@@ -17,6 +17,7 @@ TABLE9 = 'Arlington_g20_1'                                                      
 TRIPLE = ['Detroit_g27_1', 'Arlington_g29_2']                                                                        # 7.9 / 6.0 / 7.4 trio
 STEPUP = ['Arlington_g30_1', 'Arlington_g30_2']                                                                      # 8.8 -> 11.2
 BIGDBL = ['Glendale_g83_1', 'Glendale_g83_2']                                                                        # 7.1 -> 7.9, 40.5 ft floor gap
+HARD_TRIPLE = ['Detroit_g0_2', 'Arlington_g28_2', 'Custom_g6_1']                                                    # 5.8 / 5.8 / 6.0 ft short big singles (v4)
 MIXED_DET = 'Detroit_g35_0'                                                                                          # Detroit g35 rhythm lane (on-off 6.1/5.7 + 3.5s)
 SAND = ['Glendale_g66_1', 'Glendale_g66_2', 'Glendale_g86_0', 'Glendale_g30_3', 'Glendale_g65_3', 'Glendale_g63_3', 'Glendale_g86_1', 'Glendale_g65_2']
 
@@ -42,15 +43,15 @@ def sx1():
     ox, oz = SX1_ORIGIN
     xe, xw, z0 = 520.0, 150.0, 395.0
     p = Path(ox + 77, oz + z0, 0.0, 'SX1')
-    p.straight(xe - 77, [], tag='finish straight')
+    p.straight(xe - 77, [sec('SX1-F petit on-off (ligne d arrivee)', [SA[0], 'Arlington_g1_2', SA[1]], 18.0)], tag='finish straight: on-off (v4)')
     p.turn(+180, RB, BIG, tag='T1 first turn')
     p.straight(xe - xw, [sec('SX1-A triple-triple-quad', SA + SC, 12.0)], tag='A triple-triple-quad')
     p.turn(-180, RB, BIG2, tag='T2')
-    p.straight(xe - xw, [sec('SX1-B whoops (entry+11)', [('whoops', 'Custom_0', 12), BB[0]], 22.0)], tag='B 12 whoops + single')
+    p.straight(xe - xw, [sec('SX1-B whoops (entry+11), single 5 ft', [('whoops', 'Custom_0', 12), ('gap', 15.0), 'Glendale_g80_1'], 22.0)], tag='B 12 whoops + single (v4: +10 ft, 5.0 ft)')
     p.turn(+180, RB, BIG, tag='T3')
     p.straight(xe - xw, [sec('SX1-C triple on table, off quad, double', SD[:2] + [TABLE_A] + SA[:4] + [('gap', 14.0)] + SC[:2], 12.0)], tag='C triple on table / off quad')
     p.turn(-180, RB, BIG2, tag='T4')
-    p.straight(xe - xw, [sec('SX1-D step-up, triple out', STEPUP + SC[:3], 22.0)], tag='D step-up + triple')
+    p.straight(xe - xw, [sec('SX1-D step-up, triple on table, off', STEPUP + SC[:2] + [TABLE_B] + [SC[2]], 22.0)], tag='D step-up + triple sur table, off (v4)')
     p.turn(+180, RB, BIG, tag='T5')
     p.straight(xe - 77, [sec('SX1-E JGSX on-off lane + triple', [MIXED_DET, ('gap', 10.0)] + SA[3:6], 14.0)], tag='E on-off + triple')
     p.turn(+90, RS, SMALL, tag='T6')
@@ -69,19 +70,19 @@ def sx2():
     p.turn(-90, RB, BIG, tag='T1 first turn')                # north -> east
     p.straight(355.0 - 132.5, [sec('SX2-top JGSX Arlington rhythm', ['Arlington_g37_0', 'Arlington_g37_1', 'Arlington_g37_2', 'Arlington_g1_3'], 20.0)], tag='top rhythm')
     p.turn(-90, RS, SMALL2, tag='T2')                        # east -> south
-    p.straight(400.0 - 36.0, [sec('SX2-E1 on-off double-double', [SA[0], BB[0], SA[1], BB[1], SA[3]], 30.0)], tag='E1 on-off')
+    p.straight(400.0 - 36.0, [sec('SX2-E1 single single table single table single', [SA[0], SA[1], TABLE_A, SA[3], TABLE_B, SA[4]], 30.0)], tag='E1 bosse bosse table bosse table bosse (v4)')
     p.turn(-180, RB, BIG, tag='T3')                          # south -> north
-    p.straight(400.0 - 120.0, [sec('SX2-E2 big double, double out', BIGDBL + SC[:2], 30.0)], tag='E2 big double + double')
+    p.straight(400.0 - 120.0, [sec('SX2-E2 big double, triple into the turn', BIGDBL + SC[:3], 20.0)], tag='E2 gros double + triple dans le virage (v4)')
     p.turn(+180, RB, BIG2, tag='T4')                         # north -> south
     p.straight(429.0 - 120.0, [sec('SX2-E3 triple on table, triple off', SC[:2] + [TABLE_B] + SD[:2] + [SC[2]], 24.0)], tag='E3 triple on / triple off')
     p.turn(-90, RS, SMALL, tag='T5')                         # south -> west
-    p.straight(269.0 - 36.0, [sec('SX2-bottom whoops (entry+6), single', [('whoops', 'Custom_0', 7), SA[2]], 24.0)], tag='bottom 7 whoops + single')
+    p.straight(269.0 - 36.0, [sec('SX2-bottom whoops (entry+7)', [('whoops', 'Custom_0', 8)], 34.0)], tag='bottom 8 whoops, sans bosse (v4)')
     p.turn(-90, RS, SMALL2, tag='T6')                        # west -> north
     p.straight(429.0 - 60.0, [sec('SX2-W1 quad-quad', SD + SC, 40.0)], tag='W1 quad-quad')
     p.turn(-180, RB, BIG, tag='T7')                          # north -> south
     p.straight(345.0 - 60.0, [sec('SX2-W2 9 ft table, triple off', [TABLE9] + SD[:3], 30.0)], tag='W2 9 ft table + triple')
     p.turn(+180, RB, BIG2, tag='T8')                         # south -> north (finish lane F)
-    p.straight(345.0 - 140.0, [sec('SX2-F finish double', SC[:2], 20.0)], tag='F finish double')
+    p.straight(345.0 - 140.0, [sec('SX2-F triple de gros singles', HARD_TRIPLE, 12.0)], tag='F triple dur 5.8-6.0 ft (v4)')
     _start('SX2', ox, oz, gate=(200.0, 395.0), heading=-90.0, straight=95.0, merge=(111.0, 140.0))
     return p
 
@@ -89,32 +90,39 @@ def sx2():
 SX3_ORIGIN = (8.0, 560.0)
 
 def sx3():
+    """v4: U1 mixed heights + Detroit triple brought closer + small bump; whoops without the bump after them; GR sand
+    70 ft closer; U3 drift moved before its combo; GL J tucked right behind the T2 berm (U3 no longer runs 400 ft empty);
+    F combo moved east so it ends near the start merge (no long empty straight before T1)."""
     ox, oz = SX3_ORIGIN
     Zf = 330.0
     p = Path(ox + 890.0, oz + Zf, 0.0, 'SX3')                # merge point on the finish lane F (heading east)
     p.straight(980.0 - 890.0, [], tag='F to first turn')
     p.turn(+180, RB, BIG, tag='T1 first turn')               # east -> west, z = Zf - 43
-    p.straight(980.0 - 320.0, [sec('SX3-U1 triple-triple-quad, Detroit triple', SA + SD + [('gap', 30.0)] + TRIPLE, 16.0)], tag='U1 triple-triple-quad + triple')
+    u1 = SA[:3] + ['Arlington_g37_2', 'Detroit_g36_1', 'Custom_g30_3', 'Glendale_g84_2', 'Detroit_g36_4', ('gap', 20.0)] + TRIPLE + [('gap', 20.0), 'Glendale_g40_2']
+    p.straight(980.0 - 320.0, [sec('SX3-U1 triple, big single, mixed heights, Detroit triple, small bump', u1, 80.0)], tag='U1 hauteurs melangees + triple Detroit + petite bosse (v4)')
     p.turn(-180, RB, BIG2, tag='T2')                          # west -> east, z = Zf - 86
-    p.straight(980.0 - 320.0, [sec('SX3-U2 whoops (entry+9), on-off, step-up', [('whoops', 'Detroit_0', 10), SC[3], ('gap', 24.0), SA[1], BB[2], SD[3], ('gap', 30.0)] + STEPUP, 16.0)], tag='U2 10 whoops + on-off + step-up')
+    u2 = [('whoops', 'Detroit_0', 10), ('gap', 30.0), SA[1], BB[2], SD[3], ('gap', 30.0)] + STEPUP
+    p.straight(910.0 - 320.0, [sec('SX3-U2 whoops (entry+9), on-off, step-up', u2, 16.0)], tag='U2 10 whoops sans bosse + on-off + step-up (v4)')
     p.stamp('GR', tag='GR Glendale sand sweeper (left-hand)', mirror=True)   # east -> west, 114 ft north: Glendale sand berm, mirrored
-    # U3 drifts 8 deg south over its empty end so that, after the Glendale J and the Glendale-like flat exit bend,
-    # the finish lane lands exactly on z = Zf (lane spacing 43 ft + GR 114 ft + GL 187 ft do not close by themselves)
+    # closure: lane spacing 43 ft + GR 114 ft + GL 187 ft (+ exit bend) do not land on z = Zf by themselves -> U3 drifts
+    # south by d with two flat 12 deg bends, in the empty run right after the GR exit (before the combo)
+    X_GL = 335.0                                              # GL entry: its J leg passes right behind (west of) the T2 berm
     gl = np.asarray(STAMPS['GL']['line']); dGL = gl[-1, 1] - gl[0, 1]
     hGL = -np.arctan2(gl[-1, 1] - gl[-6, 1], gl[-1, 0] - gl[-6, 0]); Rx = 80.0
     d = (oz + Zf) - p.z - dGL + Rx * (1 - np.cos(hGL))
-    alpha, Rd = 8.0, 250.0
+    alpha, Rd = 12.0, 150.0
     Ld = (d - 2 * Rd * (1 - np.cos(np.radians(alpha)))) / np.sin(np.radians(alpha))
-    u3 = SC[:2] + [TABLE_B] + SA[:4] + [('gap', 30.0)] + SD
-    L3 = len(L('SX3-U3 triple on table, off quad, quad', u3)) * 0.1 + 16.0 + 30.0
-    p.straight(L3, [sec('SX3-U3 triple on table, off quad, quad', u3, 16.0)], tag='U3 table combo + quad')
-    p.turn(+alpha, Rd, None, tag='U3 lane drift (flat, 8 deg)')
+    p.straight(6.0, [], tag='sand exit')
+    p.turn(+alpha, Rd, None, tag='U3 drift (flat, 12 deg)')
     p.straight(Ld, [], tag='U3 drift')
-    p.turn(-alpha, Rd, None, tag='U3 lane drift back (flat, 8 deg)')
-    p.straight(p.x - (ox + 200.0), [], tag='U3 to sand')
+    p.turn(-alpha, Rd, None, tag='U3 drift back (flat, 12 deg)')
+    u3 = SC[:2] + [TABLE_B] + SA[:4] + [('gap', 15.0)] + SD
+    p.straight(p.x - (ox + X_GL), [sec('SX3-U3 triple on table, off quad, quad', u3, 6.0)], tag='U3 table combo + quad')
     p.stamp('GL', tag='GL Glendale sand J-turn', snap=False)  # west -> south -> NE (Glendale sand, as built)
     p.turn(-np.degrees(-p.t), Rx, None, tag='sand exit bend (flat, R 80, as in Glendale)')
-    p.straight(ox + 890.0 - p.x, [sec('SX3-F triple, big double', SC[:3] + [('gap', 34.0)] + BIGDBL, 20.0)], tag='F triple + big double')
+    f3 = SC[:3] + [('gap', 34.0)] + BIGDBL
+    Lf = ox + 890.0 - p.x; Lc = len(L('SX3-F triple, big double', f3)) * 0.1
+    p.straight(Lf, [sec('SX3-F triple, big double', f3, Lf - Lc - 108.0)], tag='F triple + gros double, fini pres du depart (v4)')
     _start('SX3', ox, oz, gate=(630.0, Zf + 70.0), heading=0.0, straight=140.0, merge=(890.0, Zf))
     return p
 

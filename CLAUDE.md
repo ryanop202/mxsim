@@ -34,11 +34,15 @@ Tu reprends un projet commencé dans une autre conversation. Lis dans cet ordre 
 | SX3 | v2 « forme bizarre » → refait compact ; v3 : sable façon photo Glendale |
 | Départs | v3 : faits « pour de vraies courses » (22 grilles, ligne de départ séparée, entonnoir, 1er virage à berm) |
 | Virage plat à droite près du départ SX1 | « je veux un appui » → berm ajouté (T7) |
+| 1er test en jeu (v3) | retours détaillés couloir par couloir → v4 (doc 07 § 6) |
+| Whoops | **jamais de bosse plus grosse juste après les whoops** (« arrête de faire ces bosses à la fin des whoops ») |
+| Lignes droites | pas de longue ligne droite vide (surtout avant un virage) : remplir avec un petit enchaînement (on-off…) |
+| Enchaînements | varier les hauteurs, pas deux fois le même enchaînement sur deux pistes |
 
-## État au moment de l'export (v3)
+## État actuel (v4)
 
-- 3 pistes SX dans `tracks/`, 39/39 contrôles, chaîne complète reproductible (`./make_all.sh` refait `lib/` et `tracks/` à l'octet près).
-- Rien n'a encore été testé en jeu. Les premiers retours en jeu de Ryan sont la prochaine vraie info.
+- 3 pistes SX dans `tracks/`, 39/39 contrôles, chaîne complète reproductible (`./make_all.sh`).
+- v3 testée en jeu par Ryan → v4 = ses corrections. **v4 pas encore testée en jeu.**
 - Pistes d'amélioration notées dans `docs/10_suite_et_idees.md`.
 
 ## Pièges connus
@@ -46,6 +50,7 @@ Tu reprends un projet commencé dans une autre conversation. Lis dans cet ordre 
 - Axes : x = colonne, z = ligne de la heightmap ; z vers le **bas** sur les images. Cap 0° = +x (est), −90° = −z (« nord », haut de l'image).
   Dans `Path.turn`, angle > 0 = virage à **gauche** (cap qui diminue).
 - `timing_gates` : la grille regarde f = (−sin a, −cos a). Vérifier avec `validate_sx.py` (couloir de départ).
+- Un gros berm (croissant 130°, fait pour 180°) posé sur un virage de 90° dépasse sur les lignes droites → « rebord ». `engine.berm_ang_scale` le resserre (×130/angle). Les petits berms (105°, faits pour 90°) ne sont jamais modifiés.
 - Un berm posé à la jonction départ/tour bloque toujours la ligne de départ derrière lui : la ligne de départ est parallèle/décalée.
 - Les RAR sont en RAR5 : `unar` et `7z` ratent des fichiers → `node-unrar-js@2.0.2` (`tools/extract_refs.sh`).
 - Le sable Glendale est un **stamp exact** (on copie le terrain tel quel avec sa ligne de course), pas un modèle.

@@ -6,7 +6,7 @@ ROOT = _os.environ.get('MXSIM_ROOT') or _os.path.dirname(_os.path.dirname(_os.pa
 REF = _os.environ.get('MXSIM_REF') or _os.path.join(ROOT, 'refs', 'extracted')  # extracted JGMX/JGSX reference archives
 import os, sys, json, numpy as np
 sys.path.insert(0, ROOT + '/scripts')
-from engine import Grid, render_lane_block, render_berm_stamp, turn_mid_angle, LIB, render_stamp
+from engine import Grid, render_lane_block, render_berm_stamp, turn_mid_angle, LIB, render_stamp, berm_ang_scale
 import layouts_sx as LS
 
 OUT = ROOT + '/build'; os.makedirs(OUT, exist_ok=True)
@@ -33,7 +33,7 @@ for key, p in paths.items():
             render_stamp(G, sand, full_tiles, g, GLENDALE_TILES)
             turns.append(dict(tag=g['tag'], kind='Glendale sand stamp', angle=float(np.degrees(g['t_out'] - g['t_in'])), berm=g['stamp']))
         else:
-            if g.get('berm'): render_berm_stamp(G, berms, g['berm'], g['cx'], g['cz'], turn_mid_angle(g))
+            if g.get('berm'): render_berm_stamp(G, berms, g['berm'], g['cx'], g['cz'], turn_mid_angle(g), ang_scale=berm_ang_scale(g['berm'], g['ang']))
             turns.append(dict(tag=g['tag'], kind='turn', angle=g['ang'], r=g['r'], berm=g.get('berm')))
     report[key] = dict(lap_ft=p.s, sections=secs, turns=turns, start=LS.STARTS[key])
 H = np.maximum.reduce([jumps, whoops, berms, sand])

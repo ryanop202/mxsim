@@ -3,6 +3,13 @@
   "lap_ft": 2931.2787294503905,
   "sections": [
    {
+    "lane": "finish straight: on-off (v4)",
+    "name": "SX1-F petit on-off (ligne d arrivee)",
+    "s0": 18.0,
+    "length": 111.2,
+    "hmax": 5.794
+   },
+   {
     "lane": "A triple-triple-quad",
     "name": "SX1-A triple-triple-quad",
     "s0": 522.5442420521806,
@@ -10,11 +17,11 @@
     "hmax": 4.016
    },
    {
-    "lane": "B 12 whoops + single",
-    "name": "SX1-B whoops (entry+11)",
+    "lane": "B 12 whoops + single (v4: +10 ft, 5.0 ft)",
+    "name": "SX1-B whoops (entry+11), single 5 ft",
     "s0": 970.0884841043612,
-    "length": 295.6,
-    "hmax": 5.903
+    "length": 300.0,
+    "hmax": 4.998
    },
    {
     "lane": "C triple on table / off quad",
@@ -24,10 +31,10 @@
     "hmax": 6.24
    },
    {
-    "lane": "D step-up + triple",
-    "name": "SX1-D step-up, triple out",
+    "lane": "D step-up + triple sur table, off (v4)",
+    "name": "SX1-D step-up, triple on table, off",
     "s0": 1845.1769682087224,
-    "length": 256.6,
+    "length": 314.40000000000003,
     "hmax": 11.218
    },
    {
@@ -120,17 +127,17 @@
     "hmax": 5.903
    },
    {
-    "lane": "E1 on-off",
-    "name": "SX2-E1 on-off double-double",
+    "lane": "E1 bosse bosse table bosse table bosse (v4)",
+    "name": "SX2-E1 single single table single table single",
     "s0": 397.05088062083416,
-    "length": 197.8,
-    "hmax": 5.903
+    "length": 255.20000000000002,
+    "hmax": 6.24
    },
    {
-    "lane": "E2 big double + double",
-    "name": "SX2-E2 big double, double out",
-    "s0": 828.5951226730147,
-    "length": 214.4,
+    "lane": "E2 gros double + triple dans le virage (v4)",
+    "name": "SX2-E2 big double, triple into the turn",
+    "s0": 818.5951226730147,
+    "length": 254.4,
     "hmax": 7.936
    },
    {
@@ -141,11 +148,11 @@
     "hmax": 6.18
    },
    {
-    "lane": "bottom 7 whoops + single",
-    "name": "SX2-bottom whoops (entry+6), single",
-    "s0": 1496.4181243199391,
-    "length": 178.3,
-    "hmax": 3.686
+    "lane": "bottom 8 whoops, sans bosse (v4)",
+    "name": "SX2-bottom whoops (entry+7)",
+    "s0": 1506.4181243199391,
+    "length": 163.8,
+    "hmax": 2.989
    },
    {
     "lane": "W1 quad-quad",
@@ -162,11 +169,11 @@
     "hmax": 9.01
    },
    {
-    "lane": "F finish double",
-    "name": "SX2-F finish double",
-    "s0": 2531.7853680190437,
-    "length": 66.0,
-    "hmax": 3.644
+    "lane": "F triple dur 5.8-6.0 ft (v4)",
+    "name": "SX2-F triple de gros singles",
+    "s0": 2523.7853680190437,
+    "length": 97.10000000000001,
+    "hmax": 6.046
    }
   ],
   "turns": [
@@ -241,33 +248,33 @@
   }
  },
  "SX3": {
-  "lap_ft": 3758.475017258189,
+  "lap_ft": 3349.0555974360886,
   "sections": [
    {
-    "lane": "U1 triple-triple-quad + triple",
-    "name": "SX3-U1 triple-triple-quad, Detroit triple",
-    "s0": 173.54424205218055,
-    "length": 528.9,
+    "lane": "U1 hauteurs melangees + triple Detroit + petite bosse (v4)",
+    "name": "SX3-U1 triple, big single, mixed heights, Detroit triple, small bump",
+    "s0": 237.54424205218055,
+    "length": 503.20000000000005,
     "hmax": 7.918
    },
    {
-    "lane": "U2 10 whoops + on-off + step-up",
+    "lane": "U2 10 whoops sans bosse + on-off + step-up (v4)",
     "name": "SX3-U2 whoops (entry+9), on-off, step-up",
     "s0": 901.0884841043612,
-    "length": 547.8000000000001,
+    "length": 518.6,
     "hmax": 11.218
    },
    {
     "lane": "U3 table combo + quad",
     "name": "SX3-U3 triple on table, off quad, quad",
-    "s0": 1807.347910272529,
-    "length": 433.8,
+    "s0": 1860.0334683405147,
+    "length": 418.8,
     "hmax": 6.18
    },
    {
-    "lane": "F triple + big double",
+    "lane": "F triple + gros double, fini pres du depart (v4)",
     "name": "SX3-F triple, big double",
-    "s0": 3135.11865860314,
+    "s0": 2968.855597436089,
     "length": 272.2,
     "hmax": 7.936
    }
@@ -294,17 +301,17 @@
     "berm": "GR"
    },
    {
-    "tag": "U3 lane drift (flat, 8 deg)",
+    "tag": "U3 drift (flat, 12 deg)",
     "kind": "turn",
-    "angle": 8.0,
-    "r": 250.0,
+    "angle": 12.0,
+    "r": 150.0,
     "berm": null
    },
    {
-    "tag": "U3 lane drift back (flat, 8 deg)",
+    "tag": "U3 drift back (flat, 12 deg)",
     "kind": "turn",
-    "angle": -8.0,
-    "r": 250.0,
+    "angle": -12.0,
+    "r": 150.0,
     "berm": null
    },
    {
@@ -335,16 +342,39 @@
   }
  },
  "tiles": {
-  "SX Main": 3434113,
-  "Jumps Sx": 416238,
-  "WhoopsV2": 107454,
-  "Berm Exit Sx": 122255,
+  "SX Main": 3407084,
+  "Jumps Sx": 451423,
+  "WhoopsV2": 101845,
+  "Berm Exit Sx": 119708,
   "Sand Straight": 0,
   "Sand Bump Straight": 0,
   "Sand Exit": 111084,
   "Sand Bump Solo": 3160
  },
  "combos": {
+  "SX1-F petit on-off (ligne d arrivee)": {
+   "length": 111.2,
+   "items": [
+    [
+     "Arlington_g37_0",
+     0.0,
+     27.400000000000002,
+     3.36
+    ],
+    [
+     "Arlington_g1_2",
+     32.7,
+     80.4,
+     5.794
+    ],
+    [
+     "Arlington_g37_1",
+     83.2,
+     111.10000000000001,
+     3.662
+    ]
+   ]
+  },
   "SX1-A triple-triple-quad": {
    "length": 356.5,
    "items": [
@@ -410,8 +440,8 @@
     ]
    ]
   },
-  "SX1-B whoops (entry+11)": {
-   "length": 295.6,
+  "SX1-B whoops (entry+11), single 5 ft": {
+   "length": 300.0,
    "items": [
     [
      "whoops Custom_0 x12",
@@ -420,10 +450,10 @@
      2.989
     ],
     [
-     "Arlington_g37_2",
-     248.90000000000003,
-     295.50000000000006,
-     5.903
+     "Glendale_g80_1",
+     258.6,
+     299.90000000000003,
+     4.998
     ]
    ]
   },
@@ -486,8 +516,8 @@
     ]
    ]
   },
-  "SX1-D step-up, triple out": {
-   "length": 256.6,
+  "SX1-D step-up, triple on table, off": {
+   "length": 314.40000000000003,
    "items": [
     [
      "Arlington_g30_1",
@@ -514,9 +544,15 @@
      3.521
     ],
     [
-     "Custom1_g71_5",
+     "Arlington_g49_2",
      221.80000000000004,
-     256.50000000000006,
+     276.80000000000007,
+     6.18
+    ],
+    [
+     "Custom1_g71_5",
+     279.6000000000001,
+     314.30000000000007,
      3.872
     ]
    ]
@@ -608,8 +644,8 @@
     ]
    ]
   },
-  "SX2-E1 on-off double-double": {
-   "length": 197.8,
+  "SX2-E1 single single table single table single": {
+   "length": 255.20000000000002,
    "items": [
     [
      "Arlington_g37_0",
@@ -618,33 +654,39 @@
      3.36
     ],
     [
-     "Arlington_g37_2",
-     32.7,
-     79.30000000000001,
-     5.903
-    ],
-    [
      "Arlington_g37_1",
-     82.10000000000001,
-     110.00000000000001,
+     32.7,
+     60.60000000000001,
      3.662
     ],
     [
-     "Arlington_g1_2",
-     115.30000000000001,
-     163.0,
-     5.794
+     "Custom1_g71_1",
+     65.9,
+     125.0,
+     6.24
     ],
     [
      "Arlington_g1_3",
-     165.8,
-     197.70000000000002,
+     127.8,
+     159.7,
      3.811
+    ],
+    [
+     "Arlington_g49_2",
+     165.0,
+     220.0,
+     6.18
+    ],
+    [
+     "Arlington_g37_4",
+     222.8,
+     255.10000000000002,
+     4.016
     ]
    ]
   },
-  "SX2-E2 big double, double out": {
-   "length": 214.4,
+  "SX2-E2 big double, triple into the turn": {
+   "length": 254.4,
    "items": [
     [
      "Glendale_g83_1",
@@ -669,6 +711,12 @@
      184.0,
      214.3,
      3.521
+    ],
+    [
+     "Custom1_g71_5",
+     219.60000000000002,
+     254.3,
+     3.872
     ]
    ]
   },
@@ -713,20 +761,14 @@
     ]
    ]
   },
-  "SX2-bottom whoops (entry+6), single": {
-   "length": 178.3,
+  "SX2-bottom whoops (entry+7)": {
+   "length": 163.8,
    "items": [
     [
-     "whoops Custom_0 x7",
+     "whoops Custom_0 x8",
      0.0,
-     144.0,
+     163.70000000000002,
      2.989
-    ],
-    [
-     "Arlington_g1_1",
-     149.3,
-     178.20000000000002,
-     3.686
     ]
    ]
   },
@@ -812,25 +854,31 @@
     ]
    ]
   },
-  "SX2-F finish double": {
-   "length": 66.0,
+  "SX2-F triple de gros singles": {
+   "length": 97.10000000000001,
    "items": [
     [
-     "Custom1_g71_2",
+     "Detroit_g0_2",
      0.0,
-     30.3,
-     3.644
+     29.8,
+     5.753
     ],
     [
-     "Custom1_g71_3",
-     35.6,
-     65.9,
-     3.521
+     "Arlington_g28_2",
+     32.6,
+     63.6,
+     5.784
+    ],
+    [
+     "Custom_g6_1",
+     66.4,
+     97.0,
+     6.046
     ]
    ]
   },
-  "SX3-U1 triple-triple-quad, Detroit triple": {
-   "length": 528.9,
+  "SX3-U1 triple, big single, mixed heights, Detroit triple, small bump": {
+   "length": 503.20000000000005,
    "items": [
     [
      "Arlington_g37_0",
@@ -851,63 +899,57 @@
      3.686
     ],
     [
-     "Arlington_g1_3",
+     "Arlington_g37_2",
      100.10000000000001,
-     132.0,
-     3.811
-    ],
-    [
-     "Arlington_g37_4",
-     137.3,
-     169.60000000000002,
-     4.016
-    ],
-    [
-     "Arlington_g1_4",
-     174.90000000000003,
-     210.00000000000003,
-     3.612
+     146.70000000000002,
+     5.903
     ],
     [
      "Detroit_g36_1",
-     215.30000000000004,
-     245.00000000000006,
+     149.50000000000003,
+     179.20000000000005,
      2.992
     ],
     [
-     "Glendale_g36_1",
-     250.30000000000007,
-     280.00000000000006,
-     3.188
+     "Custom_g30_3",
+     184.50000000000006,
+     219.10000000000005,
+     4.878
     ],
     [
      "Glendale_g84_2",
-     285.30000000000007,
-     316.20000000000005,
+     221.90000000000006,
+     252.80000000000007,
      3.448
     ],
     [
      "Detroit_g36_4",
-     321.50000000000006,
-     358.00000000000006,
+     258.1000000000001,
+     294.6000000000001,
      3.665
     ],
     [
      "Detroit_g27_1",
-     388.00000000000006,
-     474.70000000000005,
+     314.6000000000001,
+     401.30000000000007,
      7.918
     ],
     [
      "Arlington_g29_2",
-     476.30000000000007,
-     528.8000000000001,
+     402.9000000000001,
+     455.4000000000001,
      7.351
+    ],
+    [
+     "Glendale_g40_2",
+     475.4000000000001,
+     503.1000000000001,
+     2.466
     ]
    ]
   },
   "SX3-U2 whoops (entry+9), on-off, step-up": {
-   "length": 547.8000000000001,
+   "length": 518.6,
    "items": [
     [
      "whoops Detroit_0 x10",
@@ -916,45 +958,39 @@
      2.99
     ],
     [
-     "Custom_g55_2",
-     208.90000000000003,
-     238.80000000000004,
-     3.596
-    ],
-    [
      "Arlington_g37_1",
-     262.80000000000007,
-     290.70000000000005,
+     233.60000000000002,
+     261.5,
      3.662
     ],
     [
      "Custom1_g29_3",
-     296.00000000000006,
-     344.00000000000006,
+     266.8,
+     314.8,
      6.004
     ],
     [
      "Detroit_g36_4",
-     346.80000000000007,
-     383.30000000000007,
+     317.6,
+     354.1,
      3.665
     ],
     [
      "Arlington_g30_1",
-     413.30000000000007,
-     451.70000000000005,
+     384.1,
+     422.5,
      8.833
     ],
     [
      "Arlington_g30_2",
-     475.70000000000005,
-     547.7,
+     446.5,
+     518.5,
      11.218
     ]
    ]
   },
   "SX3-U3 triple on table, off quad, quad": {
-   "length": 433.8,
+   "length": 418.8,
    "items": [
     [
      "Custom1_g71_2",
@@ -1000,26 +1036,26 @@
     ],
     [
      "Detroit_g36_1",
-     291.00000000000006,
-     320.70000000000005,
+     276.00000000000006,
+     305.70000000000005,
      2.992
     ],
     [
      "Glendale_g36_1",
-     326.00000000000006,
-     355.70000000000005,
+     311.00000000000006,
+     340.70000000000005,
      3.188
     ],
     [
      "Glendale_g84_2",
-     361.00000000000006,
-     391.90000000000003,
+     346.00000000000006,
+     376.90000000000003,
      3.448
     ],
     [
      "Detroit_g36_4",
-     397.20000000000005,
-     433.70000000000005,
+     382.20000000000005,
+     418.70000000000005,
      3.665
     ]
    ]

@@ -137,21 +137,36 @@ def render_crescent(grid, out, cx, cz, mid_angle, fam, base=0.0):
 BERMS = _load(ROOT + '/lib/berm_stamps.json')
 
 
-def render_berm_stamp(grid, out, key, cx, cz, mid_angle, base=0.0, mirror=False):
-    """Paste a measured crescent (2D as-built stamp), rotated so its mid-angle matches the turn's outer bisector."""
+def render_berm_stamp(grid, out, key, cx, cz, mid_angle, base=0.0, mirror=False, ang_scale=1.0):
+    """Paste a measured crescent (2D as-built stamp), rotated so its mid-angle matches the turn's outer bisector.
+    ang_scale > 1 compresses the crescent around its bisector (radial profile unchanged): used to put a 180-degree
+    big berm on a 90-degree turn without its ends sticking out over the approach and exit lanes (v4, SX2 T1 'rebord')."""
     B = BERMS[key]; P = np.load(f'{ROOT}/lib/berm_{key}.npy').astype(np.float64)
     rad = max(P.shape) * B['s'] * 0.75
     sl, X, Z = grid.window(cx - rad, cx + rad, cz - rad, cz + rad)
     dx, dz = X - cx, Z - cz
+    keep = np.ones(dx.shape, bool)
+    if ang_scale != 1.0:
+        r = np.hypot(dx, dz); a = (np.arctan2(dz, dx) - mid_angle + np.pi) % (2 * np.pi) - np.pi
+        a2 = a * ang_scale; keep = np.abs(a2) < np.pi
+        dx, dz = r * np.cos(mid_angle + a2), r * np.sin(mid_angle + a2)
     rot = B['mid_angle'] - mid_angle
     if mirror:  # reflect across the mid-angle axis
         a = np.arctan2(dz, dx); r = np.hypot(dx, dz); a = 2 * mid_angle - a; dx, dz = r * np.cos(a), r * np.sin(a)
     c, s_ = np.cos(rot), np.sin(rot)
     sx = B['cx'] + c * dx - s_ * dz; sz = B['cz'] + s_ * dx + c * dz
     col = (sx - B['x0']) / B['s']; row = (sz - B['z0']) / B['s']
-    h = ndi.map_coordinates(P, [row, col], order=1, cval=0.0) + base
+    h = np.where(keep, ndi.map_coordinates(P, [row, col], order=1, cval=0.0), 0.0) + base
     out[sl] = np.maximum(out[sl], h)
     return sl
+
+
+def berm_ang_scale(key, ang_deg):
+    """Big crescents measure 130 deg for 180-deg turns (ends 25 deg inside the turn). On a shorter turn, compress them
+    so their ends stay at the turn tangents. Small crescents (105 deg, built for 90-deg turns) are never changed."""
+    if key and key.startswith('big') and abs(ang_deg) < 170:
+        return 130.0 / abs(ang_deg)
+    return 1.0
 
 
 def turn_mid_angle(seg):

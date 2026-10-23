@@ -78,6 +78,38 @@ Ce qui a été fait :
 - pas pu créer le repo GitHub directement depuis la session (pas d'accès en écriture au compte) → Ryan crée un repo vide
   `ryanop202/mxsimtrack` (privé) et on pousse dessus.
 
+## 6. Premier test en jeu (v3) → v4
+
+Ryan a testé les 3 pistes. Objectif : « qu'on optimise à 200 % pour avoir des pistes vraiment à mon goût ». Ses retours (résumés) :
+
+**SX1** — whoops bien, mais la grosse single juste après : « un petit peu plus loin et peut-être un tout petit peu plus bas pour pas
+partir aussi haut » ; enchaînement suivant bien ; virage à droite + step-up bien ; le triple après : « j'aimerais faire un trip sur table.
+Off » ; couloir on-off Detroit « vraiment bien, technique » ; gauche, double double, gauche, puis la ligne d'arrivée « c'est long » →
+« un petit on-off ».
+
+**SX2** — 1er virage (droite à la sortie du départ) : « tu rentres dans le virage comme si tu rentres à 180 degrés … un petit rebord
+qui fait pas rentrer fluide » ; double double ok ; couloir suivant « un peu trop light » → « bosse bosse table bosse table bosse » ;
+gros double puis « faire un triple pour sauter dans le virage » ; triple sur table : on garde ; whoops bien mais « la bosse derrière,
+enlève-la … tu rajoutes une whoops normale … arrête de faire ces bosses à la fin des whoops » ; en reprenant le départ : « faire un
+triple, un peu chaud, assez dur ».
+
+**SX3** — 1er virage gauche bien ; 1er enchaînement « que des petites bosses » et déjà vu sur SX1 → « premier triple bien, ensuite une
+grosse bosse, un peu mélangé, des hauteurs différentes » ; le triple d'après : le rapprocher, et « c'est vide après » → « une petite
+bosse, tranquille » ; whoops : enlever la bosse à la fin ; la suite bien ; 1re section de sable « tu fais plus proche » ; « le plus gros
+problème, c'est que ça va trop loin après la partie de sable … on tourne direct après à gauche, derrière l'appui … c'est là que tu fais
+la partie sable … pas une longue ligne droite avant le virage ».
+
+Ce que ça a donné (v4, détail dans doc 05) :
+- SX1 : single 5,9 → 5,0 ft, 10 ft plus loin ; triple sur table, off après le step-up ; petit on-off sur la ligne d'arrivée.
+- SX2 : T1 = gros berm resserré angulairement (cause du rebord : le berm 180° posé sur un virage de 90° dépassait de 24 ft sur
+  la ligne d'arrivée, marche ~1 ft à 12 ft de l'axe) ; E1 bosse-bosse-table-bosse-table-bosse ; gros double + triple jusqu'au virage ;
+  8 whoops sans bosse ; triple de gros singles 5,8–6,0 ft sur l'arrivée.
+- SX3 : U1 refait (triple, gros single, hauteurs mélangées, triple Detroit rapproché, petite bosse 2,5 ft) ; whoops sans bosse ;
+  sable GR 70 ft plus tôt ; U3 ne file plus 400 ft à vide : le J de sable est juste derrière le berm T2 ; combo d'arrivée décalé pour
+  finir près de la jonction. Tour 3758 → 3349 ft.
+- **Règle retenue : jamais de bosse plus grosse juste après des whoops** (sauf demande explicite, comme le single du SX1 B).
+- Interprétation à confirmer par Ryan : SX3 « derrière l'appui » = le J passe juste derrière (à l'ouest) le berm T2.
+
 ## Décisions techniques importantes (et pourquoi)
 
 | Décision | Pourquoi |

@@ -5,7 +5,7 @@ REF = _os.environ.get('MXSIM_REF') or _os.path.join(ROOT, 'refs', 'extracted')  
 import sys, numpy as np; sys.path.insert(0, ROOT + '/scripts')
 import matplotlib; matplotlib.use('Agg'); import matplotlib.pyplot as plt
 from matplotlib.colors import LightSource
-from engine import Grid, render_lane_block, render_berm_stamp, turn_mid_angle, LIB, render_stamp
+from engine import Grid, render_lane_block, render_berm_stamp, turn_mid_angle, LIB, render_stamp, berm_ang_scale
 import layouts_sx as LS
 from scipy.spatial import cKDTree
 S_GRID = 0.28975
@@ -17,7 +17,7 @@ def render(p, G):
                 render_lane_block(G, blocks, g, prof, u0, LIB['sx_lateral']['top_width'])
                 end = u0 + len(prof) * 0.1; log.append((g['tag'], name, u0, end, g['L'], 'OK' if (u0 >= 0 and end <= g['L'] + 0.01) else 'OVERRUN'))
         elif g['kind'] == 'P': render_stamp(G, berms, None, g, {})
-        elif g.get('berm'): render_berm_stamp(G, berms, g['berm'], g['cx'], g['cz'], turn_mid_angle(g))
+        elif g.get('berm'): render_berm_stamp(G, berms, g['berm'], g['cx'], g['cz'], turn_mid_angle(g), ang_scale=berm_ang_scale(g['berm'], g['ang']))
     return blocks, berms, log
 if __name__ == '__main__':
     name = sys.argv[1]; p = getattr(LS, name)(); G = Grid(11, S_GRID)
