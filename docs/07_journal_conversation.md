@@ -126,6 +126,16 @@ Ce que ça a donné (v4, détail dans doc 05) :
 - À vérifier avec Ryan : « le virage relevé beaucoup trop loin » au départ du SX3 interprété comme « l'enchaînement après le virage
   commence trop loin » (le virage lui-même n'a pas bougé depuis la v3).
 
+## 8. Test de la v5 → v6
+
+- **SX3** « bien », 2 changements : la table avant le triple d'arrivée, « on arrive à donf et ça fait 4 » (table + triple sautés en quad)
+  → « faut vraiment être obligé de s'arrêter » → 40 ft de sol plat entre la table et le triple ; 1er enchaînement : triple, grosse bosse
+  ok, « rajoute une bosse », recule le triple Detroit + la petite bosse, la dernière bosse (grosse) devient normale et une grosse vient
+  après → triple / gros / 4 singles / gros / triple Detroit / petite bosse.
+- **SX2** : couloir de gauche sur l'image (W1, quad-quad) → grosses bosses à certains endroits + table au milieu.
+- **SX1** : 1er enchaînement (A) : « écarte un tout petit peu le triple d'entrée » (+2,2 ft entre bosses) + une grande bosse dedans.
+- Alternative proposée si la table SX3 ne suffit pas : une table longue qu'on ne peut que rouler (non mesurée dans les références).
+
 ## Décisions techniques importantes (et pourquoi)
 
 | Décision | Pourquoi |
