@@ -1,0 +1,7 @@
+{
+  "name": "mxsimtrack-tools",
+  "private": true,
+  "type": "module",
+  "description": "Only used to extract the RAR5 reference archives (tools/extract_refs.sh)",
+  "dependencies": { "node-unrar-js": "2.0.2" }
+}

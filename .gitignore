@@ -1,0 +1,17 @@
+refs/archives/
+refs/extracted/
+node_modules/
+__pycache__/
+*.pyc
+# heavy intermediate arrays: rebuilt by ./make_all.sh build (~1 min)
+build/*.npy
+build/*.npz
+legacy_mx/build/
+analysis/H_*.npy
+*.zip
+.DS_Store
+Thumbs.db
+legacy_mx/tracks/
+legacy_mx/deliver/
+refs/extracted
+refs/archives

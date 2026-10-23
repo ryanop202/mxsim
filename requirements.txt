@@ -1,0 +1,6 @@
+# versions used to produce the committed outputs (Python 3.11+)
+numpy==2.5.3
+scipy==1.18.1
+pillow==12.3.0
+matplotlib==3.11.2
+scikit-image==0.26.0   # MX centreline (route_through_array)

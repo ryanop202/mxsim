@@ -1,0 +1,231 @@
+<title>Ryan Compound</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: technical race-file — dark viewer band on top, then a single reading column of sheets (plans, profiles, catalogue, checks). */
+:root{
+  --bg:#f3f1ec; --sheet:#fbfaf7; --fg:#22201c; --muted:#6b655b; --line:#d9d3c7;
+  --clay:#9a5a2b; --sand:#d9b45a; --gate:#c2187a; --ok:#2e7d4f; --warn:#b26a00; --viewer:#1c1b19;
+  --f-display:'Barlow Condensed','Arial Narrow',Arial,sans-serif; --f-body:'Barlow','Segoe UI',Arial,sans-serif; --f-mono:'JetBrains Mono',Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#171614;--sheet:#1f1d1a;--fg:#ece7de;--muted:#a59d90;--line:#36322c;--clay:#d08a52;--sand:#e2c06d;--gate:#ff5cb3;--ok:#5fc48a;--warn:#e8a33a;--viewer:#0f0e0d;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#171614;--sheet:#1f1d1a;--fg:#ece7de;--muted:#a59d90;--line:#36322c;--clay:#d08a52;--sand:#e2c06d;--gate:#ff5cb3;--ok:#5fc48a;--warn:#e8a33a;--viewer:#0f0e0d;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.55}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0}
+header{padding-block:28px 18px}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(2.2rem,5vw,3.4rem);letter-spacing:.01em;margin:0;line-height:1;text-transform:uppercase}
+h1 span{color:var(--clay)}
+.sub{color:var(--muted);margin:.5rem 0 0;max-width:70ch}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.chip{font-family:var(--f-mono);font-size:12px;padding:4px 9px;border:1px solid var(--line);border-radius:3px;background:var(--sheet)}
+.chip.ok{border-color:var(--ok);color:var(--ok)} .chip.warn{border-color:var(--warn);color:var(--warn)}
+h2{font-family:var(--f-display);font-weight:600;font-size:1.65rem;text-transform:uppercase;letter-spacing:.03em;margin:0 0 .4rem;text-wrap:balance}
+h3{font-family:var(--f-display);font-weight:600;font-size:1.2rem;letter-spacing:.02em;margin:1.2rem 0 .3rem}
+section{padding-block:26px;border-top:1px solid var(--line)}
+p,ul.plain{max-width:75ch}
+.viewer{background:var(--viewer);color:#e9e4da;border-radius:4px;overflow:hidden;position:relative}
+.vbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:10px 12px;border-bottom:1px solid #2f2c28}
+.vbar button{font-family:var(--f-display);font-size:1rem;letter-spacing:.04em;text-transform:uppercase;background:transparent;color:#e9e4da;border:1px solid #4a4540;padding:5px 14px;border-radius:3px;cursor:pointer}
+.vbar button[aria-pressed="true"]{background:#e9e4da;color:#1c1b19;border-color:#e9e4da}
+.vbar button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--sand);outline-offset:2px}
+.vbar label{font-size:13px;display:flex;align-items:center;gap:6px;color:#c9c2b6}
+.vbar .spacer{flex:1}
+#gl{display:block;width:100%;height:min(68vh,620px);touch-action:none}
+.legend{display:flex;flex-wrap:wrap;gap:12px;padding:8px 12px;font-size:12px;color:#c9c2b6;border-top:1px solid #2f2c28}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:2px;margin-right:5px;vertical-align:-2px}
+.vinfo{font-family:var(--f-mono);font-size:12px;color:#c9c2b6;padding:6px 12px 10px}
+figure{margin:14px 0;background:var(--sheet);border:1px solid var(--line);border-radius:4px;padding:10px}
+figure img{display:block;width:100%;height:auto;background:#fff}
+figcaption{font-size:13px;color:var(--muted);margin-top:6px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.grid2>*{min-width:0}
+.tablebox{overflow-x:auto;border:1px solid var(--line);border-radius:4px;background:var(--sheet);max-height:560px;overflow-y:auto}
+table{border-collapse:collapse;font-size:12.5px;width:100%}
+th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{position:sticky;top:0;background:var(--sheet);font-family:var(--f-display);font-size:.95rem;letter-spacing:.03em;text-transform:uppercase;z-index:1}
+td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+td.mono{font-family:var(--f-mono);font-size:11.5px}
+.checks{list-style:none;padding:0;margin:0;display:grid;gap:6px}
+.checks li{display:grid;grid-template-columns:52px 1fr;gap:10px;background:var(--sheet);border:1px solid var(--line);border-left:4px solid var(--ok);border-radius:3px;padding:7px 10px;font-size:13.5px}
+.checks li.fail{border-left-color:var(--warn)}
+.checks b{font-family:var(--f-mono);font-size:12px;color:var(--ok)} .checks li.fail b{color:var(--warn)}
+.checks small{display:block;color:var(--muted);font-family:var(--f-mono);font-size:11.5px;overflow-wrap:anywhere}
+.lap{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.lap>div{background:var(--sheet);border:1px solid var(--line);border-radius:4px;padding:12px}
+.lap .t{font-family:var(--f-display);font-size:2.2rem;font-weight:700;line-height:1}
+.lap .k{font-family:var(--f-display);text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.lap small{color:var(--muted)}
+.starts{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-top:10px}
+.starts>div{background:var(--sheet);border:1px solid var(--line);border-left:4px solid var(--sand);border-radius:3px;padding:10px 12px;font-size:14px;min-width:0}
+.starts strong{font-family:var(--f-display);font-size:1.15rem;letter-spacing:.03em;text-transform:uppercase;display:block}
+ol.steps{padding-left:1.3rem} ol.steps li{margin:.35rem 0;max-width:75ch}
+code{font-family:var(--f-mono);font-size:.88em;background:var(--sheet);border:1px solid var(--line);padding:0 4px;border-radius:2px;overflow-wrap:anywhere}
+.notice{border:1px solid var(--warn);background:var(--sheet);padding:10px 14px;border-radius:4px;max-width:80ch}
+footer{color:var(--muted);font-size:13px;padding-block:22px 40px;border-top:1px solid var(--line)}
+@media (prefers-reduced-motion: reduce){*{scroll-behavior:auto}}
+</style>
+
+<div class="wrap">
+<header>
+  <h1>Ryan <span>Compound</span></h1>
+  <p class="sub">Trois supercross MX Simulator sur un terrain partagé. Version 3 : de vrais départs (22 grilles, ligne de départ séparée qui débouche sur un premier virage avec berm), le SX 2 démarre au milieu du stade, l'ancien virage plat a maintenant son berm, et le SX 3 reprend le sable de JGSX Glendale. Chaque bosse, table, whoop, berm et forme de sable est une copie exacte d'un élément mesuré sur les pistes JGSX 2026.</p>
+  <div class="chips" id="chips"></div>
+</header>
+
+<section aria-labelledby="v3d">
+  <h2 id="v3d">Visionneuse 3D</h2>
+  <p>Terrain exporté, affiché avec une maille de 0.58 ft (SX 1, SX 2) et 0.87 ft (SX 3) ; le fichier du jeu est à 0.29 ft, la grille des JGSX. Les points jaunes sont les 22 grilles de départ. Glisser pour tourner, molette ou pincement pour zoomer, clic droit pour déplacer.</p>
+  <div class="viewer">
+    <div class="vbar" role="group" aria-label="Piste affichée">
+      <button id="b-SX1" aria-pressed="true">SX 1</button><button id="b-SX2" aria-pressed="false">SX 2</button><button id="b-SX3" aria-pressed="false">SX 3</button>
+      <span class="spacer"></span>
+      <label for="exag">Échelle verticale <input id="exag" type="range" min="1" max="3" step="0.5" value="1"> <span id="exv">1×</span></label>
+      <label for="showpath"><input id="showpath" type="checkbox" checked> Ligne de course</label>
+    </div>
+    <canvas id="gl" aria-label="Vue 3D du terrain"></canvas>
+    <div class="legend"><span><i style="background:#8a7f72"></i>sol</span><span><i style="background:#6e3b1f"></i>bosses / tables</span><span><i style="background:#2e86c1"></i>whoops</span><span><i style="background:#8e44ad"></i>berms</span><span><i style="background:#e3c370"></i>sable Glendale</span><span><i style="background:#c99a3c"></i>bosses de sable</span><span><i style="background:#ffe14d"></i>grilles</span><span><i style="background:#ff2fa0"></i>ligne de course</span></div>
+    <div class="vinfo" id="vinfo">Chargement…</div>
+  </div>
+</section>
+
+<section aria-labelledby="dep">
+  <h2 id="dep">Départs</h2>
+  <p>Les départs suivent la méthode des pistes JGSX 2026 : 22 grilles espacées de 4 ft, une ligne de départ qui ne fait pas partie du tour, puis un entonnoir qui rejoint le tour juste avant un premier virage avec berm. Sur les tours suivants, personne ne repasse par la grille. Aucun obstacle ni berm ne se trouve dans le couloir de départ : les 22 trajectoires, de chaque grille jusqu'au tour, ont été vérifiées sur le terrain exporté.</p>
+  <div class="starts">
+    <div><strong>SX 1</strong>Grille au sud de la ligne d'arrivée, 368 ft jusqu'à la jonction, puis premier virage (grand berm 180°). L'ancien virage plat avant l'arrivée a maintenant un berm.</div>
+    <div><strong>SX 2</strong>Grille au milieu du stade, entre les deux groupes de couloirs. 278 ft de ligne droite et d'entonnoir, puis 93 ft jusqu'au premier virage (grand berm 90°).</div>
+    <div><strong>SX 3</strong>Grille au sud de la ligne d'arrivée, 279 ft jusqu'à la jonction, puis 90 ft jusqu'au premier virage (grand berm 180°). Plus aucun virage plat sur l'arrivée.</div>
+  </div>
+</section>
+
+<section aria-labelledby="plans">
+  <h2 id="plans">Vues de dessus</h2>
+  <p>En pointillés jaunes : les bords du couloir de départ, de la grille jusqu'à la jonction avec le tour. Magenta : portes du tour. Orange : portes du premier tour seulement.</p>
+  <figure><img src="figures/00_overview.jpg" alt="Vue d'ensemble" loading="lazy"><figcaption>Le terrain partagé : SX 1 en haut à gauche, SX 2 en haut à droite, SX 3 en bas.</figcaption></figure>
+  <figure><img src="figures/01_top_SX1.jpg" alt="Plan SX 1" loading="lazy"><figcaption>SX 1 : couloirs inchangés, nouveau départ au sud et berm au dernier virage.</figcaption></figure>
+  <figure><img src="figures/01_top_SX2.jpg" alt="Plan SX 2" loading="lazy"><figcaption>SX 2 : départ au milieu. La ligne de départ monte vers le nord entre les couloirs ouest et est, puis rejoint la ligne d'arrivée avant le premier virage.</figcaption></figure>
+  <figure><img src="figures/01_top_SX3.jpg" alt="Plan SX 3" loading="lazy"><figcaption>SX 3 : 1146 m. À droite, le virage de sable de Glendale relie les couloirs du milieu au couloir du haut. À gauche, le J de sable de Glendale descend jusqu'à la ligne d'arrivée.</figcaption></figure>
+</section>
+
+<section aria-labelledby="sable">
+  <h2 id="sable">Sable du SX 3</h2>
+  <p>Les deux formes de sable de la photo sont reprises telles quelles depuis JGSX Glendale, sans les pistes voisines :</p>
+  <ul class="plain">
+    <li><strong>Le J de sable</strong> (côté gauche de Glendale) : un berm de sable en entrée, deux tables de sable dans la descente, de petites ondulations, puis le grand berm organique en U au fond et les tables arrondies de la sortie. Reproduit à l'identique, même sens.</li>
+    <li><strong>Le virage de sable</strong> (côté droit de Glendale) : la grande crête de sable irrégulière en forme de S. Elle est utilisée en version miroir, pour tourner à gauche au lieu de droite. Les deux bosses de terre qui encadraient son entrée et sa sortie appartiennent aux couloirs voisins de Glendale et n'ont pas été reprises.</li>
+  </ul>
+  <p>Le sol garde aussi les tiles de Glendale : « Sand Exit » sur tout le couloir de sable et « Sand Bump Solo » sur le berm d'entrée, avec la même physique (frottement, résistance au roulement, ornières). À la sortie du J, la piste repart avec un léger déport de 24°, comme sur Glendale.</p>
+  <figure><img src="figures/04_sand_vs_glendale.jpg" alt="Sable SX 3 contre Glendale" loading="lazy"><figcaption>À gauche, le terrain exporté du SX 3. À droite, l'original de JGSX Glendale, avec ses couloirs voisins.</figcaption></figure>
+</section>
+
+<section aria-labelledby="combo">
+  <h2 id="combo">Enchaînements</h2>
+  <p>Un « triple » part d'une bosse, passe la deuxième et se pose sur la troisième ; une table compte comme une bosse. Les bosses gardent leur forme et leur espacement JGSX : environ 5 ft de sol entre deux bosses, soit 34 à 38 ft de crête à crête.</p>
+  <div class="tablebox"><table id="combotable"><thead><tr><th>Couloir</th><th>Longueur</th><th>Éléments dans l'ordre de passage (hauteur en ft)</th></tr></thead><tbody></tbody></table></div>
+</section>
+
+<section aria-labelledby="profils">
+  <h2 id="profils">Profils des couloirs</h2>
+  <p>Profil du terrain exporté le long de chaque couloir, à l'échelle 1:1. L'écart avec la mesure JGSX est inférieur à 0.06 ft partout.</p>
+  <figure><img src="figures/02_lanes_SX1.jpg" alt="Profils SX 1" loading="lazy"><figcaption>SX 1</figcaption></figure>
+  <figure><img src="figures/02_lanes_SX2.jpg" alt="Profils SX 2" loading="lazy"><figcaption>SX 2</figcaption></figure>
+  <figure><img src="figures/02_lanes_SX3.jpg" alt="Profils SX 3" loading="lazy"><figcaption>SX 3</figcaption></figure>
+  <figure><img src="figures/03_berms.jpg" alt="Coupes des berms" loading="lazy"><figcaption>Coupe radiale d'un berm : terrain exporté (noir) contre la référence JGSX (rouge).</figcaption></figure>
+</section>
+
+<section aria-labelledby="val">
+  <h2 id="val">Validation</h2>
+  <div class="notice"><strong>Pas encore testé dans MX Simulator.</strong> Les fichiers exportés ont été relus avec le même lecteur que celui utilisé sur les pistes JGSX. Les angles des grilles suivent la convention relevée sur les pistes JGMX et JGSX, mais le départ n'a pas encore été essayé en jeu.</div>
+  <h3>Contrôles automatiques</h3>
+  <ul class="checks" id="checks"></ul>
+</section>
+
+<section aria-labelledby="laps">
+  <h2 id="laps">Temps au tour estimés</h2>
+  <p>Modèle simple : vitesse limitée par l'adhérence en virage, de 1.0 à 1.6 g, vitesse réduite de 15 % dans le sable. Les sauts ne sont pas modélisés.</p>
+  <div class="lap" id="lap"></div>
+</section>
+
+<section aria-labelledby="inst">
+  <h2 id="inst">Installation</h2>
+  <ol class="steps">
+    <li>Supprime les dossiers <code>RyanCompoundSX1</code>, <code>RyanCompoundSX2</code> et <code>RyanCompoundSX3</code> de la version précédente.</li>
+    <li>Décompresse <code>RyanCompoundSX_v3_tracks.zip</code> et copie les trois dossiers sans les renommer dans ton dossier de pistes.</li>
+    <li>Garde <code>RyanCompoundSX1</code> même si tu ne roules qu'un autre SX : il contient les textures, le ciel et le roost communs.</li>
+    <li>En jeu, choisis « Ryan Compound: SX 1 », « SX 2 » ou « SX 3 (sand) ».</li>
+  </ol>
+  <p>Pour modifier : <code>scripts/layouts_sx.py</code> (couloirs, virages, départs), puis <code>build_sx.py</code>, <code>export_sx.py</code> et <code>validate_sx.py</code>.</p>
+</section>
+<footer>Source des mesures : JGSX2026TestTracks (Detroit, Custom, Arlington, Glendale, Cleveland).</footer>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="report_data.js"></script>
+<script src="terrain_data.js"></script>
+<script>
+(function(){
+  const fmt=t=>Math.floor(t/60)+':'+(t%60).toFixed(1).padStart(4,'0');
+  const nOk=REPORT.checks.filter(c=>c.ok).length;
+  const chips=[['ok',`${nOk}/${REPORT.checks.length} contrôles OK`],['','SX 1 '+REPORT.laptime.SX1.length_ft.toFixed(0)+' ft'],['','SX 2 '+REPORT.laptime.SX2.length_ft.toFixed(0)+' ft'],['','SX 3 '+REPORT.laptime.SX3.length_ft.toFixed(0)+' ft'],['','22 grilles par départ'],['warn','non testé en jeu']];
+  document.getElementById('chips').innerHTML=chips.map(([c,t])=>`<span class="chip ${c}">${t}</span>`).join('');
+  document.getElementById('checks').innerHTML=REPORT.checks.map(c=>`<li class="${c.ok?'':'fail'}"><b>${c.ok?'OK':'ÉCHEC'}</b><span>${c.name}<small>${typeof c.detail==='string'?c.detail:JSON.stringify(c.detail)}</small></span></li>`).join('');
+  const L=REPORT.laptime, target={SX1:'1:00',SX2:'1:00',SX3:'plus longue'};
+  document.getElementById('lap').innerHTML=['SX1','SX2','SX3'].map(k=>`<div><div class="k">${k.replace('SX','SX ')} · cible ${target[k]}</div><div class="t">${fmt(L[k].est_lap_s)}</div><small>fourchette ${fmt(L[k].est_range_s[0])} – ${fmt(L[k].est_range_s[1])} · ${L[k].length_m.toFixed(0)} m · moyenne ${L[k].avg_kmh.toFixed(0)} km/h</small></div>`).join('');
+  const esc=s=>String(s).replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
+  const nice=u=>u.startsWith('whoops')?'whoops':u.replace(/_g\d+_\d+$/,'');
+  document.querySelector('#combotable tbody').innerHTML=REPORT.combos.map(c=>`<tr><td><strong>${esc(c.name.split(' ')[0])}</strong><br>${esc(c.name.split(' ').slice(1).join(' '))}</td><td class="num">${c.length.toFixed(0)} ft</td><td class="mono">${c.items.map(i=>`${esc(nice(i.unit))} ${i.h.toFixed(1)}`).join(' → ')}</td></tr>`).join('');
+  const info=document.getElementById('vinfo');
+  if(typeof THREE==='undefined'){info.textContent='La bibliothèque 3D ne s\'est pas chargée. Les vues de dessus et profils ci-dessous restent valables.';return;}
+  const canvas=document.getElementById('gl');
+  let renderer;
+  try{renderer=new THREE.WebGLRenderer({canvas,antialias:true});}catch(e){info.textContent='WebGL indisponible sur cet appareil : la vue 3D ne peut pas s\'afficher. Les vues de dessus et profils ci-dessous montrent le même terrain.';return;}
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+  const scene=new THREE.Scene(); scene.background=new THREE.Color(0x1c1b19);
+  const camera=new THREE.PerspectiveCamera(45,1,1,20000);
+  const controls=new THREE.OrbitControls(camera,canvas); controls.enableDamping=true; controls.maxPolarAngle=Math.PI*0.495;
+  scene.add(new THREE.HemisphereLight(0xdfe8f2,0x3a3026,0.55));
+  const sun=new THREE.DirectionalLight(0xfff1dc,0.85); sun.position.set(0.5128,0.5,0.3164).multiplyScalar(1000); scene.add(sun);
+  const TILE=[[0.541,0.498,0.447],[0.431,0.231,0.122],[0.180,0.525,0.757],[0.557,0.267,0.678],[0.890,0.765,0.439],[0.788,0.604,0.235],[0.890,0.765,0.439],[0.788,0.604,0.235]];
+  function b64(s,T){const bin=atob(s),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return T===Uint16Array?new Uint16Array(u.buffer):u;}
+  const cache={}; let current=null, exag=1;
+  function build(key){
+    if(cache[key]) return cache[key];
+    const D=TERRAIN[key], w=D.w, h=D.h, H=b64(D.hb64,Uint16Array), Tl=b64(D.tb64,Uint8Array);
+    const pos=new Float32Array(w*h*3), col=new Float32Array(w*h*3), hv=new Float32Array(w*h);
+    for(let j=0;j<h;j++)for(let i=0;i<w;i++){const k=j*w+i, y=D.hmin+H[k]/65535*(D.hmax-D.hmin); hv[k]=y;
+      pos[3*k]=D.x0+i*D.step; pos[3*k+1]=y; pos[3*k+2]=D.z0+j*D.step; const c=TILE[Tl[k]]||TILE[0]; col[3*k]=c[0];col[3*k+1]=c[1];col[3*k+2]=c[2];}
+    const idx=new Uint32Array((w-1)*(h-1)*6); let n=0;
+    for(let j=0;j<h-1;j++)for(let i=0;i<w-1;i++){const a=j*w+i,b=a+1,c=a+w,d=c+1; idx[n++]=a;idx[n++]=c;idx[n++]=b;idx[n++]=b;idx[n++]=c;idx[n++]=d;}
+    const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.BufferAttribute(pos,3)); g.setAttribute('color',new THREE.BufferAttribute(col,3)); g.setIndex(new THREE.BufferAttribute(idx,1)); g.computeVertexNormals();
+    const mesh=new THREE.Mesh(g,new THREE.MeshLambertMaterial({vertexColors:true}));
+    const sample=(x,z)=>{const fi=(x-D.x0)/D.step, fj=(z-D.z0)/D.step, i=Math.max(0,Math.min(w-2,Math.floor(fi))), j=Math.max(0,Math.min(h-2,Math.floor(fj))), u=fi-i, v=fj-j;
+      return hv[j*w+i]*(1-u)*(1-v)+hv[j*w+i+1]*u*(1-v)+hv[(j+1)*w+i]*(1-u)*v+hv[(j+1)*w+i+1]*u*v;};
+    const P=D.path, lp=new Float32Array(P.length/2*3);
+    for(let k=0;k<P.length/2;k++){lp[3*k]=P[2*k];lp[3*k+1]=sample(P[2*k],P[2*k+1])+0.8;lp[3*k+2]=P[2*k+1];}
+    const lg=new THREE.BufferGeometry(); lg.setAttribute('position',new THREE.BufferAttribute(lp,3));
+    const line=new THREE.LineLoop(lg,new THREE.LineBasicMaterial({color:0xff2fa0}));
+    const gp=new Float32Array(D.gates.length*3); D.gates.forEach((q,k)=>{gp[3*k]=q[0];gp[3*k+1]=sample(q[0],q[1])+1.5;gp[3*k+2]=q[1];});
+    const gg=new THREE.BufferGeometry(); gg.setAttribute('position',new THREE.BufferAttribute(gp,3));
+    const gates=new THREE.Points(gg,new THREE.PointsMaterial({color:0xffe14d,size:2.6}));
+    const grp=new THREE.Group(); grp.add(mesh,line,gates);
+    const cx=D.x0+(w-1)*D.step/2, cz=D.z0+(h-1)*D.step/2, span=Math.max(w,h)*D.step;
+    return cache[key]={grp,line,cx,cz,span,D,ymid:(D.hmin+D.hmax)/2};
+  }
+  function show(key){
+    if(current) scene.remove(current.grp);
+    info.textContent='Construction du maillage…';
+    setTimeout(()=>{current=build(key); scene.add(current.grp); current.grp.scale.y=exag; current.line.visible=document.getElementById('showpath').checked;
+      controls.target.set(current.cx,current.ymid*exag,current.cz); camera.position.set(current.cx+current.span*0.15,current.span*0.55,current.cz+current.span*0.75); controls.update();
+      const D=current.D; info.textContent=`${key} · tour ${D.lap_ft} ft · zone ${((D.w-1)*D.step).toFixed(0)} × ${((D.h-1)*D.step).toFixed(0)} ft · altitude ${D.hmin.toFixed(1)} à ${D.hmax.toFixed(1)} ft · maille d'affichage ${D.step.toFixed(2)} ft`;
+      ['SX1','SX2','SX3'].forEach(k=>document.getElementById('b-'+k).setAttribute('aria-pressed',k===key?'true':'false'));},20);
+  }
+  ['SX1','SX2','SX3'].forEach(k=>document.getElementById('b-'+k).addEventListener('click',()=>show(k)));
+  document.getElementById('exag').addEventListener('input',e=>{exag=+e.target.value;document.getElementById('exv').textContent=exag+'×';if(current){current.grp.scale.y=exag;}});
+  document.getElementById('showpath').addEventListener('change',e=>{if(current)current.line.visible=e.target.checked;});
+  function resize(){const r=canvas.getBoundingClientRect();renderer.setSize(r.width,r.height,false);camera.aspect=r.width/Math.max(1,r.height);camera.updateProjectionMatrix();}
+  window.addEventListener('resize',resize); resize();
+  (function loop(){requestAnimationFrame(loop);controls.update();renderer.render(scene,camera);})();
+  show('SX1');
+})();
+</script>

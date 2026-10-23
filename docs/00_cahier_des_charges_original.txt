@@ -1,0 +1,470 @@
+PROJET COMPLET — CRÉATION D’UN COMPOUND MX SIMULATOR AVEC 1 MX + 2 SX
+
+TON RÔLE
+
+Agis comme un concepteur expérimenté de pistes de motocross et de supercross pour MX Simulator, un analyste de heightmaps et de géométrie 3D, et un développeur capable de produire des terrains compatibles avec le jeu.
+
+Tu dois travailler directement sur les fichiers, analyser les pistes de référence, mesurer leurs caractéristiques géométriques, construire les nouveaux terrains et vérifier les résultats.
+
+Je ne veux pas uniquement des conseils, des plans théoriques, des aperçus ou une maquette 3D indépendante. Je veux un véritable projet exploitable dans MX Simulator.
+
+La priorité absolue est la fidélité géométrique, la qualité des enchaînements et la jouabilité réelle.
+
+⸻
+
+1. OBJECTIF FINAL
+
+Crée un compound complet pour MX Simulator contenant exactement trois circuits :
+
+1. Un circuit motocross (MX).
+2. Un premier circuit supercross (SX #1).
+3. Un deuxième circuit supercross (SX #2).
+
+Les trois circuits doivent être nouveaux dans leur tracé général, mais utiliser les caractéristiques géométriques et les dimensions mesurées dans les pistes de référence fournies.
+
+Je veux retrouver la qualité de construction, les profils de sauts, les berms, les vagues, les whoops, les réceptions, les enchaînements et le relief observés sur les pistes de JGMX.
+
+Je ne veux pas simplement une piste qui ressemble visuellement à ses créations. Je veux que tu analyses comment les obstacles sont construits dans les fichiers, puis que tu réutilises leurs caractéristiques géométriques pour construire de nouveaux tracés.
+
+Important : les dimensions, les angles et les profils des obstacles doivent rester aussi fidèles que possible aux références. En revanche, l’agencement global, l’ordre des sections et le tracé des trois circuits doivent être différents.
+
+Le compound doit être cohérent, fonctionnel et réellement conçu pour être utilisé dans MX Simulator.
+
+⸻
+
+2. FICHIERS DE RÉFÉRENCE À ANALYSER
+
+Je fournis les archives suivantes :
+
+* JGSX2026TestTracks.rar
+* JGMXDesertSand.rar
+* JGMXDrDew.rar
+
+Commence par localiser et inspecter ces archives dans les fichiers joints à cette conversation.
+
+Si une archive n’est pas accessible, signale précisément laquelle et demande-moi de la joindre à nouveau. Ne fais pas semblant de l’avoir analysée.
+
+Extrais toutes les archives et établis un inventaire de leurs contenus.
+
+Identifie les différentes pistes présentes dans chaque archive, en distinguant les références motocross et supercross.
+
+Inspecte tous les fichiers exploitables, notamment :
+
+* Les heightmaps et fichiers de terrain.
+* Les images de relief.
+* Les fichiers de configuration.
+* Les fichiers de données géométriques.
+* Les textures et les tilemaps.
+* Les fichiers de checkpoints et de timing gates.
+* Les autres fichiers nécessaires au chargement ou à l’organisation des pistes.
+
+Ne pars pas du principe que tous les fichiers utilisent le même format ou les mêmes unités.
+
+Pour chaque format, vérifie sa structure et détermine comment les données correspondent aux dimensions physiques du terrain.
+
+Si un fichier est inconnu, cherche à comprendre sa structure avant de l’ignorer. Si son contenu ne peut pas être décodé de manière fiable, indique-le clairement.
+
+⸻
+
+3. ANALYSE GÉOMÉTRIQUE DES PISTES
+
+Avant de construire quoi que ce soit, réalise une analyse technique des pistes de référence.
+
+3.1 Dimensions générales
+
+Mesure, lorsque les fichiers le permettent :
+
+* La longueur et la largeur du terrain.
+* L’échelle réelle des heightmaps.
+* La largeur des pistes.
+* Les variations de largeur.
+* Les dimensions des zones de saut.
+* Les distances entre les obstacles.
+* Les changements d’altitude.
+* Les pentes longitudinales et transversales.
+
+Vérifie les unités et les conversions utilisées. Ne confonds pas les pixels d’une heightmap avec des mètres dans le jeu.
+
+3.2 Géométrie des sauts
+
+Pour chaque type de saut important, analyse :
+
+* La longueur de la face de saut.
+* La hauteur de la rampe.
+* L’angle de décollage.
+* La courbure de la face.
+* La transition entre le sol plat et la rampe.
+* La forme du sommet.
+* La longueur et la pente de la réception.
+* La distance horizontale entre l’appel et la zone d’atterrissage.
+* La largeur de l’obstacle.
+* Les transitions entre l’obstacle et le relief environnant.
+
+Ne mesure pas uniquement la hauteur et l’angle maximal. Deux sauts peuvent présenter le même angle au sommet tout en ayant des courbures et des comportements très différents.
+
+Analyse le profil complet de chaque obstacle.
+
+3.3 Berms et virages
+
+Mesure et compare :
+
+* Les rayons des virages.
+* La hauteur des berms.
+* La pente des parois.
+* La largeur de la trajectoire praticable.
+* La profondeur du virage.
+* Les transitions d’entrée et de sortie.
+* Le raccordement entre le fond du virage et le berm.
+* La manière dont le relief environnant est construit.
+
+Ne suppose pas que tous les virages de référence utilisent la même méthode de construction. Identifie les différentes familles de virages réellement présentes.
+
+3.4 Obstacles MX
+
+Analyse particulièrement :
+
+* Les doubles.
+* Les triples.
+* Les tables.
+* Les gros sauts.
+* Les step-ups et step-downs, lorsqu’ils sont présents.
+* Les vagues.
+* Les rollers.
+* Les enchaînements de sauts.
+* Les réceptions sur terrain en pente.
+* Les sections sableuses.
+* Les changements de relief.
+* Les combinaisons de virages et de sauts.
+
+3.5 Obstacles SX
+
+Analyse particulièrement :
+
+* Les triples et les doubles.
+* Les tables.
+* Les whoops.
+* Les sections rythmiques.
+* Les berms serrés.
+* Les virages en épingle.
+* Les sauts après les virages.
+* Les transitions entre whoops et autres obstacles.
+* Les distances d’appel et de réception.
+* Les différentes lignes possibles.
+* Les largeurs des couloirs et des trajectoires.
+
+Ne mélange pas les dimensions MX et SX. Les deux disciplines ont des contraintes de conception différentes.
+
+3.6 Tableau comparatif obligatoire
+
+Établis un catalogue technique des obstacles mesurés avec les colonnes suivantes :
+
+Champ	Contenu
+Référence	Piste et fichier d’origine
+Type	Triple, double, berm, whoops, etc.
+Largeur	Valeur mesurée
+Longueur	Valeur mesurée
+Hauteur	Valeur mesurée
+Angle	Valeur calculée ou mesurée
+Profil	Courbure et transitions
+Réception	Longueur, pente et géométrie
+Confiance	Mesure directe, calcul ou estimation
+
+N’invente aucune valeur manquante.
+
+Si la géométrie peut être mesurée à partir de la heightmap, calcule-la. Si les fichiers ne permettent pas de déterminer une caractéristique avec certitude, indique l’incertitude et utilise une méthode d’estimation documentée.
+
+⸻
+
+4. RÈGLE DE FIDÉLITÉ AUX RÉFÉRENCES
+
+Les pistes fournies sont les références techniques de ce projet.
+
+Je veux réutiliser les dimensions et les caractéristiques géométriques des obstacles correspondants, pas les remplacer par des formes génériques qui leur ressemblent vaguement.
+
+Lorsque tu réutilises un type d’obstacle, conserve autant que possible :
+
+* Ses dimensions physiques.
+* Sa largeur.
+* Sa hauteur.
+* Son angle de décollage.
+* Son profil de courbure.
+* Sa transition au niveau du sol.
+* La forme de sa réception.
+* Ses proportions générales.
+
+Si plusieurs variantes existent dans les fichiers, constitue une bibliothèque d’obstacles et utilise les variantes pertinentes.
+
+En revanche, ne copie pas le tracé complet des pistes de référence. Ne reproduis pas exactement l’ordre des obstacles, la disposition des virages ou l’organisation globale du circuit.
+
+Le but est de construire trois pistes originales à partir de caractéristiques géométriques de référence.
+
+Ne déforme pas un obstacle simplement pour le faire entrer dans le tracé. Adapte plutôt la disposition des sections autour de cet obstacle.
+
+⸻
+
+5. CIRCUIT 1 — MOTOCROSS (MX)
+
+Le circuit MX doit être une piste complète, technique, fluide et spectaculaire, avec une vraie logique de pilotage.
+
+5.1 Gros sauts
+
+Intègre plusieurs gros sauts permettant de travailler les whips, les turndowns et les scrubs.
+
+Je veux des rampes crédibles, des courbures progressives, des sommets cohérents et des réceptions suffisamment longues pour les trajectoires visées.
+
+Varie les types de sauts et leurs fonctions. Tous ne doivent pas être des tables géantes.
+
+Les obstacles doivent être construits à partir des dimensions et profils relevés dans les références MX.
+
+5.2 Enchaînements techniques
+
+Crée plusieurs combinaisons cohérentes de doubles, triples, rollers et vagues.
+
+Certaines sections doivent favoriser la vitesse et la fluidité. D’autres doivent demander davantage de précision, de timing et de gestion de l’accélération.
+
+Prévois des choix de trajectoire lorsqu’ils sont compatibles avec la géométrie.
+
+Les obstacles doivent être liés entre eux : la sortie d’un virage doit préparer le saut suivant, et la réception d’un saut doit permettre une transition cohérente vers la suite.
+
+5.3 Berms et virages
+
+Construis des virages serrés, des épingles et des courbes rapides en utilisant les profils de référence.
+
+Les berms doivent présenter une entrée progressive, un rayon adapté et une sortie raccordée à la section suivante.
+
+Évite les murs verticaux, les angles cassés, les parois artificielles et les formes de demi-cylindres mal raccordées au terrain.
+
+5.4 Vagues et rollers
+
+Crée plusieurs sections de vagues avec des bosses arrondies, des espacements cohérents et des transitions continues.
+
+Varie les combinaisons tout en conservant les dimensions des variantes correspondantes observées dans les références.
+
+5.5 Section sableuse
+
+Intègre une véritable section sableuse, inspirée de l’analyse de JGMXDesertSand.rar.
+
+Analyse d’abord comment la zone sableuse est construite dans les fichiers.
+
+Je veux un secteur qui modifie le rythme du pilotage grâce à sa géométrie : relief irrégulier, vagues, ornières et trajectoires nécessitant de conserver de l’élan.
+
+Ne te contente pas d’appliquer une texture de sable à un terrain plat.
+
+Si le moteur ne simule pas de différence physique liée au matériau, indique clairement ce qui relève de la géométrie, des textures et du comportement physique réellement disponible.
+
+5.6 Dénivelé
+
+Le circuit doit exploiter les variations de hauteur et les collines.
+
+Intègre des montées, des descentes, des talus et des changements de niveau qui ont une véritable fonction dans le pilotage.
+
+Le terrain doit être conçu comme une surface cohérente, et non comme un sol plat sur lequel sont ajoutés des obstacles indépendants.
+
+⸻
+
+6. CIRCUIT 2 — SUPERCROSS SX #1
+
+Crée un premier circuit supercross à partir des caractéristiques géométriques mesurées dans les références SX.
+
+Je veux une piste exigeante et cohérente, avec des sections rythmiques, des whoops, des doubles, des triples, des tables, des berms serrés et des sauts après les virages.
+
+Les obstacles doivent conserver leurs dimensions et leurs profils de référence autant que possible.
+
+Ne choisis pas les distances entre les obstacles arbitrairement. Conçois les enchaînements à partir des dimensions des obstacles et de la logique de vitesse de MX Simulator.
+
+Vérifie notamment :
+
+* Les transitions entre les whoops et les autres obstacles.
+* Les distances entre les appels et les réceptions.
+* Les possibilités de doubles ou de triples selon les trajectoires prévues.
+* Les vitesses d’entrée et de sortie des virages.
+* Les largeurs de piste et les lignes praticables.
+* Les raccordements entre les berms et les sauts.
+
+Le résultat doit être un véritable SX, et non un circuit MX avec des sauts rapprochés.
+
+⸻
+
+7. CIRCUIT 3 — SUPERCROSS SX #2
+
+Crée un deuxième circuit supercross dont le tracé soit clairement différent du premier.
+
+Utilise les mêmes standards de qualité et les dimensions des obstacles présents dans les références SX, mais change :
+
+* L’ordre des sections.
+* Les directions des virages.
+* Les enchaînements rythmiques.
+* La disposition des whoops.
+* Les trajectoires et les choix de lignes.
+* L’organisation générale du tracé.
+
+Ne duplique pas le premier SX en modifiant seulement quelques virages.
+
+Les deux circuits doivent offrir des expériences de pilotage différentes tout en conservant une qualité de construction et des dimensions comparables.
+
+Si les références contiennent plusieurs variantes d’un même type d’obstacle, utilise-les pour différencier les deux SX sans inventer de géométries arbitraires.
+
+⸻
+
+8. CONSTRUCTION DU COMPOUND
+
+Réunis les trois circuits dans un compound cohérent, sous réserve des contraintes réelles du format de MX Simulator.
+
+Vérifie la taille totale nécessaire, les dimensions des terrains, les limites de résolution et les éventuelles contraintes du moteur.
+
+Les pistes doivent être clairement distinctes, sans superposition de surfaces ni intersections involontaires.
+
+Évite de placer les circuits si près les uns des autres que leurs berms, leurs sauts ou leurs reliefs interfèrent.
+
+Le compound doit disposer de tous les fichiers nécessaires à son fonctionnement : terrains, configurations, textures, checkpoints, timing gates et autres ressources requises par la structure du jeu.
+
+Si MX Simulator impose une structure particulière pour les terrains ou les ressources partagées, respecte cette structure plutôt que d’inventer un format de compound.
+
+⸻
+
+9. GÉOMÉTRIE ET QUALITÉ DU TERRAIN
+
+La géométrie doit être continue et roulable.
+
+Contrôle systématiquement :
+
+* Les ruptures de hauteur involontaires.
+* Les pics et les trous.
+* Les transitions entre les surfaces plates et les rampes.
+* Les courbures des faces de saut.
+* Les raccordements des réceptions.
+* Les profils transversaux des berms.
+* Les intersections entre les pistes et le terrain environnant.
+* Les zones où plusieurs obstacles sont proches.
+* La continuité des lignes de pilotage.
+
+N’utilise pas un lissage global excessif pour masquer les défauts. Cela risque de déformer les obstacles et de faire perdre la fidélité géométrique recherchée.
+
+Corrige les défauts localement tout en conservant les dimensions et les profils des obstacles.
+
+Les trois circuits doivent être construits à partir des terrains qui seront réellement exportés. Les visualisations doivent représenter ces mêmes terrains, pas une maquette différente.
+
+⸻
+
+10. MÉTHODE DE TRAVAIL OBLIGATOIRE
+
+Travaille par étapes et vérifie chaque résultat.
+
+Phase A — Analyse
+
+1. Extraire les archives.
+2. Inventorier les fichiers.
+3. Identifier les pistes MX et SX.
+4. Vérifier les formats, les unités et les dimensions.
+5. Mesurer les obstacles.
+6. Constituer le catalogue géométrique.
+7. Comparer les différentes variantes de construction.
+
+Phase B — Conception
+
+8. Définir l’organisation du compound.
+9. Dessiner les trois tracés en vue de dessus.
+10. Définir le sens de circulation.
+11. Placer les obstacles à partir des dimensions mesurées.
+12. Vérifier la logique des enchaînements et des trajectoires.
+
+Phase C — Construction
+
+13. Construire les trois terrains.
+14. Créer les berms et les virages.
+15. Construire les sauts et leurs réceptions.
+16. Construire les sections rythmiques.
+17. Créer la section sableuse du MX.
+18. Intégrer le dénivelé.
+19. Générer les fichiers complémentaires nécessaires.
+
+Phase D — Vérification
+
+20. Produire les vues de dessus.
+21. Examiner les profils longitudinaux et transversaux.
+22. Inspecter les zones techniques en 3D.
+23. Vérifier la cohérence des dimensions.
+24. Contrôler les fichiers finaux.
+25. Corriger les défauts.
+26. Tester le chargement dans MX Simulator si possible.
+
+Ne passe pas directement de l’extraction des fichiers à la génération finale. Chaque phase doit produire des résultats vérifiables.
+
+⸻
+
+11. OUTILS ET AUTOMATISATION
+
+Tu peux utiliser des scripts pour :
+
+* Extraire les archives.
+* Décoder les formats de terrain.
+* Mesurer les profils.
+* Calculer les pentes et les courbures.
+* Générer ou modifier les heightmaps.
+* Produire des profils de contrôle.
+* Générer les fichiers nécessaires.
+* Construire une visionneuse 3D.
+* Vérifier automatiquement les dimensions et les défauts.
+
+Avant de modifier un fichier d’origine, conserve une copie de référence.
+
+Utilise des scripts reproductibles plutôt que des modifications manuelles difficiles à contrôler.
+
+Si un format est propriétaire ou difficile à décoder, commence par comprendre sa structure et valide tes hypothèses sur les données existantes.
+
+Ne considère jamais qu’un fichier fonctionne simplement parce qu’un script a terminé sans erreur.
+
+⸻
+
+12. LIVRABLES FINAUX
+
+Je veux recevoir :
+
+1. Le compound complet avec un MX et deux SX.
+2. Tous les fichiers nécessaires au fonctionnement dans MX Simulator.
+3. Une structure de dossiers claire et directement exploitable.
+4. Les vues de dessus des trois circuits.
+5. Des vues de profil des sections techniques.
+6. Une visionneuse 3D fidèle aux terrains exportés, si réalisable.
+7. Le catalogue des obstacles et des dimensions mesurées.
+8. Un rapport de validation indiquant les contrôles réussis et les éventuels problèmes.
+9. Des instructions d’installation précises.
+10. Les fichiers source ou les scripts de génération nécessaires pour pouvoir modifier et reconstruire les terrains.
+
+Fournis les fichiers réels, pas uniquement des extraits de code ou des instructions expliquant comment je pourrais les créer moi-même.
+
+⸻
+
+13. RÈGLES DE VALIDATION
+
+Ne déclare pas le projet terminé uniquement parce que les heightmaps et les aperçus ont été générés.
+
+Distingue explicitement :
+
+* Les éléments mesurés directement dans les fichiers.
+* Les éléments calculés à partir de la géométrie.
+* Les estimations.
+* Les éléments effectivement testés dans MX Simulator.
+* Les éléments qui n’ont pas pu être testés.
+
+Si tu ne peux pas lancer MX Simulator, indique-le. Une visionneuse 3D ne prouve pas que les pistes sont agréables à rouler.
+
+Ne masque pas les problèmes et ne prétends pas que les trois circuits sont fonctionnels si tu n’as pas vérifié leur compatibilité avec le jeu.
+
+⸻
+
+14. INSTRUCTIONS FINALES
+
+Commence par analyser les trois archives de référence.
+
+Ne construis aucun terrain avant d’avoir identifié les fichiers disponibles, vérifié leurs formats et extrait autant de mesures fiables que possible.
+
+Ensuite, conçois les trois tracés, puis construis et contrôle les terrains.
+
+Ne t’arrête pas à un plan théorique. Travaille directement sur les fichiers et livre les résultats concrets.
+
+Si une information indispensable manque, demande-la précisément. Sinon, poursuis le travail de façon autonome.
+
+Résultat final attendu : un compound MX Simulator avec un circuit motocross et deux circuits supercross entièrement construits, trois tracés distincts, des obstacles dont les dimensions et les profils reprennent fidèlement les références fournies, une géométrie propre et une jouabilité vérifiée autant que possible.
+
+La fidélité des mesures, la qualité des enchaînements et le fonctionnement réel dans le jeu passent avant l’apparence des aperçus 3D.

@@ -1,0 +1,71 @@
+ref;ligne;unites;ecarts_ft
+Arlington;g1;· → Arlington_g1_1 → Arlington_g1_2 → Arlington_g1_3 → Arlington_g1_4 → Arlington_g1_5;8.3 / 3.8 / 3.3 / 1.9 / 3.7
+Arlington;g2;Arlington_g2_0 → ·;22.3
+Arlington;g6;· → · → Arlington_g6_2;11.3 / 20.3
+Arlington;g20;· → Arlington_g20_1 → Arlington_g20_2 → Arlington_g20_3 → Arlington_g1_1 → ·;16.8 / 5.0 / 39.3 / 10.2 / 3.7
+Arlington;g24;· → Arlington_g24_1;40.4
+Arlington;g28;· → Arlington_g28_1 → Arlington_g28_2;4.4 / 16.9
+Arlington;g29;· → Arlington_g29_1 → Arlington_g29_2;44.0 / 1.5
+Arlington;g30;· → Arlington_g30_1 → Arlington_g30_2;24.0 / 26.3
+Arlington;g33;· → ·;35.2
+Arlington;g37;Arlington_g37_0 → Arlington_g37_1 → Arlington_g37_2 → Arlington_g1_3 → Arlington_g37_4 → ·;9.0 / 5.0 / 4.2 / 3.4 / 3.4
+Arlington;g43;· → Arlington_g43_1 → Arlington_g43_2 → ·;4.2 / 11.8 / 16.5
+Arlington;g45;· → · → Arlington_g45_2;4.2 / 11.5
+Arlington;g49;· → Arlington_g37_1 → Arlington_g49_2 → Arlington_g49_3 → ·;28.1 / 5.6 / 1.7 / 28.2
+Custom1;g23;· → Custom1_g23_1;23.5
+Custom1;g28;Arlington_g6_2;
+Custom1;g29;· → Custom1_g29_1 → Custom1_g29_2 → Custom1_g29_3 → Arlington_g29_2 → ·;3.0 / 25.8 / 0.5 / 1.6 / 29.1
+Custom1;g30;· → Custom1_g30_1 → Custom1_g30_2 → Arlington_g30_2 → ·;9.2 / 31.9 / 21.9 / 55.0
+Custom1;g34;· → Custom1_g34_1;36.5
+Custom1;g54;Custom1_g54_0;
+Custom1;g59;· → Custom1_g59_1 → ·;35.1 / 12.5
+Custom1;g62;· → · → Custom1_g62_2;16.3 / 23.0
+Custom1;g71;· → Custom1_g71_1 → Custom1_g71_2 → Custom1_g71_3 → Custom1_g71_3 → Custom1_g71_5 → Custom1_g71_6;3.8 / 2.2 / 8.1 / 6.8 / 4.8 / 9.3
+Custom;g0;Custom_g0_0;
+Custom;g6;· → Custom_g6_1;54.9
+Custom;g23;· → Custom_g6_1;27.4
+Custom;g24;· → Custom_g24_1;37.0
+Custom;g28;· → ·;21.3
+Custom;g29;· → Custom_g29_1 → Arlington_g29_2 → ·;50.1 / 1.6 / 33.9
+Custom;g30;· → Custom1_g30_2 → Arlington_g30_2 → Custom_g30_3;15.4 / 21.9 / 17.7
+Custom;g32;· → Custom_g32_1 → Custom_g32_2 → Custom_g32_2 → Custom_g32_2 → Custom_g32_2 → Custom_g32_2 → Custom_g32_2 → Custom_g32_2 → Custom_g32_9 → Custom_g32_2 → Custom_g32_9 → Custom_g32_9 → ·;20.3 / 1.2 / 1.2 / 1.2 / 1.2 / 1.1 / 1.3 / 1.2 / 1.9 / 1.1 / 1.5 / 0.6 / 24.7
+Custom;g41;Custom_g41_0 → ·;10.4
+Custom;g42;· → Custom1_g59_1 → ·;58.9 / 4.2
+Custom;g47;· → Custom_g47_1;57.3
+Custom;g49;Custom_g49_0 → Custom_g49_1;26.6
+Custom;g50;· → Custom_g50_1;43.1
+Custom;g55;· → Custom_g55_1 → Custom_g55_2 → Custom_g55_3 → ·;16.3 / 3.8 / 2.1 / 9.0
+Detroit;g0;· → · → Detroit_g0_2;12.4 / 31.9
+Detroit;g6;· → · → Custom_g6_1;14.9 / 25.1
+Detroit;g11;· → Arlington_g43_2 → Detroit_g11_2 → ·;3.9 / 4.5 / 24.4
+Detroit;g12;Detroit_g12_0;
+Detroit;g13;· → ·;1.1
+Detroit;g14;·;
+Detroit;g15;· → ·;1.7
+Detroit;g16;· → ·;2.0
+Detroit;g17;·;
+Detroit;g23;Custom_g6_1;
+Detroit;g24;· → · → Custom_g41_0;11.2 / 24.6
+Detroit;g27;· → Detroit_g27_1 → Arlington_g29_2 → ·;49.8 / 1.7 / 26.5
+Detroit;g28;Detroit_g28_0;
+Detroit;g29;· → Detroit_g29_1 → Arlington_g29_2 → Detroit_g29_3;12.9 / 1.6 / 14.8
+Detroit;g30;· → Custom1_g30_2 → Arlington_g30_2 → ·;46.2 / 26.6 / 12.9
+Detroit;g31;· → Detroit_g31_1;47.8
+Detroit;g32;· → Custom_g32_1 → Custom_g32_2 → Custom_g32_2 → Custom_g32_2 → Custom_g32_2 → Custom_g32_2 → Custom_g32_2 → Custom_g32_2 → Custom_g32_9 → Custom_g32_2;26.4 / 1.2 / 1.2 / 1.1 / 1.2 / 1.2 / 1.2 / 1.2 / 1.9 / 1.1
+Detroit;g34;Detroit_g34_0;
+Detroit;g35;Detroit_g35_0 → Arlington_g1_1 → Detroit_g35_2 → Arlington_g43_2;2.9 / 3.9 / 3.7
+Detroit;g36;· → Detroit_g36_1 → Custom1_g29_1 → Custom1_g71_5 → Detroit_g36_4 → Arlington_g43_1 → ·;9.7 / 5.8 / 5.2 / 5.3 / 6.8 / 2.8
+Glendale;g28;· → · → Glendale_g28_2;15.7 / 19.8
+Glendale;g30;Glendale_g30_0 → Custom1_g30_2 → Arlington_g30_2 → Glendale_g30_3;21.4 / 22.2 / 12.1
+Glendale;g36;· → Glendale_g36_1 → Custom1_g29_1 → Custom1_g71_5 → Detroit_g36_4 → Arlington_g43_1 → Arlington_g37_1;18.6 / 5.8 / 5.2 / 5.3 / 6.8 / 13.1
+Glendale;g40;· → · → Glendale_g40_2 → Glendale_g40_3 → · → · → · → ·;8.3 / 11.1 / 5.2 / 62.9 / 10.1 / 8.6 / 30.7
+Glendale;g47;· → Glendale_g47_1;14.4
+Glendale;g63;· → · → · → Glendale_g63_3 → ·;12.8 / 12.0 / 7.0 / 17.3
+Glendale;g65;· → Glendale_g65_1 → Glendale_g65_2 → Glendale_g65_3;2.6 / 12.2 / 5.5
+Glendale;g66;· → Glendale_g66_1 → Glendale_g66_2 → ·;39.4 / 14.3 / 8.6
+Glendale;g79;· → ·;8.6
+Glendale;g80;· → Glendale_g80_1 → · → ·;15.0 / 5.8 / 6.3
+Glendale;g83;· → Glendale_g83_1 → Glendale_g83_2 → Custom_g32_1 → Custom_g32_2 → ·;49.1 / 40.5 / 6.5 / 1.1 / 1.2
+Glendale;g84;Arlington_g43_1 → Arlington_g37_1 → Glendale_g84_2 → Detroit_g11_2 → Glendale_g84_4 → ·;13.1 / 7.2 / 5.4 / 40.9 / 36.1
+Glendale;g85;· → · → Custom_g41_0;25.7 / 24.6
+Glendale;g86;Glendale_g86_0 → Glendale_g86_1;4.1

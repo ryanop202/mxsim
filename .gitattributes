@@ -1,0 +1,10 @@
+* text=auto
+*.sh text eol=lf
+*.py text eol=lf
+# MX Simulator files must stay byte-exact
+tracks/** -text
+*.png binary
+*.ppm binary
+*.npy binary
+*.jpg binary
+tracks/**/tilemap binary

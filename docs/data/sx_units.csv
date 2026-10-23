@@ -1,0 +1,91 @@
+uid;ref;ligne_edinfo;type;longueur_ft;hauteur_ft;nb_cretes;cretes_ft;debut_sur_ligne_ft;axe;sens
+Custom1_g71_6;JGSX2026Custom1;71;B;35.0;4.5;1;4.5;218.0;gradient line (no isolated block to verify);gradient
+Glendale_g28_2;JGSX2026Glendale;28;B;28.4;4.7;1;4.7;61.8;gradient line (no isolated block to verify);gradient
+Detroit_g29_3;JGSX2026Detroit;29;B;37.6;4.71;1;4.71;215.2;lane axis from 3 block(s), offset +13.8 ft;gradient
+Custom_g30_3;JGSX2026Custom;30;B;34.6;4.88;1;4.88;218.2;gradient line (no isolated block to verify);lap
+Glendale_g80_1;JGSX2026Glendale;80;B;41.3;5.0;1;5.0;61.5;gradient line (no isolated block to verify);gradient
+Detroit_g0_2;JGSX2026Detroit;0;B;29.8;5.75;1;5.75;61.2;gradient line (no isolated block to verify);gradient
+Glendale_g30_0;JGSX2026Glendale;30;B;51.0;5.77;1;5.77;0.8;gradient line (no isolated block to verify);gradient
+Arlington_g28_2;JGSX2026Arlington;28;B;31.0;5.78;1;5.78;61.0;gradient line (no isolated block to verify);gradient
+Arlington_g1_2;JGSX2026Arlington;1;B;47.7;5.79;1;5.79;72.6;gradient line (no isolated block to verify);lap
+Arlington_g37_2;JGSX2026Arlington;37;B;46.6;5.9;1;5.9;73.2;lane axis from 2 block(s), offset +13.8 ft;lap
+Custom_g0_0;JGSX2026Custom;0;B;60.0;5.95;1;5.95;61.0;gradient line (no isolated block to verify);gradient
+Custom1_g29_3;JGSX2026Custom1;29;B;48.0;6.0;1;6.0;100.6;lane axis from 1 block(s), offset -14.1 ft;lap
+Custom_g6_1;JGSX2026Custom;6;B;30.6;6.05;1;6.05;61.0;gradient line (no isolated block to verify);gradient
+Arlington_g6_2;JGSX2026Arlington;6;B;28.8;6.11;1;6.11;61.2;gradient line (no isolated block to verify);gradient
+Arlington_g49_2;JGSX2026Arlington;49;B;55.0;6.18;1;6.18;146.4;gradient line (no isolated block to verify);lap
+Custom1_g71_1;JGSX2026Custom1;71;B;59.1;6.24;1;6.24;7.8;gradient line (no isolated block to verify);gradient
+Custom1_g59_1;JGSX2026Custom1;59;B;30.3;6.35;1;6.35;60.9;gradient line (no isolated block to verify);gradient
+Custom_g32_9;JGSX2026Custom;32;S;19.5;2.78;1;2.78;211.3;lane axis from 12 block(s), offset +7.9 ft;lap
+Custom1_g34_1;JGSX2026Custom1;34;S;26.5;2.91;1;2.91;62.2;gradient line (no isolated block to verify);gradient
+Arlington_g20_3;JGSX2026Arlington;20;S;37.3;2.99;1;2.99;184.5;lane axis from 1 block(s), offset -12.9 ft;lap
+Custom_g32_2;JGSX2026Custom;32;S;20.3;2.99;1;2.99;70.5;lane axis from 12 block(s), offset +7.9 ft;lap
+Detroit_g36_1;JGSX2026Detroit;36;S;29.7;2.99;1;2.99;42.0;lane axis from 4 block(s), offset +0.3 ft;lap
+Custom_g50_1;JGSX2026Custom;50;S;26.6;3.05;1;3.05;62.7;gradient line (no isolated block to verify);gradient
+Arlington_g20_2;JGSX2026Arlington;20;S;32.7;3.05;1;3.05;113.6;lane axis from 1 block(s), offset -12.9 ft;lap
+Arlington_g24_1;JGSX2026Arlington;24;S;27.9;3.13;1;3.13;60.7;gradient line (no isolated block to verify);gradient
+Arlington_g2_0;JGSX2026Arlington;2;S;33.2;3.15;1;3.15;51.6;gradient line (no isolated block to verify);gradient
+Arlington_g45_2;JGSX2026Arlington;45;S;26.6;3.17;1;3.17;61.6;gradient line (no isolated block to verify);gradient
+Glendale_g36_1;JGSX2026Glendale;36;S;29.7;3.19;1;3.19;42.0;gradient line (no isolated block to verify);lap
+Arlington_g37_0;JGSX2026Arlington;37;S;27.4;3.36;1;3.36;6.1;lane axis from 2 block(s), offset +13.8 ft;lap
+Arlington_g43_2;JGSX2026Arlington;43;S;28.9;3.36;1;3.36;54.3;lane axis from 1 block(s), offset -13.8 ft;gradient
+Glendale_g47_1;JGSX2026Glendale;47;S;26.4;3.38;1;3.38;62.5;gradient line (no isolated block to verify);gradient
+Glendale_g84_2;JGSX2026Glendale;84;S;30.9;3.45;1;3.45;76.2;gradient line (no isolated block to verify);lap
+Arlington_g49_3;JGSX2026Arlington;49;S;26.7;3.48;1;3.48;202.0;gradient line (no isolated block to verify);lap
+Custom_g41_0;JGSX2026Custom;41;S;26.8;3.5;1;3.5;61.8;gradient line (no isolated block to verify);gradient
+Custom1_g71_3;JGSX2026Custom1;71;S;30.3;3.52;1;3.52;105.3;gradient line (no isolated block to verify);gradient
+Detroit_g11_2;JGSX2026Detroit;11;S;33.1;3.55;1;3.55;105.5;gradient line (no isolated block to verify);lap
+Glendale_g84_4;JGSX2026Glendale;84;S;42.9;3.56;1;3.56;185.0;gradient line (no isolated block to verify);lap
+Custom_g55_2;JGSX2026Custom;55;S;29.9;3.6;1;3.6;166.7;lane axis from 1 block(s), offset +5.3 ft;lap
+Arlington_g43_1;JGSX2026Arlington;43;S;28.6;3.6;1;3.6;15.0;lane axis from 1 block(s), offset -13.8 ft;gradient
+Custom1_g62_2;JGSX2026Custom1;62;S;26.1;3.6;1;3.6;62.5;gradient line (no isolated block to verify);gradient
+Arlington_g1_4;JGSX2026Arlington;1;S;35.1;3.61;1;3.61;155.2;gradient line (no isolated block to verify);lap
+Custom1_g29_1;JGSX2026Custom1;29;S;32.2;3.63;1;3.63;5.0;lane axis from 1 block(s), offset -14.1 ft;lap
+Custom1_g71_2;JGSX2026Custom1;71;S;30.3;3.64;1;3.64;68.0;gradient line (no isolated block to verify);gradient
+Arlington_g37_1;JGSX2026Arlington;37;S;27.9;3.66;1;3.66;41.4;lane axis from 2 block(s), offset +13.8 ft;lap
+Detroit_g36_4;JGSX2026Detroit;36;S;36.5;3.67;1;3.67;151.2;lane axis from 4 block(s), offset +0.3 ft;lap
+Arlington_g1_1;JGSX2026Arlington;1;S;28.9;3.69;1;3.69;41.0;gradient line (no isolated block to verify);lap
+Custom_g24_1;JGSX2026Custom;24;S;27.4;3.78;1;3.78;61.3;gradient line (no isolated block to verify);gradient
+Arlington_g1_3;JGSX2026Arlington;1;S;31.9;3.81;1;3.81;122.5;gradient line (no isolated block to verify);lap
+Custom1_g71_5;JGSX2026Custom1;71;S;34.7;3.87;1;3.87;175.1;gradient line (no isolated block to verify);gradient
+Detroit_g12_0;JGSX2026Detroit;12;S;123.0;3.96;1;3.96;1.3;gradient line (no isolated block to verify);gradient
+Custom_g47_1;JGSX2026Custom;47;S;27.4;4.01;1;4.01;61.4;gradient line (no isolated block to verify);gradient
+Arlington_g37_4;JGSX2026Arlington;37;S;32.3;4.02;1;4.02;156.2;lane axis from 2 block(s), offset +13.8 ft;lap
+Glendale_g40_3;JGSX2026Glendale;40;S;47.1;4.07;1;4.07;72.9;gradient line (no isolated block to verify);lap
+Detroit_g34_0;JGSX2026Detroit;34;S;27.4;4.1;1;4.1;61.4;gradient line (no isolated block to verify);gradient
+Custom1_g23_1;JGSX2026Custom1;23;T;63.0;6.01;1;6.01;61.2;gradient line (no isolated block to verify);gradient
+Detroit_g31_1;JGSX2026Detroit;31;X;29.4;6.94;1;6.94;61.0;gradient line (no isolated block to verify);gradient
+Arlington_g29_2;JGSX2026Arlington;29;X;52.5;7.35;1;7.35;149.1;gradient line (no isolated block to verify);lap
+Glendale_g83_2;JGSX2026Glendale;83;X;57.0;7.94;1;7.94;141.1;gradient line (no isolated block to verify);lap
+Custom1_g30_2;JGSX2026Custom1;30;X;36.7;8.81;1;8.81;72.0;gradient line (no isolated block to verify);lap
+Arlington_g30_1;JGSX2026Arlington;30;X;38.4;8.83;1;8.83;66.0;gradient line (no isolated block to verify);gradient
+Arlington_g30_2;JGSX2026Arlington;30;X;72.0;11.22;1;11.22;129.6;gradient line (no isolated block to verify);gradient
+Arlington_g1_5;JGSX2026Arlington;1;combo;61.0;3.72;2;3.72 / 1.17;192.9;gradient line (no isolated block to verify);lap
+Custom_g49_0;JGSX2026Custom;49;combo;85.7;5.77;2;3.68 / 5.77;41.2;gradient line (no isolated block to verify);lap
+Detroit_g35_2;JGSX2026Detroit;35;combo;74.5;5.79;2;5.79 / 3.68;296.2;lane axis from 1 block(s), offset +2.6 ft;lap
+Custom_g55_3;JGSX2026Custom;55;combo;78.6;5.8;2;5.8 / 3.6;197.6;lane axis from 1 block(s), offset +5.3 ft;lap
+Detroit_g28_0;JGSX2026Detroit;28;combo;65.4;5.93;2;5.93 / 3.29;61.4;gradient line (no isolated block to verify);gradient
+Custom_g55_1;JGSX2026Custom;55;combo;120.1;5.98;3;2.81 / 5.98 / 5.96;43.9;lane axis from 1 block(s), offset +5.3 ft;lap
+Custom1_g54_0;JGSX2026Custom1;54;combo;67.4;5.98;2;5.98 / 3.12;61.0;gradient line (no isolated block to verify);gradient
+Detroit_g35_0;JGSX2026Detroit;35;combo;221.3;6.2;6;2.83 / 6.2 / 5.79 / 3.6 / 5.8 / 3.6;41.5;lane axis from 1 block(s), offset +2.6 ft;lap
+Glendale_g83_1;JGSX2026Glendale;83;combo;34.7;7.14;2;7.14 / 7.14;67.0;gradient line (no isolated block to verify);lap
+Custom1_g29_2;JGSX2026Custom1;29;combo;39.3;7.91;2;7.91 / 7.91;61.9;lane axis from 1 block(s), offset -14.1 ft;lap
+Arlington_g29_1;JGSX2026Arlington;29;combo;86.9;7.92;2;7.92 / 6.0;61.8;gradient line (no isolated block to verify);lap
+Custom_g29_1;JGSX2026Custom;29;combo;86.7;7.92;4;7.92 / 7.92 / 7.92 / 6.0;61.9;gradient line (no isolated block to verify);lap
+Detroit_g27_1;JGSX2026Detroit;27;combo;86.7;7.92;3;7.92 / 7.92 / 6.0;61.9;lane axis from 3 block(s), offset -13.9 ft;lap
+Detroit_g29_1;JGSX2026Detroit;29;combo;86.8;7.92;6;7.92 / 7.92 / 7.92 / 7.92 / 7.92 / 6.0;61.8;lane axis from 3 block(s), offset +13.8 ft;gradient
+Arlington_g20_1;JGSX2026Arlington;20;combo;67.9;9.01;4;5.26 / 9.01 / 9.01 / 9.01;41.8;lane axis from 1 block(s), offset -12.9 ft;lap
+Arlington_g28_1;JGSX2026Arlington;28;low;29.8;0.8;1;0.8;15.4;gradient line (no isolated block to verify);gradient
+Glendale_g86_1;JGSX2026Glendale;86;low;25.7;0.83;1;0.83;43.7;gradient line (no isolated block to verify);gradient
+Glendale_g63_3;JGSX2026Glendale;63;low;20.5;1.04;1;1.04;100.5;lane axis from 2 block(s), offset -5.5 ft;lap
+Glendale_g66_1;JGSX2026Glendale;66;low;27.5;1.2;1;1.2;46.8;gradient line (no isolated block to verify);lap
+Glendale_g66_2;JGSX2026Glendale;66;low;31.6;1.21;1;1.21;87.5;gradient line (no isolated block to verify);lap
+Glendale_g86_0;JGSX2026Glendale;86;low;35.9;1.21;1;1.21;4.8;gradient line (no isolated block to verify);gradient
+Glendale_g30_3;JGSX2026Glendale;30;low;33.9;1.25;1;1.25;212.6;gradient line (no isolated block to verify);gradient
+Glendale_g65_3;JGSX2026Glendale;65;low;29.3;1.27;1;1.27;74.1;gradient line (no isolated block to verify);gradient
+Custom_g49_1;JGSX2026Custom;49;low;24.4;1.56;1;1.56;152.4;gradient line (no isolated block to verify);lap
+Glendale_g65_2;JGSX2026Glendale;65;low;26.3;1.62;1;1.62;43.4;gradient line (no isolated block to verify);gradient
+Custom_g32_1;JGSX2026Custom;32;low;23.5;1.88;1;1.88;46.9;lane axis from 12 block(s), offset +7.9 ft;lap
+Custom1_g30_1;JGSX2026Custom1;30;low;26.9;1.88;1;1.88;14.3;gradient line (no isolated block to verify);lap
+Glendale_g65_1;JGSX2026Glendale;65;low;19.1;2.18;1;2.18;13.2;gradient line (no isolated block to verify);gradient
+Glendale_g40_2;JGSX2026Glendale;40;low;27.7;2.47;1;2.47;41.1;gradient line (no isolated block to verify);lap
