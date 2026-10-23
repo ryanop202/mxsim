@@ -13,8 +13,8 @@ Base de travail pour faire des pistes **MX Simulator** à partir de mesures rée
 ## Démarrage rapide (nouveau PC)
 
 ```bash
-git clone https://github.com/ryanop202/mxsimtrack.git
-cd mxsimtrack
+git clone https://github.com/ryanop202/mxsim.git
+cd mxsim
 ```
 
 **Juste jouer** : copier `tracks/RyanCompoundSX1`, `RyanCompoundSX2`, `RyanCompoundSX3` dans le dossier des pistes de MX Simulator
