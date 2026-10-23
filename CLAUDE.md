@@ -38,13 +38,14 @@ Tu reprends un projet commencé dans une autre conversation. Lis dans cet ordre 
 | Whoops | **jamais de bosse plus grosse juste après les whoops** (« arrête de faire ces bosses à la fin des whoops ») |
 | Lignes droites | pas de longue ligne droite vide (surtout avant un virage) : remplir avec un petit enchaînement (on-off…) |
 | Enchaînements | varier les hauteurs, pas deux fois le même enchaînement sur deux pistes ; pas d'élan trop long avant un enchaînement (on arrive trop vite) |
-| « Pains de sucre » | **refusés dans les enchaînements** : bosses courtes et pointues (≥ 4,5 ft sur ≤ 35 ft). Gros singles = unités longues (≥ 46 ft). Exception voulue : un pain de sucre pour **forcer à ralentir** (SX3 arrivée) |
+| « Pains de sucre » | **refusés dans les enchaînements** : bosses pointues = hauteur / largeur à mi-hauteur > 0,31 (contrôle auto dans `validate_sx.py`), y compris les petits singles courts (~26 ft). Gros singles OK = Arlington g37_2, g1_2, Cleveland g29_3, Glendale g30_0. Exception voulue : un pain de sucre pour **forcer à ralentir** (SX3 arrivée) |
+| « Réaliste » | prendre un couloir JGSX entier avec ses écarts d'origine plutôt qu'un assemblage inventé |
 | « Ça fait 4 d'entrée » | trop d'élan / bosses trop serrées à l'entrée d'un enchaînement → coller au virage, écarter, ou 1re bosse petite |
 
-## État actuel (v7)
+## État actuel (v8)
 
-- 3 pistes SX dans `tracks/`, 39/39 contrôles, chaîne complète reproductible (`./make_all.sh`).
-- v3 à v6 testées en jeu par Ryan → v7 = ses corrections. **v7 pas encore testée en jeu.**
+- 3 pistes SX dans `tracks/`, 40/40 contrôles, chaîne complète reproductible (`./make_all.sh`).
+- v3 à v7 testées en jeu par Ryan → v8 = ses corrections. **v8 pas encore testée en jeu.**
 - Pistes d'amélioration notées dans `docs/10_suite_et_idees.md`.
 
 ## Pièges connus

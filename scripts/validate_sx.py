@@ -86,6 +86,14 @@ for k, path in paths.items():
 E = np.array([e[1] for e in errs])
 check('Profils exportés = profils mesurés JGSX', E.max() < 0.06, f'{len(errs)} couloirs, écart max {E.max():.3f} ft (interpolation sur la grille de 0.29 ft)')
 R['lane_errors'] = errs
+# Ryan: no 'pains de sucre' (short pointed bumps) in the rhythm lanes. Pointedness = height / width at half height;
+# normal JGSX singles 0.23-0.30, the ones Ryan rejected 0.37-0.51. Allowed on purpose: SX3 finish (to force braking).
+UJ = json.load(open(ROOT + '/lib/sx_units.json')); ALLOWED = {'Custom1_g59_1'}
+def pointed(uid):
+    u = UJ['units'][UJ['alias'].get(uid, uid)]; p = np.asarray(u['prof']); return u['kind'] in ('S', 'B') and p.max() / ((p > p.max() / 2).sum() * 0.1) > 0.31
+bad = sorted({(n[:3], i) for n, c in LS.COMBOS.items() for t in c['tokens'] for i in ([t] if isinstance(t, str) else (list(t[1:]) if t[0] == 'split' else []))
+              if pointed(i) and i not in ALLOWED})
+check('Pas de pains de sucre dans les enchaînements', not bad, bad or 'toutes les bosses ont un rapport hauteur / largeur à mi-hauteur ≤ 0,31 (sauf le pain de sucre voulu du SX3 avant le triple d’arrivée)')
 # berm entry lip: height jump between a floor pixel (<0.02 ft) and its neighbour (cut edge = 'rebord')
 def floorstep(Hh):
     a = Hh[:-1, :-1]; b = Hh[1:, :-1]; c = Hh[:-1, 1:]

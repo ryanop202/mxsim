@@ -150,6 +150,20 @@ Ce que ça a donné (v4, détail dans doc 05) :
   triple ; fin de E1 : +2 bosses, « bouge pas le virage ».
 - Leçon : « ça fait 4 d'entrée » = trop d'élan ou bosses trop serrées en entrée → écarter / coller au virage / mettre une petite bosse.
 
+## 10. Test de la v7 → v8
+
+- **SX1** : 1er enchaînement : « tu m'as mis des pains de sucre … mets des bosses normales, on a les grosses c'est bien » → les singles
+  courts (g45_2, g62_2, g47_1, ~26 ft de long) remplacés par des singles normaux ; après les whoops, « le pain de sucre recule-le pour
+  pas arriver trop vite dedans » → 30 ft de sol et single rond 4,1 ft ; la petite bosse de l'arrivée aussi en 1re bosse du couloir V ;
+  arrivée : **double ligne**, plus grosse à droite, pareil à gauche → « et c'est parfait ».
+- **SX2** : couloir de droite (E1) : la dernière bosse ajoutée = pain de sucre → single normal ; après le couloir de gauche + droite (W2) :
+  « ça va pas du tout, fais un enchaînement que tu retrouves dans les JGSX … pas un truc pas réaliste » → couloir Cleveland g29 copié tel
+  quel (écarts compris).
+- **SX3** : triple Detroit de U1 « rallonge-le un peu » → 8 ft entre ses deux blocs au lieu de 1,6.
+- **Définition mesurable du pain de sucre** : hauteur / largeur à mi-hauteur > 0,31 (singles JGSX normaux 0,23–0,30 ; ceux refusés
+  0,37–0,51). Contrôle automatique ajouté dans `validate_sx.py` (40 contrôles).
+- Leçon : quand Ryan dit « réaliste », prendre un **couloir JGSX entier** avec ses écarts, pas une combinaison inventée de blocs.
+
 ## Décisions techniques importantes (et pourquoi)
 
 | Décision | Pourquoi |

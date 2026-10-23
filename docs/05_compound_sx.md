@@ -1,4 +1,4 @@
-# 05 — Le compound SX (v7) : les 3 pistes, comment et pourquoi
+# 05 — Le compound SX (v8) : les 3 pistes, comment et pourquoi
 
 ## Vue d'ensemble
 
@@ -18,11 +18,11 @@ Sens anti-horaire sur l'image, couloirs est-ouest de 370 ft. Origine locale (−
 
 | Couloir | Contenu (unités mesurées) | Longueur |
 |---|---|---|
-| ligne d'arrivée | **petite bosse 2,5** (on ne peut plus rentrer en double) → gros single 5,8 → single 3,7 + 12 ft + **on-off Detroit** (g35_2 : 5,8 → 3,3) — v7 | 198 ft |
+| ligne d'arrivée | **double ligne** : petite bosse 2,5 à gauche / single 3,4 à droite → gros single 5,8 → single 3,7 + 12 ft + **on-off Detroit** (g35_2 : 5,8 → 3,3) — v8 | 198 ft |
 | T1 | gros berm 180° (`big_det_a`) — 1er virage | |
-| A | single → **gros 5,9** (2e) → single, entrée écartée (8,5 / 5 ft de sol) → 3 singles → **gros 6,0** (7e) → single → **gros 5,9** (dernière) ; gros singles longs comme sur SX3 — v7 | 351 ft |
+| A | single → **gros 5,9** (2e) → single, entrée écartée (8,5 / 5 ft de sol) → 3 singles → **gros 6,0** (7e) → single → **gros 5,9** (dernière) ; **singles normaux** Arlington/Cleveland (v7 avait des singles courts et pointus = pains de sucre) — v8 | 359 ft |
 | T2 | gros berm 180° (`big_cle`) | |
-| B | **12 whoops** (Test Track, entrée + 11) + 15 ft de sol + single **5,0 ft** (Glendale g80_1) — v4 : +10 ft plus loin, plus bas (avant : 5,9 ft) | 300 ft |
+| B | **12 whoops** (Test Track, entrée + 11) + **30 ft** de sol + single **rond 4,1 ft** (Glendale g40_3 ; le 5,0 ft g80_1 de la v4 était un pain de sucre) — v8 | 311 ft |
 | T3 | gros berm 180° | |
 | C | **triple sur table, off quad**, double : 2 singles → table 6,2 ft → 4 singles → 14 ft → 2 singles | 344 ft |
 | T4 | gros berm 180° | |
@@ -30,7 +30,7 @@ Sens anti-horaire sur l'image, couloirs est-ouest de 370 ft. Origine locale (−
 | T5 | gros berm 180° | |
 | E | **couloir on-off complet de Detroit** (g35_0 : 6,2/5,8 + singles) + triple | 341 ft |
 | T6 | petit berm 90° (`small_cus_a`) | |
-| V | quad (4 singles) | 141 ft |
+| V | **petite bosse 2,5** puis triple (comme l'entrée de la ligne d'arrivée) — v8 | 142 ft |
 | T7 | petit berm 90° (`small_arl`) — **ajouté en v3** (« je veux un appui » : c'était un virage plat à droite) | |
 
 Départ : grille de 22 centrée en (112, 360), cap est, ligne droite de 220 ft au sud de l'arrivée, entonnoir vers la jonction
@@ -46,7 +46,7 @@ Sens horaire, couloirs nord-sud. Origine locale (609, 30). Tour **2717 ft**, ~1:
 | F → T1 | ligne d'arrivée (cap nord) → **gros berm 90° à droite** (1er virage). v4 : le berm (fait pour 180°) est resserré angulairement ×1,44 pour ne plus dépasser sur la ligne d'arrivée = fin du « rebord » | |
 | haut | **gros triple** : 3 gros singles longs 5,9 / 6,0 / 5,8 (Arlington g37_2, Cleveland g29_3, Glendale g30_0) — v7 | 151 ft |
 | T2 | petit berm 90° | |
-| E1 | **bosse bosse table bosse table bosse** + 2 singles à la fin (virage non déplacé) — v4/v7 | 328 ft |
+| E1 | **bosse bosse table bosse table bosse** + 2 singles normaux à la fin (virage non déplacé ; v7 finissait sur un pain de sucre) — v8 | 330 ft |
 | T3 | gros berm 180° | |
 | E2 | **gros double** Glendale 7,1 → 7,9 (40,5 ft de sol) + **triple** qui finit au pied du virage — v4 | 254 ft |
 | T4 | gros berm 180° | |
@@ -56,7 +56,7 @@ Sens horaire, couloirs nord-sud. Origine locale (609, 30). Tour **2717 ft**, ~1:
 | T6 | petit berm 90° | |
 | W1 | **double ligne** sur la 1re bosse (gauche 3,0 ft / droite 1,9 ft : simple, double ou triple au choix) → **gros 5,9** / single → **table 6,2** → single / **gros 6,0** / single — v7 | 302 ft |
 | T7 | gros berm 180° | |
-| W2 | **technique** : single + step 5,8 (Test Track g49_0), kicker sur plateau 3,1 ft (Cleveland g54_0), on-off 5,8 → 3,5 (Test Track g55_3) — v7 | 242 ft |
+| W2 | **couloir JGSX Cleveland g29 complet, écarts d'origine** : single 3,6 → 25,8 ft → gros 7,9 → gros 6,0 → gros 7,4 — v8 | 200 ft |
 | T8 | gros berm 180° → ligne d'arrivée | |
 | F | **triple** de singles normaux Cleveland (les 2 du double d'origine + 1) — v5 (le triple de gros singles courts de la v4 = « pains de sucre », refusé) | 106 ft |
 
@@ -71,7 +71,7 @@ lignes droites vides). Origine locale (8, 560), ligne d'arrivée à z local 330.
 | Section | Contenu | Longueur |
 |---|---|---|
 | F → T1 | arrivée (cap est) → gros berm 180° | |
-| U1 | **triple** (3 singles Arlington) → **gros single 5,9** → 4 singles (3,0 / 3,4 / 3,7 / 3,2) → **gros single 6,0** → 30 ft → **triple Detroit** (7,9 / 6,0 / 7,4) → 35 ft → **petite bosse 2,5 ft** ; commence **3 ft** après la sortie de T1 (moins d'élan, plus de quad d'entrée) — v7 | 579 ft |
+| U1 | **triple** (3 singles Arlington) → **gros single 5,9** → 4 singles (3,0 / 3,4 / 3,7 / 3,2) → **gros single 6,0** → 30 ft → **triple Detroit allongé** (7,9 / 6,0 → 8 ft au lieu de 1,6 → 7,4) → 35 ft → **petite bosse 2,5 ft** ; commence **3 ft** après la sortie de T1 (moins d'élan, plus de quad d'entrée) — v7 | 579 ft |
 | T2 | gros berm 180° | |
 | U2 | **10 whoops** (Detroit) **sans bosse derrière** → 30 ft → on-off (single, gros single 6,0, single) → 30 ft → **step-up** 8,8 → 11,2 — v4 | 519 ft |
 | GR | **sable Glendale : virage en S** (stamp miroir), cap est → ouest, 114 ft plus au nord — v4 : 70 ft plus tôt | |
@@ -115,15 +115,16 @@ Répartition (cases de tilemap) : sol 3,43 M, sauts 416 k, berms 122 k, whoops 1
 | **v4** | Retours du test en jeu : SX1 single après whoops plus loin/plus bas, triple sur table off, on-off sur l'arrivée ; SX2 1er virage sans rebord, E1 bosse-bosse-table-bosse-table-bosse, triple dans le virage, whoops sans bosse, triple dur à l'arrivée ; SX3 hauteurs mélangées, petite bosse après le triple, whoops sans bosse, sable plus proche, J derrière T2, arrivée sans longue ligne droite | SX1/SX2 « bien », retours v5 (doc 07 § 7) |
 | **v5** | SX1 : on-off Detroit après le triple d'arrivée ; SX2 : triple d'arrivée en singles normaux ; SX3 : U1 commence dès T1, triple-gros-triple-gros, U3 dès la sortie du sable avec 2 gros singles, table avant le triple d'arrivée | SX3 « bien », retours v6 (doc 07 § 8) |
 | **v6** | SX1 : triple d'entrée écarté + gros single dans A ; SX2 : W1 avec gros singles + table au milieu ; SX3 : 1 bosse de plus dans U1 (gros single déplacé à la fin), 40 ft de sol après la table d'arrivée | retours v7 (doc 07 § 9) |
-| **v7** | SX1 : A 2e/7e/dernière bosses grosses + entrée écartée, triple sur table allongé, petite bosse en entrée d'arrivée ; SX2 : double ligne W1, W2 technique, gros triple en haut, +2 bosses fin E1 ; SX3 : U1 collé au virage, pain de sucre avant le triple d'arrivée | à tester |
+| **v7** | SX1 : A 2e/7e/dernière bosses grosses + entrée écartée, triple sur table allongé, petite bosse en entrée d'arrivée ; SX2 : double ligne W1, W2 technique, gros triple en haut, +2 bosses fin E1 ; SX3 : U1 collé au virage, pain de sucre avant le triple d'arrivée | retours v8 (doc 07 § 10) |
+| **v8** | Pains de sucre chassés partout (+ contrôle automatique) ; SX1 : double ligne à l'arrivée, petite bosse en entrée de V, single après whoops reculé ; SX2 : W2 = vrai couloir JGSX Cleveland g29 ; SX3 : triple Detroit allongé | à tester |
 
-## Contrôles automatiques (39)
+## Contrôles automatiques (40)
 
 `scripts/validate_sx.py` → `build/validation.json` (affichés aussi dans `viewer/index.html`). Pour chaque piste :
 fichiers requis ; heightmap relue = terrain construit (0,0001 ft) ; tilemap cohérente ; toutes les références `@dossier/` existent ;
 portes sur la ligne de course ; aucune porte ne touche une autre partie du tour ; ordre des tours ; grille de 22 sur sol plat ;
 ligne de départ dégagée jusqu'à la jonction ; aucun virage plat > 25°. Global : couloirs séparés ≥ 38 ft ; pistes séparées
 (101 / 400 / 220 ft) ; profils exportés = profils mesurés (18 couloirs, écart max 0,044 ft) ; pas de rebord au pied des obstacles
-(≤ Detroit + 0,02 ft) ; terrain sans pics ni trous.
+(≤ Detroit + 0,02 ft) ; terrain sans pics ni trous ; **pas de pains de sucre** dans les enchaînements (v8).
 
 **Pas contrôlé** : le ressenti en jeu, la physique, les chronos réels, la vue caméra, les collisions de pilotes au départ.

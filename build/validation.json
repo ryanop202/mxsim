@@ -183,7 +183,12 @@
   {
    "name": "Profils export\u00e9s = profils mesur\u00e9s JGSX",
    "ok": true,
-   "detail": "19 couloirs, \u00e9cart max 0.044 ft (interpolation sur la grille de 0.29 ft)"
+   "detail": "19 couloirs, \u00e9cart max 0.040 ft (interpolation sur la grille de 0.29 ft)"
+  },
+  {
+   "name": "Pas de pains de sucre dans les encha\u00eenements",
+   "ok": true,
+   "detail": "toutes les bosses ont un rapport hauteur / largeur \u00e0 mi-hauteur \u2264 0,31 (sauf le pain de sucre voulu du SX3 avant le triple d\u2019arriv\u00e9e)"
   },
   {
    "name": "Pas de rebord au pied des berms et des obstacles",
@@ -199,15 +204,15 @@
  "lane_errors": [
   [
    "SX1-F petite bosse, gros single, single + on-off (ligne d arrivee)",
-   0.020173885032789336
+   0.02596624949081186
   ],
   [
    "SX1-A S-GROS-S ecarte, 3 S, GROS, S, GROS",
-   0.02958353284217985
+   0.04031220864824997
   ],
   [
    "SX1-B whoops (entry+11), single 5 ft",
-   0.02406220157562684
+   0.030827409674929016
   ],
   [
    "SX1-C triple on table, off quad, double",
@@ -222,8 +227,8 @@
    0.03135384023088019
   ],
   [
-   "SX1-V quad",
-   0.04396979504670767
+   "SX1-V petite bosse + triple",
+   0.026681113214211665
   ],
   [
    "SX2-top gros triple",
@@ -231,7 +236,7 @@
   ],
   [
    "SX2-E1 single single table single table single + 2",
-   0.0226679793619596
+   0.026193414148016222
   ],
   [
    "SX2-E2 big double, triple into the turn",
@@ -250,8 +255,8 @@
    0.03669161306195673
   ],
   [
-   "SX2-W2 technique: single+step 5.8, kicker sur plateau, on-off",
-   0.02521953294564825
+   "SX2-W2 couloir JGSX Cleveland g29 tel quel",
+   0.03827931131772554
   ],
   [
    "SX2-F triple (singles d avant + 1)",
@@ -259,7 +264,7 @@
   ],
   [
    "SX3-U1 triple, big, triple, big, Detroit triple, small bump",
-   0.03216296442029082
+   0.036644967417988075
   ],
   [
    "SX3-U2 whoops (entry+9), on-off, step-up",

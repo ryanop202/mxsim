@@ -13,15 +13,15 @@
     "lane": "A 2e, 7e et derniere bosses grosses, entree ecartee (v7)",
     "name": "SX1-A S-GROS-S ecarte, 3 S, GROS, S, GROS",
     "s0": 516.5442420521806,
-    "length": 350.8,
+    "length": 358.8,
     "hmax": 6.004
    },
    {
     "lane": "B 12 whoops + single (v4: +10 ft, 5.0 ft)",
     "name": "SX1-B whoops (entry+11), single 5 ft",
     "s0": 970.0884841043612,
-    "length": 300.0,
-    "hmax": 4.998
+    "length": 320.8,
+    "hmax": 4.065
    },
    {
     "lane": "C triple on table / off quad",
@@ -46,9 +46,9 @@
    },
    {
     "lane": "V quad",
-    "name": "SX1-V quad",
+    "name": "SX1-V petite bosse + triple",
     "s0": 2736.9999698556467,
-    "length": 141.20000000000002,
+    "length": 142.20000000000002,
     "hmax": 3.872
    }
   ],
@@ -130,7 +130,7 @@
     "lane": "E1 bosse bosse table bosse table bosse (v4)",
     "name": "SX2-E1 single single table single table single + 2",
     "s0": 381.05088062083416,
-    "length": 328.3,
+    "length": 329.5,
     "hmax": 6.24
    },
    {
@@ -162,11 +162,11 @@
     "hmax": 6.24
    },
    {
-    "lane": "W2 technique (v7)",
-    "name": "SX2-W2 technique: single+step 5.8, kicker sur plateau, on-off",
-    "s0": 2174.2411259668634,
-    "length": 242.4,
-    "hmax": 5.984
+    "lane": "W2 couloir Cleveland g29 complet (v8)",
+    "name": "SX2-W2 couloir JGSX Cleveland g29 tel quel",
+    "s0": 2189.2411259668634,
+    "length": 200.0,
+    "hmax": 7.915
    },
    {
     "lane": "F triple de singles normaux (v5)",
@@ -254,7 +254,7 @@
     "lane": "U1 triple-gros-triple-gros + triple Detroit + petite bosse (v5)",
     "name": "SX3-U1 triple, big, triple, big, Detroit triple, small bump",
     "s0": 160.54424205218055,
-    "length": 579.1,
+    "length": 585.5,
     "hmax": 7.918
    },
    {
@@ -342,9 +342,9 @@
   }
  },
  "tiles": {
-  "SX Main": 3369425,
-  "Jumps Sx": 489082,
-  "WhoopsV2": 101845,
+  "SX Main": 3374848,
+  "Jumps Sx": 482791,
+  "WhoopsV2": 102713,
   "Berm Exit Sx": 119708,
   "Sand Straight": 0,
   "Sand Bump Straight": 0,
@@ -356,10 +356,10 @@
    "length": 198.0,
    "items": [
     [
-     "Glendale_g40_2",
+     "split Glendale_g40_2 | Arlington_g37_0",
      0.0,
      27.700000000000003,
-     2.466
+     3.36
     ],
     [
      "Arlington_g1_2",
@@ -382,7 +382,7 @@
    ]
   },
   "SX1-A S-GROS-S ecarte, 3 S, GROS, S, GROS": {
-   "length": 350.8,
+   "length": 358.8,
    "items": [
     [
      "Arlington_g37_0",
@@ -397,51 +397,51 @@
      5.903
     ],
     [
-     "Arlington_g45_2",
+     "Arlington_g37_1",
      87.5,
-     114.1,
-     3.171
+     115.4,
+     3.662
     ],
     [
-     "Custom1_g62_2",
-     119.39999999999999,
-     145.5,
-     3.601
+     "Arlington_g1_1",
+     120.7,
+     149.6,
+     3.686
     ],
     [
      "Custom1_g71_2",
-     150.8,
-     181.10000000000002,
+     154.9,
+     185.20000000000002,
      3.644
     ],
     [
-     "Glendale_g47_1",
-     186.40000000000003,
-     212.80000000000004,
-     3.378
+     "Custom1_g71_3",
+     190.50000000000003,
+     220.80000000000004,
+     3.521
     ],
     [
      "Custom1_g29_3",
-     218.10000000000005,
-     266.1,
+     226.10000000000005,
+     274.1,
      6.004
     ],
     [
      "Custom_g55_2",
-     268.90000000000003,
-     298.8,
+     276.90000000000003,
+     306.8,
      3.596
     ],
     [
      "Arlington_g37_2",
-     304.1,
-     350.70000000000005,
+     312.1,
+     358.70000000000005,
      5.903
     ]
    ]
   },
   "SX1-B whoops (entry+11), single 5 ft": {
-   "length": 300.0,
+   "length": 320.8,
    "items": [
     [
      "whoops Custom_0 x12",
@@ -450,10 +450,10 @@
      2.989
     ],
     [
-     "Glendale_g80_1",
-     258.6,
-     299.90000000000003,
-     4.998
+     "Glendale_g40_3",
+     273.6,
+     320.70000000000005,
+     4.065
     ]
    ]
   },
@@ -586,31 +586,31 @@
     ]
    ]
   },
-  "SX1-V quad": {
-   "length": 141.20000000000002,
+  "SX1-V petite bosse + triple": {
+   "length": 142.20000000000002,
    "items": [
     [
-     "Custom1_g71_2",
+     "Glendale_g40_2",
      0.0,
-     30.3,
-     3.644
+     27.700000000000003,
+     2.466
     ],
     [
      "Custom1_g71_3",
-     35.6,
-     65.9,
+     36.6,
+     66.9,
      3.521
     ],
     [
      "Custom1_g71_5",
-     71.2,
-     105.9,
+     72.2,
+     106.9,
      3.872
     ],
     [
      "Custom_g55_2",
-     111.2,
-     141.1,
+     112.2,
+     142.1,
      3.596
     ]
    ]
@@ -639,7 +639,7 @@
    ]
   },
   "SX2-E1 single single table single table single + 2": {
-   "length": 328.3,
+   "length": 329.5,
    "items": [
     [
      "Arlington_g37_0",
@@ -684,10 +684,10 @@
      3.612
     ],
     [
-     "Custom_g24_1",
+     "Arlington_g43_1",
      300.80000000000007,
-     328.20000000000005,
-     3.779
+     329.4000000000001,
+     3.598
     ]
    ]
   },
@@ -825,26 +825,32 @@
     ]
    ]
   },
-  "SX2-W2 technique: single+step 5.8, kicker sur plateau, on-off": {
-   "length": 242.4,
+  "SX2-W2 couloir JGSX Cleveland g29 tel quel": {
+   "length": 200.0,
    "items": [
     [
-     "Custom_g49_0",
+     "Custom1_g29_1",
      0.0,
-     85.7,
-     5.766
+     32.2,
+     3.632
     ],
     [
-     "Custom1_g54_0",
-     91.0,
-     158.4,
-     5.984
+     "Custom1_g29_2",
+     58.0,
+     97.30000000000001,
+     7.915
     ],
     [
-     "Custom_g55_3",
-     163.70000000000002,
-     242.3,
-     5.799
+     "Custom1_g29_3",
+     97.80000000000001,
+     145.8,
+     6.004
+    ],
+    [
+     "Arlington_g29_2",
+     147.4,
+     199.9,
+     7.351
     ]
    ]
   },
@@ -872,7 +878,7 @@
    ]
   },
   "SX3-U1 triple, big, triple, big, Detroit triple, small bump": {
-   "length": 579.1,
+   "length": 585.5,
    "items": [
     [
      "Arlington_g37_0",
@@ -936,14 +942,14 @@
     ],
     [
      "Arlington_g29_2",
-     463.80000000000007,
-     516.3000000000001,
+     470.20000000000005,
+     522.7,
      7.351
     ],
     [
      "Glendale_g40_2",
-     551.3000000000001,
-     579.0000000000001,
+     557.7,
+     585.4000000000001,
      2.466
     ]
    ]
