@@ -5,7 +5,7 @@ REF = _os.environ.get('MXSIM_REF') or _os.path.join(ROOT, 'refs', 'extracted')  
 import sys, numpy as np; sys.path.insert(0, ROOT + '/scripts')
 import matplotlib; matplotlib.use('Agg'); import matplotlib.pyplot as plt
 from matplotlib.colors import LightSource
-from engine import Grid, render_lane_block, render_berm_stamp, turn_mid_angle, LIB, render_stamp, berm_ang_scale
+from engine import Grid, render_split, render_lane_block, render_berm_stamp, turn_mid_angle, LIB, render_stamp, berm_ang_scale
 import layouts_sx as LS
 from scipy.spatial import cKDTree
 S_GRID = 0.28975
@@ -15,6 +15,7 @@ def render(p, G):
         if g['kind'] == 'S':
             for prof, u0, name in g['sections']:
                 render_lane_block(G, blocks, g, prof, u0, LIB['sx_lateral']['top_width'])
+                for sp in LS.SPLITS.get(name, []): render_split(G, blocks, g, sp, u0, LIB['sx_lateral']['top_width'])
                 end = u0 + len(prof) * 0.1; log.append((g['tag'], name, u0, end, g['L'], 'OK' if (u0 >= 0 and end <= g['L'] + 0.01) else 'OVERRUN'))
         elif g['kind'] == 'P': render_stamp(G, berms, None, g, {})
         elif g.get('berm'): render_berm_stamp(G, berms, g['berm'], g['cx'], g['cz'], turn_mid_angle(g), ang_scale=berm_ang_scale(g['berm'], g['ang']))

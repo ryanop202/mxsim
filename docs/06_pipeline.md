@@ -74,6 +74,7 @@ Variables : `MXSIM_REF` (dossier des références extraites, défaut `refs/extra
 ['Arlington_g37_0', 'Arlington_g37_1']          # unités mesurées (uid de lib/sx_units.json, alias acceptés)
 ('gap', 14.0)                                    # sol plat imposé, en ft (remplace l'écart mesuré suivant)
 ('whoops', 'Custom_0', 12)                       # n premières whoops d'une section (Detroit_0, Custom_0, Custom1_0)
+('split', 'Detroit_g36_1', 'Custom1_g30_1')     # double ligne : unité à gauche / à droite (sens de course), chacune sur la moitié de la largeur
 ```
 Entre deux unités sans `gap` : écart mesuré de la paire si elle existe dans une référence (`PAIR`), sinon médiane par types (`GAP`).
 

@@ -42,19 +42,32 @@ def whoops(key, n):
     while i < len(p) - 1 and p[i] > 0.06: i += 1
     return p[:i + 5]
 
+LAST_SPLITS = []   # filled by lane(): [(start_ft, prof_left, prof_right)] for ('split', left_uid, right_uid) tokens
+
+
 def lane(tokens):
-    """tokens: list of uid strings, ('gap', ft), ('whoops', key, n). Returns (profile, items[(name, start_ft, end_ft, H)])."""
+    """tokens: list of uid strings, ('gap', ft), ('whoops', key, n), ('split', left_uid, right_uid).
+    A split = double line: two measured units side by side, each on half of the lane width (left / right in the riding
+    direction). Its slot in the returned (full-width) profile is left at 0; the halves are rendered separately (LAST_SPLITS).
+    Returns (profile, items[(name, start_ft, end_ft, H)])."""
     prof = [np.zeros(1)]; items = []; prev = None; pos = 0.0
+    LAST_SPLITS.clear()
     for t in tokens:
         if isinstance(t, tuple) and t[0] == 'gap':
             n = int(round(t[1] / 0.1)); prof.append(np.zeros(n)); pos += n * 0.1; prev = None; continue
+        split = None
         if isinstance(t, tuple) and t[0] == 'whoops':
             p = whoops(t[1], t[2]); kind = 'W'; name = f'whoops {t[1]} x{t[2]}'; uid = None
+        elif isinstance(t, tuple) and t[0] == 'split':
+            pa, pb = unit(t[1])[1], unit(t[2])[1]; n = max(len(pa), len(pb))
+            pa = np.pad(pa, (0, n - len(pa))); pb = np.pad(pb, (0, n - len(pb)))
+            split = (pa, pb); p = np.zeros(n); kind = 'S'; name = f'split {t[1]} | {t[2]}'; uid = None
         else:
             u, p = unit(t); kind = u['kind']; name = t; uid = ALIAS.get(t, t)
         if prev is not None:
             g = PAIR.get((prev[0], uid), GAP.get((prev[1], kind), 5.3))
             n = int(round(g / 0.1)); prof.append(np.zeros(n)); pos += n * 0.1
-        prof.append(p); items.append((name, pos, pos + len(p) * 0.1, float(p.max()))); pos += len(p) * 0.1
+        if split is not None: LAST_SPLITS.append((pos, split[0], split[1]))
+        prof.append(p); items.append((name, pos, pos + len(p) * 0.1, float(max(p.max(), *(q.max() for q in split)) if split else p.max()))); pos += len(p) * 0.1
         prev = (uid, kind)
     return np.concatenate(prof), items

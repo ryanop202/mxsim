@@ -8,6 +8,7 @@ from mxs import Track, parse_gates, parse_tileinfo
 from scipy import ndimage as ndi
 from scipy.spatial import cKDTree
 import layouts_sx as LS
+from engine import split_centre
 
 DIST = ROOT + '/tracks'; BUILD = ROOT + '/build'
 H = np.load(f'{BUILD}/H.npy').astype(np.float64)
@@ -77,6 +78,9 @@ for k, path in paths.items():
     for g in path.segs:
         if g['kind'] != 'S': continue
         for prof, u0, name in g['sections']:
+            prof = prof.copy()
+            for sp in LS.SPLITS.get(name, []):   # double lines: expected centre-line height of the two halves
+                i0 = int(round(sp[0] / 0.1)); c = split_centre(sp); prof[i0:i0 + len(c)] = np.maximum(prof[i0:i0 + len(c)], c)
             u = u0 + np.arange(len(prof)) * 0.1; h = T.h(g['x0'] + u * np.cos(g['t']), g['z0'] + u * np.sin(g['t']))
             errs.append((name, float(np.abs(h - prof).max())))
 E = np.array([e[1] for e in errs])

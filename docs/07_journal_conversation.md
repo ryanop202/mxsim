@@ -136,6 +136,20 @@ Ce que ça a donné (v4, détail dans doc 05) :
 - **SX1** : 1er enchaînement (A) : « écarte un tout petit peu le triple d'entrée » (+2,2 ft entre bosses) + une grande bosse dedans.
 - Alternative proposée si la table SX3 ne suffit pas : une table longue qu'on ne peut que rouler (non mesurée dans les références).
 
+## 9. Test de la v6 → v7
+
+- **SX3** : 1er enchaînement « fais plus proche le virage, là ça fait 4 d'entrée, pas réaliste » → U1 commence 3 ft après T1 ;
+  la table avant le triple d'arrivée « peut être prise à fond » → **un pain de sucre pour vraiment ralentir** (ici c'est voulu).
+- **SX1** : 1er enchaînement : la grosse bosse v6 (g1_2) « pas comme maintenant » ; écarter le triple d'entrée (« ça fait 4
+  d'entrée ») ; **2e, 7e et dernière bosses grosses**, « comme t'as bien fait sur les autres » (gros singles longs g37_2 / g29_3) ;
+  gros double + triple sur table : « ça fait double et 5 » → triple sur table allongé (interprété sur le couloir D : step-up = gros
+  double) ; les 4 bosses avant le départ « ça fait 4 » → **1re bosse petite** pour ne pas pouvoir rentrer en double.
+- **SX2** : couloir de gauche : **double ligne** sur la 1re bosse (plus petite à droite) pour pouvoir faire simple, double ou triple
+  (nouveau : `('split', gauche, droite)` dans `compose.lane`) ; couloir suivant « de la merde, change complet, fais un truc technique,
+  pas des bosses simples » → combos mesurés (single+step, kicker sur plateau, on-off) ; couloir du haut (4 bosses) « nul » → gros
+  triple ; fin de E1 : +2 bosses, « bouge pas le virage ».
+- Leçon : « ça fait 4 d'entrée » = trop d'élan ou bosses trop serrées en entrée → écarter / coller au virage / mettre une petite bosse.
+
 ## Décisions techniques importantes (et pourquoi)
 
 | Décision | Pourquoi |

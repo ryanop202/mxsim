@@ -6,7 +6,7 @@ ROOT = _os.environ.get('MXSIM_ROOT') or _os.path.dirname(_os.path.dirname(_os.pa
 REF = _os.environ.get('MXSIM_REF') or _os.path.join(ROOT, 'refs', 'extracted')  # extracted JGMX/JGSX reference archives
 import os, sys, json, numpy as np
 sys.path.insert(0, ROOT + '/scripts')
-from engine import Grid, render_lane_block, render_berm_stamp, turn_mid_angle, LIB, render_stamp, berm_ang_scale
+from engine import Grid, render_split, render_lane_block, render_berm_stamp, turn_mid_angle, LIB, render_stamp, berm_ang_scale
 import layouts_sx as LS
 
 OUT = ROOT + '/build'; os.makedirs(OUT, exist_ok=True)
@@ -28,6 +28,7 @@ for key, p in paths.items():
         if g['kind'] == 'S':
             for prof, u0, name in g['sections']:
                 render_lane_block(G, whoops if 'whoops' in name else jumps, g, prof, u0, TW)
+                for sp in LS.SPLITS.get(name, []): render_split(G, jumps, g, sp, u0, TW)
                 secs.append(dict(lane=g['tag'], name=name, s0=g['s0'] + u0, length=len(prof) * 0.1, hmax=float(prof.max())))
         elif g['kind'] == 'P':
             render_stamp(G, sand, full_tiles, g, GLENDALE_TILES)

@@ -4,17 +4,17 @@
   "sections": [
    {
     "lane": "finish straight: triple + on-off Detroit (v5)",
-    "name": "SX1-F triple + on-off (ligne d arrivee)",
+    "name": "SX1-F petite bosse, gros single, single + on-off (ligne d arrivee)",
     "s0": 18.0,
-    "length": 197.70000000000002,
+    "length": 198.0,
     "hmax": 5.794
    },
    {
-    "lane": "A triple ecarte + triple a grosse bosse + quad (v6)",
-    "name": "SX1-A triple ecarte, triple avec grosse bosse, quad",
-    "s0": 522.5442420521806,
-    "length": 351.20000000000005,
-    "hmax": 5.794
+    "lane": "A 2e, 7e et derniere bosses grosses, entree ecartee (v7)",
+    "name": "SX1-A S-GROS-S ecarte, 3 S, GROS, S, GROS",
+    "s0": 516.5442420521806,
+    "length": 350.8,
+    "hmax": 6.004
    },
    {
     "lane": "B 12 whoops + single (v4: +10 ft, 5.0 ft)",
@@ -32,9 +32,9 @@
    },
    {
     "lane": "D step-up + triple sur table, off (v4)",
-    "name": "SX1-D step-up, triple on table, off",
+    "name": "SX1-D step-up, triple on table (longer), off",
     "s0": 1845.1769682087224,
-    "length": 314.40000000000003,
+    "length": 325.8,
     "hmax": 11.218
    },
    {
@@ -120,17 +120,17 @@
   "lap_ft": 2716.7853680190437,
   "sections": [
    {
-    "lane": "top rhythm",
-    "name": "SX2-top JGSX Arlington rhythm",
+    "lane": "top gros triple (v7)",
+    "name": "SX2-top gros triple",
     "s0": 147.27212102609028,
-    "length": 147.3,
-    "hmax": 5.903
+    "length": 151.3,
+    "hmax": 6.004
    },
    {
     "lane": "E1 bosse bosse table bosse table bosse (v4)",
-    "name": "SX2-E1 single single table single table single",
-    "s0": 397.05088062083416,
-    "length": 255.20000000000002,
+    "name": "SX2-E1 single single table single table single + 2",
+    "s0": 381.05088062083416,
+    "length": 328.3,
     "hmax": 6.24
    },
    {
@@ -155,18 +155,18 @@
     "hmax": 2.989
    },
    {
-    "lane": "W1 grosses bosses + table au milieu (v6)",
-    "name": "SX2-W1 S-gros-S, table, S-gros-S",
+    "lane": "W1 double ligne (petite bosse a droite) + table au milieu (v7)",
+    "name": "SX2-W1 double ligne, gros, S, table, S, gros, S",
     "s0": 1756.696883914683,
     "length": 302.5,
     "hmax": 6.24
    },
    {
-    "lane": "W2 9 ft table + triple",
-    "name": "SX2-W2 9 ft table, triple off",
-    "s0": 2189.2411259668634,
-    "length": 172.70000000000002,
-    "hmax": 9.01
+    "lane": "W2 technique (v7)",
+    "name": "SX2-W2 technique: single+step 5.8, kicker sur plateau, on-off",
+    "s0": 2174.2411259668634,
+    "length": 242.4,
+    "hmax": 5.984
    },
    {
     "lane": "F triple de singles normaux (v5)",
@@ -253,7 +253,7 @@
    {
     "lane": "U1 triple-gros-triple-gros + triple Detroit + petite bosse (v5)",
     "name": "SX3-U1 triple, big, triple, big, Detroit triple, small bump",
-    "s0": 173.54424205218055,
+    "s0": 160.54424205218055,
     "length": 579.1,
     "hmax": 7.918
    },
@@ -274,8 +274,8 @@
    {
     "lane": "F triple + gros double, fini pres du depart (v4)",
     "name": "SX3-F triple, big double",
-    "s0": 2880.151435641184,
-    "length": 361.3,
+    "s0": 2913.9514356411837,
+    "length": 327.5,
     "hmax": 7.936
    }
   ],
@@ -342,8 +342,8 @@
   }
  },
  "tiles": {
-  "SX Main": 3384863,
-  "Jumps Sx": 473644,
+  "SX Main": 3369425,
+  "Jumps Sx": 489082,
   "WhoopsV2": 101845,
   "Berm Exit Sx": 119708,
   "Sand Straight": 0,
@@ -352,37 +352,37 @@
   "Sand Bump Solo": 3160
  },
  "combos": {
-  "SX1-F triple + on-off (ligne d arrivee)": {
-   "length": 197.70000000000002,
+  "SX1-F petite bosse, gros single, single + on-off (ligne d arrivee)": {
+   "length": 198.0,
    "items": [
     [
-     "Arlington_g37_0",
+     "Glendale_g40_2",
      0.0,
-     27.400000000000002,
-     3.36
+     27.700000000000003,
+     2.466
     ],
     [
      "Arlington_g1_2",
-     32.7,
-     80.4,
+     33.0,
+     80.7,
      5.794
     ],
     [
      "Arlington_g37_1",
-     83.2,
-     111.10000000000001,
+     83.5,
+     111.4,
      3.662
     ],
     [
      "Detroit_g35_2",
-     123.10000000000001,
-     197.60000000000002,
+     123.4,
+     197.9,
      5.793
     ]
    ]
   },
-  "SX1-A triple ecarte, triple avec grosse bosse, quad": {
-   "length": 351.20000000000005,
+  "SX1-A S-GROS-S ecarte, 3 S, GROS, S, GROS": {
+   "length": 350.8,
    "items": [
     [
      "Arlington_g37_0",
@@ -391,58 +391,52 @@
      3.36
     ],
     [
-     "Arlington_g37_1",
-     34.900000000000006,
-     62.80000000000001,
-     3.662
-    ],
-    [
-     "Arlington_g1_1",
-     70.30000000000001,
-     99.20000000000002,
-     3.686
+     "Arlington_g37_2",
+     35.900000000000006,
+     82.5,
+     5.903
     ],
     [
      "Arlington_g45_2",
-     104.50000000000001,
-     131.10000000000002,
+     87.5,
+     114.1,
      3.171
     ],
     [
-     "Arlington_g1_2",
-     136.40000000000003,
-     184.10000000000002,
-     5.794
-    ],
-    [
      "Custom1_g62_2",
-     186.90000000000003,
-     213.00000000000003,
+     119.39999999999999,
+     145.5,
      3.601
     ],
     [
      "Custom1_g71_2",
-     218.30000000000004,
-     248.60000000000005,
+     150.8,
+     181.10000000000002,
      3.644
     ],
     [
-     "Custom1_g71_3",
-     253.90000000000006,
-     284.20000000000005,
-     3.521
-    ],
-    [
      "Glendale_g47_1",
-     289.50000000000006,
-     315.90000000000003,
+     186.40000000000003,
+     212.80000000000004,
      3.378
     ],
     [
+     "Custom1_g29_3",
+     218.10000000000005,
+     266.1,
+     6.004
+    ],
+    [
      "Custom_g55_2",
-     321.20000000000005,
-     351.1,
+     268.90000000000003,
+     298.8,
      3.596
+    ],
+    [
+     "Arlington_g37_2",
+     304.1,
+     350.70000000000005,
+     5.903
     ]
    ]
   },
@@ -522,8 +516,8 @@
     ]
    ]
   },
-  "SX1-D step-up, triple on table, off": {
-   "length": 314.40000000000003,
+  "SX1-D step-up, triple on table (longer), off": {
+   "length": 325.8,
    "items": [
     [
      "Arlington_g30_1",
@@ -545,20 +539,20 @@
     ],
     [
      "Custom1_g71_3",
-     186.20000000000002,
-     216.50000000000003,
+     191.9,
+     222.20000000000002,
      3.521
     ],
     [
      "Arlington_g49_2",
-     221.80000000000004,
-     276.80000000000007,
+     233.20000000000002,
+     288.20000000000005,
      6.18
     ],
     [
      "Custom1_g71_5",
-     279.6000000000001,
-     314.30000000000007,
+     291.00000000000006,
+     325.70000000000005,
      3.872
     ]
    ]
@@ -621,37 +615,31 @@
     ]
    ]
   },
-  "SX2-top JGSX Arlington rhythm": {
-   "length": 147.3,
+  "SX2-top gros triple": {
+   "length": 151.3,
    "items": [
     [
-     "Arlington_g37_0",
-     0.0,
-     27.400000000000002,
-     3.36
-    ],
-    [
-     "Arlington_g37_1",
-     32.7,
-     60.60000000000001,
-     3.662
-    ],
-    [
      "Arlington_g37_2",
-     65.9,
-     112.5,
+     0.0,
+     46.6,
      5.903
     ],
     [
-     "Arlington_g1_3",
-     115.3,
-     147.2,
-     3.811
+     "Custom1_g29_3",
+     49.4,
+     97.4,
+     6.004
+    ],
+    [
+     "Glendale_g30_0",
+     100.2,
+     151.2,
+     5.766
     ]
    ]
   },
-  "SX2-E1 single single table single table single": {
-   "length": 255.20000000000002,
+  "SX2-E1 single single table single table single + 2": {
+   "length": 328.3,
    "items": [
     [
      "Arlington_g37_0",
@@ -688,6 +676,18 @@
      222.8,
      255.10000000000002,
      4.016
+    ],
+    [
+     "Arlington_g1_4",
+     260.40000000000003,
+     295.50000000000006,
+     3.612
+    ],
+    [
+     "Custom_g24_1",
+     300.80000000000007,
+     328.20000000000005,
+     3.779
     ]
    ]
   },
@@ -778,11 +778,11 @@
     ]
    ]
   },
-  "SX2-W1 S-gros-S, table, S-gros-S": {
+  "SX2-W1 double ligne, gros, S, table, S, gros, S": {
    "length": 302.5,
    "items": [
     [
-     "Detroit_g36_1",
+     "split Detroit_g36_1 | Custom1_g30_1",
      0.0,
      29.700000000000003,
      2.992
@@ -825,32 +825,26 @@
     ]
    ]
   },
-  "SX2-W2 9 ft table, triple off": {
-   "length": 172.70000000000002,
+  "SX2-W2 technique: single+step 5.8, kicker sur plateau, on-off": {
+   "length": 242.4,
    "items": [
     [
-     "Arlington_g20_1",
+     "Custom_g49_0",
      0.0,
-     67.9,
-     9.01
+     85.7,
+     5.766
     ],
     [
-     "Detroit_g36_1",
-     71.7,
-     101.4,
-     2.992
+     "Custom1_g54_0",
+     91.0,
+     158.4,
+     5.984
     ],
     [
-     "Glendale_g36_1",
-     106.7,
-     136.4,
-     3.188
-    ],
-    [
-     "Glendale_g84_2",
-     141.70000000000002,
-     172.60000000000002,
-     3.448
+     "Custom_g55_3",
+     163.70000000000002,
+     242.3,
+     5.799
     ]
    ]
   },
@@ -1067,42 +1061,42 @@
    ]
   },
   "SX3-F triple, big double": {
-   "length": 361.3,
+   "length": 327.5,
    "items": [
     [
-     "Custom1_g71_1",
+     "Custom1_g59_1",
      0.0,
-     59.1,
-     6.24
+     30.3,
+     6.346
     ],
     [
      "Custom1_g71_2",
-     99.1,
-     129.4,
+     65.3,
+     95.6,
      3.644
     ],
     [
      "Custom1_g71_3",
-     134.70000000000002,
-     165.00000000000003,
+     100.89999999999999,
+     131.2,
      3.521
     ],
     [
      "Custom1_g71_5",
-     170.30000000000004,
-     205.00000000000006,
+     136.5,
+     171.2,
      3.872
     ],
     [
      "Glendale_g83_1",
-     229.00000000000006,
-     263.70000000000005,
+     195.2,
+     229.89999999999998,
      7.144
     ],
     [
      "Glendale_g83_2",
-     304.20000000000005,
-     361.20000000000005,
+     270.4,
+     327.4,
      7.936
     ]
    ]

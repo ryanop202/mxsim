@@ -95,10 +95,11 @@ class Grid:
         return (slice(i0, i1), slice(j0, j1)), jj * self.s, ii * self.s
 
 
-def render_lane_block(grid, out, seg, profile, u0, top_width, base=0.0, mode='max'):
-    """Extrude a 1D profile along a straight segment, starting at distance u0 from the segment start."""
+def render_lane_block(grid, out, seg, profile, u0, top_width, base=0.0, mode='max', v_off=0.0):
+    """Extrude a 1D profile along a straight segment, starting at distance u0 from the segment start.
+    v_off shifts the block sideways (> 0 = right of the riding direction): used for split lanes (half-width blocks)."""
     L = len(profile) * 0.1; c, s_ = np.cos(seg['t']), np.sin(seg['t'])
-    half = top_width / 2 + 8.0
+    half = top_width / 2 + 8.0 + abs(v_off)
     pts = []
     for uu in (u0, u0 + L):
         for vv in (-half, half):
@@ -108,9 +109,21 @@ def render_lane_block(grid, out, seg, profile, u0, top_width, base=0.0, mode='ma
     dx, dz = X - seg['x0'], Z - seg['z0']
     u = dx * c + dz * s_ - u0; v = -dx * s_ + dz * c
     pu = np.interp(u / 0.1, np.arange(len(profile)), profile, left=0, right=0)
-    h = pu * sx_wall(np.abs(v) - top_width / 2) + base
+    h = pu * sx_wall(np.abs(v - v_off) - top_width / 2) + base
     if mode == 'max': out[sl] = np.maximum(out[sl], h)
     return sl
+
+
+def render_split(grid, out, seg, split, u0, top_width):
+    """Double line: left/right halves of the lane, each a measured unit on half the width."""
+    st, pl, pr = split; hw = top_width / 2
+    render_lane_block(grid, out, seg, pl, u0 + st, hw, v_off=-hw / 2)
+    render_lane_block(grid, out, seg, pr, u0 + st, hw, v_off=+hw / 2)
+
+
+def split_centre(split):
+    """Centre-line height of a split (for the profile check)."""
+    return np.maximum(split[1], split[2]) * float(sx_wall(0.0))
 
 
 def render_crescent(grid, out, cx, cz, mid_angle, fam, base=0.0):

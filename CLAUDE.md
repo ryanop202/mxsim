@@ -38,12 +38,13 @@ Tu reprends un projet commencé dans une autre conversation. Lis dans cet ordre 
 | Whoops | **jamais de bosse plus grosse juste après les whoops** (« arrête de faire ces bosses à la fin des whoops ») |
 | Lignes droites | pas de longue ligne droite vide (surtout avant un virage) : remplir avec un petit enchaînement (on-off…) |
 | Enchaînements | varier les hauteurs, pas deux fois le même enchaînement sur deux pistes ; pas d'élan trop long avant un enchaînement (on arrive trop vite) |
-| « Pains de sucre » | **refusés** : bosses courtes et pointues (≥ 4,5 ft sur ≤ 35 ft). Gros singles = unités longues (≥ 46 ft) |
+| « Pains de sucre » | **refusés dans les enchaînements** : bosses courtes et pointues (≥ 4,5 ft sur ≤ 35 ft). Gros singles = unités longues (≥ 46 ft). Exception voulue : un pain de sucre pour **forcer à ralentir** (SX3 arrivée) |
+| « Ça fait 4 d'entrée » | trop d'élan / bosses trop serrées à l'entrée d'un enchaînement → coller au virage, écarter, ou 1re bosse petite |
 
-## État actuel (v6)
+## État actuel (v7)
 
 - 3 pistes SX dans `tracks/`, 39/39 contrôles, chaîne complète reproductible (`./make_all.sh`).
-- v3, v4, v5 testées en jeu par Ryan → v6 = ses corrections. **v6 pas encore testée en jeu.**
+- v3 à v6 testées en jeu par Ryan → v7 = ses corrections. **v7 pas encore testée en jeu.**
 - Pistes d'amélioration notées dans `docs/10_suite_et_idees.md`.
 
 ## Pièges connus

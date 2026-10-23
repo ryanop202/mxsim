@@ -3,6 +3,7 @@ JGSX-style starts: 22 gates, dedicated start straight that funnels into the lap 
 import numpy as np
 from engine import Path, STAMPS
 from compose import lane
+import compose
 
 BIG, BIG2, SMALL, SMALL2 = 'big_det_a', 'big_cle', 'small_cus_a', 'small_arl'
 RB, RS = 21.5, 11.0
@@ -22,8 +23,11 @@ MIXED_DET = 'Detroit_g35_0'                                                     
 SAND = ['Glendale_g66_1', 'Glendale_g66_2', 'Glendale_g86_0', 'Glendale_g30_3', 'Glendale_g65_3', 'Glendale_g63_3', 'Glendale_g86_1', 'Glendale_g65_2']
 
 COMBOS = {}
+SPLITS = {}   # section name -> [(start_ft, prof_left, prof_right)] (double lines, see compose.lane)
 def L(name, tokens):
-    p, items = lane(tokens); COMBOS[name] = dict(tokens=tokens, items=items, length=len(p) * 0.1); return p
+    p, items = lane(tokens); COMBOS[name] = dict(tokens=tokens, items=items, length=len(p) * 0.1)
+    if compose.LAST_SPLITS: SPLITS[name] = list(compose.LAST_SPLITS)
+    return p
 
 def sec(name, tokens, u0):
     return (L(name, tokens), u0, name)
@@ -43,15 +47,15 @@ def sx1():
     ox, oz = SX1_ORIGIN
     xe, xw, z0 = 520.0, 150.0, 395.0
     p = Path(ox + 77, oz + z0, 0.0, 'SX1')
-    p.straight(xe - 77, [sec('SX1-F triple + on-off (ligne d arrivee)', [SA[0], 'Arlington_g1_2', SA[1], ('gap', 12.0), 'Detroit_g35_2'], 18.0)], tag='finish straight: triple + on-off Detroit (v5)')
+    p.straight(xe - 77, [sec('SX1-F petite bosse, gros single, single + on-off (ligne d arrivee)', ['Glendale_g40_2', 'Arlington_g1_2', SA[1], ('gap', 12.0), 'Detroit_g35_2'], 18.0)], tag='finish straight: triple + on-off Detroit (v5)')
     p.turn(+180, RB, BIG, tag='T1 first turn')
-    p.straight(xe - xw, [sec('SX1-A triple ecarte, triple avec grosse bosse, quad', [SA[0], ('gap', 7.5), SA[1], ('gap', 7.5), SA[2], 'Arlington_g45_2', 'Arlington_g1_2', 'Custom1_g62_2', SC[0], SC[1], 'Glendale_g47_1', SC[3]], 12.0)], tag='A triple ecarte + triple a grosse bosse + quad (v6)')
+    p.straight(xe - xw, [sec('SX1-A S-GROS-S ecarte, 3 S, GROS, S, GROS', [SA[0], ('gap', 8.5), 'Arlington_g37_2', ('gap', 5.0), 'Arlington_g45_2', 'Custom1_g62_2', SC[0], 'Glendale_g47_1', 'Custom1_g29_3', SC[3], 'Arlington_g37_2'], 6.0)], tag='A 2e, 7e et derniere bosses grosses, entree ecartee (v7)')
     p.turn(-180, RB, BIG2, tag='T2')
     p.straight(xe - xw, [sec('SX1-B whoops (entry+11), single 5 ft', [('whoops', 'Custom_0', 12), ('gap', 15.0), 'Glendale_g80_1'], 22.0)], tag='B 12 whoops + single (v4: +10 ft, 5.0 ft)')
     p.turn(+180, RB, BIG, tag='T3')
     p.straight(xe - xw, [sec('SX1-C triple on table, off quad, double', SD[:2] + [TABLE_A] + SA[:4] + [('gap', 14.0)] + SC[:2], 12.0)], tag='C triple on table / off quad')
     p.turn(-180, RB, BIG2, tag='T4')
-    p.straight(xe - xw, [sec('SX1-D step-up, triple on table, off', STEPUP + SC[:2] + [TABLE_B] + [SC[2]], 22.0)], tag='D step-up + triple sur table, off (v4)')
+    p.straight(xe - xw, [sec('SX1-D step-up, triple on table (longer), off', STEPUP + [SC[0], ('gap', 11.0), SC[1], ('gap', 11.0), TABLE_B, SC[2]], 22.0)], tag='D step-up + triple sur table, off (v4)')
     p.turn(+180, RB, BIG, tag='T5')
     p.straight(xe - 77, [sec('SX1-E JGSX on-off lane + triple', [MIXED_DET, ('gap', 10.0)] + SA[3:6], 14.0)], tag='E on-off + triple')
     p.turn(+90, RS, SMALL, tag='T6')
@@ -68,9 +72,9 @@ def sx2():
     p = Path(ox + 111.0, oz + 140.0, -90.0, 'SX2')          # merge point on the finish lane F (heading north)
     p.straight(140.0 - 46.5, [], tag='F to first turn')
     p.turn(-90, RB, BIG, tag='T1 first turn')                # north -> east
-    p.straight(355.0 - 132.5, [sec('SX2-top JGSX Arlington rhythm', ['Arlington_g37_0', 'Arlington_g37_1', 'Arlington_g37_2', 'Arlington_g1_3'], 20.0)], tag='top rhythm')
+    p.straight(355.0 - 132.5, [sec('SX2-top gros triple', ['Arlington_g37_2', 'Custom1_g29_3', 'Glendale_g30_0'], 20.0)], tag='top gros triple (v7)')
     p.turn(-90, RS, SMALL2, tag='T2')                        # east -> south
-    p.straight(400.0 - 36.0, [sec('SX2-E1 single single table single table single', [SA[0], SA[1], TABLE_A, SA[3], TABLE_B, SA[4]], 30.0)], tag='E1 bosse bosse table bosse table bosse (v4)')
+    p.straight(400.0 - 36.0, [sec('SX2-E1 single single table single table single + 2', [SA[0], SA[1], TABLE_A, SA[3], TABLE_B, SA[4], 'Arlington_g1_4', 'Custom_g24_1'], 14.0)], tag='E1 bosse bosse table bosse table bosse (v4)')
     p.turn(-180, RB, BIG, tag='T3')                          # south -> north
     p.straight(400.0 - 120.0, [sec('SX2-E2 big double, triple into the turn', BIGDBL + SC[:3], 20.0)], tag='E2 gros double + triple dans le virage (v4)')
     p.turn(+180, RB, BIG2, tag='T4')                         # north -> south
@@ -78,9 +82,9 @@ def sx2():
     p.turn(-90, RS, SMALL, tag='T5')                         # south -> west
     p.straight(269.0 - 36.0, [sec('SX2-bottom whoops (entry+7)', [('whoops', 'Custom_0', 8)], 34.0)], tag='bottom 8 whoops, sans bosse (v4)')
     p.turn(-90, RS, SMALL2, tag='T6')                        # west -> north
-    p.straight(429.0 - 60.0, [sec('SX2-W1 S-gros-S, table, S-gros-S', [SD[0], 'Arlington_g37_2', SD[1], TABLE_A, SC[0], 'Custom1_g29_3', SC[2]], 34.0)], tag='W1 grosses bosses + table au milieu (v6)')
+    p.straight(429.0 - 60.0, [sec('SX2-W1 double ligne, gros, S, table, S, gros, S', [('split', SD[0], 'Custom1_g30_1'), 'Arlington_g37_2', SD[1], TABLE_A, SC[0], 'Custom1_g29_3', SC[2]], 34.0)], tag='W1 double ligne (petite bosse a droite) + table au milieu (v7)')
     p.turn(-180, RB, BIG, tag='T7')                          # north -> south
-    p.straight(345.0 - 60.0, [sec('SX2-W2 9 ft table, triple off', [TABLE9] + SD[:3], 30.0)], tag='W2 9 ft table + triple')
+    p.straight(345.0 - 60.0, [sec('SX2-W2 technique: single+step 5.8, kicker sur plateau, on-off', ['Custom_g49_0', 'Custom1_g54_0', 'Custom_g55_3'], 15.0)], tag='W2 technique (v7)')
     p.turn(+180, RB, BIG2, tag='T8')                         # south -> north (finish lane F)
     p.straight(345.0 - 140.0, [sec('SX2-F triple (singles d avant + 1)', SC[:3], 8.0)], tag='F triple de singles normaux (v5)')
     _start('SX2', ox, oz, gate=(206.0, 395.0), heading=-90.0, straight=95.0, merge=(111.0, 140.0))
@@ -99,7 +103,7 @@ def sx3():
     p.straight(980.0 - 890.0, [], tag='F to first turn')
     p.turn(+180, RB, BIG, tag='T1 first turn')               # east -> west, z = Zf - 43
     u1 = SA[:3] + ['Arlington_g37_2', 'Detroit_g36_1', 'Glendale_g84_2', 'Detroit_g36_4', 'Glendale_g36_1', 'Custom1_g29_3', ('gap', 30.0)] + TRIPLE + [('gap', 35.0), 'Glendale_g40_2']   # v6
-    p.straight(980.0 - 320.0, [sec('SX3-U1 triple, big, triple, big, Detroit triple, small bump', u1, 16.0)], tag='U1 triple-gros-triple-gros + triple Detroit + petite bosse (v5)')
+    p.straight(980.0 - 320.0, [sec('SX3-U1 triple, big, triple, big, Detroit triple, small bump', u1, 3.0)], tag='U1 triple-gros-triple-gros + triple Detroit + petite bosse (v5)')
     p.turn(-180, RB, BIG2, tag='T2')                          # west -> east, z = Zf - 86
     u2 = [('whoops', 'Detroit_0', 10), ('gap', 30.0), SA[1], BB[2], SD[3], ('gap', 30.0)] + STEPUP
     p.straight(910.0 - 320.0, [sec('SX3-U2 whoops (entry+9), on-off, step-up', u2, 16.0)], tag='U2 10 whoops sans bosse + on-off + step-up (v4)')
@@ -121,7 +125,7 @@ def sx3():
     p.straight(p.x - (ox + X_GL), [], tag='U3 to sand')
     p.stamp('GL', tag='GL Glendale sand J-turn', snap=False)  # west -> south -> NE (Glendale sand, as built)
     p.turn(-np.degrees(-p.t), Rx, None, tag='sand exit bend (flat, R 80, as in Glendale)')
-    f3 = [TABLE_A, ('gap', 40.0)] + SC[:3] + [('gap', 24.0)] + BIGDBL      # v6: 40 ft of floor after the table: no more table-to-triple quad      # v5: table ('saut a plat') to slow down before the triple
+    f3 = ['Custom1_g59_1', ('gap', 35.0)] + SC[:3] + [('gap', 24.0)] + BIGDBL   # v7: 'pain de sucre' (6.3 ft, 30 ft long) to really slow down before the triple      # v5: table ('saut a plat') to slow down before the triple
     Lf = ox + 890.0 - p.x; Lc = len(L('SX3-F triple, big double', f3)) * 0.1
     p.straight(Lf, [sec('SX3-F triple, big double', f3, Lf - Lc - 108.0)], tag='F triple + gros double, fini pres du depart (v4)')
     _start('SX3', ox, oz, gate=(630.0, Zf + 70.0), heading=0.0, straight=140.0, merge=(890.0, Zf))

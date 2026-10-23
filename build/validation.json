@@ -198,12 +198,12 @@
  ],
  "lane_errors": [
   [
-   "SX1-F triple + on-off (ligne d arrivee)",
-   0.019812470770972933
+   "SX1-F petite bosse, gros single, single + on-off (ligne d arrivee)",
+   0.020173885032789336
   ],
   [
-   "SX1-A triple ecarte, triple avec grosse bosse, quad",
-   0.02724665143560804
+   "SX1-A S-GROS-S ecarte, 3 S, GROS, S, GROS",
+   0.02958353284217985
   ],
   [
    "SX1-B whoops (entry+11), single 5 ft",
@@ -214,7 +214,7 @@
    0.028924491784873843
   ],
   [
-   "SX1-D step-up, triple on table, off",
+   "SX1-D step-up, triple on table (longer), off",
    0.034425752762851404
   ],
   [
@@ -226,12 +226,12 @@
    0.04396979504670767
   ],
   [
-   "SX2-top JGSX Arlington rhythm",
-   0.01902778936278144
+   "SX2-top gros triple",
+   0.037747711823435816
   ],
   [
-   "SX2-E1 single single table single table single",
-   0.028196237926517268
+   "SX2-E1 single single table single table single + 2",
+   0.0226679793619596
   ],
   [
    "SX2-E2 big double, triple into the turn",
@@ -246,12 +246,12 @@
    0.012956065480715154
   ],
   [
-   "SX2-W1 S-gros-S, table, S-gros-S",
+   "SX2-W1 double ligne, gros, S, table, S, gros, S",
    0.03669161306195673
   ],
   [
-   "SX2-W2 9 ft table, triple off",
-   0.030796030599103377
+   "SX2-W2 technique: single+step 5.8, kicker sur plateau, on-off",
+   0.02521953294564825
   ],
   [
    "SX2-F triple (singles d avant + 1)",
@@ -259,7 +259,7 @@
   ],
   [
    "SX3-U1 triple, big, triple, big, Detroit triple, small bump",
-   0.034164039589892024
+   0.03216296442029082
   ],
   [
    "SX3-U2 whoops (entry+9), on-off, step-up",
