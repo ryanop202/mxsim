@@ -37,12 +37,13 @@ Tu reprends un projet commencé dans une autre conversation. Lis dans cet ordre 
 | 1er test en jeu (v3) | retours détaillés couloir par couloir → v4 (doc 07 § 6) |
 | Whoops | **jamais de bosse plus grosse juste après les whoops** (« arrête de faire ces bosses à la fin des whoops ») |
 | Lignes droites | pas de longue ligne droite vide (surtout avant un virage) : remplir avec un petit enchaînement (on-off…) |
-| Enchaînements | varier les hauteurs, pas deux fois le même enchaînement sur deux pistes |
+| Enchaînements | varier les hauteurs, pas deux fois le même enchaînement sur deux pistes ; pas d'élan trop long avant un enchaînement (on arrive trop vite) |
+| « Pains de sucre » | **refusés** : bosses courtes et pointues (≥ 4,5 ft sur ≤ 35 ft). Gros singles = unités longues (≥ 46 ft) |
 
-## État actuel (v4)
+## État actuel (v5)
 
 - 3 pistes SX dans `tracks/`, 39/39 contrôles, chaîne complète reproductible (`./make_all.sh`).
-- v3 testée en jeu par Ryan → v4 = ses corrections. **v4 pas encore testée en jeu.**
+- v3 et v4 testées en jeu par Ryan → v5 = ses corrections. **v5 pas encore testée en jeu.**
 - Pistes d'amélioration notées dans `docs/10_suite_et_idees.md`.
 
 ## Pièges connus

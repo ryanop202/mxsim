@@ -93,7 +93,7 @@
   {
    "name": "RyanCompoundSX2: ligne de d\u00e9part d\u00e9gag\u00e9e jusqu\u2019au tour",
    "ok": true,
-   "detail": "22 trajectoires grille -> entonnoir -> point de jonction, hauteur max 0.001 ft ; longueur jusqu\u2019\u00e0 la jonction \u2248 278 ft"
+   "detail": "22 trajectoires grille -> entonnoir -> point de jonction, hauteur max 0.000 ft ; longueur jusqu\u2019\u00e0 la jonction \u2248 281 ft"
   },
   {
    "name": "RyanCompoundSX2: aucun virage plat",
@@ -148,7 +148,7 @@
   {
    "name": "RyanCompoundSX3: aucun virage plat",
    "ok": true,
-   "detail": "4 virages avec berm/sable ; seuls des d\u00e9ports plats \u2264 25\u00b0 restent : [12.0, -12.0, -23.6]"
+   "detail": "4 virages avec berm/sable ; seuls des d\u00e9ports plats \u2264 25\u00b0 restent : [15.0, -15.0, -23.6]"
   },
   {
    "name": "RyanCompoundSX1: couloirs non confondus",
@@ -173,12 +173,12 @@
   {
    "name": "SX1 / SX3: pistes s\u00e9par\u00e9es",
    "ok": true,
-   "detail": "distance mini entre lignes 420 ft"
+   "detail": "distance mini entre lignes 400 ft"
   },
   {
    "name": "SX2 / SX3: pistes s\u00e9par\u00e9es",
    "ok": true,
-   "detail": "distance mini entre lignes 221 ft"
+   "detail": "distance mini entre lignes 220 ft"
   },
   {
    "name": "Profils export\u00e9s = profils mesur\u00e9s JGSX",
@@ -198,7 +198,7 @@
  ],
  "lane_errors": [
   [
-   "SX1-F petit on-off (ligne d arrivee)",
+   "SX1-F triple + on-off (ligne d arrivee)",
    0.019812470770972933
   ],
   [
@@ -254,24 +254,24 @@
    0.030796030599103377
   ],
   [
-   "SX2-F triple de gros singles",
-   0.03235440814180465
+   "SX2-F triple (singles d avant + 1)",
+   0.03678007893845703
   ],
   [
-   "SX3-U1 triple, big single, mixed heights, Detroit triple, small bump",
-   0.03658478766505894
+   "SX3-U1 triple, big, triple, big, Detroit triple, small bump",
+   0.034164039589892024
   ],
   [
    "SX3-U2 whoops (entry+9), on-off, step-up",
    0.040493724925951824
   ],
   [
-   "SX3-U3 triple on table, off quad, quad",
-   0.030617786507587418
+   "SX3-U3 triple on table, off quad, S-big-S-big",
+   0.030494587368166657
   ],
   [
    "SX3-F triple, big double",
-   0.024810834497641425
+   0.026031451986555387
   ]
  ]
 }

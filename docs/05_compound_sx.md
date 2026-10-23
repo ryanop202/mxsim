@@ -18,7 +18,7 @@ Sens anti-horaire sur l'image, couloirs est-ouest de 370 ft. Origine locale (−
 
 | Couloir | Contenu (unités mesurées) | Longueur |
 |---|---|---|
-| ligne d'arrivée | **petit on-off** (single 3,4 → gros single 5,8 → single 3,7), placé avant l'entonnoir du départ — v4 | 111 ft |
+| ligne d'arrivée | triple (single 3,4 → gros single 5,8 → single 3,7) + 12 ft + **on-off Detroit** (g35_2 : 5,8 → 3,3), avant l'entonnoir du départ — v4/v5 | 198 ft |
 | T1 | gros berm 180° (`big_det_a`) — 1er virage | |
 | A | **triple-triple-quad** : 6 singles Arlington (3,4–4,0) + 4 singles Custom/Cleveland | 356 ft |
 | T2 | gros berm 180° (`big_cle`) | |
@@ -58,7 +58,7 @@ Sens horaire, couloirs nord-sud. Origine locale (609, 30). Tour **2717 ft**, ~1:
 | T7 | gros berm 180° | |
 | W2 | **table 9 ft** (Arlington g20_1) + triple | 173 ft |
 | T8 | gros berm 180° → ligne d'arrivée | |
-| F | **triple dur** : 3 gros singles courts 5,8 / 5,8 / 6,0 ft (Detroit g0_2, Arlington g28_2, Test Track g6_1) — v4 | 97 ft |
+| F | **triple** de singles normaux Cleveland (les 2 du double d'origine + 1) — v5 (le triple de gros singles courts de la v4 = « pains de sucre », refusé) | 106 ft |
 
 Départ : grille centrée en (809, 425), **cap nord**, dans l'infield, ligne de 95 ft puis entonnoir vers la jonction (720, 170)
 sur la ligne d'arrivée, avant T1. Départ → jonction ≈ **278 ft**. 8 virages, tous à berm.
@@ -71,21 +71,21 @@ lignes droites vides). Origine locale (8, 560), ligne d'arrivée à z local 330.
 | Section | Contenu | Longueur |
 |---|---|---|
 | F → T1 | arrivée (cap est) → gros berm 180° | |
-| U1 | **triple** (3 singles Arlington) → **gros single 5,9** → hauteurs mélangées 3,0 / 4,9 / 3,4 / 3,7 → 20 ft → **triple Detroit** (7,9 / 6,0 / 7,4) → 20 ft → **petite bosse 2,5 ft** pour ralentir avant T2 — v4 | 503 ft |
+| U1 | **triple** (3 singles Arlington) → **gros single 5,9** → triple (3,0 / 3,4 / 3,7) → **gros single 5,8** → 20 ft → **triple Detroit** (7,9 / 6,0 / 7,4) → 35 ft → **petite bosse 2,5 ft** ; commence dès la sortie de T1 (v4 : 80 ft trop loin) — v5 | 519 ft |
 | T2 | gros berm 180° | |
 | U2 | **10 whoops** (Detroit) **sans bosse derrière** → 30 ft → on-off (single, gros single 6,0, single) → 30 ft → **step-up** 8,8 → 11,2 — v4 | 519 ft |
 | GR | **sable Glendale : virage en S** (stamp miroir), cap est → ouest, 114 ft plus au nord — v4 : 70 ft plus tôt | |
-| U3 | déport plat 12° aller-retour (R 150) juste à la sortie du sable, puis **triple sur table, off quad** + quad | 419 ft |
+| U3 | **dès la sortie du sable** (v5) : triple sur table, off quad, puis single / **gros single 6,0** / single / **gros single 5,8** ; ensuite déport plat 15° aller-retour (R 120) avant le J | 441 ft |
 | GL | **sable Glendale : le J**, posé juste derrière le berm T2 (v3 : 135 ft plus à l'ouest, après 400 ft de ligne droite vide) | |
 | sortie | courbe plate de 23,6° (R 80 ft), comme à Glendale | |
-| F | triple + **gros double** Glendale, placé pour finir ~110 ft avant la jonction du départ (plus de longue ligne droite vide avant T1) — v4 | 272 ft |
+| F | **table 6,2 ft** (« saut à plat » pour ralentir) → triple → **gros double** Glendale, finit ~110 ft avant la jonction du départ — v5 | 333 ft |
 
 Départ : grille centrée en (638, 960), cap est, ligne de 140 ft puis entonnoir vers la jonction (898, 890), avant T1.
-Départ → jonction ≈ **279 ft**. 4 virages à berm/sable + 3 déports plats ≤ 25° (12°, −12°, −23,6°).
+Départ → jonction ≈ **279 ft**. 4 virages à berm/sable + 3 déports plats ≤ 25° (15°, −15°, −23,6°).
 
 Pourquoi le déport : 43 ft (espacement) + 114 ft (décalage GR) + 187 ft (décalage GL) + sortie du J ne referment pas la boucle sur
 la ligne d'arrivée (≈ 20 ft d'écart). v3 : déport de 8° dans la fin vide de U3 ; v4 : U3 raccourci → déport de 12° (R 150) placé
-dans la sortie du sable GR, avant le combo.
+dans la sortie du sable GR, avant le combo ; v5 : combo dès la sortie du sable (on arrivait trop vite), déport de 15° (R 120) après le combo.
 
 ## Départs (v3, « pour qu'on puisse vraiment faire des courses »)
 
@@ -112,7 +112,8 @@ Répartition (cases de tilemap) : sol 3,43 M, sauts 416 k, berms 122 k, whoops 1
 | **v1** | 1 MX + 2 SX (MX = sections Desert Sand / Dr. Dew recollées ; SX = sections JGSX entières) | MX « pas du tout » ; SX : « pas de vrai enchaînement, que des triples » ; virages « parfaits » sauf « un p'tit rebord en rentrant » ; whoops « vraiment bien, juste les changer entre les pistes » |
 | **v2** | SX seulement. Bibliothèque d'**unités** (`sx_units`) + composition (`compose.py`) → vrais enchaînements (triple sur table off quad, triple-triple-quad, quad-quad…) ; whoops différents par piste ; rebord des berms corrigé ; SX3 plus long avec sable « tranquille » | « SX1 vraiment bien, SX2 ça va, SX3 forme bizarre » → SX3 refait compact |
 | **v3** | Berm sur le virage plat du SX1 (T7) ; départs façon JGSX pour les 3 ; SX2 départ au milieu ; sable = stamps Glendale (photo) ; plus aucun virage plat > 25° | **1er test en jeu** de Ryan → retours détaillés (doc 07 § 6) |
-| **v4** | Retours du test en jeu : SX1 single après whoops plus loin/plus bas, triple sur table off, on-off sur l'arrivée ; SX2 1er virage sans rebord, E1 bosse-bosse-table-bosse-table-bosse, triple dans le virage, whoops sans bosse, triple dur à l'arrivée ; SX3 hauteurs mélangées, petite bosse après le triple, whoops sans bosse, sable plus proche, J derrière T2, arrivée sans longue ligne droite | à tester |
+| **v4** | Retours du test en jeu : SX1 single après whoops plus loin/plus bas, triple sur table off, on-off sur l'arrivée ; SX2 1er virage sans rebord, E1 bosse-bosse-table-bosse-table-bosse, triple dans le virage, whoops sans bosse, triple dur à l'arrivée ; SX3 hauteurs mélangées, petite bosse après le triple, whoops sans bosse, sable plus proche, J derrière T2, arrivée sans longue ligne droite | SX1/SX2 « bien », retours v5 (doc 07 § 7) |
+| **v5** | SX1 : on-off Detroit après le triple d'arrivée ; SX2 : triple d'arrivée en singles normaux ; SX3 : U1 commence dès T1, triple-gros-triple-gros, U3 dès la sortie du sable avec 2 gros singles, table avant le triple d'arrivée | à tester |
 
 ## Contrôles automatiques (39)
 

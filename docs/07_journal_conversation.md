@@ -110,6 +110,22 @@ Ce que ça a donné (v4, détail dans doc 05) :
 - **Règle retenue : jamais de bosse plus grosse juste après des whoops** (sauf demande explicite, comme le single du SX1 B).
 - Interprétation à confirmer par Ryan : SX3 « derrière l'appui » = le J passe juste derrière (à l'ouest) le berm T2.
 
+## 7. Test de la v4 → v5
+
+- **SX1** : « piste 1 c'est bien » ; seul changement : après le triple de la ligne d'arrivée, « enchaîne avec un on-off » pour casser
+  la ligne droite → on-off Detroit (g35_2) ajouté.
+- **SX2** : le reste bien ; le triple de l'arrivée : « c'est des pains de sucre … garde les bosses d'avant, juste rajoute-en une »
+  → retour aux singles du double v3 + 1.
+- **SX3** : tracé v4 validé (« c'est bien les changements »). Corrections : après le 1er virage l'enchaînement commençait trop loin
+  (v4 l'avait décalé de 80 ft) → remis juste après T1 ; la bosse 4,9 ft = « pain de sucre » → remplacée, motif
+  triple – gros single – triple – gros single ; après le sable GR « l'enchaînement commence trop loin, t'arrives beaucoup trop vite »
+  et bosses trop similaires → combo dès la sortie du sable + 2 gros singles ; avant le petit triple de l'arrivée « ralentis un peu …
+  un saut à plat avant » → table 6,2 ft.
+- **Règle** : pas de « pains de sucre » = bosses courtes et pointues (≥ 4,5 ft de haut sur ≤ 35 ft de long : Detroit g0_2,
+  Arlington g28_2, Test Track g6_1, Test Track g30_3…). Les gros singles OK = longs (≥ 46 ft : Arlington g37_2, g1_2, Cleveland g29_3).
+- À vérifier avec Ryan : « le virage relevé beaucoup trop loin » au départ du SX3 interprété comme « l'enchaînement après le virage
+  commence trop loin » (le virage lui-même n'a pas bougé depuis la v3).
+
 ## Décisions techniques importantes (et pourquoi)
 
 | Décision | Pourquoi |

@@ -5,9 +5,9 @@ Base de travail pour faire des pistes **MX Simulator** à partir de mesures rée
 - **toutes les mesures** des 3 archives de référence (JGMX Desert Sand, JGMX Dr. Dew, JGSX 2026 Test Tracks) : bosses, singles, doubles, tables, on-off, step-up, whoops, berms, sable, départs, profils en travers ;
 - le **compound SX** (3 pistes sur un même terrain) prêt à copier dans MX Simulator ;
 - les **scripts** qui refont tout (mesures → bibliothèque → pistes → contrôles → figures) ;
-- la **doc complète** : formats de fichiers, méthode, décisions, retours de Ryan, historique v1 → v4.
+- la **doc complète** : formats de fichiers, méthode, décisions, retours de Ryan, historique v1 → v5.
 
-> ⚠️ **État : v3 testée en jeu par Ryan, v4 (ses corrections) pas encore testée.** Tout ce qui est « validé » l'est par des contrôles automatiques
+> ⚠️ **État : v3 et v4 testées en jeu par Ryan, v5 (ses corrections) pas encore testée.** Tout ce qui est « validé » l'est par des contrôles automatiques
 > (relecture des fichiers exportés, géométrie, profils). Checklist de test : `docs/08_installation_et_test.md`.
 
 ## Démarrage rapide (nouveau PC)
@@ -32,12 +32,12 @@ npm install && ./tools/extract_refs.sh               # -> refs/extracted/ (voir 
 
 Sous Windows : Git Bash ou WSL pour les `.sh` (les scripts Python marchent partout).
 
-## Les 3 pistes (v4)
+## Les 3 pistes (v5)
 
 | Piste | Tour | Estimation* | Départ → jonction | Ce qu'il y a |
 |---|---|---|---|---|
-| SX 1 | 2931 ft (893 m) | ~1:04 | 368 ft | triple-triple-quad, 12 whoops + single, triple sur table / off quad, step-up + triple sur table off, on-off Detroit, quad, on-off d'arrivée ; 7 virages à berm |
-| SX 2 | 2717 ft (828 m) | ~1:03 | 278 ft | départ au milieu, rythmique Arlington, bosse-bosse-table-bosse-table-bosse, gros double + triple, triple sur table, 8 whoops, quad-quad, table 9 ft, triple dur |
+| SX 1 | 2931 ft (893 m) | ~1:04 | 368 ft | triple-triple-quad, 12 whoops + single, triple sur table / off quad, step-up + triple sur table off, on-off Detroit, quad, triple + on-off d'arrivée ; 7 virages à berm |
+| SX 2 | 2717 ft (828 m) | ~1:03 | 278 ft | départ au milieu, rythmique Arlington, bosse-bosse-table-bosse-table-bosse, gros double + triple, triple sur table, 8 whoops, quad-quad, table 9 ft, triple d'arrivée |
 | SX 3 (sand) | 3349 ft (1021 m) | ~1:07 | 279 ft | sable Glendale (J + virage en S), hauteurs mélangées + triple Detroit, 10 whoops, on-off, step-up, triple sur table off quad, gros double |
 
 \* modèle point-masse grossier (`scripts/laptime.py`), **pas** un chrono mesuré en jeu.
