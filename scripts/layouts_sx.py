@@ -40,10 +40,11 @@ def sec(name, tokens, u0):
 STARTS = {}
 N_GATES, GATE_PITCH = 22, 4.0          # JGSX 2026: 22 gates at 4 ft
 
-def _start(name, ox, oz, gate, heading, route, narrow, finish=None):
+def _start(name, ox, oz, gate, heading, route, narrow, finish=None, end_w=None):
     """route ops in LOCAL coords (see starts.py); merge = end of the route (must lie on the lap line)."""
     rt = [(op[0], (ox + op[1][0], oz + op[1][1])) if op[0] == 'TO' else op for op in route]
     S0 = dict(gate=(ox + gate[0], oz + gate[1]), heading=heading, route=rt, narrow=narrow, finish=finish)
+    if end_w: S0['end_w'] = end_w
     from starts import StartRoute
     R = StartRoute(S0, N_GATES, GATE_PITCH); S0['merge'] = (float(R.merge[0]), float(R.merge[1])); S0['straight'] = R.s_straight
     S0['length'] = R.L; STARTS[name] = S0
@@ -92,15 +93,20 @@ def sx2():
     p.turn(-90, RS, SMALL2, tag='T6')                        # west -> north
     p.straight(429.0 - 60.0, [sec('SX2-W1 double ligne, gros, S, table, S, gros, S', [('split', SD[0], 'Custom1_g30_1'), 'Arlington_g37_2', SD[1], TABLE_A, SC[0], 'Custom1_g29_3', SC[2]], 34.0)], tag='W1 double ligne (petite bosse a droite) + table au milieu (v7)')
     p.turn(-180, RB, BIG, tag='T7')                          # north -> south
-    # v11: 1st small = double ligne (left: low bump 1.9 ft to double into the big, right: normal small 3.0 ft, both ending 2.6 ft after where
-    # the v10 small ended: the right line and everything after it are exactly v10, the left bump starts 6.6 ft earlier)
-    p.straight(345.0 - 60.0, [sec('SX2-W2 small big small + big triple', [('split', 'Custom1_g30_1', 'Custom_g32_2', 'end'), 'Arlington_g37_2', 'Custom_g32_2', ('gap', 13.0)] + BIG_TRIPLE, 28.0)], tag='W2 small (double ligne)-big-small (depart) + big triple (arrivee) (v11)')
+    # v11b: first triple = the first three bumps of W1 (double ligne Detroit g36_1 | low Custom1 g30_1, Arlington g37_2,
+    # Glendale g36_1, measured gaps) with the double ligne mirrored (low bump on the LEFT); big triple at the same place as before
+    p.straight(345.0 - 60.0, [sec('SX2-W2 small big small + big triple', [('split', 'Custom1_g30_1', SD[0]), 'Arlington_g37_2', SD[1], ('gap', 6.8)] + BIG_TRIPLE, 22.0)], tag='W2 small (double ligne)-big-small (depart) + big triple (arrivee) (v11)')
     p.turn(+180, RB, BIG2, tag='T8')                         # south -> north (finish lane F)
     p.straight(345.0 - 140.0, [sec('SX2-F triple (singles d avant + 1)', SC[:3], 8.0)], tag='F triple de singles normaux (v5)')
     # v10: grid in the infield heading north, flat left turn, crosses the (flat) top of the F lane, flat left turn into W2
     # right after T7: the start rejoins on the small-big-small; finish line on the W2 big triple (first jump crest)
-    _start('SX2', ox, oz, gate=(206.0, 395.0), heading=-90.0, route=[('S', 293.0), ('T', +90, 30.0), ('S', 97.0), ('T', +90, 11.0)],
-           narrow=[(0.0, None), (15.0, None), (293.0, 62.0), (340.0, 40.0), (380.0, 40.0), (415.0, 30.0)],   # v11: gradual taper, no funnel
+    # v11b (Ryan's drawing): the corridor runs slightly north-west while narrowing regularly (right edge = one straight line),
+    # flat left turn R 51 across the top of F, flat left turn R 8 into W2
+    R1, R2, zl = 50.0, 8.0, 70.0                                 # local: westward leg at z 70 (world 100), 26 ft wide: between the T7 berm skirt and the W2 double ligne
+    s_t1 = 20.0 + float(np.hypot(206.0 - 173.0, 375.0 - 170.0)) + 50.0
+    _start('SX2', ox, oz, gate=(206.0, 395.0), heading=-90.0,
+           route=[('S', 20.0), ('TO', (173.0, 170.0)), ('TO', (173.0, zl + R1)), ('T', +90, R1), ('TO', (68.0 + R2, zl)), ('T', +90, R2)],
+           narrow=[(0.0, None), (15.0, None), (s_t1, 40.0), (s_t1 + 78.5, 36.0), (s_t1 + 94.0, 26.0)], end_w=26.0,
            finish=('SX2-W2 small big small + big triple', 3))
     return p
 

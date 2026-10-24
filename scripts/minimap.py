@@ -1,6 +1,7 @@
 """Minimaps (map.png, 1024 x 1024 RGBA like JGMX Dr. Dew): the top-view look (hillshade + height colours) without any line
-or label. v11 (Ryan): each folder's map is framed on ITS track only (square box around the track + 12 ft), same orientation as
-the top views (x to the right, z down), transparent outside the track.
+or label. v11b: MX Simulator stretches map.png over the WHOLE terrain (seen in game on v11: a map framed on the track put the
+rider arrow outside it), so the image must cover the whole 1186.8 ft terrain; each folder shows only its own track,
+transparent elsewhere, x to the right, z down (as the top views; matches the arrow in game).
 Writes tracks/<folder>/map.png and viewer/figures/06_minimap_SX*.png. Run after dress_sx.py."""
 import os as _os
 ROOT = _os.environ.get('MXSIM_ROOT') or _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))  # repo root
@@ -18,7 +19,7 @@ masks, xx, yy = D.riding_mask()
 for key, folder in FOLDERS.items():
     fm = masks[key]['foot']; zs, xs = np.nonzero(fm); c4 = 4 * D.S
     x0, x1, z0, z1 = xs.min() * c4 - 12, (xs.max() + 1) * c4 + 12, zs.min() * c4 - 12, (zs.max() + 1) * c4 + 12
-    side = max(x1 - x0, z1 - z0); cx, cz = (x0 + x1) / 2, (z0 + z1) / 2
+    side = D.SIZE; cx, cz = D.SIZE / 2, D.SIZE / 2                     # whole terrain (game mapping), see docstring
     gx = cx - side / 2 + (np.arange(M) + 0.5) * side / M; gz = cz - side / 2 + (np.arange(M) + 0.5) * side / M
     ix = np.clip((gx / D.S).astype(int), 0, D.N - 1); iz = np.clip((gz / D.S).astype(int), 0, D.N - 1)
     inside = ((gx >= 0) & (gx < D.SIZE))[None, :] & ((gz >= 0) & (gz < D.SIZE))[:, None]

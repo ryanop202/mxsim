@@ -208,6 +208,16 @@ Ce que ça a donné (v4, détail dans doc 05) :
 - **Sol** : « brun moche, pas texturé » → la même terre que sur la piste (decal track.png) partout où il n'y a rien, routes béton gardées.
 - **Minimaps** : cadrées sur chaque piste (avant : le compound entier).
 
+## 15. Retours v11 (capture en jeu) → v11b
+
+- Le logo des tuffs se lit bien en jeu. Mais ils sont « pas assez vers la piste, ça peut couper » → chaque bloc est posé au bord du
+  couloir (centre à 16,5 ft de la ligne de course, parallèle à la ligne), glissé de ±8 ft vers le sol le plus plat.
+- Minimap « pas du tout bien réglée » : la capture montre que le jeu étire `map.png` sur **tout le terrain** (la flèche du pilote
+  sortait de la carte cadrée) → retour à une image qui couvre tout le terrain, seule la bonne piste visible.
+- SX2 : départ redessiné (couloir légèrement vers le nord-ouest, bord droit en ligne droite, virage à plat R 50 au-dessus de F,
+  26 ft à la jonction) ; 1er triple de W2 = les 3 premières bosses de W1 (double ligne inversée : petite bosse à gauche),
+  big triple à la même place.
+
 ## Décisions techniques importantes (et pourquoi)
 
 | Décision | Pourquoi |

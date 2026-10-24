@@ -215,13 +215,32 @@ def sand_decals():
 # (x, z, direction of the mark) in world ft, read from his annotated 01_top_SX3.jpg (axes 20-1150 x 620-1065, 1.0407 px/ft)
 TUFFS = [(956.9, 717.6, (-0.84, -0.54)), (305.8, 738.2, (-0.95, 0.31)), (979.9, 760.2, (-0.27, 0.96)),
          (349.6, 928.5, (-0.81, 0.59)), (265.5, 975.1, (-0.76, -0.65))]
+TUFF_EDGE = 16.5   # v11b: block centre 16.5 ft from the riding line = its inner face at the edge of the 30 ft JGSX lane
 def tuff_rows():
-    out = []
-    for x, z, (ex, ez) in TUFFS:
-        fx = np.array([ex, ez]); q = np.array([[x, z]]) + np.outer(np.linspace(-2.7, 2.7, 5), fx)
+    """Ryan's marks, pulled onto the edge of the riding lane ('pas assez vers la piste, ça peut couper'): each block goes to
+    TUFF_EDGE ft from the nearest point of the SX3 riding line, on the side of the mark, parallel to the line there."""
+    from scipy.spatial import cKDTree
+    smp = PATHS['SX3'].samples(0.5); tr = cKDTree(np.c_[smp['x'], smp['z']]); out = []
+    for x, z, _ in TUFFS:
+        d, i = tr.query([x, z]); best = None
+        for k in range(-16, 17):                                    # slide along the line (+-8 ft) to the flattest footprint
+            j = int(np.clip(i + k, 0, len(smp['x']) - 1)); P0 = np.array([smp['x'][j], smp['z'][j]])
+            u = (np.array([x, z]) - np.array([smp['x'][i], smp['z'][i]])) / d
+            c = P0 + u * TUFF_EDGE; fx = np.array([np.cos(smp['th'][j]), np.sin(smp['th'][j])])
+            q = np.array([c]) + np.outer(np.linspace(-2.7, 2.7, 5), fx)
+            q = np.vstack([q + np.array([-fx[1], fx[0]]) * o for o in (-0.9, 0, 0.9)])
+            hh = H[(q[:, 1] / S).astype(int).clip(0, N - 1), (q[:, 0] / S).astype(int).clip(0, N - 1)]
+            score = np.ptp(hh) + 0.02 * abs(k)
+            if best is None or score < best[0]: best = (score, c, fx, hh)
+        _, c, fx, hh = best
+        for _ in range(10):                                         # no part of the line nearer than TUFF_EDGE (corners)
+            dd, jj = tr.query(c)
+            if dd >= TUFF_EDGE - 0.05: break
+            c = c + (c - np.array([smp['x'][jj], smp['z'][jj]])) / dd * (TUFF_EDGE - dd)
+        q = np.array([c]) + np.outer(np.linspace(-2.7, 2.7, 5), fx)
         q = np.vstack([q + np.array([-fx[1], fx[0]]) * o for o in (-0.9, 0, 0.9)])
         hh = H[(q[:, 1] / S).astype(int).clip(0, N - 1), (q[:, 0] / S).astype(int).clip(0, N - 1)]
-        out.append((x, z, ang_of(ex, ez), float(hh.min())))
+        out.append((c[0], c[1], ang_of(fx[0], fx[1]), float(hh.min() + hh.max()) / 2))   # y = middle of the local ground
     return out
 
 def turn_cones(p):

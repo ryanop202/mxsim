@@ -34,7 +34,8 @@ class StartRoute:
         nw = self.S0['narrow']
         if isinstance(nw, list):
             ks = [k[0] for k in nw]; ws = [self.W0 if k[1] is None else k[1] for k in nw]
-            return np.interp(s, ks + [self.L, 1e9], ws + [LANE_W, LANE_W])
+            we = self.S0.get('end_w', LANE_W)                 # width at the merge (default: a lap lane)
+            return np.interp(s, ks + [self.L, 1e9], ws + [we, we])
         a, b = nw
         return np.interp(s, [0, a, b, 1e9], [self.W0, self.W0, LANE_W, LANE_W])
 

@@ -62,3 +62,9 @@ Convention d'angle (statues et decals) : l'axe z local du modèle / l'axe vertic
 - **Minimaps** : carré autour de la piste (+12 ft), même sens que les vues de dessus, transparent hors piste.
 - **Portes** (`export_sx.gate_marks`) : vecteur = sens de la course × half (comme toutes les références), 1 porte au milieu de chaque
   virage, 2 par couloir (3 au-delà de 330 ft), arrivée en dernier.
+
+## v11b
+
+- Tuffs : au bord du couloir (`TUFF_EDGE` = 16,5 ft), y = milieu du sol local, contrôle « ni enterré ni en l'air de plus de 0,5 ft ».
+- Minimap : le jeu étire `map.png` sur tout le terrain (vu en jeu) → l'image couvre tout le terrain. Elle ne peut pas être plus
+  « zoomée » sans réduire le terrain de chaque piste.

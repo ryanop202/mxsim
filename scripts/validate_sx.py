@@ -150,7 +150,12 @@ for l in open(f'{SX1D}/statues'):
     nobj += 1
     if len(q) and ride_c.query(q)[0].min() < 1.0: worst.append((model, round(x), round(z), 'couloir de départ')); continue
     lim = 0.85 if model.startswith('tuff') else 0.05      # tuff blocks may sit on the foot of two jump walls (y = local ground)
-    if (model != '2' and (dmin < 17.0 or hmax > lim)) or (model == '2' and dmin < 17.0): worst.append((model, round(x), round(z), round(dmin, 1), round(hmax, 2)))
+    if model.startswith('tuff'): lim, dlim = 1.5, 15.0          # v11b: tuff blocks AT the lane edge (centre 16.5 ft, corners >= 15 ft on curves), may sit on a sand berm foot
+    else: dlim = 17.0
+    if model.startswith('tuff'):                                  # y = local ground: neither buried nor floating by more than 0.5 ft
+        hmin = float(T.h(q[:, 0], q[:, 1]).min()); lim = 9.9
+        if hmax - y > 0.5 or y - hmin > 0.5: worst.append((model, round(x), round(z), 'sol en pente', round(hmin, 2), round(hmax, 2)))
+    if (model != '2' and (dmin < dlim or hmax > lim)) or (model == '2' and dmin < 17.0): worst.append((model, round(x), round(z), round(dmin, 1), round(hmax, 2)))
 check('Objets hors piste (tuff blocks, grillages, poteaux, paddock, repères)', not worst, worst[:8] or f'{nobj} objets : tous à plus de 17 ft des lignes de course et sur sol plat')
 refs2 = set()
 for fname in ('statues', 'decals', 'timing_gates'):

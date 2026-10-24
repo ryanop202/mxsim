@@ -5922,7 +5922,7 @@
   "pit_side": "right",
   "finish_flagger": [
    655.5,
-   249.5
+   250.0
   ],
   "boards": [
    [
@@ -10665,7 +10665,7 @@
    ]
   ]
  },
- "ground_decals": 6199,
+ "ground_decals": 6276,
  "tuffs": 5,
  "road_cells": 351018
 }

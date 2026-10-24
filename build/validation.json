@@ -83,7 +83,7 @@
   {
    "name": "USLAND2026SX2: tours compt\u00e9s sans bug (simulation des portes)",
    "ok": true,
-   "detail": "1er tour : 32 portes franchies dans l'ordre (3308 ft depuis la grille) ; tours suivants : 29 portes, arriv\u00e9e = derni\u00e8re porte"
+   "detail": "1er tour : 32 portes franchies dans l'ordre (3274 ft depuis la grille) ; tours suivants : 29 portes, arriv\u00e9e = derni\u00e8re porte"
   },
   {
    "name": "USLAND2026SX2: grille de d\u00e9part (22 grilles comme JGSX)",
@@ -93,7 +93,7 @@
   {
    "name": "USLAND2026SX2: ligne de d\u00e9part d\u00e9gag\u00e9e jusqu\u2019au tour",
    "ok": true,
-   "detail": "couloir entier (largeur 92 -> 30 ft, sans entonnoir) plat, hauteur max 0.026 ft ; jonction sur la ligne du tour (\u00e9cart 0.00 ft) ; longueur grille -> jonction \u2248 454 ft"
+   "detail": "couloir entier (largeur 92 -> 30 ft, sans entonnoir) plat, hauteur max 0.027 ft ; jonction sur la ligne du tour (\u00e9cart 0.00 ft) ; longueur grille -> jonction \u2248 416 ft"
   },
   {
    "name": "USLAND2026SX2: aucun virage plat",
@@ -208,7 +208,7 @@
   {
    "name": "Habillage : fichiers r\u00e9f\u00e9renc\u00e9s pr\u00e9sents, grilles de d\u00e9part mod\u00e9lis\u00e9es",
    "ok": true,
-   "detail": "43 fichiers r\u00e9f\u00e9renc\u00e9s, 24227 decals, 22 grilles gate01"
+   "detail": "43 fichiers r\u00e9f\u00e9renc\u00e9s, 24093 decals, 22 grilles gate01"
   },
   {
    "name": "Terrain sans pics ni trous",
