@@ -16,3 +16,6 @@ legacy_mx/deliver/
 refs/extracted
 refs/archives
 # v11b: third-party JGSX/JGMX assets ARE versioned now (repo private since 2026-10-24, asked by Ryan)
+
+# v12: reference photos sent for the paddock objects (third-party, not ours): kept locally only
+docs/img/refs_paddock/

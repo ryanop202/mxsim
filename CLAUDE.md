@@ -13,6 +13,18 @@ Tu reprends un projet commencé dans une autre conversation. Lis dans cet ordre 
 - **Poser des questions** avant une tâche complexe ou ambiguë (préférence explicite).
 - Il teste en jeu chez lui, plus tard. Il juge sur ce qu'il voit : vues de dessus d'abord.
 
+- **Attention** : d'autres personnes de l'équipe travaillent aussi sur ce dépôt (v12 : objets USLAND, paddock, arche, départ).
+  Ne pas supposer que la personne est Ryan ; ne pas lui attribuer les retours des autres.
+
+## Objets 3D / décor (v12) — lire `docs/12_objets_usland.md` AVANT de dessiner quoi que ce soit
+
+- Générateur : `scripts/props_usland.py` (specs contrôlées automatiquement), placement : `scripts/props_place.py`,
+  aperçu 3D : `scripts/preview_props.py` → toujours montrer l'aperçu et le vérifier soi-même avant de mettre en jeu.
+- Règles de design (retours de l'utilisateur) : pas de formes carrées (arrondir), réaliste et épuré, logos peu nombreux /
+  centrés / même taille / jamais déformés, logos noirs sur vitres grises, jamais deux USLAND côte à côte, vraies roues,
+  volumes creux crédibles, pas de treillis inutile, objets alignés, drapeaux pointe vers l'avant (câble), bord haut légèrement arqué,
+  enseignes découpées autour du logo, aucun logo à l'envers / en miroir (vérifier chaque face). Détail : doc 12 § 3.
+
 ## Règles du projet (non négociables)
 
 - **Ne jamais dire qu'une piste marche / a été testée en jeu.** Ce qu'on sait = contrôles automatiques. Dire « non testé en jeu ».
@@ -46,10 +58,13 @@ Tu reprends un projet commencé dans une autre conversation. Lis dans cet ordre 
 | Portes | 1 par virage + 2-3 par couloir |
 | « Ça fait 4 d'entrée » | trop d'élan / bosses trop serrées à l'entrée d'un enchaînement → coller au virage, écarter, ou 1re bosse petite |
 
-## État actuel (v11)
+## État actuel (v12, branche `v12-camions-arche`)
 
-- 3 pistes SX dans `tracks/` + habillage JGSX (doc 11), 43/43 contrôles, chaîne complète reproductible (`./make_all.sh`).
-- v3 à v10 testées en jeu ; v11 = ses corrections (portes dans le bon sens, départs sans entonnoir, tuff blocks USLAND placés à la main, cônes, terre, minimaps). **v11 pas encore testée en jeu.**
+- 3 pistes SX dans `tracks/` + habillage (doc 11) ; v12 : objets USLAND faits maison posés à la place des objets JGSX
+  (doc 12) : hospitality, pick-ups + vélos, grilles + grates + portique de départ, arche FINISH, bannières.
+- SX1 : arrivée déplacée sur la 1re bosse du step-up du couloir D (1er tour plus court : jonction -> arrivée).
+- v3 à v10 testées en jeu ; v11 et **v12 pas encore testées en jeu**. Contrôles v12 faits sans les archives (portes, comptage
+  des tours, objets) ; `./make_all.sh build` complet à relancer sur le PC qui a les archives.
 - Pistes d'amélioration notées dans `docs/10_suite_et_idees.md`.
 
 ## Pièges connus
