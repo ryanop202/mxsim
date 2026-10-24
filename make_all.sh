@@ -63,6 +63,8 @@ build() {
   run export_sx.py              # tracks/USLAND2026SX1..3 (needs refs for textures/tileinfo)
   run tuff_usland.py            # tuff block blanc logo USLAND (assets/usland_logo.png)
   run dress_sx.py               # habillage : grilles, grillages, tuff blocks, routes, paddock, decor, decals, drapeaux (needs refs)
+  run props_usland.py           # v12 : objets USLAND faits maison -> assets/props (specs contrôlées)
+  run place_props.py            # v12 : les pose à la place des objets JGSX (hospitality, pick-ups + vélos, grilles, grates, portique, arche)
   run minimap.py                # map.png de chaque dossier (vue de dessus sans lignes)
   run validate_sx.py            # build/validation.json (39 checks)
   run laptime.py                # build/laptime.json (estimate, not measured in game)

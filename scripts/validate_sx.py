@@ -139,6 +139,7 @@ def _bbox(model):
 BB = {}; worst = []; nobj = 0
 for l in open(f'{SX1D}/statues'):
     if not l.strip() or 'ET_compound' in l: continue
+    if any(f'/{m}.jm' in l for m in ('finish_arch', 'start_gantry', 'start_grate', 'bike_trainer')): continue   # v12: over / on the track on purpose (checked below)
     nums = [float(t) for t in re.findall(r'-?\d+\.?\d*', l.split('@')[0])]; x, y, z, a = nums[:4]; model = l.split()[4].split('/')[-1][:-3]
     if model not in BB: BB[model] = _bbox(model)
     lo, hi = BB[model]; f_ = np.array([-np.sin(a), -np.cos(a)]); n_ = np.array([f_[1], -f_[0]])
@@ -164,7 +165,7 @@ for fname in ('statues', 'decals', 'timing_gates'):
             if tok.startswith('@USLAND2026'): refs2.add(tok[1:])
 miss = [r_ for r_ in refs2 if not os.path.exists(f'{DIST}/{r_}')]
 nd = sum(1 for _ in open(f'{SX1D}/decals'))
-gl = [l for l in open(f'{SX1D}/timing_gates') if l.startswith('[') and 'gate01.jm' in l]
+gl = [l for l in open(f'{SX1D}/timing_gates') if l.startswith('[') and 'start_gate.jm' in l]          # v12: USLAND gates
 badf = []
 for d_ in paths:
     for l in open(f'{DIST}/{d_}/flaggers'):
@@ -174,7 +175,14 @@ for d_ in paths:
             dm = min(r_.query([q[0], q[2]])[0] for r_ in ride)
             if dm < 20: badf.append((d_[-3:], round(q[0]), round(q[2]), round(dm, 1)))
 check('Drapeaux hors piste', not badf, badf or 'panneaux 30 s et drapeau d’arrivée à plus de 20 ft des lignes de course')
-check('Habillage : fichiers référencés présents, grilles de départ modélisées', not miss and len(gl) == 22, miss[:5] or f'{len(refs2)} fichiers référencés, {nd} decals, 22 grilles gate01')
+# v12: USLAND finish arches (pillars clear of every riding line, flat feet, room under the beam), gate models, grates
+import props_place as PP_
+T_ = PP_.load_terrain(); bad_arch = []
+for k_ in ('SX1', 'SX2', 'SX3'):
+    A_ = PP_.arch_pose(k_, T_)
+    if A_['pillar_line_dist'] < 17 or A_['plate_slope'] > 1.5 or A_['clearance'] < 18: bad_arch.append((k_, round(A_['pillar_line_dist'], 1), round(A_['plate_slope'], 2), round(A_['clearance'], 1)))
+check('Arches d’arrivée USLAND', not bad_arch, bad_arch or 'poteaux à ≥ 17 ft des lignes, pieds sur sol plat, ≥ 18 ft sous la poutre au-dessus de la crête')
+check('Habillage : fichiers référencés présents, grilles de départ modélisées', not miss and len(gl) == 22, miss[:5] or f'{len(refs2)} fichiers référencés, {nd} decals, 22 grilles USLAND')
 lap = np.max(np.abs(ndi.laplace(H)))
 check('Terrain sans pics ni trous', lap < 4.0, f'|laplacien| max {lap:.2f}')
 json.dump(R, open(f'{BUILD}/validation.json', 'w'), indent=1, default=float)

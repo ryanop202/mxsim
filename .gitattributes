@@ -8,3 +8,4 @@ tracks/** -text
 *.npy binary
 *.jpg binary
 tracks/**/tilemap binary
+*.jm -text

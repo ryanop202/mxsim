@@ -1,0 +1,94 @@
+"""v12 : pose les objets USLAND (props_usland.py) dans les 3 pistes, à la place des objets JGSX, 1 pour 1.
+  - semi JGSX (semi_1)          -> hospitality USLAND (même place, même axe ; décalé de 13 ft vers l'extérieur du grillage)
+                                   + 8 bannières (les 4 dans le même ordre de chaque côté du tapis rouge)
+  - vans JGSX (transit) x3      -> pick-ups USLAND (même place, même angle) + un vélo sur home-trainer dans chaque benne
+  - grilles JGSX (gate01)       -> grilles USLAND (lignes startinggate de timing_gates : le jeu les fait tomber)
+  - arche FINISH sur la porte d'arrivée, portique au-dessus de la rangée de grilles, une grate par grille
+  - commissaire d'arrivée déplacé à côté de l'arche (jamais sur un poteau)
+  - copie assets/props/* dans tracks/<SX1>/statue/ (référencés @USLAND2026SX1/statue/...)
+Les autres objets JGSX (camion-citerne, citerne, bulldozer, bobcat, Matrix + tente, grillages, poteaux...) restent pour l'instant.
+Relançable : retire d'abord les objets USLAND déjà posés. Lancé par make_all.sh juste après dress_sx.py ; marche aussi seul
+(sans les archives de référence) sur les pistes déjà construites :  python3 scripts/place_props.py"""
+import os, sys, json, shutil, re
+ROOT = os.environ.get('MXSIM_ROOT') or os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, ROOT + '/scripts')
+import numpy as np
+from names import FOLDERS as F
+import props_place as PP
+import props_usland as PU
+
+OUT = ROOT + '/tracks'; P = '@' + F['SX1']; A = f'{OUT}/{F["SX1"]}'
+OURS = ('hospitality_usland', 'pickup_usland', 'bike_trainer', 'banner', 'finish_arch', 'start_gantry', 'start_grate')
+REPLACED = ('semi_1', 'transit')
+
+def line(x, y, z, a, model, tex):
+    return f'[{x:.6f} {y:.6f} {z:.6f}] {a:.6f} {P}/statue/{model}.jm {P}/statue/{tex}.png null'
+
+def parse(l):
+    nums = [float(t) for t in re.findall(r'-?\d+\.?\d*(?:e-?\d+)?', l.split('@')[0])]
+    return nums[0], nums[1], nums[2], nums[3], l.split()[4].split('/')[-1][:-3]
+
+def outward(x, z, rects):
+    """unit vector from the nearest fence side towards the outside (the paddock strip)."""
+    best = None
+    for x0, x1, z0, z1 in rects:
+        for d, o in ((abs(z - z0), (0.0, -1.0)), (abs(z - z1), (0.0, 1.0)), (abs(x - x0), (-1.0, 0.0)), (abs(x - x1), (1.0, 0.0))):
+            if best is None or d < best[0]: best = (d, np.array(o))
+    return best[1]
+
+def main():
+    T = PP.load_terrain()
+    rep = json.load(open(f'{ROOT}/build/dress_report.json')); rects = [rep[k]['fence'] for k in ('SX1', 'SX2', 'SX3')]
+    stat = open(f'{A}/statues').read().split('\n')
+    keep, new = [], []
+    for l in stat:
+        if not l.strip(): continue
+        m = l.split()[4].split('/')[-1][:-3] if len(l.split()) > 4 else ''
+        if m in OURS: continue                                          # ours from a previous run
+        if m == 'semi_1':
+            x, y, z, a, _ = parse(l); o = outward(x, z, rects); c = np.array([x, z]) + o * 13.0
+            # local +x (entrance module, stairs, carpet) -> world (-cos a, sin a) (proper rotation, to check in game):
+            # turn the trailer round if needed so the entrance faces the outside of the fence
+            if np.dot(np.array([-np.cos(a), np.sin(a)]), o) < 0: a += np.pi
+            new.append(line(c[0], 0.0, c[1], a, 'hospitality_usland', 'hospitality_usland'))
+            f = np.array([-np.sin(a), -np.cos(a)])                   # long axis of the trailer
+            xl = np.array([-np.cos(a), np.sin(a)])                   # towards the entrance / carpet
+            for side in (-1, 1):
+                for k, nm in enumerate(PU.BANNERS):
+                    u = (-50.0 if side < 0 else 12.6) + k * 12.4 + 6.0     # same 4, same order, each side of the carpet
+                    q = c + f * u + xl * 29.0
+                    new.append(line(q[0], 0.0, q[1], PP.ang_of(*xl), 'banner', 'banner_' + nm.lower()))   # parallel to the trailer
+            continue
+        if m == 'transit':
+            x, y, z, a, _ = parse(l)
+            new.append(line(x, 0.0, z, a, 'pickup_usland', 'pickup_usland'))
+            b = PP.bike_in_pickup(x, 0.0, z, a); new.append(line(b['x'], b['y'], b['z'], b['a'], 'bike_trainer', 'bike_trainer'))
+            continue
+        keep.append(l)
+    for key in ('SX1', 'SX2', 'SX3'):
+        Ap = PP.arch_pose(key, T); new.append(line(Ap['x'], Ap['y'], Ap['z'], Ap['a'], PP.ARCH_MODEL[key], PP.ARCH_MODEL[key]))
+        g = PP.gantry_pose(key, T); new.append(line(g['x'], g['y'], g['z'], g['a'], 'start_gantry', 'start_gantry'))
+        for x, y, z, a in PP.grate_poses(key, T): new.append(line(x, y, z, a, 'start_grate', 'start_grate'))
+    out = '\n'.join(keep + new) + '\n'
+    for key, folder in F.items():
+        d = f'{OUT}/{folder}'
+        open(f'{d}/statues', 'w', newline='\n').write(out)
+        # start gates: our gate model on every startinggate line (the game raises / drops it like gate01)
+        tg = open(f'{d}/timing_gates').read().split('\n'); sec = None; o2 = []
+        for l in tg:
+            if l.endswith(':'): sec = l
+            elif sec == 'startinggate:' and l.startswith('['):
+                l = ' '.join(l.split()[:4]) + f' {P}/statue/start_gate.jm {P}/statue/start_gate.png @startgate.shp'
+            o2.append(l)
+        open(f'{d}/timing_gates', 'w', newline='\n').write('\n'.join(o2))
+        # finish flagger next to the arch (21.5 ft from the lane, beside a pillar, never on it)
+        fl = PP.finish_flagger(key)
+        L = open(f'{d}/flaggers').read().split('\n'); idx = [i for i, l in enumerate(L) if l.startswith('[') and not l.startswith('[0.0')]
+        L[idx[2]] = f'[{fl[0]:.6f} 0.000 {fl[1]:.6f}]'; open(f'{d}/flaggers', 'w', newline='\n').write('\n'.join(L))
+    os.makedirs(f'{A}/statue', exist_ok=True)
+    for f in os.listdir(f'{ROOT}/assets/props'): shutil.copy(f'{ROOT}/assets/props/{f}', f'{A}/statue/{f}')
+    n = {m: sum(1 for l in new if f'/{m}.jm' in l) for m in OURS}
+    print('objets USLAND posés :', n, '| statues au total :', len(keep) + len(new))
+
+if __name__ == '__main__':
+    main()

@@ -22,3 +22,6 @@ tracks/*/sky/
 tracks/*/tiles/
 tracks/*/treads/
 tracks/*/roost/
+
+# v12: reference photos sent for the paddock objects (third-party, not ours): kept locally only
+docs/img/refs_paddock/

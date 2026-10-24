@@ -14,6 +14,7 @@
 | 09 | `09_donnees_mesurees.md` | **toutes les données** (généré) : chaque unité, whoop, berm, bloc, section MX |
 | 10 | `10_suite_et_idees.md` | limites connues, idées, prochaines étapes |
 | 11 | `11_habillage.md` | grilles de départ, grillages, paddock, paysage, decals, drapeaux (v9) |
+| 12 | `12_objets_usland.md` | **objets faits maison (v12)** : specs pour le jeu, remplacement de l'habillage JGSX, **règles de design** |
 
 Dossiers :
 - `data/` — tableaux CSV (séparateur `;`) : `sx_units`, `sx_blocks`, `sx_whoops`, `sx_berm_stamps`, `sx_floor_gaps`,

@@ -70,7 +70,9 @@ def sx1():
     p.turn(+90, RS, SMALL, tag='T6')
     p.straight((oz + z0 - RS) - p.z, [sec('SX1-V petite bosse + triple', ['Glendale_g40_2'] + SC[1:], 16.0)], tag='V quad')
     p.turn(+90, RS, SMALL2, tag='T7 (berm added)')
-    _start('SX1', ox, oz, gate=(120.0, z0 + 70.0), heading=0.0, route=[('S', 220.0), ('TO', (470.0, z0))], narrow=(220.0, 368.0))
+    # v12: finish line on the crest of the first bump of the lane D step-up (Arlington g30, as the JGSX finish double), arch on it
+    _start('SX1', ox, oz, gate=(120.0, z0 + 70.0), heading=0.0, route=[('S', 220.0), ('TO', (470.0, z0))], narrow=(220.0, 368.0),
+           finish=('SX1-D step-up, triple on table (longer), off', 0))
     return p
 
 # ---------------------------------------------------------------- SX2 (clockwise, N-S lanes, start straight in the middle)
