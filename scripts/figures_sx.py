@@ -27,7 +27,7 @@ def path_draw(ax, key, every=70):
     for k in range(0, len(x) - 3, every): ax.annotate('', xy=(x[k + 3], z[k + 3]), xytext=(x[k], z[k]), arrowprops=dict(arrowstyle='-|>', color='r', lw=1.1))
     G = parse_gates(f'{ROOT}/tracks/{FOLD[key]}/timing_gates')
     for i, cp in enumerate(G['cps']):
-        L_, cx, cy, cz, dx, dy, dz = cp[:7]; ax.plot([cx - dx, cx + dx], [cz - dz, cz + dz], color='#ff00ff' if i in G['normal'] else '#ffaa00', lw=0.8)
+        L_, cx, cy, cz, dx, dy, dz = cp[:7]; ax.plot([cx + dz, cx - dz], [cz - dx, cz + dx], color='#ff00ff' if i in G['normal'] else '#ffaa00', lw=0.8)
     st = np.array([g[:3] for g in G['start']]); ax.plot(st[:, 0], st[:, 2], 's', color='yellow', ms=2.5, mec='k', mew=0.3)
     S0 = LS.STARTS[key]; hd = np.radians(S0['heading']); f = np.array([np.cos(hd), np.sin(hd)]); gc = np.array(S0['gate'])
     from starts import StartRoute

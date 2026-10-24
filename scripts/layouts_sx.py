@@ -92,13 +92,16 @@ def sx2():
     p.turn(-90, RS, SMALL2, tag='T6')                        # west -> north
     p.straight(429.0 - 60.0, [sec('SX2-W1 double ligne, gros, S, table, S, gros, S', [('split', SD[0], 'Custom1_g30_1'), 'Arlington_g37_2', SD[1], TABLE_A, SC[0], 'Custom1_g29_3', SC[2]], 34.0)], tag='W1 double ligne (petite bosse a droite) + table au milieu (v7)')
     p.turn(-180, RB, BIG, tag='T7')                          # north -> south
-    p.straight(345.0 - 60.0, [sec('SX2-W2 small big small + big triple', ['Custom_g32_2', 'Arlington_g37_2', 'Custom_g32_2', ('gap', 13.0)] + BIG_TRIPLE, 32.0)], tag='W2 small-big-small (depart) + big triple (arrivee) (v10)')
+    # v11: 1st small = double ligne (left: low bump 1.9 ft to double into the big, right: normal small 3.0 ft, both ending 2.6 ft after where
+    # the v10 small ended: the right line and everything after it are exactly v10, the left bump starts 6.6 ft earlier)
+    p.straight(345.0 - 60.0, [sec('SX2-W2 small big small + big triple', [('split', 'Custom1_g30_1', 'Custom_g32_2', 'end'), 'Arlington_g37_2', 'Custom_g32_2', ('gap', 13.0)] + BIG_TRIPLE, 28.0)], tag='W2 small (double ligne)-big-small (depart) + big triple (arrivee) (v11)')
     p.turn(+180, RB, BIG2, tag='T8')                         # south -> north (finish lane F)
     p.straight(345.0 - 140.0, [sec('SX2-F triple (singles d avant + 1)', SC[:3], 8.0)], tag='F triple de singles normaux (v5)')
     # v10: grid in the infield heading north, flat left turn, crosses the (flat) top of the F lane, flat left turn into W2
     # right after T7: the start rejoins on the small-big-small; finish line on the W2 big triple (first jump crest)
-    _start('SX2', ox, oz, gate=(206.0, 395.0), heading=-90.0, route=[('S', 293.0), ('T', +90, 30.0), ('S', 93.0), ('T', +90, 15.0)],
-           narrow=(140.0, 280.0), finish=('SX2-W2 small big small + big triple', 3))
+    _start('SX2', ox, oz, gate=(206.0, 395.0), heading=-90.0, route=[('S', 293.0), ('T', +90, 30.0), ('S', 97.0), ('T', +90, 11.0)],
+           narrow=[(0.0, None), (15.0, None), (293.0, 62.0), (340.0, 40.0), (380.0, 40.0), (415.0, 30.0)],   # v11: gradual taper, no funnel
+           finish=('SX2-W2 small big small + big triple', 3))
     return p
 
 # ---------------------------------------------------------------- SX3 (long, Glendale sand: GR sweeper + GL J-turn)
@@ -136,13 +139,19 @@ def sx3():
     p.straight(p.x - (ox + X_GL), [], tag='U3 to sand')
     p.stamp('GL', tag='GL Glendale sand J-turn', snap=False)  # west -> south -> NE (Glendale sand, as built)
     p.turn(-np.degrees(-p.t), Rx, None, tag='sand exit bend (flat, R 80, as in Glendale)')
-    # v10: pain de sucre (forces braking), triple, JGSX finish double (Cleveland g30_2 8.8 -> Arlington g30_2 11.2, as built)
-    f3 = ['Custom1_g59_1', ('gap', 45.0)] + SC[:3] + [('gap', 35.0)] + FINISH_DBL
+    # v11: pain de sucre right at the sand exit (lap only: the start rejoins after it), then the triple and the JGSX finish double
+    # (Cleveland g30_2 8.8 -> Arlington g30_2 11.2) where the v9 triple + double were (double ends 108 ft before the turn)
+    x_pds, x_tri = 400.0, ox + 890.0 - 108.0 - 132.3 - 24.0 - 106.0           # v9: triple start, from the v9 double end
+    g1 = x_tri - (x_pds + 30.4)
+    f3 = ['Custom1_g59_1', ('gap', g1)] + SC[:3] + [('gap', 24.0)] + FINISH_DBL
     Lf = ox + 890.0 - p.x
-    p.straight(Lf, [sec('SX3-F pain de sucre, triple, double d arrivee JGSX', f3, (ox + XE3 + 70.0) - (ox + 890.0 - Lf))], tag='F pain de sucre + triple + double d arrivee (v10)')
-    # v10: grid under the F lane heading WEST, funnel, right U-turn with a big berm (faded near the lap lane) -> F, heading east
-    _start('SX3', ox, oz, gate=(780.0, Zf + 75.0), heading=180.0, route=[('S', 100.0), ('TO', (560.0, Zf + 43.0)), ('TO', (XE3, Zf + 43.0)), ('T', -180, RB, BIG)],
-           narrow=(100.0, 227.0), finish=('SX3-F pain de sucre, triple, double d arrivee JGSX', 4))
+    p.straight(Lf, [sec('SX3-F pain de sucre, triple, double d arrivee JGSX', f3, x_pds - p.x)], tag='F pain de sucre (sortie du sable) + triple + double d arrivee (v11)')
+    # v11: grid under the F lane heading WEST, gradual taper (no funnel), FLAT right U-turn (no berm) -> F heading east,
+    # merging between the pain de sucre and the triple
+    xc, R3 = 472.0, 24.0                    # corridor north edge kept straight at z ~918 (clear of the triple's skirt), width 92 -> 40
+    s_t = 15.0 + float(np.hypot(765.0 - (xc + 20.0), 405.0 - (Zf + 2 * R3))) + 20.0
+    _start('SX3', ox, oz, gate=(780.0, Zf + 75.0), heading=180.0, route=[('S', 15.0), ('TO', (xc + 20.0, Zf + 2 * R3)), ('TO', (xc, Zf + 2 * R3)), ('T', -180, R3, None)],
+           narrow=[(0.0, None), (15.0, None), (s_t, 40.0)], finish=('SX3-F pain de sucre, triple, double d arrivee JGSX', 4))
     return p
 
 SAND_TAGS = ()

@@ -60,7 +60,10 @@ def lane(tokens):
             p = whoops(t[1], t[2]); kind = 'W'; name = f'whoops {t[1]} x{t[2]}'; uid = None
         elif isinstance(t, tuple) and t[0] == 'split':
             pa, pb = unit(t[1])[1], unit(t[2])[1]; n = max(len(pa), len(pb))
-            pa = np.pad(pa, (0, n - len(pa))); pb = np.pad(pb, (0, n - len(pb)))
+            if len(t) > 3 and t[3] == 'end':      # v11: both bumps END together (keeps the rhythm of the next jump on both lines)
+                pa = np.pad(pa, (n - len(pa), 0)); pb = np.pad(pb, (n - len(pb), 0))
+            else:
+                pa = np.pad(pa, (0, n - len(pa))); pb = np.pad(pb, (0, n - len(pb)))
             split = (pa, pb); p = np.zeros(n); kind = 'S'; name = f'split {t[1]} | {t[2]}'; uid = None
         else:
             u, p = unit(t); kind = u['kind']; name = t; uid = ALIAS.get(t, t)

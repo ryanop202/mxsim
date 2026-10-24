@@ -49,14 +49,27 @@ lam, _ = lambert_shadow(H, S, [-0.6528, 0.3590, 0.6671], shadow=False)
 sh = np.clip(89.3 + 245.8 * lam, 0, 255).astype(np.uint8)          # calibrated on JGSX Detroit shading.ppm (r = 0.995)
 lighting = open(f'{DET}/lighting').read().replace('@JGSX2026Detroit/sky/', f'{P}/sky/')
 
-def gates(path, start, cp_step=60.0, half=18.0):
-    """JGSX-style timing (v10).
+def gate_marks(path):
+    """v11 (Ryan): fewer gates, only where needed - one in the middle of every turn (and of every Glendale sand stamp),
+    2 per rhythm lane (3 if longer than 330 ft), at 1/(n+1) .. n/(n+1) of the straight."""
+    out = []
+    for g in path.segs:
+        if g['kind'] in ('T', 'P'):
+            if g['kind'] == 'T' and abs(g['ang']) < 45: continue          # flat drifts / sand exit bend: not a turn
+            out.append(g['s0'] + g['L'] / 2)
+        elif g['kind'] == 'S' and g['L'] > 60:
+            n = 3 if g['L'] > 330 else 2
+            out += [g['s0'] + g['L'] * k / (n + 1) for k in range(1, n + 1)]
+    return out
+
+def gates(path, start, half=18.0):
+    """JGSX-style timing (v11).
     - startinggate: 22 gates at 4 ft, facing the start heading.
-    - loop gates every cp_step ft after the finish line, finish gate last (normallap ends on it). The finish is the crest of a
-      jump (LS.STARTS[key]['finish'], like the JGSX finish double) or, by default, 8 ft before the merge.
-    - first lap: start-only gates along the start route, then the loop from the merge to the finish. If the finish comes soon
-      after the merge (less than half a lap), lap 1 = merge -> finish -> full lap -> finish: a separate gate F' (12 ft before
-      the finish, first lap only) is the first crossing, so every index appears once."""
+    - checkpoint line = 'half [centre] [vector]': the vector points ALONG the riding direction and its length is half (measured on
+      all 7 reference tracks: cos(travel, vector) median 0.97-1.0, |vector| = half). v10 had it across the track (wrong).
+    - loop gates = gate_marks (turns + 2-3 per lane), finish gate last (normallap ends on it): crest of a jump or 8 ft before the merge.
+    - first lap: 1-2 start-only gates on the start route, then the loop from the merge to the finish. If the finish comes soon
+      after the merge (less than half a lap), a separate gate F' (12 ft before the finish, first lap only) is crossed first."""
     from starts import StartRoute, finish_s
     smp = path.samples(0.5); L = path.s
     R = StartRoute(start, LS.N_GATES, LS.GATE_PITCH)
@@ -68,25 +81,27 @@ def gates(path, start, cp_step=60.0, half=18.0):
         lines.append(f'[{x:.6f} 0.000000 {z:.6f}] {ang:.6f}')
     lines.append('checkpoints:'); cps = []
     sF, sM = finish_s(path, start, LS.COMBOS)
+    def gate_at(x, z, th, hl): return (hl, x, z, np.cos(th) * hl, np.sin(th) * hl)      # vector along the travel direction
     def lap_gate(sv, hl0=half):
-        i = int(np.argmin(np.abs(smp['s'] - sv % L))); x, z, th = smp['x'][i], smp['z'][i], smp['th'][i]
+        i = int(np.argmin(np.abs(smp['s'] - sv % L)))
         hl = hl0 + (6.0 if path.segs[int(smp['seg'][i])]['kind'] == 'P' else 0.0)     # wider in the Glendale sand channel
-        return (hl, x, z, -np.sin(th) * hl, np.cos(th) * hl)
-    rel = list(np.arange(30.0, L - 20.0, cp_step))
+        return gate_at(smp['x'][i], smp['z'][i], smp['th'][i], hl)
+    rel = sorted({round((m - sF) % L, 1) for m in gate_marks(path)})
+    rel = [r for r in rel if 15.0 < r < L - 15.0 and abs(r - (sM - sF) % L) > 10.0]
     for r in rel: cps.append(lap_gate(sF + r))
     cps.append(lap_gate(sF)); fin = len(cps) - 1
     loop_idx = list(range(len(cps)))
     loop_rel = [((sF + r) - sM) % L for r in rel] + [(sF - sM) % L]           # position of every loop gate after the merge
-    # start-only gates across the corridor
+    # start-only gates: middle of the first straight, and of the last long straight of the route if any
     rs = R.samples(1.0); start_only = []
-    marks = [60.0, R.s_straight] + [float(g['s0'] + g['L'] / 2) for g in R.path.segs[1:] if g['kind'] == 'S' and g['L'] > 40]
-    for sv in sorted(set(round(m) for m in marks if 30 < m < R.L - 30)):
-        i = int(np.argmin(np.abs(rs['s'] - sv))); th = rs['th'][i]; hl = rs['w'][i] / 2 + 4.0
-        cps.append((hl, rs['x'][i], rs['z'][i], -np.sin(th) * hl, np.cos(th) * hl)); start_only.append(len(cps) - 1)
+    marks = [R.s_straight / 2 if R.s_straight > 60 else 30.0] + [float(g['s0'] + g['L'] / 2) for g in R.path.segs[1:] if g['kind'] == 'S' and g['L'] > 60][-1:]
+    for sv in sorted(set(round(m) for m in marks if 20 < m < R.L - 25)):
+        i = int(np.argmin(np.abs(rs['s'] - sv))); hl = rs['w'][i] / 2 + 4.0
+        cps.append(gate_at(rs['x'][i], rs['z'][i], rs['th'][i], hl)); start_only.append(len(cps) - 1)
     delta = (sF - sM) % L
     if delta < L / 2:      # finish just after the merge: lap 1 goes round once more
-        i = int(np.argmin(np.abs(smp['s'] - (sF - 12.0) % L))); th = smp['th'][i]
-        cps.append((half, smp['x'][i], smp['z'][i], -np.sin(th) * half, np.cos(th) * half)); fprime = len(cps) - 1
+        i = int(np.argmin(np.abs(smp['s'] - (sF - 12.0) % L)))
+        cps.append(gate_at(smp['x'][i], smp['z'][i], smp['th'][i], half)); fprime = len(cps) - 1
         after = [k for k in sorted(loop_idx, key=lambda k: loop_rel[k]) if loop_rel[k] > delta]
         before = [k for k in sorted(loop_idx, key=lambda k: loop_rel[k]) if loop_rel[k] < delta]
         first = start_only + [fprime] + after + before + [fin]

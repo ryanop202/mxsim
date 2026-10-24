@@ -41,20 +41,22 @@ Tu reprends un projet commencé dans une autre conversation. Lis dans cet ordre 
 | « Pains de sucre » | **refusés dans les enchaînements** : bosses pointues = hauteur / largeur à mi-hauteur > 0,31 (contrôle auto dans `validate_sx.py`), y compris les petits singles courts (~26 ft). Gros singles OK = Arlington g37_2, g1_2, Cleveland g29_3, Glendale g30_0. Exception voulue : un pain de sucre pour **forcer à ralentir** (SX3 arrivée) |
 | « Réaliste » | prendre un couloir JGSX entier avec ses écarts d'origine plutôt qu'un assemblage inventé |
 | Arrivée | ligne d'arrivée sur un saut (comme JGSX : crête du double d'arrivée g30) |
-| Délimitations | tuff blocks pour qu'on ne coupe pas ; virages de départ à plat acceptés s'ils sont délimités (SX2) |
+| Délimitations | tuff blocks **placés par Ryan seulement** (blancs, logo USLAND) ; 1 cône dans chaque virage ; virages de départ à plat |
+| Départs | pas d'entonnoir : couloir qui se resserre régulièrement |
+| Portes | 1 par virage + 2-3 par couloir |
 | « Ça fait 4 d'entrée » | trop d'élan / bosses trop serrées à l'entrée d'un enchaînement → coller au virage, écarter, ou 1re bosse petite |
 
-## État actuel (v10)
+## État actuel (v11)
 
 - 3 pistes SX dans `tracks/` + habillage JGSX (doc 11), 43/43 contrôles, chaîne complète reproductible (`./make_all.sh`).
-- v3 à v9 testées en jeu ; v10 = ses corrections (départs SX2/SX3, arrivées, tuff blocks, routes, minimaps). **v10 pas encore testée en jeu.**
+- v3 à v10 testées en jeu ; v11 = ses corrections (portes dans le bon sens, départs sans entonnoir, tuff blocks USLAND placés à la main, cônes, terre, minimaps). **v11 pas encore testée en jeu.**
 - Pistes d'amélioration notées dans `docs/10_suite_et_idees.md`.
 
 ## Pièges connus
 
 - Axes : x = colonne, z = ligne de la heightmap ; z vers le **bas** sur les images. Cap 0° = +x (est), −90° = −z (« nord », haut de l'image).
   Dans `Path.turn`, angle > 0 = virage à **gauche** (cap qui diminue).
-- `timing_gates` : la grille regarde f = (−sin a, −cos a). Vérifier avec `validate_sx.py` (couloir de départ).
+- `timing_gates` : la grille regarde f = (−sin a, −cos a). Porte `half [centre] [vecteur]` : le vecteur va **dans le sens de la course** (longueur = half), la ligne de la porte est perpendiculaire (erreur de la v10).
 - Un gros berm (croissant 130°, fait pour 180°) posé sur un virage de 90° dépasse sur les lignes droites → « rebord ». `engine.berm_ang_scale` le resserre (×130/angle). Les petits berms (105°, faits pour 90°) ne sont jamais modifiés.
 - Un berm posé à la jonction départ/tour bloque toujours la ligne de départ derrière lui : la ligne de départ est parallèle/décalée.
 - Les RAR sont en RAR5 : `unar` et `7z` ratent des fichiers → `node-unrar-js@2.0.2` (`tools/extract_refs.sh`).

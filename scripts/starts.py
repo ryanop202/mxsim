@@ -2,7 +2,8 @@
 
 layouts_sx.STARTS[key] = dict(gate=(x, z) world, heading=deg, route=[ops], narrow=(s_a, s_b), finish=(section, item_index))
   ops: ('S', L) straight | ('T', ang_deg, r, berm_key or None) turn (ang > 0 = left) | ('TO', (x, z)) straight to a world point
-  narrow: corridor full width (22 gates + margin) until s_a, then linear down to LANE_W at s_b.
+  narrow: (s_a, s_b) = full width (22 gates + margin) until s_a, then linear down to LANE_W at s_b;
+          or a list of (s, width) knots (v11: gradual taper, no funnel), width = LANE_W after the last knot.
   finish: lap finish line (last gate of normallap) on the crest of that unit of that section; None = just before the merge.
 """
 import numpy as np
@@ -30,7 +31,11 @@ class StartRoute:
         self.s_straight = S0['route'][0][1] if S0['route'][0][0] == 'S' else 0.0
 
     def width(self, s):
-        a, b = self.S0['narrow']
+        nw = self.S0['narrow']
+        if isinstance(nw, list):
+            ks = [k[0] for k in nw]; ws = [self.W0 if k[1] is None else k[1] for k in nw]
+            return np.interp(s, ks + [self.L, 1e9], ws + [LANE_W, LANE_W])
+        a, b = nw
         return np.interp(s, [0, a, b, 1e9], [self.W0, self.W0, LANE_W, LANE_W])
 
     def samples(self, ds=1.0):

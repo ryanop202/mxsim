@@ -30,7 +30,7 @@ def draw_path(ax, p, folder, every=150):
         ax.annotate('', xy=(x[k + 3], z[k + 3]), xytext=(x[k], z[k]), arrowprops=dict(arrowstyle='-|>', color='r', lw=1.2))
     G = parse_gates(f'{ROOT}/legacy_mx/tracks/{folder}/timing_gates')
     for i, cp in enumerate(G['cps']):
-        L_, cx, cy, cz, dx, dy, dz = cp[:7]; ax.plot([cx - dx, cx + dx], [cz - dz, cz + dz], color='#ff00ff', lw=0.8)
+        L_, cx, cy, cz, dx, dy, dz = cp[:7]; ax.plot([cx + dz, cx - dz], [cz - dx, cz + dx], color='#ff00ff', lw=0.8)
     st = np.array([g[:3] for g in G['start']]); ax.plot(st[:, 0], st[:, 2], 's', color='yellow', ms=2.5, mec='k', mew=0.3)
     for g in p.segs:
         if g['kind'] == 'S' and g['sections']:

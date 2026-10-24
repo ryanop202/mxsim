@@ -192,6 +192,22 @@ Ce que ça a donné (v4, détail dans doc 05) :
   du comptage dans `validate_sx.py` ; sol hors piste en **terre**, **routes béton** ; texture sable mal placée → refaite.
 - Puis : « fais les mini maps directement avec les vues de dessus, sans les lignes » → `map.png` par dossier (`minimap.py`).
 
+## 14. Retours v10 → v11 (images annotées)
+
+- **Tuff blocks** : « ça va pas du tout, enlève tout » → plus aucun bloc automatique. Ryan les place lui-même (points bleus sur la
+  vue de dessus) : 5 sur SX3, aucun sur SX1 / SX2. Blancs avec le **logo USLAND** sur les deux grands côtés (`tuff_usland.py`).
+- **Cônes** : un dans **chaque virage** des 3 pistes (2.jm + cone.shp, à 22 ft de la ligne, côté intérieur).
+- **Portes** : « à l'envers, ça marche pas » → c'était vrai : le vecteur d'une porte JGSX est **dans le sens de la course**
+  (mesuré sur les 7 pistes de référence), on l'avait mis en travers. Corrigé + moins de portes : 1 par virage, 2-3 par couloir.
+- **Départs** : « pas d'entonnoir » → couloir qui se resserre régulièrement (92 → 40 ft) puis 30 ft à la jonction. SX1 inchangé.
+  SX3 : virage du départ **à plat** (plus de berm), le départ rejoint F entre le pain de sucre et le triple.
+- **SX3 ligne F** : pain de sucre à la sortie du sable ; triple + double d'arrivée JGSX aux places du triple + double de la v9
+  (écart pain de sucre → triple 98 ft au lieu de 45).
+- **SX2 W2** : 1er small en **double ligne** : à gauche petite bosse (1,9 ft, pour doubler), à droite le small normal ; les deux
+  finissent au même endroit, la suite est identique à la v10.
+- **Sol** : « brun moche, pas texturé » → la même terre que sur la piste (decal track.png) partout où il n'y a rien, routes béton gardées.
+- **Minimaps** : cadrées sur chaque piste (avant : le compound entier).
+
 ## Décisions techniques importantes (et pourquoi)
 
 | Décision | Pourquoi |

@@ -15,7 +15,7 @@ st = [(num(l), l.split()[4].split('/')[-1].replace('.jm', '')) for l in open(D +
 dc = [(num(l), l.split()[-1].split('/')[-1].replace('.png', '')) for l in open(D + '/decals') if l.strip()]
 COL = {'track': '#c08040', 'sand': '#e8d090', 'gravel': '#777777', 'single': '#ff9900', 'whoops': '#00cc66', 'table': '#3399ff',
        'tripleface': '#ff3333', 'triplemiddle': '#aa0000', '90': '#cc66ff', '180': '#9933cc', 'Tearoff': '#ff66cc'}
-MK = {'tuff-medium': ('s', '#ff8800', 6), 'chainlink': ('|', 'k', 18), 'lightpole': ('*', 'yellow', 120), '2': ('o', 'orange', 30), 'transit': ('s', 'blue', 40),
+MK = {'tuff_usland': ('s', '#ff8800', 40), 'chainlink': ('|', 'k', 18), 'lightpole': ('*', 'yellow', 120), '2': ('o', '#ff3300', 70), 'transit': ('s', 'blue', 40),
       'watertruck': ('s', 'cyan', 40), 'watertank': ('s', 'teal', 60), 'semi_1': ('s', 'navy', 70), 'matrixa2': ('^', 'red', 50),
       'ezup': ('^', 'pink', 50), 'dozer': ('D', 'gold', 50), 'bobcat': ('D', 'khaki', 40)}
 
@@ -39,7 +39,7 @@ def draw(ax, crop=None, small=False):
     else: ax.set_xlim(0, T.size); ax.set_ylim(T.size, 0)
 
 fig, ax = plt.subplots(figsize=(16, 16)); draw(ax)
-ax.set_title('Habillage v10 : routes béton (bleu), tuff blocks (orange), grillages (|), poteaux (*), paddock, grilles (rouge), drapeaux (+), decals')
+ax.set_title('Habillage v11 : routes béton (bleu), tuff blocks USLAND (carrés orange), cônes (ronds orange), grillages (|), poteaux (*), paddock, grilles (rouge), drapeaux (+), decals')
 h, l = ax.get_legend_handles_labels(); ax.legend(h, l, loc='upper left', fontsize=8, ncol=2, markerscale=1.5)
 plt.tight_layout(); plt.savefig(OUT + '/05_habillage.jpg', dpi=70, pil_kwargs=dict(quality=82)); plt.close()
 for nm, crop in (('SX1', (0, 600, 0, 480)), ('SX2', (560, 1060, 0, 560)), ('SX3', (180, 1080, 600, 1080))):

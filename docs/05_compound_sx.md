@@ -1,4 +1,4 @@
-# 05 — Le compound SX (v10) : les 3 pistes, comment et pourquoi
+# 05 — Le compound SX (v11) : les 3 pistes, comment et pourquoi
 
 ## Vue d'ensemble
 
@@ -139,3 +139,14 @@ ligne de départ dégagée jusqu'à la jonction ; aucun virage plat > 25°. Glob
 | SX3 F | pain de sucre → 45 ft → triple → 35 ft → **double d'arrivée JGSX** (Cleveland g30_2 → 21,9 ft → Arlington g30_2), **ligne d'arrivée** sur sa crête de départ |
 | SX3 départ | grille (788, 965) vers l'ouest → entonnoir → 110 ft → demi-tour droite R 21,5 avec gros berm (estompé près de la ligne F) → F vers l'est |
 | Toutes | 43 contrôles dont simulation des tours ; tuff blocks ; routes béton ; minimaps |
+
+## v11 (détail doc 07 § 14)
+
+| Piste | Changement |
+|---|---|
+| SX1 | inchangée (plus de tuff blocks, 1 cône par virage) |
+| SX2 départ | même tracé, couloir 92 → 62 → 40 → 30 ft sans entonnoir, 2e virage R 11 |
+| SX2 W2 | 1er small en double ligne : gauche Custom1 g30_1 (1,9 ft), droite Custom g32_2 (3,0 ft), alignés sur la fin |
+| SX3 F | pain de sucre x 400-430 (sortie du sable) → 98 ft → triple x 528-634 → 24 ft → double d'arrivée x 658-788 (places v9) |
+| SX3 départ | grille (788, 965) vers l'ouest, bord nord droit (z ≈ 918), 92 → 40 ft, demi-tour à droite **à plat** R 24 → jonction (480, 890) |
+| Toutes | portes dans le bon sens (vecteur = sens de la course), 22-32 portes ; terre partout ; minimaps cadrées |

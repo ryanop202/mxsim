@@ -1,4 +1,4 @@
-# 11 — Habillage (v9, complété en v10) : grilles, grillages, paddock, décor, decals, drapeaux
+# 11 — Habillage (v9, complété en v10 et v11) : grilles, grillages, paddock, décor, decals, drapeaux
 
 Script : `scripts/dress_sx.py` (lancé par `./make_all.sh build` juste après `export_sx.py`). Vue : `viewer/figures/05_habillage*.jpg`.
 Toutes les ressources viennent de **JGSX 2026 Detroit** (`statue/`, `decal/`), copiées dans `tracks/USLAND2026SX1/` et référencées
@@ -51,3 +51,14 @@ Convention d'angle (statues et decals) : l'axe z local du modèle / l'axe vertic
 - **Minimaps** : `map.png` 1024² RGBA par dossier (comme Dr. Dew), vue de dessus sans lignes, transparente hors de la piste.
 - **Portes** : simulation du comptage (1er tour depuis la grille, tours suivants) ; ligne d'arrivée possible n'importe où
   (`finish`), porte F' pour le 1er passage quand l'arrivée suit de près la jonction.
+
+## v11
+
+- **Tuff blocks** : seulement ceux placés par Ryan (`dress_sx.TUFFS`, 5 sur SX3). Modèle `tuff_usland.jm` = boîte 1,8 × 1,8 × 5,4 ft
+  (taille du tuff JGSX), texture blanche `tuff_usland.png` avec le logo (`assets/usland_logo.png`) sur les deux grands côtés.
+  Sens des UV copié sur le van JGSX (texte lisible des deux côtés) — **à vérifier en jeu** (logo à l'envers ou en miroir = inverser `u`/`v` dans `tuff_usland.py`).
+- **Cônes** (`turn_cones`) : 1 par virage de plus de 45° et dans chaque virage de sable Glendale, à 22 ft de la ligne de course vers l'intérieur.
+- **Sol** (`ground_decals`) : decal `track.png` 26 ft sur une grille de 11 ft partout hors piste, hors routes béton, hors sable et gravier.
+- **Minimaps** : carré autour de la piste (+12 ft), même sens que les vues de dessus, transparent hors piste.
+- **Portes** (`export_sx.gate_marks`) : vecteur = sens de la course × half (comme toutes les références), 1 porte au milieu de chaque
+  virage, 2 par couloir (3 au-delà de 330 ft), arrivée en dernier.

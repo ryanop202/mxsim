@@ -37,7 +37,7 @@ for folder, path in paths.items():
     loop = G['normal']; worst = 0; cross = 0
     for i in loop:
         L_, x, y, z, dx, dy, dz = G['cps'][i][:7]; dd, ii = tr.query([x, z]); worst = max(worst, dd)
-        t = np.linspace(-1, 1, 41); dist, idx = tr.query(np.c_[x + dx * t, z + dz * t])
+        t = np.linspace(-1, 1, 41); dist, idx = tr.query(np.c_[x - dz * t, z + dx * t])   # gate line = perpendicular to the travel vector
         far = np.abs(smp['s'][idx] - smp['s'][ii]); far = np.minimum(far, path.s - far); cross += int(np.any((dist < 6) & (far > 60)))
     check(f'{folder}: portes sur la ligne de course', worst < 1.0, f'{len(loop)} portes du tour, écart max {worst:.2f} ft')
     check(f'{folder}: aucune porte ne touche une autre partie du tour', cross == 0, f'{cross} porte(s) en défaut')
@@ -46,12 +46,13 @@ for folder, path in paths.items():
     RT = StartRoute(S0, LS.N_GATES, LS.GATE_PITCH); EI = json.load(open(f'{BUILD}/export_info.json'))[key]
     # lap counting simulated on the riders' trajectory: every gate of the list must be crossed, in that order
     def crossings(traj, gate):
-        h_, x_, y_, z_, dx_, dy_, dz_ = gate[:7]; p_ = np.array([x_ - dx_, z_ - dz_]); q_ = np.array([x_ + dx_, z_ + dz_])
+        h_, x_, y_, z_, dx_, dy_, dz_ = gate[:7]; p_ = np.array([x_ + dz_, z_ - dx_]); q_ = np.array([x_ - dz_, z_ + dx_])   # gate line
         A = traj[:-1]; B = traj[1:]; d1 = B - A; d2 = q_ - p_
+        fwd = d1[:, 0] * dx_ + d1[:, 1] * dz_ > 0                                # crossed in the riding direction (vector = travel)
         den = d1[:, 0] * d2[1] - d1[:, 1] * d2[0]; ok = np.abs(den) > 1e-9
         t_ = np.where(ok, ((p_[0] - A[:, 0]) * d2[1] - (p_[1] - A[:, 1]) * d2[0]) / np.where(ok, den, 1), -1)
         u_ = np.where(ok, ((p_[0] - A[:, 0]) * d1[:, 1] - (p_[1] - A[:, 1]) * d1[:, 0]) / np.where(ok, den, 1), -1)
-        return np.nonzero(ok & (t_ >= 0) & (t_ <= 1) & (u_ >= 0) & (u_ <= 1))[0]
+        return np.nonzero(ok & fwd & (t_ >= 0) & (t_ <= 1) & (u_ >= 0) & (u_ <= 1))[0]
     def ride(order, traj):
         pos = -1
         for gi in order:
@@ -81,7 +82,7 @@ for folder, path in paths.items():
     hh_ = T.h(X_[~off], Z_[~off]); worst = float(hh_.max())
     iM = int(np.argmin(np.hypot(lap_s['x'] - RT.merge[0], lap_s['z'] - RT.merge[1]))); dM = float(np.hypot(lap_s['x'][iM] - RT.merge[0], lap_s['z'][iM] - RT.merge[1]))
     check(f'{folder}: ligne de départ dégagée jusqu’au tour', worst < 0.05 and dM < 1.0,
-          f'couloir entier (largeur 92 -> 30 ft) plat, hauteur max {worst:.3f} ft ; jonction sur la ligne du tour (écart {dM:.2f} ft) ; longueur grille -> jonction ≈ {RT.L:.0f} ft')
+          f'couloir entier (largeur 92 -> 30 ft, sans entonnoir) plat, hauteur max {worst:.3f} ft ; jonction sur la ligne du tour (écart {dM:.2f} ft) ; longueur grille -> jonction ≈ {RT.L:.0f} ft')
     turns = json.load(open(f'{BUILD}/build_report.json'))[key]['turns']
     flat = [t_ for t_ in turns if t_['kind'] == 'turn' and not t_['berm'] and abs(t_['angle']) > 25]
     check(f'{folder}: aucun virage plat', not flat, flat or f"{sum(1 for t_ in turns if t_['berm'])} virages avec berm/sable ; seuls des déports plats ≤ 25° restent : {[round(t_['angle'],1) for t_ in turns if not t_['berm']]}")
@@ -115,7 +116,7 @@ R['lane_errors'] = errs
 UJ = json.load(open(ROOT + '/lib/sx_units.json')); ALLOWED = {'Custom1_g59_1'}
 def pointed(uid):
     u = UJ['units'][UJ['alias'].get(uid, uid)]; p = np.asarray(u['prof']); return u['kind'] in ('S', 'B') and p.max() / ((p > p.max() / 2).sum() * 0.1) > 0.31
-bad = sorted({(n[:3], i) for n, c in LS.COMBOS.items() for t in c['tokens'] for i in ([t] if isinstance(t, str) else (list(t[1:]) if t[0] == 'split' else []))
+bad = sorted({(n[:3], i) for n, c in LS.COMBOS.items() for t in c['tokens'] for i in ([t] if isinstance(t, str) else (list(t[1:3]) if t[0] == 'split' else []))
               if pointed(i) and i not in ALLOWED})
 check('Pas de pains de sucre dans les enchaînements', not bad, bad or 'toutes les bosses ont un rapport hauteur / largeur à mi-hauteur ≤ 0,31 (sauf le pain de sucre voulu du SX3 avant le triple d’arrivée)')
 # berm entry lip: height jump between a floor pixel (<0.02 ft) and its neighbour (cut edge = 'rebord')
@@ -148,7 +149,7 @@ for l in open(f'{SX1D}/statues'):
     hmax = float(T.h(q[:, 0], q[:, 1]).max()) if len(q) else 0.0
     nobj += 1
     if len(q) and ride_c.query(q)[0].min() < 1.0: worst.append((model, round(x), round(z), 'couloir de départ')); continue
-    lim = 0.85 if model == 'tuff-medium' else 0.05      # tuff blocks may sit on the foot of two jump walls (y = local ground)
+    lim = 0.85 if model.startswith('tuff') else 0.05      # tuff blocks may sit on the foot of two jump walls (y = local ground)
     if (model != '2' and (dmin < 17.0 or hmax > lim)) or (model == '2' and dmin < 17.0): worst.append((model, round(x), round(z), round(dmin, 1), round(hmax, 2)))
 check('Objets hors piste (tuff blocks, grillages, poteaux, paddock, repères)', not worst, worst[:8] or f'{nobj} objets : tous à plus de 17 ft des lignes de course et sur sol plat')
 refs2 = set()
