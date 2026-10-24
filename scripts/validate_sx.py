@@ -2,7 +2,7 @@
 import os as _os
 ROOT = _os.environ.get('MXSIM_ROOT') or _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))  # repo root
 REF = _os.environ.get('MXSIM_REF') or _os.path.join(ROOT, 'refs', 'extracted')  # extracted JGMX/JGSX reference archives
-import os, sys, json, numpy as np
+import os, re, sys, json, numpy as np
 sys.path.insert(0, ROOT + '/scripts')
 from mxs import Track, parse_gates, parse_tileinfo
 from scipy import ndimage as ndi
@@ -100,6 +100,46 @@ def floorstep(Hh):
     return max(np.where(np.minimum(a, b) < 0.02, np.abs(a - b), 0).max(), np.where(np.minimum(a, c) < 0.02, np.abs(a - c), 0).max())
 ref = Track(REF + '/JGSX2026TestTracks/JGSX2026Detroit', 'xz'); fr = floorstep(np.clip(ref.H - np.median(ref.H), 0, None)); fo = floorstep(H)
 check('Pas de rebord au pied des berms et des obstacles', fo <= fr + 0.02, f'marche max sol -> obstacle : {fo:.3f} ft (référence JGSX Detroit : {fr:.3f} ft ; ancien rebord des berms : 0.30 ft)')
+# v9 habillage: every object off the riding surfaces and off the obstacles; every referenced file present; gate models on the grid
+from scipy.spatial import cKDTree as _KD
+ride = [_KD(np.c_[s_['x'], s_['z']]) for s_ in (p_.samples(1.0) for p_ in paths.values())]
+SX1D = f'{DIST}/RyanCompoundSX1'
+def _bbox(model):
+    L_ = open(f'{SX1D}/statue/{model}.jm').read().split('\n')   # JM1 / JM2: first 'nverts ntris' line, then the vertices
+    i_ = next(k for k, l in enumerate(L_) if len(l.split()) == 2 and all(t.isdigit() for t in l.split())); nv_ = int(L_[i_].split()[0])
+    V_ = np.array([[float(t) for t in l.split()[:3]] for l in L_[i_ + 1:i_ + 1 + nv_]]); return V_.min(0), V_.max(0)
+BB = {}; worst = []; nobj = 0
+for l in open(f'{SX1D}/statues'):
+    if not l.strip() or 'ET_compound' in l: continue
+    nums = [float(t) for t in re.findall(r'-?\d+\.?\d*', l.split('@')[0])]; x, y, z, a = nums[:4]; model = l.split()[4].split('/')[-1][:-3]
+    if model not in BB: BB[model] = _bbox(model)
+    lo, hi = BB[model]; f_ = np.array([-np.sin(a), -np.cos(a)]); n_ = np.array([f_[1], -f_[0]])
+    uu, vv = np.meshgrid(np.linspace(lo[2], hi[2], 7), np.linspace(-max(abs(lo[0]), abs(hi[0])), max(abs(lo[0]), abs(hi[0])), 5))
+    q = np.c_[x + uu.ravel() * f_[0] + vv.ravel() * n_[0], z + uu.ravel() * f_[1] + vv.ravel() * n_[1]]
+    q = q[(q[:, 0] > 0) & (q[:, 0] < T.size) & (q[:, 1] > 0) & (q[:, 1] < T.size)]
+    dmin = min(r_.query(q)[0].min() for r_ in ride) if len(q) else 1e9
+    hmax = float(T.h(q[:, 0], q[:, 1]).max()) if len(q) else 0.0
+    nobj += 1
+    if (model != '2' and (dmin < 17.0 or hmax > 0.05)) or (model == '2' and dmin < 17.0): worst.append((model, round(x), round(z), round(dmin, 1), round(hmax, 2)))
+check('Objets hors piste (grillages, poteaux, paddock, repères)', not worst, worst[:8] or f'{nobj} objets : tous à plus de 17 ft des lignes de course et sur sol plat')
+refs2 = set()
+for fname in ('statues', 'decals', 'timing_gates'):
+    for d_ in paths:
+        for tok in open(f'{DIST}/{d_}/{fname}').read().split():
+            if tok.startswith('@RyanCompound'): refs2.add(tok[1:])
+miss = [r_ for r_ in refs2 if not os.path.exists(f'{DIST}/{r_}')]
+nd = sum(1 for _ in open(f'{SX1D}/decals'))
+gl = [l for l in open(f'{SX1D}/timing_gates') if l.startswith('[') and 'gate01.jm' in l]
+badf = []
+for d_ in paths:
+    for l in open(f'{DIST}/{d_}/flaggers'):
+        if l.startswith('['):
+            q = [float(t) for t in re.findall(r'-?\d+\.?\d*', l)][:3]
+            if q[0] == 0 and q[2] == 0: continue
+            dm = min(r_.query([q[0], q[2]])[0] for r_ in ride)
+            if dm < 20: badf.append((d_[-3:], round(q[0]), round(q[2]), round(dm, 1)))
+check('Drapeaux hors piste', not badf, badf or 'panneaux 30 s et drapeau d’arrivée à plus de 20 ft des lignes de course')
+check('Habillage : fichiers référencés présents, grilles de départ modélisées', not miss and len(gl) == 22, miss[:5] or f'{len(refs2)} fichiers référencés, {nd} decals, 22 grilles gate01')
 lap = np.max(np.abs(ndi.laplace(H)))
 check('Terrain sans pics ni trous', lap < 4.0, f'|laplacien| max {lap:.2f}')
 json.dump(R, open(f'{BUILD}/validation.json', 'w'), indent=1, default=float)

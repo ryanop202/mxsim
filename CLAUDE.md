@@ -19,7 +19,7 @@ Tu reprends un projet commencé dans une autre conversation. Lis dans cet ordre 
 - **Fidélité** : toute géométrie vient des mesures (`lib/`). Pas d'obstacle inventé « à l'œil ». Si on crée une forme nouvelle, le dire.
 - **Garder les dimensions** des références (Ryan l'a demandé) : grille 0,28975 ft, couloirs 30,4 ft, espacement 43 ft, berms JGSX.
 - Les archives de référence ne vont **pas** sur GitHub (taille + ce n'est pas à nous). Elles sont dans `refs/archives/` en local.
-- Après tout changement : `./make_all.sh build` → doit finir sur `40 / 40` (ou plus si on ajoute des contrôles). Montrer les vues de dessus.
+- Après tout changement : `./make_all.sh build` → doit finir sur `43 / 43` (ou plus si on ajoute des contrôles). Montrer les vues de dessus.
 
 ## Ce que Ryan a validé / rejeté (résumé)
 
@@ -42,10 +42,10 @@ Tu reprends un projet commencé dans une autre conversation. Lis dans cet ordre 
 | « Réaliste » | prendre un couloir JGSX entier avec ses écarts d'origine plutôt qu'un assemblage inventé |
 | « Ça fait 4 d'entrée » | trop d'élan / bosses trop serrées à l'entrée d'un enchaînement → coller au virage, écarter, ou 1re bosse petite |
 
-## État actuel (v8)
+## État actuel (v9)
 
-- 3 pistes SX dans `tracks/`, 40/40 contrôles, chaîne complète reproductible (`./make_all.sh`).
-- v3 à v7 testées en jeu par Ryan → v8 = ses corrections. **v8 pas encore testée en jeu.**
+- 3 pistes SX dans `tracks/` + habillage JGSX (doc 11), 43/43 contrôles, chaîne complète reproductible (`./make_all.sh`).
+- v3 à v7 testées en jeu ; v8 = ses corrections ; v9 = v8 + habillage. **v9 pas encore testée en jeu.**
 - Pistes d'amélioration notées dans `docs/10_suite_et_idees.md`.
 
 ## Pièges connus

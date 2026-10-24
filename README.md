@@ -5,9 +5,9 @@ Base de travail pour faire des pistes **MX Simulator** à partir de mesures rée
 - **toutes les mesures** des 3 archives de référence (JGMX Desert Sand, JGMX Dr. Dew, JGSX 2026 Test Tracks) : bosses, singles, doubles, tables, on-off, step-up, whoops, berms, sable, départs, profils en travers ;
 - le **compound SX** (3 pistes sur un même terrain) prêt à copier dans MX Simulator ;
 - les **scripts** qui refont tout (mesures → bibliothèque → pistes → contrôles → figures) ;
-- la **doc complète** : formats de fichiers, méthode, décisions, retours de Ryan, historique v1 → v8.
+- la **doc complète** : formats de fichiers, méthode, décisions, retours de Ryan, historique v1 → v9 ; habillage JGSX (grilles, grillages, paddock, decals, drapeaux).
 
-> ⚠️ **État : v3 à v7 testées en jeu par Ryan, v8 (ses corrections) pas encore testée.** Tout ce qui est « validé » l'est par des contrôles automatiques
+> ⚠️ **État : v3 à v7 testées en jeu par Ryan, v9 (v8 + habillage) pas encore testée.** Tout ce qui est « validé » l'est par des contrôles automatiques
 > (relecture des fichiers exportés, géométrie, profils). Checklist de test : `docs/08_installation_et_test.md`.
 
 ## Démarrage rapide (nouveau PC)
@@ -32,7 +32,7 @@ npm install && ./tools/extract_refs.sh               # -> refs/extracted/ (voir 
 
 Sous Windows : Git Bash ou WSL pour les `.sh` (les scripts Python marchent partout).
 
-## Les 3 pistes (v8)
+## Les 3 pistes (v9 = v8 + habillage)
 
 | Piste | Tour | Estimation* | Départ → jonction | Ce qu'il y a |
 |---|---|---|---|---|

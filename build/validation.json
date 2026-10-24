@@ -196,6 +196,21 @@
    "detail": "marche max sol -> obstacle : 0.141 ft (r\u00e9f\u00e9rence JGSX Detroit : 0.133 ft ; ancien rebord des berms : 0.30 ft)"
   },
   {
+   "name": "Objets hors piste (grillages, poteaux, paddock, rep\u00e8res)",
+   "ok": true,
+   "detail": "544 objets : tous \u00e0 plus de 17 ft des lignes de course et sur sol plat"
+  },
+  {
+   "name": "Drapeaux hors piste",
+   "ok": true,
+   "detail": "panneaux 30 s et drapeau d\u2019arriv\u00e9e \u00e0 plus de 20 ft des lignes de course"
+  },
+  {
+   "name": "Habillage : fichiers r\u00e9f\u00e9renc\u00e9s pr\u00e9sents, grilles de d\u00e9part mod\u00e9lis\u00e9es",
+   "ok": true,
+   "detail": "40 fichiers r\u00e9f\u00e9renc\u00e9s, 17134 decals, 22 grilles gate01"
+  },
+  {
    "name": "Terrain sans pics ni trous",
    "ok": true,
    "detail": "|laplacien| max 0.48"

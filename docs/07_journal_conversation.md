@@ -164,6 +164,13 @@ Ce que ça a donné (v4, détail dans doc 05) :
   0,37–0,51). Contrôle automatique ajouté dans `validate_sx.py` (40 contrôles).
 - Leçon : quand Ryan dit « réaliste », prendre un **couloir JGSX entier** avec ses écarts, pas une combinaison inventée de blocs.
 
+## 11. GitHub + habillage (v9)
+
+- Repo créé par Ryan : `ryanop202/mxsim` (accès Claude donné, poussé le 23/10). Repo **public** → rappel fait : ressources JGSX/JGMX dedans.
+- Ryan : « reprends tout des fichiers et mets les textures et tout ce qui manque … avant de tout lancer propose-moi » → proposition
+  (grilles, decals, grillages, poteaux, paddock, drapeaux, contrôles) → « oui voilà mets tout, on modifie ensuite, mets gates aussi ».
+- Fait : `dress_sx.py` (doc 11), 43 contrôles. Billboards laissés vides comme JGSX.
+
 ## Décisions techniques importantes (et pourquoi)
 
 | Décision | Pourquoi |

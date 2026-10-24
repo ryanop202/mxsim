@@ -61,10 +61,12 @@ analysis() {
 build() {
   run build_sx.py               # build/H.npy + tiles.npy + build_report.json
   run export_sx.py              # tracks/RyanCompoundSX1..3 (needs refs for textures/tileinfo)
+  run dress_sx.py               # habillage : grilles, grillages, paddock, decor, decals, drapeaux (needs refs)
   run validate_sx.py            # build/validation.json (39 checks)
   run laptime.py                # build/laptime.json (estimate, not measured in game)
   for t in sx1 sx2 sx3; do run preview_sx.py "$t"; done   # analysis/pv2_*.png (each track alone + geometric checks)
   run figures_sx.py             # viewer/figures + viewer/terrain_data.js
+  run figures_dress.py          # viewer/figures/05_habillage*.jpg
   run gen_docs.py               # docs/09_donnees_mesurees.md + docs/data/*.csv + docs/img/atlas_*.jpg
 }
 
