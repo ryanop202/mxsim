@@ -1,4 +1,4 @@
-# 05 — Le compound SX (v8) : les 3 pistes, comment et pourquoi
+# 05 — Le compound SX (v10) : les 3 pistes, comment et pourquoi
 
 ## Vue d'ensemble
 
@@ -128,3 +128,14 @@ ligne de départ dégagée jusqu'à la jonction ; aucun virage plat > 25°. Glob
 (≤ Detroit + 0,02 ft) ; terrain sans pics ni trous ; **pas de pains de sucre** dans les enchaînements (v8).
 
 **Pas contrôlé** : le ressenti en jeu, la physique, les chronos réels, la vue caméra, les collisions de pilotes au départ.
+
+## v10 (résumé des changements, détail doc 07 § 13)
+
+| Piste | Changement |
+|---|---|
+| SX2 haut | big triple Cleveland g29 (7,9 / 6,0 / 7,4, écarts d'origine) |
+| SX2 W2 | small 3,0 – big 5,9 – small 3,0, 13 ft, big triple Cleveland g29 ; **ligne d'arrivée** sur la crête du 1er saut du big triple |
+| SX2 départ | grille (206, 395) vers le nord → 293 ft → gauche à plat R 30 → traverse le haut de F → gauche à plat R 15 → W2 (jonction avant le small-big-small) |
+| SX3 F | pain de sucre → 45 ft → triple → 35 ft → **double d'arrivée JGSX** (Cleveland g30_2 → 21,9 ft → Arlington g30_2), **ligne d'arrivée** sur sa crête de départ |
+| SX3 départ | grille (788, 965) vers l'ouest → entonnoir → 110 ft → demi-tour droite R 21,5 avec gros berm (estompé près de la ligne F) → F vers l'est |
+| Toutes | 43 contrôles dont simulation des tours ; tuff blocks ; routes béton ; minimaps |

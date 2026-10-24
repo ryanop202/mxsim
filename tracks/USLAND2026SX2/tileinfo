@@ -26,7 +26,7 @@ erode_limit 0.75 0.7 1.7
 erode_limit 1.5 0.3 0.75
 erode_limit 2.5 0.3 0.3
 erode_lateral_scale 0.025
-texture @USLAND2026SX1/tiles/hardpack.ppm
+texture @USLAND2026SX1/tiles/dirt.ppm
 roost texture=@splash.png count=4 slip_threshold=2.0 slow_speed=0.0 fast_speed=64.0 slow_angle=1.07 fast_angle=0.196 size=0.80 grow=2.3 drag=1.90 vscale=1.0 randomize=5.0 r=123 g=73 b=52 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=1024
 roost texture=@USLAND2026SX1/roost/redroost.png count=8 dig=0.0 slip_threshold=2.0 slow_speed=0.0 fast_speed=64.0 slow_angle=1.07 fast_angle=0.196 size=1.5 grow=4.0 drag=2.0 vscale=1.0 randomize=5.0 r=255 g=255 b=255 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=1024
 treadmark texture=@USLAND2026SX1/treads/dirt2x4.png size=4 aspect=0.5 spacing=3 speed_threshold=-20
@@ -289,5 +289,38 @@ roost texture=@USLAND2026SX1/roost/hha.dust.png count=4 dig=1.0 slip_threshold=2
 roost texture=@USLAND2026SX1/roost/dirt4.png count=4 dig=0.0 slip_threshold=2.0 slow_speed=0.0 fast_speed=50.0 slow_angle=1.57 fast_angle=0.296 size=1.0 grow=2.5 drag=1.0 vscale=1.0 randomize=1 r=255 g=255 b=255 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=256
 treadmark texture=@USLAND2026SX1/treads/sand1x4.png size=4 aspect=0.25 spacing=3 speed_threshold=-20
 treadmark texture=@USLAND2026SX1/treads/sand1x8.png size=8 aspect=0.125 spacing=6
+addtile
+
+name Road
+friction 1.0 0
+friction 1.2 1.5
+friction 1.1 15
+friction 1.2 30
+roll_resist 40.0 60.0 35.0
+roll_resist 50.0 70.0 45.0
+erode_depth 2.5
+erode_lower 50.0
+erode_upper 150.0
+erode_displacement 2.5
+erode_radius 5.0
+erode_inner_depth 1.25
+erode_inner_radius 2.0
+erode_min_slope -0.75
+erode_max_slope 0.75
+erode_off_speed 10.0
+erode_on_speed 50.0
+erode_slip_base_scale 1.0
+erode_slip_scale 1.0
+erode_slip_lower 0.0
+erode_slip_upper 5.0
+erode_downhill_scale 0.8
+erode_limit 0.00 1.0 2.25
+erode_limit 0.75 0.7 1.7
+erode_limit 1.5 0.3 0.75
+erode_limit 2.5 0.3 0.3
+erode_lateral_scale 0.025
+texture @USLAND2026SX1/tiles/concrete.ppm
+treadmark texture=@USLAND2026SX1/treads/dirt2x4.png size=4 aspect=0.5 spacing=3 speed_threshold=-20
+treadmark texture=@USLAND2026SX1/treads/dirt2x8.png size=8 aspect=0.25 spacing=6
 addtile
 

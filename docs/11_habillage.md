@@ -1,4 +1,4 @@
-# 11 — Habillage (v9) : grilles, grillages, paddock, décor, decals, drapeaux
+# 11 — Habillage (v9, complété en v10) : grilles, grillages, paddock, décor, decals, drapeaux
 
 Script : `scripts/dress_sx.py` (lancé par `./make_all.sh build` juste après `export_sx.py`). Vue : `viewer/figures/05_habillage*.jpg`.
 Toutes les ressources viennent de **JGSX 2026 Detroit** (`statue/`, `decal/`), copiées dans `tracks/USLAND2026SX1/` et référencées
@@ -38,3 +38,16 @@ Convention d'angle (statues et decals) : l'axe z local du modèle / l'axe vertic
 - Pas de banderoles / tuff blocks le long des couloirs (JGSX n'en a pas non plus dans ces fichiers).
 - Texture du sol : pack `25BHFSXMiami` absent des archives → terre et hardpack de Dr. Dew sous les decals JGSX.
 - Taille : `USLAND2026SX1` passe à ~260 Mo.
+
+## v10
+
+- **Tuff blocks** (`tuff-medium.jm` de Detroit `seq/`, collision `tuff.shp` à 4 sphères au format de `cone.shp` — format déduit, à vérifier en jeu) :
+  partout où deux parties d'un tour passent à moins de 70 ft l'une de l'autre en étant à plus de 110 ft sur le tour (médiane entre
+  couloirs, sable, J), plus les deux bords de chaque couloir de départ ; jamais sur une piste, un croisement, une jonction ;
+  posés au sol local (y) quand ils sont au pied de deux murs de saut (≤ 0,65 ft).
+- **Sol** : tile Main texturé en terre (`dirt.ppm`) ; nouveau tile **Road** (béton `concrete.ppm` de Dr. Dew, physique du Main) :
+  anneau de 18 ft autour de chaque grillage + avenue est-ouest entre les pistes du haut et SX3 ; paddocks décalés de 22 ft.
+- **Sable** : decals `sand.png` posés sur les cases de sable du tilemap (pas de 6 ft), plus le long de la ligne.
+- **Minimaps** : `map.png` 1024² RGBA par dossier (comme Dr. Dew), vue de dessus sans lignes, transparente hors de la piste.
+- **Portes** : simulation du comptage (1er tour depuis la grille, tours suivants) ; ligne d'arrivée possible n'importe où
+  (`finish`), porte F' pour le 1er passage quand l'arrivée suit de près la jonction.

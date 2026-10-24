@@ -13,7 +13,7 @@
   {
    "name": "USLAND2026SX1: tilemap coh\u00e9rente avec tileinfo",
    "ok": true,
-   "detail": "index max 7, 8 tiles"
+   "detail": "index max 8, 9 tiles"
   },
   {
    "name": "USLAND2026SX1: toutes les r\u00e9f\u00e9rences @dossier/ existent dans le paquet",
@@ -23,7 +23,7 @@
   {
    "name": "USLAND2026SX1: portes sur la ligne de course",
    "ok": true,
-   "detail": "49 portes du tour, \u00e9cart max 0.00 ft"
+   "detail": "50 portes du tour, \u00e9cart max 0.00 ft"
   },
   {
    "name": "USLAND2026SX1: aucune porte ne touche une autre partie du tour",
@@ -31,9 +31,9 @@
    "detail": "0 porte(s) en d\u00e9faut"
   },
   {
-   "name": "USLAND2026SX1: ordre des tours",
+   "name": "USLAND2026SX1: tours compt\u00e9s sans bug (simulation des portes)",
    "ok": true,
-   "detail": "1er tour 51 portes (dont 2 sur la ligne de d\u00e9part), tours suivants 49"
+   "detail": "1er tour : 53 portes franchies dans l'ordre (3291 ft depuis la grille) ; tours suivants : 50 portes, arriv\u00e9e = derni\u00e8re porte"
   },
   {
    "name": "USLAND2026SX1: grille de d\u00e9part (22 grilles comme JGSX)",
@@ -43,7 +43,7 @@
   {
    "name": "USLAND2026SX1: ligne de d\u00e9part d\u00e9gag\u00e9e jusqu\u2019au tour",
    "ok": true,
-   "detail": "22 trajectoires grille -> entonnoir -> point de jonction, hauteur max 0.000 ft ; longueur jusqu\u2019\u00e0 la jonction \u2248 368 ft"
+   "detail": "couloir entier (largeur 92 -> 30 ft) plat, hauteur max 0.000 ft ; jonction sur la ligne du tour (\u00e9cart 0.00 ft) ; longueur grille -> jonction \u2248 368 ft"
   },
   {
    "name": "USLAND2026SX1: aucun virage plat",
@@ -63,7 +63,7 @@
   {
    "name": "USLAND2026SX2: tilemap coh\u00e9rente avec tileinfo",
    "ok": true,
-   "detail": "index max 7, 8 tiles"
+   "detail": "index max 8, 9 tiles"
   },
   {
    "name": "USLAND2026SX2: toutes les r\u00e9f\u00e9rences @dossier/ existent dans le paquet",
@@ -81,9 +81,9 @@
    "detail": "0 porte(s) en d\u00e9faut"
   },
   {
-   "name": "USLAND2026SX2: ordre des tours",
+   "name": "USLAND2026SX2: tours compt\u00e9s sans bug (simulation des portes)",
    "ok": true,
-   "detail": "1er tour 48 portes (dont 2 sur la ligne de d\u00e9part), tours suivants 46"
+   "detail": "1er tour : 50 portes franchies dans l'ordre (3304 ft depuis la grille) ; tours suivants : 46 portes, arriv\u00e9e = derni\u00e8re porte"
   },
   {
    "name": "USLAND2026SX2: grille de d\u00e9part (22 grilles comme JGSX)",
@@ -93,7 +93,7 @@
   {
    "name": "USLAND2026SX2: ligne de d\u00e9part d\u00e9gag\u00e9e jusqu\u2019au tour",
    "ok": true,
-   "detail": "22 trajectoires grille -> entonnoir -> point de jonction, hauteur max 0.000 ft ; longueur jusqu\u2019\u00e0 la jonction \u2248 281 ft"
+   "detail": "couloir entier (largeur 92 -> 30 ft) plat, hauteur max 0.022 ft ; jonction sur la ligne du tour (\u00e9cart 0.00 ft) ; longueur grille -> jonction \u2248 457 ft"
   },
   {
    "name": "USLAND2026SX2: aucun virage plat",
@@ -113,7 +113,7 @@
   {
    "name": "USLAND2026SX3: tilemap coh\u00e9rente avec tileinfo",
    "ok": true,
-   "detail": "index max 7, 8 tiles"
+   "detail": "index max 8, 9 tiles"
   },
   {
    "name": "USLAND2026SX3: toutes les r\u00e9f\u00e9rences @dossier/ existent dans le paquet",
@@ -131,9 +131,9 @@
    "detail": "0 porte(s) en d\u00e9faut"
   },
   {
-   "name": "USLAND2026SX3: ordre des tours",
+   "name": "USLAND2026SX3: tours compt\u00e9s sans bug (simulation des portes)",
    "ok": true,
-   "detail": "1er tour 58 portes (dont 2 sur la ligne de d\u00e9part), tours suivants 56"
+   "detail": "1er tour : 61 portes franchies dans l'ordre (4054 ft depuis la grille) ; tours suivants : 56 portes, arriv\u00e9e = derni\u00e8re porte"
   },
   {
    "name": "USLAND2026SX3: grille de d\u00e9part (22 grilles comme JGSX)",
@@ -143,7 +143,7 @@
   {
    "name": "USLAND2026SX3: ligne de d\u00e9part d\u00e9gag\u00e9e jusqu\u2019au tour",
    "ok": true,
-   "detail": "22 trajectoires grille -> entonnoir -> point de jonction, hauteur max 0.001 ft ; longueur jusqu\u2019\u00e0 la jonction \u2248 279 ft"
+   "detail": "couloir entier (largeur 92 -> 30 ft) plat, hauteur max 0.033 ft ; jonction sur la ligne du tour (\u00e9cart 0.12 ft) ; longueur grille -> jonction \u2248 402 ft"
   },
   {
    "name": "USLAND2026SX3: aucun virage plat",
@@ -196,9 +196,9 @@
    "detail": "marche max sol -> obstacle : 0.141 ft (r\u00e9f\u00e9rence JGSX Detroit : 0.133 ft ; ancien rebord des berms : 0.30 ft)"
   },
   {
-   "name": "Objets hors piste (grillages, poteaux, paddock, rep\u00e8res)",
+   "name": "Objets hors piste (tuff blocks, grillages, poteaux, paddock, rep\u00e8res)",
    "ok": true,
-   "detail": "544 objets : tous \u00e0 plus de 17 ft des lignes de course et sur sol plat"
+   "detail": "1482 objets : tous \u00e0 plus de 17 ft des lignes de course et sur sol plat"
   },
   {
    "name": "Drapeaux hors piste",
@@ -208,7 +208,7 @@
   {
    "name": "Habillage : fichiers r\u00e9f\u00e9renc\u00e9s pr\u00e9sents, grilles de d\u00e9part mod\u00e9lis\u00e9es",
    "ok": true,
-   "detail": "40 fichiers r\u00e9f\u00e9renc\u00e9s, 17134 decals, 22 grilles gate01"
+   "detail": "43 fichiers r\u00e9f\u00e9renc\u00e9s, 17895 decals, 22 grilles gate01"
   },
   {
    "name": "Terrain sans pics ni trous",
@@ -219,79 +219,79 @@
  "lane_errors": [
   [
    "SX1-F petite bosse, gros single, single + on-off (ligne d arrivee)",
-   0.02596624949081186
+   0.025973016738305533
   ],
   [
    "SX1-A S-GROS-S ecarte, 3 S, GROS, S, GROS",
-   0.04031220864824997
+   0.04027674928879831
   ],
   [
    "SX1-B whoops (entry+11), single 5 ft",
-   0.030827409674929016
+   0.03079273451218635
   ],
   [
    "SX1-C triple on table, off quad, double",
-   0.028924491784873843
+   0.02889016373852165
   ],
   [
    "SX1-D step-up, triple on table (longer), off",
-   0.034425752762851404
+   0.03439036923686794
   ],
   [
    "SX1-E JGSX on-off lane + triple",
-   0.03135384023088019
+   0.03131851990858167
   ],
   [
    "SX1-V petite bosse + triple",
-   0.026681113214211665
+   0.026716980724877413
   ],
   [
-   "SX2-top gros triple",
-   0.037747711823435816
+   "SX2-top big triple Cleveland g29",
+   0.03379059089738084
   ],
   [
    "SX2-E1 single single table single table single + 2",
-   0.026193414148016222
+   0.026159172516546297
   ],
   [
    "SX2-E2 big double, triple into the turn",
-   0.025510813048478638
+   0.025542649304033077
   ],
   [
    "SX2-E3 triple on table, triple off",
-   0.02898572972058661
+   0.029021754177941818
   ],
   [
    "SX2-bottom whoops (entry+7)",
-   0.012956065480715154
+   0.012920718069558246
   ],
   [
    "SX2-W1 double ligne, gros, S, table, S, gros, S",
-   0.03669161306195673
+   0.03668013564862026
   ],
   [
-   "SX2-W2 couloir JGSX Cleveland g29 tel quel",
-   0.03827931131772554
+   "SX2-W2 small big small + big triple",
+   0.02948044276651697
   ],
   [
    "SX2-F triple (singles d avant + 1)",
-   0.03678007893845703
+   0.036768285833731186
   ],
   [
    "SX3-U1 triple, big, triple, big, Detroit triple, small bump",
-   0.036644967417988075
+   0.036610484133746214
   ],
   [
    "SX3-U2 whoops (entry+9), on-off, step-up",
-   0.040493724925951824
+   0.04042305946810565
   ],
   [
    "SX3-U3 triple on table, off quad, S-big-S-big",
-   0.030494587368166657
+   0.03045845941888502
   ],
   [
-   "SX3-F triple, big double",
-   0.026031451986555387
+   "SX3-F pain de sucre, triple, double d arrivee JGSX",
+   0.03618443929236169
   ]
  ]
 }

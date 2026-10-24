@@ -7,7 +7,7 @@ Base de travail pour faire des pistes **MX Simulator** à partir de mesures rée
 - les **scripts** qui refont tout (mesures → bibliothèque → pistes → contrôles → figures) ;
 - la **doc complète** : formats de fichiers, méthode, décisions, retours de Ryan, historique v1 → v9 ; habillage JGSX (grilles, grillages, paddock, decals, drapeaux).
 
-> ⚠️ **État : v3 à v7 testées en jeu par Ryan, v9 (v8 + habillage) pas encore testée.** Tout ce qui est « validé » l'est par des contrôles automatiques
+> ⚠️ **État : v3 à v9 testées en jeu par Ryan, v10 pas encore testée.** Tout ce qui est « validé » l'est par des contrôles automatiques
 > (relecture des fichiers exportés, géométrie, profils). Checklist de test : `docs/08_installation_et_test.md`.
 
 ## Démarrage rapide (nouveau PC)
@@ -33,7 +33,7 @@ npm install && ./tools/extract_refs.sh               # -> refs/extracted/ (voir 
 
 Sous Windows : Git Bash ou WSL pour les `.sh` (les scripts Python marchent partout).
 
-## Les 3 pistes (v9 = v8 + habillage)
+## Les 3 pistes (v10)
 
 | Piste | Tour | Estimation* | Départ → jonction | Ce qu'il y a |
 |---|---|---|---|---|
@@ -70,7 +70,7 @@ legacy_mx/              notes sur la v1 MX abandonnée
 ```bash
 git pull                     # récupérer
 # ... modifier scripts/layouts_sx.py, etc.
-./make_all.sh build          # reconstruire + 39 contrôles
+./make_all.sh build          # reconstruire + 43 contrôles
 git add -A && git commit -m "SX2 : ..." && git push
 ```
 

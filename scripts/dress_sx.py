@@ -42,6 +42,8 @@ def copy_assets():
         if f.endswith('.shp') or any(f.startswith(s + '.') or f.startswith(s + '_') for s in STATUES) or f.startswith('transit') or f.startswith('ws_semiskin'):
             if f != 'ET.jm': shutil.copy(f'{DET}/statue/{f}', f'{A}/statue/{f}')
     shutil.copy(f'{DET}/statue/ET.png', f'{A}/statue/ET.png'); shutil.copy(f'{DET}/statue/ET_spec.png', f'{A}/statue/ET_spec.png')
+    for f in ('tuff-medium.jm', 'tuff_mechanic_autumn.png', 'tuff_mechanic_autumn_norm.png', 'tuff_mechanic_alpha.png'):   # v10 tuff blocks
+        shutil.copy(f'{DET}/seq/{f}', f'{A}/statue/{f}')
     for d in DECALS:
         for suf in ('', '_tnorm', '_tspec'):
             src = f'{DET}/decal/{d}{suf}.png'
@@ -61,10 +63,12 @@ def make_environment():
 
 # ------------------------------------------------------------------ geometry of the three tracks
 PATHS = {'SX1': LS.sx1(), 'SX2': LS.sx2(), 'SX3': LS.sx3()}
+from starts import StartRoute
+ROUTES = {k: StartRoute(LS.STARTS[k], LS.N_GATES, LS.GATE_PITCH) for k in PATHS}
 def start_corridor(key):
     S0 = LS.STARTS[key]; h = np.radians(S0['heading']); f = np.array([np.cos(h), np.sin(h)]); n = np.array([-f[1], f[0]])
-    g = np.array(S0['gate']); b = g + f * S0['straight']; M = np.array(S0['merge'])
-    return g, f, n, b, M, S0
+    g = np.array(S0['gate']); M = np.array(S0['merge'])
+    return g, f, n, None, M, S0
 
 def riding_mask():
     """Per track: riding surface (path +-17 ft, start straight + funnel), and footprint (riding surface + obstacles + berms)."""
@@ -76,14 +80,13 @@ def riding_mask():
         smp = p.samples(1.0); tr = cKDTree(np.c_[smp['x'], smp['z']])
         d, _ = tr.query(np.c_[xx.ravel(), yy.ravel()]); d = d.reshape(xx.shape)
         ride = d < 17.0
+        X_, Z_, S_, B_ = ROUTES[key].area_points(1.0, 1.0, margin=-2.0)      # start corridor (+2 ft)
         g, f, n, b, M, S0 = start_corridor(key)
-        half = (LS.N_GATES - 1) / 2 * LS.GATE_PITCH + 6
-        # start box (gate row -> end of straight) and funnel (straight end -> merge)
-        u = (xx - g[0]) * f[0] + (yy - g[1]) * f[1]; v = (xx - g[0]) * n[0] + (yy - g[1]) * n[1]
-        ride |= (u > -12) & (u < S0['straight']) & (np.abs(v) < half)
-        for t in np.linspace(0, 1, 80):
-            c = b + (M - b) * t; w = half * (1 - t) + 17 * t
-            ride |= np.hypot(xx - c[0], yy - c[1]) < w
+        for u in np.arange(-12, 0, 1.0):                                       # behind the gate row
+            for v in np.arange(-ROUTES[key].W0 / 2, ROUTES[key].W0 / 2, 1.0):
+                X_ = np.append(X_, g[0] + f[0] * u + n[0] * v); Z_ = np.append(Z_, g[1] + f[1] * u + n[1] * v)
+        ci = (Z_ / (4 * S)).astype(int).clip(0, xx.shape[0] - 1); cj = (X_ / (4 * S)).astype(int).clip(0, xx.shape[1] - 1)
+        ride[ci, cj] = True; ride = ndi.binary_closing(ride, iterations=1)
         masks[key] = dict(ride=ride, dist=d)
     near = np.argmin(np.stack([masks[k]['dist'] for k in PATHS]), axis=0)   # every obstacle pixel belongs to its nearest track
     for i, key in enumerate(PATHS):
@@ -128,11 +131,11 @@ def pits(rect, side, shift=0.0):
     o0, e, o, L = side_frame(rect, side); st = []; grav = []
     rot = np.arctan2(e[1], e[0])   # Detroit side runs along +x: rotate model angles by the same amount (angle grows clockwise)
     for model, tex, x, z, a in PITS:
-        u = x - PIT_U0 + shift; w = DET_FENCE_Z - z
+        u = x - PIT_U0 + shift; w = DET_FENCE_Z - z + 22.0
         p = o0 + e * u + o * w
         st.append((p[0], p[1], a - rot, model, tex))
     for u in np.arange(-L / 2 + 6, L / 2 - 6, 5.9):
-        for w in np.arange(8, 52, 5.9):
+        for w in np.arange(30, 74, 5.9):
             p = o0 + e * u + o * w; grav.append((p[0], p[1], rng.uniform(-np.pi, np.pi)))
     return st, grav
 
@@ -183,23 +186,92 @@ def surface_decals(key, masks, xx, yy):
     out = []; p = PATHS[key]; smp = p.samples(3.9)
     sand_seg = {k for k, g in enumerate(p.segs) if g['kind'] == 'P'}
     for x, z, th, sg in zip(smp['x'], smp['z'], smp['th'], smp['seg']):
-        nx, nz = -np.sin(th), np.cos(th); tex = 'sand' if int(sg) in sand_seg else 'track'
+        nx, nz = -np.sin(th), np.cos(th)
+        if int(sg) in sand_seg: continue                 # sand: decals laid on the sand tiles themselves (sand_decals)
+        tex = 'track'
         for v in (-10.4, -5.2, 0.0, 5.2, 10.4):
             j = rng.normal(0, 0.8, 2)
             out.append(decal(x + nx * v + j[0], z + nz * v + j[1], rng.uniform(-np.pi, np.pi), 26.0, tex))
-    g, f, n, b, M, S0 = start_corridor(key); half = (LS.N_GATES - 1) / 2 * LS.GATE_PITCH + 4
-    for u in np.arange(0, S0['straight'], 4.5):
-        for v in np.arange(-half, half + 0.1, 5.5):
-            c = g + f * u + n * v; out.append(decal(c[0], c[1], rng.uniform(-np.pi, np.pi), 26.0, 'track'))
-    for t in np.arange(0, 1, 0.04):
-        c0 = b + (M - b) * t; w = half * (1 - t) + 12 * t
-        for v in np.arange(-w, w + 0.1, 5.5):
-            c = c0 + n * v; out.append(decal(c[0], c[1], rng.uniform(-np.pi, np.pi), 26.0, 'track'))
+    X_, Z_, S_, B_ = ROUTES[key].area_points(4.5, 5.5, margin=2.0)
+    for x, z in zip(X_, Z_): out.append(decal(x + rng.normal(0, 0.6), z + rng.normal(0, 0.6), rng.uniform(-np.pi, np.pi), 26.0, 'track'))
     # tear-offs: ~50 per track, on the riding line
     idx = rng.choice(len(smp['x']), 50, replace=False)
     for i in idx:
         out.append(decal(smp['x'][i] + rng.normal(0, 5), smp['z'][i] + rng.normal(0, 5), rng.uniform(-np.pi, np.pi), 4.84, 'Tearoff'))
     return out
+
+def sand_decals():
+    """sand.png (26 ft, as Glendale) every 6 ft on the sand tiles (tilemap cells 4..7)."""
+    T = np.load(f'{BUILD}/tiles.npy'); cs = SIZE / T.shape[0]; out = []
+    sand = np.isin(T, (4, 5, 6, 7)); sand = ndi.binary_opening(sand, iterations=2)
+    step = int(round(6.0 / cs))
+    for i in range(0, T.shape[0], step):
+        for j in range(0, T.shape[1], step):
+            if sand[i, j]:
+                out.append(decal(j * cs + rng.normal(0, 1), i * cs + rng.normal(0, 1), rng.uniform(-np.pi, np.pi), 26.0, 'sand'))
+    return out
+
+TUFF_LEN = 5.6   # tuff-medium.jm is 5.4 ft long
+def tuff_rows():
+    """v10 delimitations: tuff blocks wherever two parts of a lap (or a lap and a start corridor) run close to each other but far
+    apart along the lap - i.e. where a rider could cut: on the median between adjacent lanes, between the sand J and its neighbours,
+    and along both sides of every start corridor. Never on a riding surface, an obstacle, a crossing or a merge."""
+    from scipy.spatial import cKDTree
+    lines = []; cand = []
+    for key, p in PATHS.items():
+        smp = p.samples(2.0); P_ = np.c_[smp['x'], smp['z']]; tr = cKDTree(P_)
+        pr = tr.query_pairs(70.0, output_type='ndarray'); far = np.abs(smp['s'][pr[:, 0]] - smp['s'][pr[:, 1]]); far = np.minimum(far, p.s - far)
+        pr = pr[far > 110]
+        for a, b in pr:
+            A, B = P_[a], P_[b]; m = (A + B) / 2; u = (B - A) / max(np.linalg.norm(B - A), 1e-6)
+            cand.append((m[0], m[1], -u[1], u[0], key))
+        lines.append(P_)
+        R = ROUTES[key]; rs = R.samples(TUFF_LEN)
+        for x, z, th, sv, w in zip(rs['x'], rs['z'], rs['th'], rs['s'], rs['w']):
+            if sv > R.L - 25: continue
+            nx, nz = -np.sin(th), np.cos(th)
+            for sg in (-1, 1): cand.append((x + sg * nx * (w / 2 + 3.5), z + sg * nz * (w / 2 + 3.5), np.cos(th), np.sin(th), key))
+    allp = np.vstack(lines); trall = cKDTree(allp)
+    corr = [ROUTES[k].area_points(2.0, 2.0, margin=-1.5) for k in PATHS]
+    trc = cKDTree(np.vstack([np.c_[c[0], c[1]] for c in corr]))
+    marks = np.array([(g['cx'], g['cz']) for p in PATHS.values() for g in p.segs if g['kind'] == 'T' and g.get('berm') and g['r'] > 20])
+    out, kept = [], []
+    cand = sorted(cand, key=lambda c: (round(c[0] / 50), round(c[1] / 50), c[0], c[1]))
+    kd_kept = None
+    for x, z, ex, ez, key in cand:
+        if not (2 < x < SIZE - 2 and 2 < z < SIZE - 2): continue
+        if trall.query([x, z])[0] < 20.2: continue                        # >= lane half width + wall + block half width
+        if len(marks) and np.min(np.hypot(marks[:, 0] - x, marks[:, 1] - z)) < 4: continue
+        fx = np.array([ex, ez]); q = np.array([[x, z]]) + np.outer(np.linspace(-2.8, 2.8, 5), fx)
+        q = np.vstack([q + np.array([-fx[1], fx[0]]) * o for o in (-1.0, 0, 1.0)])
+        hh = H[(q[:, 1] / S).astype(int).clip(0, N - 1), (q[:, 0] / S).astype(int).clip(0, N - 1)]
+        if hh.max() > 0.65: continue                                       # flat median, or the very foot of two jump walls
+        if trc.query(q)[0].min() < 1.0: continue                          # never inside a start corridor (+1.5 ft)
+        if kept and np.min(np.hypot(np.array(kept)[:, 0] - x, np.array(kept)[:, 1] - z)) < TUFF_LEN: continue
+        kept.append((x, z)); out.append((x, z, ang_of(ex, ez), float(hh.min())))
+    return out
+
+def write_tuff_shape():
+    """collision shape for the tuff block, same format as JGSX cone.shp (count, then x y z + 4 parameters per sphere)."""
+    lines = ['4'] + [f'0 0.6 {z:.6f}  1 1 300 20' for z in (-2.0, -0.7, 0.7, 2.0)]
+    open(f'{A}/statue/tuff.shp', 'w').write('\n'.join(lines) + '\n')
+
+def roads(masks, rects):
+    """v10 concrete service roads (tile 'Road' = 8): an 18 ft ring 3 ft outside every fence + an east-west avenue between the
+    top tracks and SX3; never on a fenced area, a riding surface or an obstacle."""
+    cs = SIZE / 2048; jj, ii = np.meshgrid(np.arange(2048), np.arange(2048)); X = (jj + 0.5) * cs; Z = (ii + 0.5) * cs
+    road = np.zeros((2048, 2048), bool); inside = np.zeros_like(road)
+    for x0, x1, z0, z1 in rects.values():
+        o = np.maximum.reduce([x0 - X, X - x1, z0 - Z, Z - z1])     # >0 outside the rectangle (Chebyshev distance)
+        road |= (o > 3) & (o < 21); inside |= o < 3
+    zr = (rects['SX1'][3] + rects['SX3'][2]) / 2
+    road |= (np.abs(Z - zr) < 9) & (X > 8) & (X < SIZE - 8)
+    Hc = H[1::2, 1::2][:2048, :2048]
+    busy = inside | (Hc > 0.02)
+    for k in masks:
+        rm = ndi.zoom(masks[k]['ride'].astype(np.uint8), 2048 / masks[k]['ride'].shape[0], order=0)[:2048, :2048].astype(bool)
+        busy |= ndi.binary_dilation(rm, iterations=8)
+    return road & ~busy
 
 # ------------------------------------------------------------------ flaggers
 def flaggers(key):
@@ -207,7 +279,7 @@ def flaggers(key):
     b1 = g - f * 25 + n * (half - 15); b2 = g - f * 25 - n * (half - 15)   # behind the gate row, like a 30 s board
     G = parse_gates(f'{OUT}/{F[key]}/timing_gates'); fin = G['cps'][G['normal'][-1]]
     cx, cz, dx, dz = fin[1], fin[3], fin[4], fin[6]; L = np.hypot(dx, dz)
-    cands = [(cx + sg * dx / L * (L + 14), cz + sg * dz / L * (L + 14)) for sg in (1, -1)]
+    cands = [(cx + sg * dx / L * o, cz + sg * dz / L * o) for sg in (1, -1) for o in (L + 14, 21.5, 25.0)]   # 21.5 = median between lanes
     fl = max(cands, key=lambda q: MASKS[key]['dist'][int(q[1] / (4 * S)), int(q[0] / (4 * S))] - 100 * MASKS[key]['ride'][int(q[1] / (4 * S)), int(q[0] / (4 * S))])
     return '\n'.join([f'[{b1[0]:.6f} 0.000 {b1[1]:.6f}]', f'[{b2[0]:.6f} 0.000 {b2[1]:.6f}]', '8.4 1', '9',
                       '@30sec_30.png', '@30sec_turn.seq', '@30sec_5.png', '@30sec_run.seq', '@30sec_done.png', '',
@@ -236,6 +308,15 @@ if __name__ == '__main__':
         world_dec += surface_decals(key, masks, xx, yy) + obstacle_decals(p) + turn_decals(p)
         report[key] = dict(fence=rect, n_fence=len(fz), poles=poles, markers=marks, pits=[(x, z, model) for x, z, a, model, tex in pst],
                            gravel=[(x, z) for x, z, a in grav], pit_side=side)
+    rects = {k: v['fence'] for k, v in report.items()}
+    world_dec += sand_decals()
+    write_tuff_shape(); tf = tuff_rows()
+    for x, z, a, y in tf: world_st.append(f'[{x:.6f} {y:.6f} {z:.6f}] {a:.6f} {P}/statue/tuff-medium.jm {P}/statue/tuff_mechanic_autumn.png {P}/statue/tuff.shp')
+    rd = roads(masks, rects)
+    for key, folder in F.items():
+        t = np.fromfile(f'{OUT}/{folder}/tilemap', np.uint8).reshape(2048, 2048)
+        t[rd & (t == 0)] = 8; t.tofile(f'{OUT}/{folder}/tilemap')
+    report['tuffs'] = len(tf); report['road_cells'] = int(rd.sum())
     for key, folder in F.items():
         d = f'{OUT}/{folder}'
         # start gates: add the gate model to every startinggate line
@@ -251,4 +332,4 @@ if __name__ == '__main__':
         fl, fpos, boards = flaggers(key); open(f'{d}/flaggers', 'w').write(fl)
         report[key]['finish_flagger'] = fpos; report[key]['boards'] = [tuple(b) for b in boards]
     json.dump(report, open(f'{BUILD}/dress_report.json', 'w'), indent=1, default=float)
-    print('statues', len(world_st), 'decals', len(world_dec), {k: (v['pit_side'], [round(x) for x in v['fence']]) for k, v in report.items()})
+    print('statues', len(world_st), 'decals', len(world_dec), 'tuffs', report['tuffs'], 'road cells', report['road_cells'], {k: (v['pit_side'], [round(x) for x in v['fence']]) for k, v in report.items() if isinstance(v, dict)})

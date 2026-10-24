@@ -109,22 +109,41 @@
     360.0
    ],
    "heading": 0.0,
-   "straight": 220.0,
+   "route": [
+    [
+     "S",
+     220.0
+    ],
+    [
+     "TO",
+     [
+      462.0,
+      290.0
+     ]
+    ]
+   ],
+   "narrow": [
+    220.0,
+    368.0
+   ],
+   "finish": null,
    "merge": [
     462.0,
     290.0
-   ]
+   ],
+   "straight": 220.0,
+   "length": 367.648230602334
   }
  },
  "SX2": {
   "lap_ft": 2716.7853680190437,
   "sections": [
    {
-    "lane": "top gros triple (v7)",
-    "name": "SX2-top gros triple",
+    "lane": "top big triple Cleveland (v10)",
+    "name": "SX2-top big triple Cleveland g29",
     "s0": 147.27212102609028,
-    "length": 151.3,
-    "hmax": 6.004
+    "length": 142.0,
+    "hmax": 7.915
    },
    {
     "lane": "E1 bosse bosse table bosse table bosse (v4)",
@@ -162,10 +181,10 @@
     "hmax": 6.24
    },
    {
-    "lane": "W2 couloir Cleveland g29 complet (v8)",
-    "name": "SX2-W2 couloir JGSX Cleveland g29 tel quel",
-    "s0": 2189.2411259668634,
-    "length": 200.0,
+    "lane": "W2 small-big-small (depart) + big triple (arrivee) (v10)",
+    "name": "SX2-W2 small big small + big triple",
+    "s0": 2191.2411259668634,
+    "length": 250.3,
     "hmax": 7.915
    },
    {
@@ -240,11 +259,40 @@
     425.0
    ],
    "heading": -90.0,
-   "straight": 95.0,
+   "route": [
+    [
+     "S",
+     293.0
+    ],
+    [
+     "T",
+     90,
+     30.0
+    ],
+    [
+     "S",
+     93.0
+    ],
+    [
+     "T",
+     90,
+     15.0
+    ]
+   ],
+   "narrow": [
+    140.0,
+    280.0
+   ],
+   "finish": [
+    "SX2-W2 small big small + big triple",
+    3
+   ],
    "merge": [
-    720.0,
-    170.0
-   ]
+    677.0,
+    116.99999999999999
+   ],
+   "straight": 293.0,
+   "length": 456.68583470577033
   }
  },
  "SX3": {
@@ -272,11 +320,11 @@
     "hmax": 6.18
    },
    {
-    "lane": "F triple + gros double, fini pres du depart (v4)",
-    "name": "SX3-F triple, big double",
-    "s0": 2913.9514356411837,
-    "length": 327.5,
-    "hmax": 7.936
+    "lane": "F pain de sucre + triple + double d arrivee (v10)",
+    "name": "SX3-F pain de sucre, triple, double d arrivee JGSX",
+    "s0": 2979.4514356411837,
+    "length": 346.90000000000003,
+    "hmax": 11.218
    }
   ],
   "turns": [
@@ -330,22 +378,65 @@
   ],
   "start": {
    "gate": [
-    638.0,
-    960.0
+    788.0,
+    965.0
    ],
-   "heading": 0.0,
-   "straight": 140.0,
+   "heading": 180.0,
+   "route": [
+    [
+     "S",
+     100.0
+    ],
+    [
+     "TO",
+     [
+      568.0,
+      933.0
+     ]
+    ],
+    [
+     "TO",
+     [
+      458.0,
+      933.0
+     ]
+    ],
+    [
+     "T",
+     -180,
+     21.5,
+     "big_det_a"
+    ]
+   ],
+   "narrow": [
+    100.0,
+    227.0
+   ],
+   "finish": [
+    "SX3-F pain de sucre, triple, double d arrivee JGSX",
+    4
+   ],
    "merge": [
-    898.0,
+    458.0,
     890.0
-   ]
-  }
+   ],
+   "straight": 100.0,
+   "length": 401.73763962226076
+  },
+  "start_berms": [
+   {
+    "berm": "big_det_a",
+    "cx": 458.0,
+    "cz": 911.5,
+    "angle": -180.0
+   }
+  ]
  },
  "tiles": {
-  "SX Main": 3374848,
-  "Jumps Sx": 482791,
+  "SX Main": 3362510,
+  "Jumps Sx": 490807,
   "WhoopsV2": 102713,
-  "Berm Exit Sx": 119708,
+  "Berm Exit Sx": 124030,
   "Sand Straight": 0,
   "Sand Bump Straight": 0,
   "Sand Exit": 111084,
@@ -615,26 +706,26 @@
     ]
    ]
   },
-  "SX2-top gros triple": {
-   "length": 151.3,
+  "SX2-top big triple Cleveland g29": {
+   "length": 142.0,
    "items": [
     [
-     "Arlington_g37_2",
+     "Custom1_g29_2",
      0.0,
-     46.6,
-     5.903
+     39.300000000000004,
+     7.915
     ],
     [
      "Custom1_g29_3",
-     49.4,
-     97.4,
+     39.800000000000004,
+     87.80000000000001,
      6.004
     ],
     [
-     "Glendale_g30_0",
-     100.2,
-     151.2,
-     5.766
+     "Arlington_g29_2",
+     89.4,
+     141.9,
+     7.351
     ]
    ]
   },
@@ -825,31 +916,43 @@
     ]
    ]
   },
-  "SX2-W2 couloir JGSX Cleveland g29 tel quel": {
-   "length": 200.0,
+  "SX2-W2 small big small + big triple": {
+   "length": 250.3,
    "items": [
     [
-     "Custom1_g29_1",
+     "Custom_g32_2",
      0.0,
-     32.2,
-     3.632
+     20.3,
+     2.989
+    ],
+    [
+     "Arlington_g37_2",
+     25.6,
+     72.2,
+     5.903
+    ],
+    [
+     "Custom_g32_2",
+     75.0,
+     95.3,
+     2.989
     ],
     [
      "Custom1_g29_2",
-     58.0,
-     97.30000000000001,
+     108.3,
+     147.6,
      7.915
     ],
     [
      "Custom1_g29_3",
-     97.80000000000001,
-     145.8,
+     148.1,
+     196.1,
      6.004
     ],
     [
      "Arlington_g29_2",
-     147.4,
-     199.9,
+     197.7,
+     250.2,
      7.351
     ]
    ]
@@ -1066,8 +1169,8 @@
     ]
    ]
   },
-  "SX3-F triple, big double": {
-   "length": 327.5,
+  "SX3-F pain de sucre, triple, double d arrivee JGSX": {
+   "length": 346.90000000000003,
    "items": [
     [
      "Custom1_g59_1",
@@ -1077,33 +1180,33 @@
     ],
     [
      "Custom1_g71_2",
-     65.3,
-     95.6,
+     75.3,
+     105.6,
      3.644
     ],
     [
      "Custom1_g71_3",
-     100.89999999999999,
-     131.2,
+     110.89999999999999,
+     141.2,
      3.521
     ],
     [
      "Custom1_g71_5",
-     136.5,
-     171.2,
+     146.5,
+     181.2,
      3.872
     ],
     [
-     "Glendale_g83_1",
-     195.2,
-     229.89999999999998,
-     7.144
+     "Custom1_g30_2",
+     216.2,
+     252.89999999999998,
+     8.811
     ],
     [
-     "Glendale_g83_2",
-     270.4,
-     327.4,
-     7.936
+     "Arlington_g30_2",
+     274.79999999999995,
+     346.79999999999995,
+     11.218
     ]
    ]
   }

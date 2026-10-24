@@ -16,7 +16,7 @@ if os.path.exists(OUT): shutil.rmtree(OUT)
 for f in F.values(): os.makedirs(f'{OUT}/{f}')
 A = f'{OUT}/{F["SX1"]}'; P = '@' + F['SX1']
 DET = f'{REF}/JGSX2026TestTracks/JGSX2026Detroit'
-copies = {'tiles/dirt.ppm': f'{REF}/JGMXDrDew/JGMXDrDew/tiles/dirt.ppm', 'tiles/hardpack.ppm': f'{REF}/JGMXDrDew/JGMXDrDew/tiles/hardpack.ppm',
+copies = {'tiles/dirt.ppm': f'{REF}/JGMXDrDew/JGMXDrDew/tiles/dirt.ppm', 'tiles/hardpack.ppm': f'{REF}/JGMXDrDew/JGMXDrDew/tiles/hardpack.ppm', 'tiles/concrete.ppm': f'{REF}/JGMXDrDew/JGMXDrDew/tiles/concrete.ppm',
           'tiles/sand.ppm': f'{REF}/JGMXDesertSand/JGMXDesertSand/tiles/sand.ppm', 'roost/redroost.png': f'{REF}/JGMXDesertSand/JGMXDesertSand/tiles/redroost.png',
           'roost/dirt4.png': f'{REF}/JGMXDesertSand/JGMXDesertSand/tiles/dirt4.png', 'roost/hha.dust.png': f'{REF}/JGMXDesertSand/JGMXDesertSand/tiles/hha.dust.png'}
 for k in ('dirt2x4', 'dirt2x8', 'sand1x4', 'sand1x8'): copies[f'treads/{k}.png'] = f'{DET}/decal/treads/{k}.png'
@@ -36,10 +36,11 @@ dirt_fx = ['roost texture=@splash.png count=4 slip_threshold=2.0 slow_speed=0.0 
 sand_fx = [f'roost texture={P}/roost/hha.dust.png count=4 dig=1.0 slip_threshold=2.0 slow_speed=0.0 fast_speed=50.0 slow_angle=1 fast_angle=0.1 size=2.0 grow=2.0 drag=1.5 vscale=1.0 randomize=1 r=255 g=255 b=255 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=-256',
            f'roost texture={P}/roost/dirt4.png count=4 dig=0.0 slip_threshold=2.0 slow_speed=0.0 fast_speed=50.0 slow_angle=1.57 fast_angle=0.296 size=1.0 grow=2.5 drag=1.0 vscale=1.0 randomize=1 r=255 g=255 b=255 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=256',
            f'treadmark texture={P}/treads/sand1x4.png size=4 aspect=0.25 spacing=3 speed_threshold=-20', f'treadmark texture={P}/treads/sand1x8.png size=8 aspect=0.125 spacing=6']
-TILES = [('Main', 'hardpack', dirt_fx), ('Jumps Sx', 'dirt', dirt_fx), ('WhoopsV2', 'dirt', dirt_fx), ('Berm Exit Sx', 'dirt', dirt_fx),
-         ('Sand Straight', 'sand', sand_fx), ('Sand Bump Straight', 'sand', sand_fx), ('Sand Exit', 'sand', sand_fx), ('Sand Bump Solo', 'sand', sand_fx)]
+TILES = [('Main', 'dirt', dirt_fx), ('Jumps Sx', 'dirt', dirt_fx), ('WhoopsV2', 'dirt', dirt_fx), ('Berm Exit Sx', 'dirt', dirt_fx),
+         ('Sand Straight', 'sand', sand_fx), ('Sand Bump Straight', 'sand', sand_fx), ('Sand Exit', 'sand', sand_fx), ('Sand Bump Solo', 'sand', sand_fx),
+         ('Road', 'concrete', dirt_fx[2:])]   # v10: concrete service roads (physics of the Main block), painted by dress_sx.py
 ti = []
-for name, tex, fx in TILES: ti += [f'name {name}'] + block(name) + [f'texture {P}/tiles/{tex}.ppm'] + fx + ['addtile', '']
+for name, tex, fx in TILES: ti += [f'name {name}'] + block('Main' if name == 'Road' else name) + [f'texture {P}/tiles/{tex}.ppm'] + fx + ['addtile', '']
 tileinfo = '\n'.join(ti) + '\n'
 hmin, hmax = float(H.min()) - 0.5, float(H.max()) + 0.5
 raw = np.round((H - hmin) / (hmax - hmin) * 65535).astype(np.uint16)
@@ -49,9 +50,16 @@ sh = np.clip(89.3 + 245.8 * lam, 0, 255).astype(np.uint8)          # calibrated 
 lighting = open(f'{DET}/lighting').read().replace('@JGSX2026Detroit/sky/', f'{P}/sky/')
 
 def gates(path, start, cp_step=60.0, half=18.0):
-    """JGSX-style timing: 22-gate row facing the start heading; 2 first-lap-only gates across the start straight;
-    loop gates every cp_step ft starting just after the merge point M (lap counter = last gate, just before M)."""
+    """JGSX-style timing (v10).
+    - startinggate: 22 gates at 4 ft, facing the start heading.
+    - loop gates every cp_step ft after the finish line, finish gate last (normallap ends on it). The finish is the crest of a
+      jump (LS.STARTS[key]['finish'], like the JGSX finish double) or, by default, 8 ft before the merge.
+    - first lap: start-only gates along the start route, then the loop from the merge to the finish. If the finish comes soon
+      after the merge (less than half a lap), lap 1 = merge -> finish -> full lap -> finish: a separate gate F' (12 ft before
+      the finish, first lap only) is the first crossing, so every index appears once."""
+    from starts import StartRoute, finish_s
     smp = path.samples(0.5); L = path.s
+    R = StartRoute(start, LS.N_GATES, LS.GATE_PITCH)
     gx, gz = start['gate']; h = np.radians(start['heading']); f = np.array([np.cos(h), np.sin(h)]); n = np.array([-f[1], f[0]])
     ang = float(np.arctan2(-f[0], -f[1]))                     # MXS gate angle: riders face (-sin a, -cos a)
     lines = ['startinggate:']
@@ -59,20 +67,34 @@ def gates(path, start, cp_step=60.0, half=18.0):
         o = (k - (LS.N_GATES - 1) / 2) * LS.GATE_PITCH; x, z = gx + o * n[0], gz + o * n[1]
         lines.append(f'[{x:.6f} 0.000000 {z:.6f}] {ang:.6f}')
     lines.append('checkpoints:'); cps = []
-    sM = float(smp['s'][np.argmin(np.hypot(smp['x'] - start['merge'][0], smp['z'] - start['merge'][1]))])
-    rel = list(np.arange(30.0, L - 30.0, cp_step)) + [L - 8.0]
-    for r in rel:
-        sv = (sM + r) % L; i = int(np.argmin(np.abs(smp['s'] - sv))); x, z, th = smp['x'][i], smp['z'][i], smp['th'][i]
-        hl = half + (6.0 if path.segs[int(smp['seg'][i])]['kind'] == 'P' else 0.0)     # wider in the Glendale sand channel
-        cps.append((hl, x, z, -np.sin(th) * hl, np.cos(th) * hl))
+    sF, sM = finish_s(path, start, LS.COMBOS)
+    def lap_gate(sv, hl0=half):
+        i = int(np.argmin(np.abs(smp['s'] - sv % L))); x, z, th = smp['x'][i], smp['z'][i], smp['th'][i]
+        hl = hl0 + (6.0 if path.segs[int(smp['seg'][i])]['kind'] == 'P' else 0.0)     # wider in the Glendale sand channel
+        return (hl, x, z, -np.sin(th) * hl, np.cos(th) * hl)
+    rel = list(np.arange(30.0, L - 20.0, cp_step))
+    for r in rel: cps.append(lap_gate(sF + r))
+    cps.append(lap_gate(sF)); fin = len(cps) - 1
     loop_idx = list(range(len(cps)))
-    for dist in (60.0, start['straight']):                    # first-lap-only gates across the start straight
-        c = np.array([gx, gz]) + f * dist; hl = (LS.N_GATES - 1) / 2 * LS.GATE_PITCH + 8.0
-        cps.append((hl, c[0], c[1], n[0] * hl, n[1] * hl))
+    loop_rel = [((sF + r) - sM) % L for r in rel] + [(sF - sM) % L]           # position of every loop gate after the merge
+    # start-only gates across the corridor
+    rs = R.samples(1.0); start_only = []
+    marks = [60.0, R.s_straight] + [float(g['s0'] + g['L'] / 2) for g in R.path.segs[1:] if g['kind'] == 'S' and g['L'] > 40]
+    for sv in sorted(set(round(m) for m in marks if 30 < m < R.L - 30)):
+        i = int(np.argmin(np.abs(rs['s'] - sv))); th = rs['th'][i]; hl = rs['w'][i] / 2 + 4.0
+        cps.append((hl, rs['x'][i], rs['z'][i], -np.sin(th) * hl, np.cos(th) * hl)); start_only.append(len(cps) - 1)
+    delta = (sF - sM) % L
+    if delta < L / 2:      # finish just after the merge: lap 1 goes round once more
+        i = int(np.argmin(np.abs(smp['s'] - (sF - 12.0) % L))); th = smp['th'][i]
+        cps.append((half, smp['x'][i], smp['z'][i], -np.sin(th) * half, np.cos(th) * half)); fprime = len(cps) - 1
+        after = [k for k in sorted(loop_idx, key=lambda k: loop_rel[k]) if loop_rel[k] > delta]
+        before = [k for k in sorted(loop_idx, key=lambda k: loop_rel[k]) if loop_rel[k] < delta]
+        first = start_only + [fprime] + after + before + [fin]
+    else:
+        first = start_only + [k for k in sorted(loop_idx, key=lambda k: loop_rel[k]) if k != fin] + [fin]
     for c in cps: lines.append(f'{c[0]:.6f} [{c[1]:.6f} 0.000000 {c[2]:.6f}] [{c[3]:.6f} 0.000000 {c[4]:.6f}]')
-    first = list(range(len(loop_idx), len(cps))) + loop_idx
     lines += ['firstlap:', ' '.join(map(str, first)) + ' ', 'normallap:', ' '.join(map(str, loop_idx)) + ' ', '']
-    return '\n'.join(lines), cps, first, loop_idx, sM
+    return '\n'.join(lines), cps, first, loop_idx, sM, sF
 
 PATHS = {'SX1': LS.sx1(), 'SX2': LS.sx2(), 'SX3': LS.sx3()}
 GT = {k: gates(PATHS[k], LS.STARTS[k]) for k in PATHS}
@@ -85,5 +107,5 @@ for key, folder in F.items():
     for nm, img in (('shading.ppm', sh), ('shadingx2.ppm', (sh // 2).astype(np.uint8))):
         with open(f'{d}/{nm}', 'wb') as fh: fh.write(f'P6\n{N} {N}\n255\n'.encode()); fh.write(np.repeat(img[:, :, None], 3, axis=2).tobytes())
     open(f'{d}/timing_gates', 'w').write(GT[key][0])
-json.dump({k: dict(n_cp=len(v[1]), first=v[2], normal=v[3], s_merge=v[4]) for k, v in GT.items()} | dict(hmin=hmin, hmax=hmax), open(f'{BUILD}/export_info.json', 'w'))
+json.dump({k: dict(n_cp=len(v[1]), first=v[2], normal=v[3], s_merge=v[4], s_finish=v[5]) for k, v in GT.items()} | dict(hmin=hmin, hmax=hmax), open(f'{BUILD}/export_info.json', 'w'))
 print('exported', {k: len(v[1]) for k, v in GT.items()}, 'heights', round(hmin, 2), round(hmax, 2))

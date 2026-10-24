@@ -179,6 +179,19 @@ Ce que ça a donné (v4, détail dans doc 05) :
   (statue/, decal/, sky/, tiles/, treads/, roost/) sont désormais **hors Git** (`.gitignore`, reconstruites par `make_all.sh build`) ;
   attention : les anciens commits (v1–v8) en contiennent encore une partie (textures Dr. Dew / Desert Sand, ciel Detroit).
 
+## 13. Retours v9 → v10 (images annotées)
+
+- **SX1** : « bien », améliorer les délimitations pour qu'on ne coupe pas.
+- **SX2** : départ redessiné (grille dans l'infield vers le nord, virage à gauche **à plat et délimité**, traverse le haut de la
+  ligne F, virage à gauche à plat dans le couloir W2) ; W2 = **small-big-small** à la sortie du virage (le départ reprend dessus)
+  + le **big triple** Cleveland g29 ; le même big triple dans le couloir du haut ; **ligne d'arrivée sur le big triple** de W2.
+- **SX3** : grille sous la ligne F tournée vers l'ouest, demi-tour à droite avec berm (estompé près de la ligne F) → toute la
+  ligne F : pain de sucre, triple, **double d'arrivée JGSX** (Cleveland g30_2 8,8 → Arlington g30_2 11,2 = le saut d'arrivée de
+  toutes les JGSX 2026, mesuré) ; ligne d'arrivée sur ce double ; angle de sortie du J **gardé**, mieux délimité.
+- Partout : **tuff blocks** (délimitations), « les gates bien comme JGSX, les tours doivent compter, aucun bug » → simulation
+  du comptage dans `validate_sx.py` ; sol hors piste en **terre**, **routes béton** ; texture sable mal placée → refaite.
+- Puis : « fais les mini maps directement avec les vues de dessus, sans les lignes » → `map.png` par dossier (`minimap.py`).
+
 ## Décisions techniques importantes (et pourquoi)
 
 | Décision | Pourquoi |

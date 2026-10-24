@@ -41,24 +41,47 @@ for folder, path in paths.items():
         far = np.abs(smp['s'][idx] - smp['s'][ii]); far = np.minimum(far, path.s - far); cross += int(np.any((dist < 6) & (far > 60)))
     check(f'{folder}: portes sur la ligne de course', worst < 1.0, f'{len(loop)} portes du tour, écart max {worst:.2f} ft')
     check(f'{folder}: aucune porte ne touche une autre partie du tour', cross == 0, f'{cross} porte(s) en défaut')
-    extra = [i for i in G['first'] if i not in loop]
-    check(f'{folder}: ordre des tours', set(loop) <= set(G['first']) and G['first'][len(extra):] == loop, f'1er tour {len(G["first"])} portes (dont {len(extra)} sur la ligne de départ), tours suivants {len(loop)}')
-    key = folder[-3:]; S0 = LS.STARTS[key]; hd = np.radians(S0['heading']); f = np.array([np.cos(hd), np.sin(hd)]); nv = np.array([-f[1], f[0]])
+    key = folder[-3:]; S0 = LS.STARTS[key]
+    from starts import StartRoute
+    RT = StartRoute(S0, LS.N_GATES, LS.GATE_PITCH); EI = json.load(open(f'{BUILD}/export_info.json'))[key]
+    # lap counting simulated on the riders' trajectory: every gate of the list must be crossed, in that order
+    def crossings(traj, gate):
+        h_, x_, y_, z_, dx_, dy_, dz_ = gate[:7]; p_ = np.array([x_ - dx_, z_ - dz_]); q_ = np.array([x_ + dx_, z_ + dz_])
+        A = traj[:-1]; B = traj[1:]; d1 = B - A; d2 = q_ - p_
+        den = d1[:, 0] * d2[1] - d1[:, 1] * d2[0]; ok = np.abs(den) > 1e-9
+        t_ = np.where(ok, ((p_[0] - A[:, 0]) * d2[1] - (p_[1] - A[:, 1]) * d2[0]) / np.where(ok, den, 1), -1)
+        u_ = np.where(ok, ((p_[0] - A[:, 0]) * d1[:, 1] - (p_[1] - A[:, 1]) * d1[:, 0]) / np.where(ok, den, 1), -1)
+        return np.nonzero(ok & (t_ >= 0) & (t_ <= 1) & (u_ >= 0) & (u_ <= 1))[0]
+    def ride(order, traj):
+        pos = -1
+        for gi in order:
+            c = crossings(traj, G['cps'][gi]); c = c[c > pos]
+            if not len(c): return gi
+            pos = c[0]
+        return None
+    lap_s = path.samples(0.5); Lp = path.s
+    def lap_traj(s0, length):
+        ss = (s0 + np.arange(0, length, 0.5)) % Lp; idx = np.searchsorted(lap_s['s'], ss).clip(0, len(lap_s['s']) - 1)
+        return np.c_[lap_s['x'][idx], lap_s['z'][idx]]
+    rs = RT.samples(0.5); sM, sF = EI['s_merge'], EI['s_finish']; dl = (sF - sM) % Lp
+    first_traj = np.vstack([np.c_[rs['x'], rs['z']], lap_traj(sM, (Lp + dl if dl < Lp / 2 else dl) + 2)])
+    miss1 = ride(G['first'], first_traj); miss2 = ride(loop, lap_traj(sF + 0.5, Lp + 1))
+    dup = len(G['first']) != len(set(G['first']))
+    check(f'{folder}: tours comptés sans bug (simulation des portes)', miss1 is None and miss2 is None and not dup and G['first'][-1] == loop[-1],
+          f"1er tour : {len(G['first'])} portes franchies dans l'ordre ({(Lp + dl if dl < Lp / 2 else dl) + RT.L:.0f} ft depuis la grille) ; "
+          f"tours suivants : {len(loop)} portes, arrivée = dernière porte" if miss1 is None and miss2 is None else f'porte manquée : 1er tour {miss1}, tour {miss2}, doublons {dup}')
     st = np.array([g[:3] for g in G['start']]); hs = T.h(st[:, 0], st[:, 2])
     check(f'{folder}: grille de départ (22 grilles comme JGSX)', len(st) == 22 and np.ptp(hs) < 0.05 and np.abs(hs).max() < 0.05, f'{len(st)} grilles au pas de 4 ft, sol plat (écart {np.ptp(hs):.3f} ft)')
-    # start corridor: from every gate, straight ahead then funnel into the lap lane at the merge point: all flat floor, 3 ft each side
-    M = np.array(S0['merge']); worst = 0.0
-    tM = path.samples(0.5); iM = np.argmin(np.hypot(tM['x'] - M[0], tM['z'] - M[1])); thM = tM['th'][iM]; nM = np.array([-np.sin(thM), np.cos(thM)])
-    for g in st:
-        a = np.array([g[0], g[2]]); b = a + f * S0['straight']; o = (a - np.array(S0['gate'])) @ nv
-        c = M + np.clip(o, -10, 10) * nM * np.sign(nv @ nM if abs(nv @ nM) > 0.1 else 1)
-        for p0, p1 in ((a, b), (b, c)):
-            u = np.linspace(0, 1, int(np.hypot(*(p1 - p0)) / 0.5) + 2)[:, None]; q = p0 + (p1 - p0) * u
-            dirv = (p1 - p0) / max(np.hypot(*(p1 - p0)), 1e-6); lat = np.array([-dirv[1], dirv[0]])
-            for off in (-3, 0, 3):
-                worst = max(worst, float(T.h(q[:, 0] + off * lat[0], q[:, 1] + off * lat[1]).max()))
-    L_start = S0['straight'] + float(np.hypot(*(M - (np.array(S0['gate']) + f * S0['straight']))))
-    check(f'{folder}: ligne de départ dégagée jusqu’au tour', worst < 0.05, f'22 trajectoires grille -> entonnoir -> point de jonction, hauteur max {worst:.3f} ft ; longueur jusqu’à la jonction ≈ {L_start:.0f} ft')
+    # start corridor: whole corridor area flat (on a start berm turn: the riding line +-3 ft), and it ends on the lap line
+    X_, Z_, S_, B_ = RT.area_points(1.0, 1.0, margin=1.0)
+    off = B_ & False
+    if B_.any():
+        for g_ in RT.berm_turns:
+            r_ = np.hypot(X_ - g_['cx'], Z_ - g_['cz']); off |= B_ & (np.abs(r_ - g_['r']) > 2)   # start berm turn: riding line +-2 ft
+    hh_ = T.h(X_[~off], Z_[~off]); worst = float(hh_.max())
+    iM = int(np.argmin(np.hypot(lap_s['x'] - RT.merge[0], lap_s['z'] - RT.merge[1]))); dM = float(np.hypot(lap_s['x'][iM] - RT.merge[0], lap_s['z'][iM] - RT.merge[1]))
+    check(f'{folder}: ligne de départ dégagée jusqu’au tour', worst < 0.05 and dM < 1.0,
+          f'couloir entier (largeur 92 -> 30 ft) plat, hauteur max {worst:.3f} ft ; jonction sur la ligne du tour (écart {dM:.2f} ft) ; longueur grille -> jonction ≈ {RT.L:.0f} ft')
     turns = json.load(open(f'{BUILD}/build_report.json'))[key]['turns']
     flat = [t_ for t_ in turns if t_['kind'] == 'turn' and not t_['berm'] and abs(t_['angle']) > 25]
     check(f'{folder}: aucun virage plat', not flat, flat or f"{sum(1 for t_ in turns if t_['berm'])} virages avec berm/sable ; seuls des déports plats ≤ 25° restent : {[round(t_['angle'],1) for t_ in turns if not t_['berm']]}")
@@ -104,6 +127,9 @@ check('Pas de rebord au pied des berms et des obstacles', fo <= fr + 0.02, f'mar
 # v9 habillage: every object off the riding surfaces and off the obstacles; every referenced file present; gate models on the grid
 from scipy.spatial import cKDTree as _KD
 ride = [_KD(np.c_[s_['x'], s_['z']]) for s_ in (p_.samples(1.0) for p_ in paths.values())]
+from starts import StartRoute as _SR
+_corr = [_SR(LS.STARTS[k_[-3:]], LS.N_GATES, LS.GATE_PITCH).area_points(2.0, 2.0, margin=0.0) for k_ in paths]
+ride_c = _KD(np.vstack([np.c_[c_[0], c_[1]] for c_ in _corr]))
 SX1D = f'{DIST}/' + FOLDERS['SX1']
 def _bbox(model):
     L_ = open(f'{SX1D}/statue/{model}.jm').read().split('\n')   # JM1 / JM2: first 'nverts ntris' line, then the vertices
@@ -121,8 +147,10 @@ for l in open(f'{SX1D}/statues'):
     dmin = min(r_.query(q)[0].min() for r_ in ride) if len(q) else 1e9
     hmax = float(T.h(q[:, 0], q[:, 1]).max()) if len(q) else 0.0
     nobj += 1
-    if (model != '2' and (dmin < 17.0 or hmax > 0.05)) or (model == '2' and dmin < 17.0): worst.append((model, round(x), round(z), round(dmin, 1), round(hmax, 2)))
-check('Objets hors piste (grillages, poteaux, paddock, repères)', not worst, worst[:8] or f'{nobj} objets : tous à plus de 17 ft des lignes de course et sur sol plat')
+    if len(q) and ride_c.query(q)[0].min() < 1.0: worst.append((model, round(x), round(z), 'couloir de départ')); continue
+    lim = 0.85 if model == 'tuff-medium' else 0.05      # tuff blocks may sit on the foot of two jump walls (y = local ground)
+    if (model != '2' and (dmin < 17.0 or hmax > lim)) or (model == '2' and dmin < 17.0): worst.append((model, round(x), round(z), round(dmin, 1), round(hmax, 2)))
+check('Objets hors piste (tuff blocks, grillages, poteaux, paddock, repères)', not worst, worst[:8] or f'{nobj} objets : tous à plus de 17 ft des lignes de course et sur sol plat')
 refs2 = set()
 for fname in ('statues', 'decals', 'timing_gates'):
     for d_ in paths:

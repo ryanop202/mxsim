@@ -40,12 +40,14 @@ Tu reprends un projet commencé dans une autre conversation. Lis dans cet ordre 
 | Enchaînements | varier les hauteurs, pas deux fois le même enchaînement sur deux pistes ; pas d'élan trop long avant un enchaînement (on arrive trop vite) |
 | « Pains de sucre » | **refusés dans les enchaînements** : bosses pointues = hauteur / largeur à mi-hauteur > 0,31 (contrôle auto dans `validate_sx.py`), y compris les petits singles courts (~26 ft). Gros singles OK = Arlington g37_2, g1_2, Cleveland g29_3, Glendale g30_0. Exception voulue : un pain de sucre pour **forcer à ralentir** (SX3 arrivée) |
 | « Réaliste » | prendre un couloir JGSX entier avec ses écarts d'origine plutôt qu'un assemblage inventé |
+| Arrivée | ligne d'arrivée sur un saut (comme JGSX : crête du double d'arrivée g30) |
+| Délimitations | tuff blocks pour qu'on ne coupe pas ; virages de départ à plat acceptés s'ils sont délimités (SX2) |
 | « Ça fait 4 d'entrée » | trop d'élan / bosses trop serrées à l'entrée d'un enchaînement → coller au virage, écarter, ou 1re bosse petite |
 
-## État actuel (v9)
+## État actuel (v10)
 
 - 3 pistes SX dans `tracks/` + habillage JGSX (doc 11), 43/43 contrôles, chaîne complète reproductible (`./make_all.sh`).
-- v3 à v7 testées en jeu ; v8 = ses corrections ; v9 = v8 + habillage. **v9 pas encore testée en jeu.**
+- v3 à v9 testées en jeu ; v10 = ses corrections (départs SX2/SX3, arrivées, tuff blocks, routes, minimaps). **v10 pas encore testée en jeu.**
 - Pistes d'amélioration notées dans `docs/10_suite_et_idees.md`.
 
 ## Pièges connus

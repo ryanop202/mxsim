@@ -37,6 +37,20 @@ for key, p in paths.items():
             if g.get('berm'): render_berm_stamp(G, berms, g['berm'], g['cx'], g['cz'], turn_mid_angle(g), ang_scale=berm_ang_scale(g['berm'], g['ang']))
             turns.append(dict(tag=g['tag'], kind='turn', angle=g['ang'], r=g['r'], berm=g.get('berm')))
     report[key] = dict(lap_ft=p.s, sections=secs, turns=turns, start=LS.STARTS[key])
+# v10: berms of the start routes (SX3 U-turn), faded out near every lap line so they never stick out on a lap lane
+from starts import StartRoute
+from scipy.spatial import cKDTree
+for key, p in paths.items():
+    R = StartRoute(LS.STARTS[key], LS.N_GATES, LS.GATE_PITCH)
+    if not R.berm_turns: continue
+    lap = p.samples(1.0); tr = cKDTree(np.c_[lap['x'], lap['z']])
+    for g in R.berm_turns:
+        tmp = np.zeros((N, N)); sl = render_berm_stamp(G, tmp, g['berm'], g['cx'], g['cz'], turn_mid_angle(g), ang_scale=berm_ang_scale(g['berm'], g['ang']))
+        jj, ii = np.meshgrid(np.arange(sl[1].start, sl[1].stop), np.arange(sl[0].start, sl[0].stop))
+        d, _ = tr.query(np.c_[jj.ravel() * S, ii.ravel() * S]); d = d.reshape(jj.shape)
+        w = np.clip((d - 19.0) / 8.0, 0, 1); w = w * w * (3 - 2 * w)
+        berms[sl] = np.maximum(berms[sl], tmp[sl] * w)
+        report[key].setdefault('start_berms', []).append(dict(berm=g['berm'], cx=g['cx'], cz=g['cz'], angle=g['ang']))
 H = np.maximum.reduce([jumps, whoops, berms, sand])
 TN = 2 ** 11
 def t(a): return a[:-1:2, :-1:2][:TN, :TN]

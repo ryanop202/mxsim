@@ -44,8 +44,7 @@ if __name__ == '__main__':
     offs = (np.arange(LS.N_GATES) - (LS.N_GATES - 1) / 2) * LS.GATE_PITCH
     G0 = np.array([gx, gz]) + offs[:, None] * n
     ax.plot(G0[:, 0], G0[:, 1], 'ys', ms=3, mec='k')
-    M = np.array(st['merge'])
-    for o in offs[[0, -1]]:
-        a = np.array([gx, gz]) + o * n; b = a + f * st['straight']; c = M + np.sign(o) * 12 * n
-        ax.plot([a[0], b[0], c[0]], [a[1], b[1], c[1]], 'y--', lw=1)
+    from starts import StartRoute
+    rs = StartRoute(st, LS.N_GATES, LS.GATE_PITCH).samples(1.0)
+    for sg in (-1, 1): ax.plot(rs['x'] - np.sin(rs['th']) * rs['w'] / 2 * sg, rs['z'] + np.cos(rs['th']) * rs['w'] / 2 * sg, 'y--', lw=1)
     plt.savefig(f'{ROOT}/analysis/pv2_{name}.png', dpi=55, bbox_inches='tight')

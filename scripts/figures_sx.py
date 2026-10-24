@@ -30,8 +30,11 @@ def path_draw(ax, key, every=70):
         L_, cx, cy, cz, dx, dy, dz = cp[:7]; ax.plot([cx - dx, cx + dx], [cz - dz, cz + dz], color='#ff00ff' if i in G['normal'] else '#ffaa00', lw=0.8)
     st = np.array([g[:3] for g in G['start']]); ax.plot(st[:, 0], st[:, 2], 's', color='yellow', ms=2.5, mec='k', mew=0.3)
     S0 = LS.STARTS[key]; hd = np.radians(S0['heading']); f = np.array([np.cos(hd), np.sin(hd)]); gc = np.array(S0['gate'])
-    for g in st[[0, -1]]:
-        a = np.array([g[0], g[2]]); b = a + f * S0['straight']; ax.plot([a[0], b[0], S0['merge'][0]], [a[1], b[1], S0['merge'][1]], '--', color='gold', lw=1.2)
+    from starts import StartRoute
+    RT = StartRoute(S0, LS.N_GATES, LS.GATE_PITCH); rs = RT.samples(1.0)
+    for sg in (-1, 1):
+        ax.plot(rs['x'] - np.sin(rs['th']) * rs['w'] / 2 * sg, rs['z'] + np.cos(rs['th']) * rs['w'] / 2 * sg, '--', color='gold', lw=1.2)
+    ax.plot(rs['x'], rs['z'], ':', color='gold', lw=0.8)
     tp = gc + f * 28; ax.text(tp[0], tp[1], 'DÉPART', fontsize=8, weight='bold', ha='center', va='center', bbox=dict(fc='yellow', alpha=.9, lw=0))
     for g in p.segs:
         if g['kind'] == 'S' and g['sections']:
