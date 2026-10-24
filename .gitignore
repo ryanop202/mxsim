@@ -15,10 +15,4 @@ legacy_mx/tracks/
 legacy_mx/deliver/
 refs/extracted
 refs/archives
-# third-party assets copied from the JGSX / JGMX archives by export_sx.py + dress_sx.py (rebuilt by ./make_all.sh build)
-tracks/*/statue/
-tracks/*/decal/
-tracks/*/sky/
-tracks/*/tiles/
-tracks/*/treads/
-tracks/*/roost/
+# v11b: third-party JGSX/JGMX assets ARE versioned now (repo private since 2026-10-24, asked by Ryan)
