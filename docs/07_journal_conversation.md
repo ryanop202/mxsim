@@ -171,6 +171,14 @@ Ce que ça a donné (v4, détail dans doc 05) :
   (grilles, decals, grillages, poteaux, paddock, drapeaux, contrôles) → « oui voilà mets tout, on modifie ensuite, mets gates aussi ».
 - Fait : `dress_sx.py` (doc 11), 43 contrôles. Billboards laissés vides comme JGSX.
 
+## 12. Renommage + lien
+
+- Ryan : « renomme USLAND 2026 SX TEST TRACKS » → dossiers `USLAND2026SX1..3`, noms en jeu « USLAND: 2026 SX 1/2/3 (sand) »,
+  pack `USLAND2026SXTestTracks` ; tous les noms dans `scripts/names.py`.
+- « fais un lien » (pour reprendre dans une autre conversation) → push sur `ryanop202/mxsim`. Les ressources copiées des archives
+  (statue/, decal/, sky/, tiles/, treads/, roost/) sont désormais **hors Git** (`.gitignore`, reconstruites par `make_all.sh build`) ;
+  attention : les anciens commits (v1–v8) en contiennent encore une partie (textures Dr. Dew / Desert Sand, ciel Detroit).
+
 ## Décisions techniques importantes (et pourquoi)
 
 | Décision | Pourquoi |

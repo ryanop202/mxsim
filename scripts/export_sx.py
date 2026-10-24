@@ -1,4 +1,4 @@
-"""v2 export: RyanCompoundSX1 / SX2 / SX3 share one terrain; shared assets live in RyanCompoundSX1."""
+"""Export: the 3 track folders (names.FOLDERS) share one terrain; shared assets live in the SX1 folder."""
 import os as _os
 ROOT = _os.environ.get('MXSIM_ROOT') or _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))  # repo root
 REF = _os.environ.get('MXSIM_REF') or _os.path.join(ROOT, 'refs', 'extracted')  # extracted JGMX/JGSX reference archives
@@ -9,7 +9,7 @@ from shading import lambert_shadow
 import layouts_sx as LS
 
 BUILD = ROOT + '/build'; OUT = ROOT + '/tracks'; REF = REF
-F = {'SX1': 'RyanCompoundSX1', 'SX2': 'RyanCompoundSX2', 'SX3': 'RyanCompoundSX3'}
+from names import FOLDERS as F, DESC as _DESC
 H = np.load(f'{BUILD}/H.npy').astype(np.float64); tiles = np.load(f'{BUILD}/tiles.npy')
 N = H.shape[0]; S = 0.28975; NE = 11
 if os.path.exists(OUT): shutil.rmtree(OUT)
@@ -76,7 +76,7 @@ def gates(path, start, cp_step=60.0, half=18.0):
 
 PATHS = {'SX1': LS.sx1(), 'SX2': LS.sx2(), 'SX3': LS.sx3()}
 GT = {k: gates(PATHS[k], LS.STARTS[k]) for k in PATHS}
-DESC = {'SX1': 'Ryan Compound: SX 1', 'SX2': 'Ryan Compound: SX 2', 'SX3': 'Ryan Compound: SX 3 (sand)'}
+DESC = _DESC
 for key, folder in F.items():
     d = f'{OUT}/{folder}'
     open(f'{d}/terrain.hf', 'w').write(hf); Image.fromarray(raw).save(f'{d}/terrain.png'); tiles.astype(np.uint8).tofile(f'{d}/tilemap')

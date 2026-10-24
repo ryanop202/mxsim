@@ -11,8 +11,9 @@ from mxs import Track, parse_gates
 from engine import turn_mid_angle
 import layouts_sx as LS
 OUT = ROOT + '/viewer/figures'; os.makedirs(OUT, exist_ok=True)
-T = Track(ROOT + '/tracks/RyanCompoundSX1', 'xz'); H = T.H; s = T.s
-FOLD = {'SX1': 'RyanCompoundSX1', 'SX2': 'RyanCompoundSX2', 'SX3': 'RyanCompoundSX3'}
+from names import FOLDERS
+T = Track(ROOT + '/tracks/' + FOLDERS['SX1'], 'xz'); H = T.H; s = T.s
+FOLD = FOLDERS
 PATHS = {'SX1': LS.sx1(), 'SX2': LS.sx2(), 'SX3': LS.sx3()}
 def hill(ax, x0, x1, z0, z1):
     j0, j1, i0, i1 = [int(np.clip(v, 0, T.size) / s) for v in (x0, x1, z0, z1)]
@@ -44,7 +45,7 @@ def path_draw(ax, key, every=70):
 fig, ax = plt.subplots(figsize=(13, 13)); hill(ax, 0, T.size, 0, T.size)
 for k, c in (('SX1', 'r'), ('SX2', 'b'), ('SX3', 'm')):
     smp = PATHS[k].samples(2.0); ax.plot(smp['x'], smp['z'], '-', color=c, lw=1, label=k)
-ax.legend(); ax.set_title('Ryan Compound SX : terrain partagé exporté (1187 × 1187 ft, grille 0.29 ft identique aux JGSX)')
+ax.legend(); ax.set_title('USLAND 2026 SX Test Tracks : terrain partagé exporté (1187 × 1187 ft, grille 0.29 ft identique aux JGSX)')
 plt.savefig(f'{OUT}/00_overview.png', dpi=80, bbox_inches='tight'); plt.close()
 for key, box, fs in (('SX1', (0, 595, 0, 425), (17, 12.2)), ('SX2', (572, 1045, 0, 535), (14, 15.8)), ('SX3', (20, 1150, 620, 1065), (19, 7.6))):
     fig, ax = plt.subplots(figsize=fs); hill(ax, *box); path_draw(ax, key)

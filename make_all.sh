@@ -60,7 +60,7 @@ analysis() {
 
 build() {
   run build_sx.py               # build/H.npy + tiles.npy + build_report.json
-  run export_sx.py              # tracks/RyanCompoundSX1..3 (needs refs for textures/tileinfo)
+  run export_sx.py              # tracks/USLAND2026SX1..3 (needs refs for textures/tileinfo)
   run dress_sx.py               # habillage : grilles, grillages, paddock, decor, decals, drapeaux (needs refs)
   run validate_sx.py            # build/validation.json (39 checks)
   run laptime.py                # build/laptime.json (estimate, not measured in game)

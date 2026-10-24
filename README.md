@@ -1,4 +1,4 @@
-# mxsimtrack
+# USLAND 2026 SX Test Tracks (repo mxsim)
 
 Base de travail pour faire des pistes **MX Simulator** à partir de mesures réelles :
 
@@ -17,8 +17,9 @@ git clone https://github.com/ryanop202/mxsim.git
 cd mxsim
 ```
 
-**Juste jouer** : copier `tracks/RyanCompoundSX1`, `RyanCompoundSX2`, `RyanCompoundSX3` dans le dossier des pistes de MX Simulator
-(sans les renommer : les textures sont partagées via `@RyanCompoundSX1/...`). En jeu : « Ryan Compound: SX 1 / SX 2 / SX 3 (sand) ».
+**Juste jouer** : prendre le pack `USLAND2026SXTestTracks.zip` (envoyé à part : les textures et modèles JGSX/JGMX ne sont **pas** dans Git),
+ou le reconstruire avec `./make_all.sh build` (il faut les archives de référence), puis copier `tracks/USLAND2026SX1`, `USLAND2026SX2`, `USLAND2026SX3` dans le dossier des pistes de MX Simulator
+(sans les renommer : les textures sont partagées via `@USLAND2026SX1/...`). En jeu : « USLAND: 2026 SX 1 / SX 2 / SX 3 (sand) ».
 
 **Modifier / reconstruire** :
 
@@ -73,4 +74,4 @@ git pull                     # récupérer
 git add -A && git commit -m "SX2 : ..." && git push
 ```
 
-Puis recopier `tracks/RyanCompoundSX*` dans MX Simulator sur chaque PC.
+Puis recopier `tracks/USLAND2026SX*` dans MX Simulator sur chaque PC.

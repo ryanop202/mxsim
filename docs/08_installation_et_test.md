@@ -2,13 +2,13 @@
 
 ## Installer
 
-1. Supprimer les anciennes versions dans le dossier des pistes du jeu : `RyanCompoundSX1`, `RyanCompoundSX2`, `RyanCompoundSX3`
-   (et `RyanCompoundMX` de la v1 s'il existe encore).
-2. Copier `tracks/RyanCompoundSX1`, `tracks/RyanCompoundSX2`, `tracks/RyanCompoundSX3` dans le dossier des pistes de MX Simulator,
-   **sans les renommer** (les 3 utilisent les textures/ciel de `RyanCompoundSX1` via `@RyanCompoundSX1/...`).
-3. En jeu : « Ryan Compound: SX 1 », « Ryan Compound: SX 2 », « Ryan Compound: SX 3 (sand) ».
+1. Supprimer les anciennes versions dans le dossier des pistes du jeu : `RyanCompoundSX1..3` (ancien nom, jusqu'à la v9) et
+   `RyanCompoundMX` de la v1 s'il existe encore.
+2. Copier `tracks/USLAND2026SX1`, `tracks/USLAND2026SX2`, `tracks/USLAND2026SX3` dans le dossier des pistes de MX Simulator,
+   **sans les renommer** (les 3 utilisent les textures/ciel de `USLAND2026SX1` via `@USLAND2026SX1/...`).
+3. En jeu : « USLAND: 2026 SX 1 », « USLAND: 2026 SX 2 », « USLAND: 2026 SX 3 (sand) ».
 
-Taille : ~131 Mo (SX1, avec les ressources) + ~103 Mo × 2. Le plus gros = `shading.ppm` (50 Mo, identique dans les 3).
+Pack : `USLAND2026SXTestTracks.zip` (comme `JGSX2026TestTracks`). Taille : ~260 Mo (SX1, avec toutes les ressources) + ~104 Mo × 2. Le plus gros = `shading.ppm` (50 Mo, identique dans les 3).
 
 Le dossier exact des pistes dépend de l'installation de MX Simulator (c'est celui où sont déjà les autres pistes perso,
 ex. là où ont été mis JGSX2026Detroit, etc.).
@@ -36,7 +36,7 @@ Noter ce qui ne va pas (piste, couloir, obstacle, « trop court / trop long / tr
 | Symptôme | Piste |
 |---|---|
 | Piste absente de la liste | dossier mal placé, ou `desc` illisible |
-| Textures blanches / manquantes | dossier `RyanCompoundSX1` renommé ou absent |
+| Textures blanches / manquantes | dossier `USLAND2026SX1` renommé ou absent |
 | Mauvais sens au départ | angle des grilles : `export_sx.gates()` (convention f = (−sin a, −cos a)) |
 | Tours non comptés | portes trop étroites ou ordre : `timing_gates`, `export_sx.gates()` (cp_step, half) |
 | Sable qui ne creuse pas | tiles : `build_sx.GLENDALE_TILES`, blocs `Sand *` de `tileinfo` |

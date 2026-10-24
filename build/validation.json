@@ -1,167 +1,167 @@
 {
  "checks": [
   {
-   "name": "RyanCompoundSX1: fichiers requis pr\u00e9sents",
+   "name": "USLAND2026SX1: fichiers requis pr\u00e9sents",
    "ok": true,
    "detail": "tous pr\u00e9sents"
   },
   {
-   "name": "RyanCompoundSX1: heightmap relu = terrain construit",
+   "name": "USLAND2026SX1: heightmap relu = terrain construit",
    "ok": true,
    "detail": "\u00e9cart max 0.0001 ft, 4097px \u00e0 0.28975 ft = 1186.8 ft (grille identique aux JGSX)"
   },
   {
-   "name": "RyanCompoundSX1: tilemap coh\u00e9rente avec tileinfo",
+   "name": "USLAND2026SX1: tilemap coh\u00e9rente avec tileinfo",
    "ok": true,
    "detail": "index max 7, 8 tiles"
   },
   {
-   "name": "RyanCompoundSX1: toutes les r\u00e9f\u00e9rences @dossier/ existent dans le paquet",
+   "name": "USLAND2026SX1: toutes les r\u00e9f\u00e9rences @dossier/ existent dans le paquet",
    "ok": true,
    "detail": "19 r\u00e9f\u00e9rences OK"
   },
   {
-   "name": "RyanCompoundSX1: portes sur la ligne de course",
+   "name": "USLAND2026SX1: portes sur la ligne de course",
    "ok": true,
    "detail": "49 portes du tour, \u00e9cart max 0.00 ft"
   },
   {
-   "name": "RyanCompoundSX1: aucune porte ne touche une autre partie du tour",
+   "name": "USLAND2026SX1: aucune porte ne touche une autre partie du tour",
    "ok": true,
    "detail": "0 porte(s) en d\u00e9faut"
   },
   {
-   "name": "RyanCompoundSX1: ordre des tours",
+   "name": "USLAND2026SX1: ordre des tours",
    "ok": true,
    "detail": "1er tour 51 portes (dont 2 sur la ligne de d\u00e9part), tours suivants 49"
   },
   {
-   "name": "RyanCompoundSX1: grille de d\u00e9part (22 grilles comme JGSX)",
+   "name": "USLAND2026SX1: grille de d\u00e9part (22 grilles comme JGSX)",
    "ok": true,
    "detail": "22 grilles au pas de 4 ft, sol plat (\u00e9cart 0.000 ft)"
   },
   {
-   "name": "RyanCompoundSX1: ligne de d\u00e9part d\u00e9gag\u00e9e jusqu\u2019au tour",
+   "name": "USLAND2026SX1: ligne de d\u00e9part d\u00e9gag\u00e9e jusqu\u2019au tour",
    "ok": true,
    "detail": "22 trajectoires grille -> entonnoir -> point de jonction, hauteur max 0.000 ft ; longueur jusqu\u2019\u00e0 la jonction \u2248 368 ft"
   },
   {
-   "name": "RyanCompoundSX1: aucun virage plat",
+   "name": "USLAND2026SX1: aucun virage plat",
    "ok": true,
    "detail": "7 virages avec berm/sable ; seuls des d\u00e9ports plats \u2264 25\u00b0 restent : []"
   },
   {
-   "name": "RyanCompoundSX2: fichiers requis pr\u00e9sents",
+   "name": "USLAND2026SX2: fichiers requis pr\u00e9sents",
    "ok": true,
    "detail": "tous pr\u00e9sents"
   },
   {
-   "name": "RyanCompoundSX2: heightmap relu = terrain construit",
+   "name": "USLAND2026SX2: heightmap relu = terrain construit",
    "ok": true,
    "detail": "\u00e9cart max 0.0001 ft, 4097px \u00e0 0.28975 ft = 1186.8 ft (grille identique aux JGSX)"
   },
   {
-   "name": "RyanCompoundSX2: tilemap coh\u00e9rente avec tileinfo",
+   "name": "USLAND2026SX2: tilemap coh\u00e9rente avec tileinfo",
    "ok": true,
    "detail": "index max 7, 8 tiles"
   },
   {
-   "name": "RyanCompoundSX2: toutes les r\u00e9f\u00e9rences @dossier/ existent dans le paquet",
+   "name": "USLAND2026SX2: toutes les r\u00e9f\u00e9rences @dossier/ existent dans le paquet",
    "ok": true,
    "detail": "19 r\u00e9f\u00e9rences OK"
   },
   {
-   "name": "RyanCompoundSX2: portes sur la ligne de course",
+   "name": "USLAND2026SX2: portes sur la ligne de course",
    "ok": true,
    "detail": "46 portes du tour, \u00e9cart max 0.00 ft"
   },
   {
-   "name": "RyanCompoundSX2: aucune porte ne touche une autre partie du tour",
+   "name": "USLAND2026SX2: aucune porte ne touche une autre partie du tour",
    "ok": true,
    "detail": "0 porte(s) en d\u00e9faut"
   },
   {
-   "name": "RyanCompoundSX2: ordre des tours",
+   "name": "USLAND2026SX2: ordre des tours",
    "ok": true,
    "detail": "1er tour 48 portes (dont 2 sur la ligne de d\u00e9part), tours suivants 46"
   },
   {
-   "name": "RyanCompoundSX2: grille de d\u00e9part (22 grilles comme JGSX)",
+   "name": "USLAND2026SX2: grille de d\u00e9part (22 grilles comme JGSX)",
    "ok": true,
    "detail": "22 grilles au pas de 4 ft, sol plat (\u00e9cart 0.000 ft)"
   },
   {
-   "name": "RyanCompoundSX2: ligne de d\u00e9part d\u00e9gag\u00e9e jusqu\u2019au tour",
+   "name": "USLAND2026SX2: ligne de d\u00e9part d\u00e9gag\u00e9e jusqu\u2019au tour",
    "ok": true,
    "detail": "22 trajectoires grille -> entonnoir -> point de jonction, hauteur max 0.000 ft ; longueur jusqu\u2019\u00e0 la jonction \u2248 281 ft"
   },
   {
-   "name": "RyanCompoundSX2: aucun virage plat",
+   "name": "USLAND2026SX2: aucun virage plat",
    "ok": true,
    "detail": "8 virages avec berm/sable ; seuls des d\u00e9ports plats \u2264 25\u00b0 restent : []"
   },
   {
-   "name": "RyanCompoundSX3: fichiers requis pr\u00e9sents",
+   "name": "USLAND2026SX3: fichiers requis pr\u00e9sents",
    "ok": true,
    "detail": "tous pr\u00e9sents"
   },
   {
-   "name": "RyanCompoundSX3: heightmap relu = terrain construit",
+   "name": "USLAND2026SX3: heightmap relu = terrain construit",
    "ok": true,
    "detail": "\u00e9cart max 0.0001 ft, 4097px \u00e0 0.28975 ft = 1186.8 ft (grille identique aux JGSX)"
   },
   {
-   "name": "RyanCompoundSX3: tilemap coh\u00e9rente avec tileinfo",
+   "name": "USLAND2026SX3: tilemap coh\u00e9rente avec tileinfo",
    "ok": true,
    "detail": "index max 7, 8 tiles"
   },
   {
-   "name": "RyanCompoundSX3: toutes les r\u00e9f\u00e9rences @dossier/ existent dans le paquet",
+   "name": "USLAND2026SX3: toutes les r\u00e9f\u00e9rences @dossier/ existent dans le paquet",
    "ok": true,
    "detail": "19 r\u00e9f\u00e9rences OK"
   },
   {
-   "name": "RyanCompoundSX3: portes sur la ligne de course",
+   "name": "USLAND2026SX3: portes sur la ligne de course",
    "ok": true,
    "detail": "56 portes du tour, \u00e9cart max 0.00 ft"
   },
   {
-   "name": "RyanCompoundSX3: aucune porte ne touche une autre partie du tour",
+   "name": "USLAND2026SX3: aucune porte ne touche une autre partie du tour",
    "ok": true,
    "detail": "0 porte(s) en d\u00e9faut"
   },
   {
-   "name": "RyanCompoundSX3: ordre des tours",
+   "name": "USLAND2026SX3: ordre des tours",
    "ok": true,
    "detail": "1er tour 58 portes (dont 2 sur la ligne de d\u00e9part), tours suivants 56"
   },
   {
-   "name": "RyanCompoundSX3: grille de d\u00e9part (22 grilles comme JGSX)",
+   "name": "USLAND2026SX3: grille de d\u00e9part (22 grilles comme JGSX)",
    "ok": true,
    "detail": "22 grilles au pas de 4 ft, sol plat (\u00e9cart 0.000 ft)"
   },
   {
-   "name": "RyanCompoundSX3: ligne de d\u00e9part d\u00e9gag\u00e9e jusqu\u2019au tour",
+   "name": "USLAND2026SX3: ligne de d\u00e9part d\u00e9gag\u00e9e jusqu\u2019au tour",
    "ok": true,
    "detail": "22 trajectoires grille -> entonnoir -> point de jonction, hauteur max 0.001 ft ; longueur jusqu\u2019\u00e0 la jonction \u2248 279 ft"
   },
   {
-   "name": "RyanCompoundSX3: aucun virage plat",
+   "name": "USLAND2026SX3: aucun virage plat",
    "ok": true,
    "detail": "4 virages avec berm/sable ; seuls des d\u00e9ports plats \u2264 25\u00b0 restent : [15.0, -15.0, -23.6]"
   },
   {
-   "name": "RyanCompoundSX1: couloirs non confondus",
+   "name": "USLAND2026SX1: couloirs non confondus",
    "ok": true,
    "detail": "axes s\u00e9par\u00e9s d\u2019au moins 38 ft (espacement JGSX 43 ft)"
   },
   {
-   "name": "RyanCompoundSX2: couloirs non confondus",
+   "name": "USLAND2026SX2: couloirs non confondus",
    "ok": true,
    "detail": "axes s\u00e9par\u00e9s d\u2019au moins 38 ft (espacement JGSX 43 ft)"
   },
   {
-   "name": "RyanCompoundSX3: couloirs non confondus",
+   "name": "USLAND2026SX3: couloirs non confondus",
    "ok": true,
    "detail": "axes s\u00e9par\u00e9s d\u2019au moins 38 ft (espacement JGSX 43 ft)"
   },

@@ -10,7 +10,7 @@ lib/  ← la « base » mesurée (JSON + stamps .npy)          analysis/ ← fig
    │  ./make_all.sh build
    ▼
 build_sx.py  → build/H.npy, tiles.npy, build_report.json   (terrain + tilemap en mémoire)
-export_sx.py → tracks/RyanCompoundSX1..3                    (fichiers MX Simulator)
+export_sx.py → tracks/USLAND2026SX1..3                    (fichiers MX Simulator)
 validate_sx.py → build/validation.json                      (39 contrôles, relit les fichiers exportés)
 laptime.py → build/laptime.json                             (estimation de chrono)
 preview_sx.py sx1|sx2|sx3 → analysis/pv2_*.png              (chaque piste seule + contrôles géométriques)

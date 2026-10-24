@@ -2,7 +2,7 @@
 
 ## Vue d'ensemble
 
-- **1 terrain partagé**, 3 dossiers MX Simulator (`tracks/RyanCompoundSX1..3`), même `terrain.png` / `tilemap` / `shading.ppm`,
+- **1 terrain partagé**, 3 dossiers MX Simulator (`tracks/USLAND2026SX1..3`), même `terrain.png` / `tilemap` / `shading.ppm`,
   chaque dossier a son propre `timing_gates` et `desc`. Choix de Ryan au départ : « 1 terrain, 3 dossiers ».
 - Grille **4097 px à 0,28975 ft = 1186,8 ft** de côté (exactement la résolution des JGSX, 4× la surface).
 - Tous les obstacles sont des **unités mesurées** JGSX (profil exact) posées sur le profil en travers mesuré

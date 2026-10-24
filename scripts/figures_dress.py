@@ -1,4 +1,4 @@
-"""Top view of the 'habillage' (statues, decals, flaggers) read back from the exported folder RyanCompoundSX1."""
+"""Top view of the habillage (statues, decals, flaggers) read back from the exported SX1 folder (names.FOLDERS)."""
 import os as _os
 ROOT = _os.environ.get('MXSIM_ROOT') or _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))  # repo root
 import sys, re, numpy as np
@@ -6,7 +6,8 @@ sys.path.insert(0, ROOT + '/scripts')
 import matplotlib; matplotlib.use('Agg'); import matplotlib.pyplot as plt
 from mxs import Track, parse_gates
 
-D = ROOT + '/tracks/RyanCompoundSX1'; OUT = ROOT + '/viewer/figures'
+from names import FOLDERS
+D = ROOT + '/tracks/' + FOLDERS['SX1']; OUT = ROOT + '/viewer/figures'
 T = Track(D, 'xz'); Hs = T.H[::3, ::3]; s = T.s * 3
 gz, gx = np.gradient(Hs, s); sh = np.clip(0.55 - 0.35 * gx - 0.35 * gz, 0, 1)
 num = lambda l: [float(v) for v in re.findall(r'-?\d+\.?\d*', l.split('@')[0])]
@@ -27,7 +28,7 @@ def draw(ax, crop=None, small=False):
     for m, (mk, c, sz) in MK.items():
         pts = np.array([[p[0], p[2]] for p, t in st if t == m])
         if len(pts): ax.scatter(pts[:, 0], pts[:, 1], marker=mk, c=c, s=sz if not small else sz / 3, label=m, edgecolors='k', linewidths=0.3)
-    for key, folder in (('SX1', 'RyanCompoundSX1'), ('SX2', 'RyanCompoundSX2'), ('SX3', 'RyanCompoundSX3')):
+    for key, folder in FOLDERS.items():
         G = parse_gates(ROOT + f'/tracks/{folder}/timing_gates'); g = np.array([x[:3] for x in G['start']])
         ax.plot(g[:, 0], g[:, 2], 'r', lw=3)
         fl = [num(l) for l in open(ROOT + f'/tracks/{folder}/flaggers') if l.startswith('[')][:3]

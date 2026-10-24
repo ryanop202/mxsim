@@ -15,7 +15,8 @@ H = np.load(f'{BUILD}/H.npy').astype(np.float64)
 R = {'checks': []}
 def check(name, ok, detail):
     R['checks'].append(dict(name=name, ok=bool(ok), detail=detail)); print(('PASS ' if ok else 'FAIL ') + name + ' :: ' + str(detail))
-paths = {'RyanCompoundSX1': LS.sx1(), 'RyanCompoundSX2': LS.sx2(), 'RyanCompoundSX3': LS.sx3()}
+from names import FOLDERS
+paths = {FOLDERS['SX1']: LS.sx1(), FOLDERS['SX2']: LS.sx2(), FOLDERS['SX3']: LS.sx3()}
 req = ['terrain.hf', 'terrain.png', 'tilemap', 'tileinfo', 'timing_gates', 'lighting', 'desc', 'shading.ppm', 'shadingx2.ppm']
 T = None
 for folder, path in paths.items():
@@ -103,7 +104,7 @@ check('Pas de rebord au pied des berms et des obstacles', fo <= fr + 0.02, f'mar
 # v9 habillage: every object off the riding surfaces and off the obstacles; every referenced file present; gate models on the grid
 from scipy.spatial import cKDTree as _KD
 ride = [_KD(np.c_[s_['x'], s_['z']]) for s_ in (p_.samples(1.0) for p_ in paths.values())]
-SX1D = f'{DIST}/RyanCompoundSX1'
+SX1D = f'{DIST}/' + FOLDERS['SX1']
 def _bbox(model):
     L_ = open(f'{SX1D}/statue/{model}.jm').read().split('\n')   # JM1 / JM2: first 'nverts ntris' line, then the vertices
     i_ = next(k for k, l in enumerate(L_) if len(l.split()) == 2 and all(t.isdigit() for t in l.split())); nv_ = int(L_[i_].split()[0])
@@ -126,7 +127,7 @@ refs2 = set()
 for fname in ('statues', 'decals', 'timing_gates'):
     for d_ in paths:
         for tok in open(f'{DIST}/{d_}/{fname}').read().split():
-            if tok.startswith('@RyanCompound'): refs2.add(tok[1:])
+            if tok.startswith('@USLAND2026'): refs2.add(tok[1:])
 miss = [r_ for r_ in refs2 if not os.path.exists(f'{DIST}/{r_}')]
 nd = sum(1 for _ in open(f'{SX1D}/decals'))
 gl = [l for l in open(f'{SX1D}/timing_gates') if l.startswith('[') and 'gate01.jm' in l]

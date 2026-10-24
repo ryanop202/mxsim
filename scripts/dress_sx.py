@@ -22,7 +22,7 @@ from mxs import parse_gates
 
 OUT = ROOT + '/tracks'; BUILD = ROOT + '/build'
 DET = f'{REF}/JGSX2026TestTracks/JGSX2026Detroit'
-F = {'SX1': 'RyanCompoundSX1', 'SX2': 'RyanCompoundSX2', 'SX3': 'RyanCompoundSX3'}
+from names import FOLDERS as F
 A = f'{OUT}/{F["SX1"]}'; P = '@' + F['SX1']
 H = np.load(f'{BUILD}/H.npy').astype(np.float64); S = 0.28975; N = H.shape[0]; SIZE = (N - 1) * S
 rng = np.random.default_rng(2026)

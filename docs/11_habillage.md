@@ -1,8 +1,8 @@
 # 11 — Habillage (v9) : grilles, grillages, paddock, décor, decals, drapeaux
 
 Script : `scripts/dress_sx.py` (lancé par `./make_all.sh build` juste après `export_sx.py`). Vue : `viewer/figures/05_habillage*.jpg`.
-Toutes les ressources viennent de **JGSX 2026 Detroit** (`statue/`, `decal/`), copiées dans `tracks/RyanCompoundSX1/` et référencées
-`@RyanCompoundSX1/...`. Les 3 dossiers ont le même décor (terrain partagé) ; les grilles et les drapeaux sont propres à chaque piste.
+Toutes les ressources viennent de **JGSX 2026 Detroit** (`statue/`, `decal/`), copiées dans `tracks/USLAND2026SX1/` et référencées
+`@USLAND2026SX1/...`. Les 3 dossiers ont le même décor (terrain partagé) ; les grilles et les drapeaux sont propres à chaque piste.
 
 ## Ce que fait JGSX (mesuré sur Detroit / Glendale)
 
@@ -29,7 +29,7 @@ Convention d'angle (statues et decals) : l'axe z local du modèle / l'axe vertic
 
 - Objets hors piste : chaque objet (boîte englobante du modèle) à plus de 17 ft de toute ligne de course et sur sol plat.
 - Drapeaux à plus de 20 ft des lignes de course.
-- Tous les fichiers `@RyanCompoundSX1/...` référencés existent, 22 grilles `gate01`.
+- Tous les fichiers `@USLAND2026SX1/...` référencés existent, 22 grilles `gate01`.
 
 ## Limites
 
@@ -37,4 +37,4 @@ Convention d'angle (statues et decals) : l'axe z local du modèle / l'axe vertic
   (Dr. Dew en a 23 000).
 - Pas de banderoles / tuff blocks le long des couloirs (JGSX n'en a pas non plus dans ces fichiers).
 - Texture du sol : pack `25BHFSXMiami` absent des archives → terre et hardpack de Dr. Dew sous les decals JGSX.
-- Taille : `RyanCompoundSX1` passe à ~260 Mo.
+- Taille : `USLAND2026SX1` passe à ~260 Mo.
