@@ -17,8 +17,7 @@ git clone https://github.com/ryanop202/mxsim.git
 cd mxsim
 ```
 
-**Juste jouer** : prendre le pack `USLAND2026SXTestTracks.zip` (envoyé à part : les textures et modèles JGSX/JGMX ne sont **pas** dans Git),
-ou le reconstruire avec `./make_all.sh build` (il faut les archives de référence), puis copier `tracks/USLAND2026SX1`, `USLAND2026SX2`, `USLAND2026SX3` dans le dossier des pistes de MX Simulator
+**Juste jouer** : tout est dans Git (dépôt privé : textures et modèles JGSX/JGMX inclus). Après le clone, copier `tracks/USLAND2026SX1`, `USLAND2026SX2`, `USLAND2026SX3` dans le dossier des pistes de MX Simulator
 (sans les renommer : les textures sont partagées via `@USLAND2026SX1/...`). En jeu : « USLAND: 2026 SX 1 / SX 2 / SX 3 (sand) ».
 
 **Modifier / reconstruire** :
