@@ -62,18 +62,30 @@ def lane(tokens):
             # v13b ('scale', uid, H): a measured unit with its height scaled to H ft (same length / shape), e.g. a finish jump
             # judged too high in game; the walls follow (they are extruded from this profile)
             u, p = unit(t[1]); p = p * (t[2] / p.max()); kind = u['kind']; name = f'{t[1]} (H {t[2]:.1f})'; uid = ALIAS.get(t[1], t[1])
+        elif isinstance(t, tuple) and t[0] == 'trapeze':
+            # v13b ('trapeze', H, up, top, down): one clean mound - rounded climb, short flat top, long gentle descent (Saint-Thibery
+            # freestyle landing, asked by the user: "juste une montee, avec un petit plat et une descente"). Not a measured unit.
+            H_, up_, top_, dn_ = t[1:5]
+            c = lambda n: (1 - np.cos(np.linspace(0, np.pi, n))) / 2
+            p = H_ * np.r_[c(int(up_ / 0.1)), np.ones(int(top_ / 0.1)), c(int(dn_ / 0.1))[::-1]]
+            kind = 'T'; name = f'trapeze H {H_:.1f} ({up_:.0f}/{top_:.0f}/{dn_:.0f} ft)'; uid = None
         elif isinstance(t, tuple) and t[0] == 'landing':
             # v13b ('landing', uid, H, back_ft): measured unit scaled to H, its back side replaced by a gentle cosine slope
             # back_ft long (Saint-Thibery freestyle landing: "la deuxieme partie de la reception plus douce")
             u, p = unit(t[1]); p = p * (t[2] / p.max()); k = int(np.nonzero(p >= 0.9 * t[2])[0][-1]); n = int(round(t[3] / 0.1))
             p = np.r_[p[:k], p[k] * (1 + np.cos(np.linspace(0, np.pi, n))) / 2]; kind = u['kind']; name = f'{t[1]} (landing H {t[2]:.1f})'; uid = ALIAS.get(t[1], t[1])
         elif isinstance(t, tuple) and t[0] == 'split':
-            pa, pb = unit(t[1])[1], unit(t[2])[1]; n = max(len(pa), len(pb))
+            def _half(x):
+                if isinstance(x, tuple) and x[0] == 'scale':                  # v13b: scaled half (Saint-Thibery L2)
+                    q = unit(x[1])[1]; return q * (x[2] / q.max())
+                return unit(x)[1]
+            pa, pb = _half(t[1]), _half(t[2]); n = max(len(pa), len(pb))
             if len(t) > 3 and t[3] == 'end':      # v11: both bumps END together (keeps the rhythm of the next jump on both lines)
                 pa = np.pad(pa, (n - len(pa), 0)); pb = np.pad(pb, (n - len(pb), 0))
             else:
                 pa = np.pad(pa, (0, n - len(pa))); pb = np.pad(pb, (0, n - len(pb)))
-            split = (pa, pb); p = np.zeros(n); kind = 'S'; name = f'split {t[1]} | {t[2]}'; uid = None
+            nm_ = lambda x: x[1] if isinstance(x, tuple) else x
+            split = (pa, pb); p = np.zeros(n); kind = 'S'; name = f'split {nm_(t[1])} | {nm_(t[2])}'; uid = None
         else:
             u, p = unit(t); kind = u['kind']; name = t; uid = ALIAS.get(t, t)
         if prev is not None:
