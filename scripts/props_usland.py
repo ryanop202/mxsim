@@ -26,7 +26,7 @@ TEAM = dict(riders=['B.PIGOIS', 'R.OPPLIGER', 'M.SONNERAT', 'E.VIDALENC'], coach
 NAVY, RED, WHITE = (22, 27, 58), (225, 30, 60), (250, 250, 250)
 GOLD = (246, 190, 0)
 ARCH_X = 22.0          # pillar centre, ft from the lane centre: past the 4 ft side walls of the finish jumps (flat ground on SX1-3)
-GRATE = dict(parts=[(1.5, 2.4), (2.7, 3.8), (1.5, 3.2)], gap=2.5, t=0.06)   # cross shape (width, length) ft, from the gate backwards; v13b: gap 0.4 -> 2.5 = fallen gate (2.375 ft) + 0.125, the gate lands against the grate, not on it ; v13b: short narrow part at the front (gate), long one at the back (asked)
+GRATE = dict(parts=[(1.5, 2.4), (2.7, 3.8), (1.5, 3.2)], gap=0.2, t=0.06)   # cross shape (width, length) ft, from the gate backwards; v13b: seen in game, the gate falls FORWARD (away from the riders): the grate starts right behind the hinge (0.2 ft), under the whole bike ; v13b: short narrow part at the front (gate), long one at the back (asked)
 
 # ------------------------------------------------------------------ mesh builder
 class Mesh:
