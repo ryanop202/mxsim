@@ -1153,8 +1153,10 @@ def gate_model(pal):
         for i, j, k in _ear_clip(poly):
             pts = [np.array([poly[q][0], poly[q][1], zz]) for q in (i, j, k)]
             # -z face: viewer's right is -x ; +z face: +x
-            uv = [m.uv_px(px0 + (0.5 + poly[q][0] / (2 * hw)) * (px1 - px0), py1 - (poly[q][1] - yh) / (top - yh) * (py1 - py0))
-                  for q in (i, j, k)] if nz > 0 else [bl] * 3                         # logo on the outer (track) side only
+            # v13b: logo on the -z face = the face that is UP once the gate has fallen (seen in game: the gate falls forward,
+            # the old +z logo face ended up against the ground). Read from behind the gate, top of the logo at the gate top.
+            uv = [m.uv_px(px0 + (0.5 - poly[q][0] / (2 * hw)) * (px1 - px0), py1 - (poly[q][1] - yh) / (top - yh) * (py1 - py0))
+                  for q in (i, j, k)] if nz < 0 else [bl] * 3
             m.tri_fan(pts, np.array([0, 0, nz]), uv)
     n = len(poly)
     for q in range(n):
