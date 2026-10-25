@@ -24,7 +24,7 @@ out.append(f'<text class="ts" x="{f((ta + tc) / 2)}" y="{f((tb + td) / 2 + 4)}" 
 # berms (outer arc of each bermed turn)
 for g in p.segs:
     if g['kind'] == 'T' and g.get('berm'):
-        u = np.linspace(0, g['L'], 12); a = np.radians(g['ang']) * u / g['L']; th = g['t0'] - a
+        u = np.linspace(g['L'] * (0.5 if g.get('tag') in getattr(LT, 'HALF_BERM', ()) else 0.0), g['L'], 12); a = np.radians(g['ang']) * u / g['L']; th = g['t0'] - a
         left = g['ang'] > 0; n0 = np.array([np.sin(g['t0']), -np.cos(g['t0'])]) if left else np.array([-np.sin(g['t0']), np.cos(g['t0'])])
         rr = g['r'] + 17.0; vx, vz = -n0[0] * rr, -n0[1] * rr
         pts = [P(g['cx'] + np.cos(-ai) * vx - np.sin(-ai) * vz, g['cz'] + np.sin(-ai) * vx + np.cos(-ai) * vz) for ai in a]
@@ -62,12 +62,12 @@ out.append(f'<line x1="{f(ga)}" y1="{f(gb)}" x2="{f(gc)}" y2="{f(gd)}" stroke="#
 sx, sy = P(gx, gz - 50); out.append(f'<text class="ts" x="{f(sx)}" y="{f(sy)}" text-anchor="middle" style="fill:#ffffff">Start</text>')
 # finish on the D table crest
 sec = [g for g in p.segs if g['kind'] == 'S' and any(nm == LT.FINISH_SEC for _, _, nm in g['sections'])][0]
-it = LS.COMBOS[LT.FINISH_SEC]['items'][2]; u0f = [u for _, u, nm in sec['sections'] if nm == LT.FINISH_SEC][0]
+it = LS.COMBOS[LT.FINISH_SEC]['items'][LS.STARTS['STT']['finish'][1]]; u0f = [u for _, u, nm in sec['sections'] if nm == LT.FINISH_SEC][0]
 c = np.array([sec['x0'], sec['z0']]) + np.array([np.cos(sec['t']), np.sin(sec['t'])]) * (u0f + (it[1] + it[2]) / 2)
-fa, fb = P(c[0], c[1] - 17); fc, fd = P(c[0], c[1] + 17)
+nf = np.array([-np.sin(sec['t']), np.cos(sec['t'])]); fa, fb = P(*(c - nf * 17)); fc, fd = P(*(c + nf * 17))      # across the lane
 out.append(f'<line x1="{f(fa)}" y1="{f(fb)}" x2="{f(fc)}" y2="{f(fd)}" stroke="#ffffff" stroke-width="5" stroke-dasharray="4 4"/>')
-out.append(f'<line x1="{f(fa)}" y1="{f(fb + 4)}" x2="{f(fc)}" y2="{f(fd)}" stroke="#111111" stroke-width="5" stroke-dasharray="4 4"/>')
-fx, fy = P(c[0], c[1] - 22); out.append(f'<text class="ts" x="{f(fx)}" y="{f(fy)}" text-anchor="middle" style="fill:#ffffff">Arrivée</text>')
+out.append(f'<line x1="{f(fa)}" y1="{f(fb)}" x2="{f(fc)}" y2="{f(fd)}" stroke="#111111" stroke-width="5" stroke-dasharray="4 4" stroke-dashoffset="4"/>')
+fx, fy = P(*(c - nf * 24)); out.append(f'<text class="ts" x="{f(fx)}" y="{f(fy)}" text-anchor="middle" style="fill:#ffffff">Arrivée</text>')
 # row labels
 for k, (t, x) in LT.ROWS.items():
     lx, ly = P(ox + x, oz + LT.Z[k] - 20); out.append(f'<text class="th" x="{f(lx)}" y="{f(ly)}" style="fill:#ffffff">{t}</text>')
