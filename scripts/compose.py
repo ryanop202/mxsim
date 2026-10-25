@@ -62,6 +62,15 @@ def lane(tokens):
             # v13b ('scale', uid, H): a measured unit with its height scaled to H ft (same length / shape), e.g. a finish jump
             # judged too high in game; the walls follow (they are extruded from this profile)
             u, p = unit(t[1]); p = p * (t[2] / p.max()); kind = u['kind']; name = f'{t[1]} (H {t[2]:.1f})'; uid = ALIAS.get(t[1], t[1])
+            if len(t) > 3 and t[3] == 'flip':     # v13c ('scale', uid, H, 'flip'): turned around (Saint-Thibery: steep side to the turn)
+                p = p[::-1].copy(); name += ' flip'
+        elif isinstance(t, tuple) and t[0] == 'dip':
+            # v13c ('dip', uid, H, bottom): a table scaled to H whose top is dug into a raised dip (bottom = fraction of H):
+            # between a table and a double, the valley does not reach the floor (Saint-Thibery L3, asked by the user)
+            u, p = unit(t[1]); p = p * (t[2] / p.max()); i = np.nonzero(p >= 0.85 * t[2])[0]; i0, i1 = i[0], i[-1]
+            w = np.sin(np.linspace(0, np.pi, i1 - i0 + 1)) ** 2; seg = p[i0:i1 + 1]
+            p[i0:i1 + 1] = seg - (seg - t[2] * t[3]) * w
+            kind = u['kind']; name = f'{t[1]} (dip H {t[2]:.1f}, bottom {t[2] * t[3]:.1f})'; uid = ALIAS.get(t[1], t[1])
         elif isinstance(t, tuple) and t[0] == 'trapeze':
             # v13b ('trapeze', H, up, top, down): one clean mound - rounded climb, short flat top, long gentle descent (Saint-Thibery
             # freestyle landing, asked by the user: "juste une montee, avec un petit plat et une descente"). Not a measured unit.

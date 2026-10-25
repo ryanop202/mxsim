@@ -2,14 +2,16 @@
 START = west end. Every bump is a measured JGSX unit (lib/) unless marked 'scaled' (height scaled, same shape/length),
 'landing' (scaled, back side replaced by a gentle slope) or 'trapeze' (synthetic mound) - asked by the user in game tests.
 
-Lap (v8, after the 4th in-game test):
-  L7  along the stands, eastbound : small double right at the turn exit, 11 whoops, triple close to the turn
-  high berm turn (90, big radius) -> east lane northbound : bigger SX triple (Cleveland g29 x1.15), less run-up
-  tight turn (L1 10 ft lower: turns earlier) -> L1 north, westbound : triple, triple, bump, table, bump, 2 bumps (approved)
-  left turn -> west column southbound : finish double (same distance, normal landing back 24 ft), curve right after
+Lap (v9, after the 5th in-game test):
+  L7  along the stands, eastbound : small double right at the turn exit (landing turned around: steep side to the turn),
+      11 whoops, triple close to the turn (approved)
+  high berm turn (90, big radius) -> east lane northbound : bigger SX triple (Cleveland g29 x1.15) (approved)
+  tight turn -> L1 north, westbound : triple, triple, bump, table, bump, 2 bumps, foot of the bumps rounded
+  left turn -> west column southbound : finish double, round normal landing (Glendale g83 at 10 ft), curve right after
   one 90 curve (r 16) -> L4 eastbound : roller, bump, roller, freestyle jump (approved)
-  bowl (left 180, half berm) -> L3 westbound : 3 bumps (1st lower), lower table, 2 bumps, same gaps, longer lane
-  U (right 180, 20 ft further west) -> L2 eastbound : long triple right at the turn exit, triple, double, same gaps
+  bowl (left 180, half berm) -> L3 westbound : low roller, 2 bumps, raised dip (table dug between table and double), 2 bumps
+  U (right 180) -> L2 eastbound : long triple right at the turn exit (inside half of the 1st bump 4.2 ft), triple, double,
+      same gaps, foot of the bumps rounded
   -> middle lane southbound : bump, table, bump (approved)
   -> L6 westbound : jumpable roller right at the turn exit, flat straight (approved)
   U (left 180, half berm) -> L7
@@ -21,7 +23,8 @@ import layouts_sx as LS
 from layouts_sx import L, sec, _start, SA, SD, SC, BB, TABLE_A, TABLE_B, TABLE9, BIG_TRIPLE, RB, RS, BIG, BIG2, SMALL, SMALL2
 
 STT_ORIGIN = (175.0, 170.0)
-FIN = ['Custom1_g30_2', ('gap', 4.0), ('landing', 'Arlington_g30_2', 11.2, 24.0)]   # v8: same distance, normal landing back (15 -> 24 ft)
+FIN = ['Custom1_g30_2', ('gap', 12.0), ('scale', 'Glendale_g83_2', 10.0)]   # v9: round normal landing (Glendale g83 double landing, 7.9 -> 10 ft),
+                                                                            # crest at the same distance as v8
 R_CURVE = 16.0                                                              # one 90 deg curve west column -> L4 (v8: 21.5 -> 16, room for L1 lower)
 R_HIGH = 21.5                                                               # the 90 after the whoops: big radius, big berm
 R_TIGHT = 8.0                                                               # v7: east lane -> L1 "plus serre"
@@ -69,6 +72,13 @@ def even(units, lane, u0, end):
         if j < len(units) - 1: toks.append(('gap', round(g, 1)))
     return toks
 
+def rounded(s, R=30.0):
+    """v9: round the foot of the bumps (the user: "plat, bosse, plat, bosse" -> transitions). Grey closing with a ball of
+    radius R ft: only fills the concave corners at the foot of the faces, crests and faces above are unchanged."""
+    from scipy.ndimage import grey_closing
+    P, u0, name = s; n = int(R / 0.1); y = np.arange(-n, n + 1) * 0.1
+    return (grey_closing(P, structure=np.sqrt(R * R - y * y) - R), u0, name)
+
 def stt():
     ox, oz = STT_ORIGIN
     a_col = Z['L4'] - R_CURVE - RS - Z['L1']                               # west column straight
@@ -78,13 +88,13 @@ def stt():
     l4 = [ROLLER, SA[1], 'Glendale_g63_3'] + fmx
     p.straight(XBOWL - x_l4, [sec('STT-L4 roller, bosse, roller, saut freestyle', l4, 14.0)], tag='L4 roller, bump, roller, freestyle jump')
     p.turn(+180, RB, BIG, tag='bowl (L4 -> L3)')
-    l3 = [('scale', SA[0], 2.8), SA[1], SA[2], ('scale', TABLE_B, 5.2), SA[1], SA[0]]   # v8: 1st bump lower (no triple in), table lower
+    l3 = [('scale', SA[0], 2.0), SA[1], SA[2], ('dip', TABLE_B, 5.5, 0.5), SA[1], SA[0]]   # v9: 1st bump a low roller, table -> raised dip
     p.straight(XBOWL - XU, [sec('STT-L3 3 bosses, table, 2 bosses', even(l3, XBOWL - XU, 4.0, 16.0), 4.0)], tag='L3 3 bumps, table, 2 bumps')
     p.turn(-180, RB, BIG2, tag='U L3 -> L2 (rays)')
     L2 = (XMID - RS) - XU
-    first = ('split', ('scale', SA[1], 4.8), ('scale', SA[1], 3.0))         # v7: normal rhythm bump, lower on the right (inside)
+    first = ('split', ('scale', SA[1], 4.8), ('scale', SA[1], 4.2))         # v9: inside (right) half closer to a normal bump
     l2 = even([first] + up([SA[2], SA[0]], 1.35) + up([SA[1], SA[2], SA[0]], 1.35) + up([SA[1], SA[2]], 1.35), L2, 0.0, 12.0)
-    p.straight(L2, [sec('STT-L2 long triple, triple, double (ecarts egaux)', l2, 0.0)], tag='L2 long triple, triple, double, same gaps')
+    p.straight(L2, [rounded(sec('STT-L2 long triple, triple, double (ecarts egaux)', l2, 0.0))], tag='L2 long triple, triple, double, same gaps')
     p.turn(-90, RS, SMALL, tag='L2 -> middle lane')
     Lmid = (Z['L6'] - RS) - (Z['L2'] + RS); mid = [SC[2], TABLE_B, SC[3]]
     p.straight(Lmid, [sec('STT-mid bosse, table, bosse', mid, (Lmid - len(L('tmp', mid)) * 0.1) / 2)], tag='middle lane: bump, table, bump')
@@ -92,7 +102,7 @@ def stt():
     p.straight((XMID - RS) - XU67, [sec('STT-L6 roller a sauter (sortie de virage)', [SMALL_B], 3.0)], tag='L6 straight, jumpable roller at the turn exit')
     p.turn(+180, RB, BIG, tag='U L6 -> L7')
     L7 = (XEL - R_HIGH) - XU67
-    l7 = [('scale', ROLLER, 2.6), ('gap', 4.0), ('scale', 'Custom_g32_1', 2.6), ('gap', 10.0), ('whoops', 'Custom_0', 11), ('gap', 20.0)] + SA[3:6]
+    l7 = [('scale', ROLLER, 2.6), ('gap', 4.0), ('scale', 'Custom_g32_1', 2.6, 'flip'), ('gap', 10.0), ('whoops', 'Custom_0', 11), ('gap', 20.0)] + SA[3:6]
     p.straight(L7, [sec('STT-L7 petit double, 11 whoops, triple', l7, 1.5)], tag='L7 small double at the turn exit, 11 whoops, triple')
     p.turn(+90, R_HIGH, BIG, tag='L7 -> east lane (real high berm)')
     Lns = (Z['L7'] - R_HIGH) - (Z['L1'] + R_TIGHT)
@@ -101,10 +111,10 @@ def stt():
     p.turn(+90, R_TIGHT, SMALL2, tag='east lane -> L1 (tight)')
     L1 = (XEL - R_TIGHT) - (XWL + RS)
     l1 = spread([up(SA[:3], 1.2), up(SD[:3], 1.2), up([SA[3]], 1.2), [TABLE_B], up([SA[0]], 1.2), up([SA[0], SA[0]], 1.2)], L1, 16.0, 22.0, 8.0)
-    p.straight(L1, [sec('STT-L1 triple, triple, bosse, table, bosse, 2 bosses', l1, 16.0)], tag='L1 along the north fence, wider gaps')
+    p.straight(L1, [rounded(sec('STT-L1 triple, triple, bosse, table, bosse, 2 bosses', l1, 16.0))], tag='L1 along the north fence, wider gaps')
     p.turn(+90, RS, SMALL, tag='L1 -> west column')
     nf = len(L('tmp', FIN)) * 0.1
-    p.straight(a_col, [sec(FINISH_SEC, FIN, a_col - nf - 3.0)], tag='west column: room after the turn, short finish double, curve right after')
+    p.straight(a_col, [rounded(sec(FINISH_SEC, FIN, a_col - nf - 3.0))], tag='west column: room after the turn, short finish double, curve right after')
     p.turn(+90, R_CURVE, None, tag='curve west column -> L4')
     _start('STT', ox, oz, gate=(-100.0, 167.0), heading=0.0,
            route=[('S', 360.0), ('T', +90, 30.0, None), ('TO', (XBOWL + RB, Z['L4'] - RB))],
