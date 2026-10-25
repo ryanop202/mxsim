@@ -2,16 +2,14 @@
 START = west end. Every bump is a measured JGSX unit (lib/) unless marked 'scaled' (height scaled, same shape/length),
 'landing' (scaled, back side replaced by a gentle slope) or 'trapeze' (synthetic mound) - asked by the user in game tests.
 
-Lap (v7, after the 3rd in-game test):
-  L7  along the stands, eastbound : small double (2.6 ft), 9 whoops, triple close to the turn
-  high berm turn (90, big radius, a bit lower than v6) -> east lane northbound : big SX triple (Cleveland g29, as SX2)
-  tight turn -> L1 north, westbound : triple, triple, bump, table, bump, 2 bumps, wider gaps (harder), room before the turn
-  left turn -> west column southbound : room after the turn, short finish double (finish line + arch), curve right after
-  one 90 curve -> L4 eastbound, straight : roller, bump, roller, freestyle jump (steep short kicker 6.9 ft, one clean
-      landing mound 18 ft: climb, short flat, medium descent)
-  bowl (left 180, half berm) -> L3 westbound : 3 normal bumps, table, 2 normal bumps
-  U (right 180, rays) -> L2 eastbound : right at the turn exit; triple (1st bump split: normal, lower on the right),
-      triple, double, spread over the lane (no long run-up before the next turn)
+Lap (v8, after the 4th in-game test):
+  L7  along the stands, eastbound : small double right at the turn exit, 11 whoops, triple close to the turn
+  high berm turn (90, big radius) -> east lane northbound : bigger SX triple (Cleveland g29 x1.15), less run-up
+  tight turn (L1 10 ft lower: turns earlier) -> L1 north, westbound : triple, triple, bump, table, bump, 2 bumps (approved)
+  left turn -> west column southbound : finish double (same distance, normal landing back 24 ft), curve right after
+  one 90 curve (r 16) -> L4 eastbound : roller, bump, roller, freestyle jump (approved)
+  bowl (left 180, half berm) -> L3 westbound : 3 bumps (1st lower), lower table, 2 bumps, same gaps, longer lane
+  U (right 180, 20 ft further west) -> L2 eastbound : long triple right at the turn exit, triple, double, same gaps
   -> middle lane southbound : bump, table, bump (approved)
   -> L6 westbound : jumpable roller right at the turn exit, flat straight (approved)
   U (left 180, half berm) -> L7
@@ -23,12 +21,12 @@ import layouts_sx as LS
 from layouts_sx import L, sec, _start, SA, SD, SC, BB, TABLE_A, TABLE_B, TABLE9, BIG_TRIPLE, RB, RS, BIG, BIG2, SMALL, SMALL2
 
 STT_ORIGIN = (175.0, 170.0)
-FIN = ['Custom1_g30_2', ('gap', 4.0), ('landing', 'Arlington_g30_2', 11.2, 15.0)]   # v7: short finish double (8.8 -> 11.2 ft, short landing)
-R_CURVE = 21.5                                                              # one 90 deg curve west column -> L4, then straight
+FIN = ['Custom1_g30_2', ('gap', 4.0), ('landing', 'Arlington_g30_2', 11.2, 24.0)]   # v8: same distance, normal landing back (15 -> 24 ft)
+R_CURVE = 16.0                                                              # one 90 deg curve west column -> L4 (v8: 21.5 -> 16, room for L1 lower)
 R_HIGH = 21.5                                                               # the 90 after the whoops: big radius, big berm
 R_TIGHT = 8.0                                                               # v7: east lane -> L1 "plus serre"
-Z = dict(L1=-31.3, L2=43.0, L3=86.0, L4=129.0, L6=206.0, L7=249.0)        # L1 kept where v6 put it (the user liked it)
-XWL, XBOWL, XU, XMID, XEL, XU67 = -35.0, 295.0, 60.0, 364.0, 445.0, -5.0   # v7: west column 20 ft west, east lane 24 ft east (room in L1)
+Z = dict(L1=-21.3, L2=43.0, L3=86.0, L4=129.0, L6=206.0, L7=249.0)        # v8: L1 10 ft lower (east lane turns earlier)
+XWL, XBOWL, XU, XMID, XEL, XU67 = -35.0, 295.0, 40.0, 364.0, 445.0, -5.0   # v8: U L3 -> L2 20 ft west (L3 and L2 longer)
 ARENA = (-110.0, 475.0, Z['L1'] - 24.0, 274.0)                            # fence box (x0, x1, z0, z1), local
 ROWS = dict(L1=('L1', XU + 50), L2=('L2', XU + 50), L3=('L3', XU + 50), L4=('L4', 100.0), L6=('L6', 40.0), L7=('L7', 40.0))
 FINISH_SEC = 'STT-ouest saut d arrivee (court)'
@@ -61,6 +59,16 @@ def spread(groups, lane, u0, end, g_in):
         if k < len(groups) - 1: toks.append(('gap', g_out))
     return toks
 
+def even(units, lane, u0, end):
+    """v8: same gap between every bump of the lane (the user: not 3, 3, 2)."""
+    unit_len = lambda u: len(L('tmp', [u])) * 0.1
+    g = (lane - u0 - end - sum(unit_len(u) for u in units)) / max(1, len(units) - 1)
+    toks = []
+    for j, u in enumerate(units):
+        toks.append(u)
+        if j < len(units) - 1: toks.append(('gap', round(g, 1)))
+    return toks
+
 def stt():
     ox, oz = STT_ORIGIN
     a_col = Z['L4'] - R_CURVE - RS - Z['L1']                               # west column straight
@@ -70,13 +78,13 @@ def stt():
     l4 = [ROLLER, SA[1], 'Glendale_g63_3'] + fmx
     p.straight(XBOWL - x_l4, [sec('STT-L4 roller, bosse, roller, saut freestyle', l4, 14.0)], tag='L4 roller, bump, roller, freestyle jump')
     p.turn(+180, RB, BIG, tag='bowl (L4 -> L3)')
-    l3 = [SA[0], SA[1], SA[2], TABLE_B, SA[1], SA[0]]                       # v7: 3 normal bumps, table, 2 normal bumps
-    p.straight(XBOWL - XU, [sec('STT-L3 3 bosses, table, 2 bosses', l3, 4.0)], tag='L3 3 bumps, table, 2 bumps')
+    l3 = [('scale', SA[0], 2.8), SA[1], SA[2], ('scale', TABLE_B, 5.2), SA[1], SA[0]]   # v8: 1st bump lower (no triple in), table lower
+    p.straight(XBOWL - XU, [sec('STT-L3 3 bosses, table, 2 bosses', even(l3, XBOWL - XU, 4.0, 16.0), 4.0)], tag='L3 3 bumps, table, 2 bumps')
     p.turn(-180, RB, BIG2, tag='U L3 -> L2 (rays)')
     L2 = (XMID - RS) - XU
     first = ('split', ('scale', SA[1], 4.8), ('scale', SA[1], 3.0))         # v7: normal rhythm bump, lower on the right (inside)
-    l2 = spread([[first] + up([SA[2], SA[0]], 1.3), up([SA[1], SA[2], SA[0]], 1.3), up([SA[1], SA[2]], 1.3)], L2, 0.0, 12.0, 4.0)
-    p.straight(L2, [sec('STT-L2 triple, triple, double (repartis)', l2, 0.0)], tag='L2 triple, triple, double spread over the lane')
+    l2 = even([first] + up([SA[2], SA[0]], 1.35) + up([SA[1], SA[2], SA[0]], 1.35) + up([SA[1], SA[2]], 1.35), L2, 0.0, 12.0)
+    p.straight(L2, [sec('STT-L2 long triple, triple, double (ecarts egaux)', l2, 0.0)], tag='L2 long triple, triple, double, same gaps')
     p.turn(-90, RS, SMALL, tag='L2 -> middle lane')
     Lmid = (Z['L6'] - RS) - (Z['L2'] + RS); mid = [SC[2], TABLE_B, SC[3]]
     p.straight(Lmid, [sec('STT-mid bosse, table, bosse', mid, (Lmid - len(L('tmp', mid)) * 0.1) / 2)], tag='middle lane: bump, table, bump')
@@ -84,11 +92,12 @@ def stt():
     p.straight((XMID - RS) - XU67, [sec('STT-L6 roller a sauter (sortie de virage)', [SMALL_B], 3.0)], tag='L6 straight, jumpable roller at the turn exit')
     p.turn(+180, RB, BIG, tag='U L6 -> L7')
     L7 = (XEL - R_HIGH) - XU67
-    l7 = [('scale', ROLLER, 2.6), ('gap', 4.0), ('scale', 'Custom_g32_1', 2.6), ('gap', 20.0), ('whoops', 'Custom_0', 9), ('gap', 25.0)] + SA[3:6]
-    p.straight(L7, [sec('STT-L7 petit double, 9 whoops, triple', l7, L7 - len(L('tmp', l7)) * 0.1 - 8.0)], tag='L7 small double, whoops, triple close to the turn')
+    l7 = [('scale', ROLLER, 2.6), ('gap', 4.0), ('scale', 'Custom_g32_1', 2.6), ('gap', 10.0), ('whoops', 'Custom_0', 11), ('gap', 20.0)] + SA[3:6]
+    p.straight(L7, [sec('STT-L7 petit double, 11 whoops, triple', l7, 1.5)], tag='L7 small double at the turn exit, 11 whoops, triple')
     p.turn(+90, R_HIGH, BIG, tag='L7 -> east lane (real high berm)')
     Lns = (Z['L7'] - R_HIGH) - (Z['L1'] + R_TIGHT)
-    p.straight(Lns, [sec('STT-east gros triple SX', BIG_TRIPLE, (Lns - len(L('tmp', BIG_TRIPLE)) * 0.1) / 2)], tag='east lane, big SX triple (Cleveland g29, as SX2)')
+    big3 = [('scale', 'Custom1_g29_2', 9.1), ('gap', 0.5), ('scale', 'Custom1_g29_3', 6.9), ('gap', 1.6), ('scale', 'Arlington_g29_2', 8.45)]  # v8: x1.15
+    p.straight(Lns, [sec('STT-east gros triple SX (plus gros)', big3, 30.0)], tag='east lane, bigger SX triple, less run-up')
     p.turn(+90, R_TIGHT, SMALL2, tag='east lane -> L1 (tight)')
     L1 = (XEL - R_TIGHT) - (XWL + RS)
     l1 = spread([up(SA[:3], 1.2), up(SD[:3], 1.2), up([SA[3]], 1.2), [TABLE_B], up([SA[0]], 1.2), up([SA[0], SA[0]], 1.2)], L1, 16.0, 22.0, 8.0)
