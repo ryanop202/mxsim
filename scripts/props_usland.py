@@ -549,14 +549,14 @@ def pickup_texture():
         d.line([Z(-3.45), Y(2.05), Z(4.0), Y(2.05)], fill=(52, 52, 56), width=3)
         for z in (-0.4, 3.4): d.rounded_rectangle([Z(z), Y(4.35), Z(z + 0.55), Y(4.22)], radius=3, fill=(58, 58, 62))  # handles
         d.line([0, Y(3.95), W, Y(3.95)], fill=(38, 38, 42), width=2)                                          # body crease
-        gloss(im, Y(4.75), Y(4.05), 38); gloss(im, Y(3.6), Y(3.1), 18)                                        # glossy black paint reflections
+        gloss(im, Y(4.75), Y(4.05), 18); gloss(im, Y(3.6), Y(3.1), 8)                                        # glossy black paint reflections
         d.rectangle([0, Y(2.05), W, H], fill=(14, 14, 15))                                                     # rocker (black plastic)
         _arch_cut(d, W, H, *BODY_Z, *BODY_Y, PK['wf'], 2.0)
     img.paste(panel((BODY_Z[1] - BODY_Z[0], BODY_Y[1] - BODY_Y[0]), 1008, body_side).resize((1008, 240), Image.LANCZOS), (8, 8))
     def bed_side(im):
         d = ImageDraw.Draw(im); W, H = im.size; d.rectangle([0, 0, W, H], fill=PK_BODY)
         d.line([0, H - (3.95 - BED_Y[0]) / (BED_Y[1] - BED_Y[0]) * H, W, H - (3.95 - BED_Y[0]) / (BED_Y[1] - BED_Y[0]) * H], fill=(38, 38, 42), width=2)
-        gloss(im, H * 0.05, H * 0.30, 38); gloss(im, H * 0.42, H * 0.55, 18)
+        gloss(im, H * 0.05, H * 0.30, 18); gloss(im, H * 0.42, H * 0.55, 8)
         _arch_cut(d, W, H, *BED_Z, *BED_Y, PK['wr'], 2.0)
     img.paste(panel((BED_Z[1] - BED_Z[0], BED_Y[1] - BED_Y[0]), 504, bed_side).resize((504, 160), Image.LANCZOS), (8, 264))
     def windows(im):                                                       # side glass strip, z from WIN_Z[0] (left)
@@ -598,7 +598,7 @@ def pickup_texture():
     def paint_top(im):                                                     # hood / roof: glossy black paint, soft reflection
         d = ImageDraw.Draw(im); W, H = im.size; d.rectangle([0, 0, W, H], fill=PK_BODY)
         a = np.array(im).astype(float); x = np.linspace(-1, 1, W)[None, :, None]; y = np.linspace(0, 1, H)[:, None, None]
-        a += 34 * np.exp(-(x / 0.35) ** 2) * (0.6 + 0.4 * np.cos(y * 6.0)) + 10 * np.exp(-((x - 0.7) / 0.12) ** 2)
+        a += 16 * np.exp(-(x / 0.35) ** 2) * (0.6 + 0.4 * np.cos(y * 6.0)) + 5 * np.exp(-((x - 0.7) / 0.12) ** 2)
         im.paste(Image.fromarray(np.clip(a, 0, 255).astype(np.uint8)))
     img.paste(panel((6.6, 14.0), 232, paint_top, ao=0).resize((232, 170), Image.LANCZOS), (280, 600))
     rim_face(img, (8, 520, 264, 776), metal=(36, 36, 39), dark=(12, 12, 13), spokes=6)
@@ -1386,10 +1386,11 @@ def weather(img, seed=7, grain=4.0, mottle=0.06):
     return Image.fromarray(np.clip(a, 0, 255).astype(np.uint8))
 
 # materials: glossy paint / glass / carbon vs matte steel, fabric, rubber. spec = (base level, {palette name: level})
-MATERIAL = {'hospitality_usland': (50, 1, 1, 1, 1), 'pickup_usland': (50, 1, 1, 1, 1), 'bike_trainer': (50, 1, 1, 1, 1),
+MATERIAL = {'hospitality_usland': (50, 1, 1, 1, 1), 'pickup_usland': (24, 0.45, 0.6, 0.6, 0.6),   # v12b: less shiny (seen in game)
+             'bike_trainer': (50, 1, 1, 1, 1),
             'start_gate': (16, 1, 0.35, 0.35, 0.35), 'start_grate': (16, 0.6, 0.35, 0.35, 0.35), 'finish_arch': (6, 0.5, 0.3, 0.3, 0.3),
             'start_gantry': (5, 0.5, 0.3, 0.3, 0.3), 'banner': (0, 0, 0, 0, 0)}
-SPEC = {'pickup_usland': (215, {'tyre': 10, 'plastic': 25, 'dark': 30, 'bed': 15, 'hook': 60}),
+SPEC = {'pickup_usland': (120, {'tyre': 10, 'plastic': 25, 'dark': 30, 'bed': 15, 'hook': 60}),
         'hospitality_usland': (150, {'tyre': 10, 'rope': 20, 'char': 40, 'steel': 90}),
         'bike_trainer': (170, {'tyre': 10, 'black': 30, 'tan': 20, 'grey': 40}),
         'start_gate': (110, {'black': 50})}
