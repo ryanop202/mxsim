@@ -56,12 +56,10 @@ def main(models, out):
     scenes['start_SX1'] = dict(terrain=terrain_patch(T, cx - 8, cz, 62, step=2), objs=objs, cam=[cx, 0, cz])
     pad = [dict(m='hospitality_usland', t='hospitality_usland', x=0, y=0, z=0, a=-np.pi / 2)]   # entrance (+x local) towards +z       # long side along x, module towards +z
     for k in range(3):
-        pad.append(dict(m='pickup_usland', t='pickup_usland', x=38 + k * 10, y=0, z=14, a=0.0))
-        b = PP.bike_in_pickup(38 + k * 10, 0, 14, 0.0); pad.append(dict(m='bike_trainer', t='bike_trainer', **b))
-    for side in (-1, 1):                                                          # same 4 banners, same order, each side of the carpet
-        for k, nm in enumerate(PU.BANNERS):
-            x = (-50.0 if side < 0 else 12.6) + k * 12.4
-            pad.append(dict(m='banner', t='banner_' + nm.lower(), x=x, y=0, z=29, a=0.0))
+        pad.append(dict(m='pickup_usland', t='pickup_usland', x=75 + k * 10, y=0, z=14, a=0.0))
+        b = PP.bike_in_pickup(75 + k * 10, 0, 14, 0.0); pad.append(dict(m='bike_trainer', t='bike_trainer', **b))
+    for bx, bz, ba, nm in PP.stand_banners((0.0, 0.0), -np.pi / 2):              # v13b: same stand as in the tracks
+        pad.append(dict(m='banner', t='banner_' + nm.lower(), x=bx, y=0, z=bz, a=ba))
     pad.append(dict(m='tent_usland', t='tent_usland', x=-30, y=0, z=-26, a=0.0))
     pad.append(dict(m='watertruck', t='watertruck', x=40, y=0, z=-26, a=-np.pi / 2))      # JGSX water truck (kept) + our U sticker
     pad.append(dict(m='watertruck_u', t='watertruck_u', x=40, y=0, z=-26, a=-np.pi / 2))

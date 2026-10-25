@@ -111,3 +111,20 @@ def finish_flagger(key):
                 if d >= 20 and dp >= 4 and (best is None or d > best[0] + 1e-6): best = (d, q)
     if best is None: raise ValueError(f'{key}: no room for the finish flagger')
     return best[1]
+
+STAND = dict(front=29.0, opening=6.2, pitch=12.4, returns=('RBT', 'FOX'))
+def stand_banners(c, a):
+    """v13b: banners of the hospitality stand, (x, z, yaw, sponsor) for a hospitality at centre c, yaw a.
+    Front line parallel to the trailer, STAND['front'] ft out (past the end of the red carpet), centred on the carpet (local
+    z = 0): the same 4 banners in the same order on each side of a 12.4 ft opening. At both ends the line turns back towards
+    the trailer (2 banners, RBT then FOX from the corner) so it reads as a stand."""
+    f = statue_fwd(a); xl = np.array([np.cos(a), -np.sin(a)]); c = np.asarray(c, float)
+    P, half, out = STAND['pitch'], STAND['opening'], []
+    for side in (-1, 1):
+        for k, nm in enumerate(PU.BANNERS):                    # same order along +z on both sides
+            u = (-half - P / 2 - (3 - k) * P) if side < 0 else (half + P / 2 + k * P)
+            q = c + f * u + xl * STAND['front']; out.append((float(q[0]), float(q[1]), statue_ang(*xl), nm))
+        u_end = side * (half + 4 * P)                          # corner: end of the front line
+        for j, nm in enumerate(STAND['returns']):
+            q = c + f * u_end + xl * (STAND['front'] - P / 2 - j * P); out.append((float(q[0]), float(q[1]), statue_ang(*(f * side)), nm))
+    return out

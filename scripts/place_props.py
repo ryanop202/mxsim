@@ -1,6 +1,7 @@
 """v12 : pose les objets USLAND (props_usland.py) dans les 3 pistes, à la place des objets JGSX, 1 pour 1.
   - semi JGSX (semi_1)          -> hospitality USLAND (même place, même axe ; décalé de 13 ft vers l'extérieur du grillage)
-                                   + 8 bannières (les 4 dans le même ordre de chaque côté du tapis rouge)
+                                   + stand de bannières centré sur le tapis rouge : les 4 dans le même ordre de chaque côté,
+                                   + 2 bannières en retour à chaque bout (props_place.stand_banners)
   - vans JGSX (transit) x3      -> pick-ups USLAND (même place, même angle) + un vélo sur home-trainer dans chaque benne
   - grilles JGSX (gate01)       -> grilles USLAND (lignes startinggate de timing_gates : le jeu les fait tomber)
   - arche FINISH sur la porte d'arrivée, portique au-dessus de la rangée de grilles, une grate par grille
@@ -23,6 +24,7 @@ OURS = ('hospitality_usland', 'pickup_usland', 'bike_trainer', 'banner', 'finish
 REPLACED = ('semi_1', 'transit', 'watertank', 'matrixa2', 'dozer', 'bobcat', 'ezup')   # watertruck kept (asked)
 
 def line(x, y, z, a, model, tex):
+    a = float((a + np.pi) % (2 * np.pi) - np.pi)        # v13b: yaw in [-pi, pi) (bikes at a + pi = 4.7 / 6.27 sat crosswise in some pickups)
     return f'[{x:.6f} {y:.6f} {z:.6f}] {a:.6f} {P}/statue/{model}.jm {P}/statue/{tex}.png null'
 
 def parse(l):
@@ -59,13 +61,8 @@ def main():
             # turn the trailer round if needed so the entrance faces the outside of the fence
             if np.dot(np.array([np.cos(a), -np.sin(a)]), o) < 0: a += np.pi
             new.append(line(c[0], 0.0, c[1], a, 'hospitality_usland', 'hospitality_usland'))
-            f = PP.statue_fwd(a)                                     # long axis of the trailer
-            xl = np.array([np.cos(a), -np.sin(a)])                   # towards the entrance / carpet
-            for side in (-1, 1):
-                for k, nm in enumerate(PU.BANNERS):
-                    u = (-50.0 if side < 0 else 12.6) + k * 12.4 + 6.0     # same 4, same order, each side of the carpet
-                    q = c + f * u + xl * 29.0
-                    new.append(line(q[0], 0.0, q[1], PP.statue_ang(*xl), 'banner', 'banner_' + nm.lower()))   # parallel to the trailer
+            for bx, bz, ba, nm in PP.stand_banners(c, a):            # v13b: stand centred on the red carpet, with returns
+                new.append(line(bx, 0.0, bz, ba, 'banner', 'banner_' + nm.lower()))
             continue
         if m == 'ezup':                                            # v12b: JGSX tent -> USLAND tent (USLAND / RBT / FOX)
             x, y, z, a, _ = parse(l); new.append(line(x, 0.0, z, a, 'tent_usland', 'tent_usland')); continue

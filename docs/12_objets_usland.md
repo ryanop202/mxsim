@@ -178,3 +178,11 @@ Ces règles viennent des retours sur la v12. Les relire **avant** de dessiner un
 - **Torches** : un petit bâton de flamme (socle noir, tige alu, coupelle noire, 2,85 ft) sur la poutre au-dessus de chaque
   poteau de l'arche FINISH, dans le modèle de l'arche (un objet posé seul serait remis au sol par le jeu). Les flammes de
   `pyro_chalk.py` partent du haut des torches, **seulement quand le vainqueur passe l'arrivée**.
+
+## v13b — stand de bannières, angles
+
+- **Stand** (`props_place.stand_banners`) : ligne de 8 bannières à 29 ft devant la remorque, **centrée sur le tapis rouge**
+  (ouverture de 12,4 ft), les 4 dans le même ordre de chaque côté, + **2 bannières en retour** (RBT puis FOX) à chaque bout,
+  vers la remorque : 12 bannières par stand. Contrôlé : à ≥ 92 ft des lignes de course, rien à moins de 9 ft, sol plat.
+- **Angles** : tous nos objets sont écrits avec un angle entre −π et π (les vélos à a + π = 4,7 / 6,27 étaient de travers
+  dans certains pick-ups en jeu).
