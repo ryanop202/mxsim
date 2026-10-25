@@ -939,6 +939,7 @@ def arch_model(pal):
     m.rbox(-X - AP - 0.6, X + AP + 0.6, BEAM[0], BEAM[1], -2.4, 2.4, 0.5, 0,
            {'-z': P['beam'], '+z': P['beam'], '*': P['black']}, P['black'])
     sign_pair(m, 'arch_sign', 0.0, BEAM[1] - 0.05, 22.0, 1.6, 0.3, P['black'], P['metal'])   # two cut plates (front / back) tied by rods, on the beam
+    for i, v in enumerate(m.V): m.V[i] = (v[0] + ARCH_X,) + tuple(v[1:])            # v12b: origin = foot of the -x pillar (flat ground)
     return m
 
 

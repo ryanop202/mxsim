@@ -30,7 +30,10 @@ Ce qui est sûr vient des fichiers des références (doc 01) ; ce qui est *(à v
 - 1 unité = 1 pied (ft). y vers le haut. Dans un modèle : **+z = l'avant** (véhicule) ou le sens de la course (arche,
   portique, grates), x = le côté.
 - Ligne `statues` : `[x y z] angle @USLAND2026SX1/statue/<modèle>.jm @USLAND2026SX1/statue/<texture>.png null`.
-  L'axe z local va vers (−sin a, −cos a) : `a = atan2(−fx, −fz)` (`props_place.ang_of`).
+  **L'axe +z local va vers (sin a, cos a)** : `a = atan2(fx, fz)` (`props_place.statue_ang`), **vu en jeu (v12b)**, l'inverse de la
+  convention des grilles de départ (`timing_gates`, pilote vers (−sin a, −cos a)). L'axe +x local va vers (cos a, −sin a).
+- Le jeu pose l'objet sur le sol sous son **origine** : la mettre sur du plat (arche : au pied d'un poteau, sinon elle flottait
+  de toute la hauteur du saut).
 - `y` = sol local sous l'objet (le plus bas sous ses appuis ; l'objet descend sous le sol si besoin, jamais en l'air).
 
 **Format `.jm` (JM1, texte)**
@@ -102,7 +105,8 @@ grillage et tourné pour que son entrée parte vers l'extérieur (sens de l'axe 
 | repère d'arrivée (aucun objet) | arche FINISH | posé |
 | — | portique de départ + grates | posé |
 | `gate01` (grilles de départ) | grille USLAND (plaque noire + U, tube rouge) | posé |
-| `watertruck`, `watertank`, `dozer`, `bobcat`, `matrixa2` + `ezup` | à faire ou à retirer | à décider |
+| `watertruck`, `watertank`, `matrixa2` | pick-ups USLAND + vélo (v12b) | posé |
+| `dozer`, `bobcat`, `ezup` | retirés (v12b) | fait |
 | grillages, poteaux d'éclairage, cônes, decals, sol, ciel | à faire pour une version publique | à faire |
 
 ## 3. Règles de design (retours de l'utilisateur, à respecter pour tout nouvel objet)

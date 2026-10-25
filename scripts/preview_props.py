@@ -44,19 +44,19 @@ def main(models, out):
     for key in ('SX1', 'SX2', 'SX3'):
         A = PP.arch_pose(key, T)
         report[key] = {k: (round(v, 2) if isinstance(v, float) else v) for k, v in A.items() if k not in ('pillars',)}
-        scenes['arch_' + key] = dict(terrain=terrain_patch(T, A['x'], A['z'], 80),
+        scenes['arch_' + key] = dict(terrain=terrain_patch(T, A['cx'], A['cz'], 80),
                                      objs=[dict(m=PP.ARCH_MODEL[key], t=PP.ARCH_MODEL[key], x=A['x'], y=A['y'], z=A['z'], a=A['a'])],
-                                     cam=[A['x'], A['crest'] + 6, A['z']], back=A['f'], info=A)
+                                     cam=[A['cx'], A['crest'] + 6, A['cz']], back=A['f'], info=dict(A, x=A['cx'], z=A['cz']))
     G = PP.start_gates('SX1')
     objs = [dict(m='start_grate', t='start_grate', x=x, y=y, z=z, a=a) for x, y, z, a in PP.grate_poses('SX1', T)]
     objs += [dict(m='start_gate', t='start_gate', x=g[0], y=g[1], z=g[2], a=g[3]) for g in PP.start_gates('SX1')]
     gp = PP.gantry_pose('SX1', T); objs.append(dict(m='start_gantry', t='start_gantry', x=gp['x'], y=gp['y'], z=gp['z'], a=gp['a']))
     cx = np.mean([g[0] for g in G]); cz = np.mean([g[2] for g in G])
     scenes['start_SX1'] = dict(terrain=terrain_patch(T, cx - 8, cz, 62, step=2), objs=objs, cam=[cx, 0, cz])
-    pad = [dict(m='hospitality_usland', t='hospitality_usland', x=0, y=0, z=0, a=np.pi / 2)]       # long side along x, module towards +z
+    pad = [dict(m='hospitality_usland', t='hospitality_usland', x=0, y=0, z=0, a=-np.pi / 2)]   # entrance (+x local) towards +z       # long side along x, module towards +z
     for k in range(3):
-        pad.append(dict(m='pickup_usland', t='pickup_usland', x=38 + k * 10, y=0, z=14, a=np.pi))
-        b = PP.bike_in_pickup(38 + k * 10, 0, 14, np.pi); pad.append(dict(m='bike_trainer', t='bike_trainer', **b))
+        pad.append(dict(m='pickup_usland', t='pickup_usland', x=38 + k * 10, y=0, z=14, a=0.0))
+        b = PP.bike_in_pickup(38 + k * 10, 0, 14, 0.0); pad.append(dict(m='bike_trainer', t='bike_trainer', **b))
     for side in (-1, 1):                                                          # same 4 banners, same order, each side of the carpet
         for k, nm in enumerate(PU.BANNERS):
             x = (-50.0 if side < 0 else 12.6) + k * 12.4
