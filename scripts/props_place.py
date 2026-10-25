@@ -81,7 +81,7 @@ def grate_poses(key, T):
     """one grate per gate, same angle (the grate model runs backwards from the gate), y = local ground."""
     out = []
     for x, y, z, a in start_gates(key):
-        f = np.array([-np.sin(a), -np.cos(a)]); q = np.array([[x, z]]) - np.outer(np.linspace(0.4, 0.4 + sum(L for _, L in PU.GRATE['parts']), 9), f)
+        f = np.array([-np.sin(a), -np.cos(a)]); q = np.array([[x, z]]) - np.outer(np.linspace(PU.GRATE['gap'], PU.GRATE['gap'] + sum(L for _, L in PU.GRATE['parts']), 9), f)
         out.append((x, float(h_at(T, q[:, 0], q[:, 1]).max()), z, statue_ang(*f)))   # statue yaw: local +z = riding direction
     return out
 

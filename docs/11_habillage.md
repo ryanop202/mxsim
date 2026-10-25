@@ -72,8 +72,8 @@ Convention d'angle (statues et decals) : l'axe z local du modèle / l'axe vertic
 ## v13b — flammes d'arrivée + craie (`scripts/pyro_chalk.py`, fichiers bruts dans `assets/sx2026`)
 
 - **Flammes** : 2 billboards (`finishflames`, `finishflames2` d'Anaheim 1) posés sur le haut des 2 poteaux de l'arche FINISH
-  (base à 37,5 ft, taille 45). `frills.js` les cache au repos et les joue une fois à la chute de la grille, puis une fois
-  quand le vainqueur passe la ligne (même logique de dernier tour que le commissaire d'Anaheim). Son `finishlineflame`.
+  (base en haut des torches de l'arche, 40,35 ft, taille 45). `frills.js` les cache au repos et les joue **une seule fois,
+  quand le vainqueur passe la ligne** (même logique de dernier tour que le commissaire d'Anaheim). Son `finishlineflame`.
   Pas de jets de feu au départ ni de boule de feu (v13 annulée). Hauteur à vérifier en jeu (y = base ou centre du billboard).
 - **Craie** (un decal par piste, `decal/chalk_SXn.png`, blanc 242, 1,6 ft) : deux traits le long des bords du couloir de
   départ (grilles → jonction avec le tour ; le trait intérieur s'arrête où un virage serré le ferait revenir en arrière) et

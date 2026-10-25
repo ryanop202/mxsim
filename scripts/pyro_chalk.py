@@ -2,10 +2,10 @@
 MX Simulator SX 2026 Anaheim 1 rangés dans assets/sx2026 (voir son README). Remplace la v13 annulée : plus de jets de feu
 sur le portique de départ ni de boule de feu, seulement les flammes de l'arche d'arrivée.
   - flammes : 2 billboards (finishflames / finishflames2) sur les 2 poteaux de l'arche, cachés au repos ; ils jouent une
-    fois (41 images à 32 im/s, son finishlineflame) à la chute de la grille (comme Anaheim) et quand le vainqueur passe
-    l'arrivée (1er passage du leader sur la ligne après le drapeau à damier, même logique que le commissaire d'Anaheim).
-    Taille 45 (Anaheim), base du billboard sur le haut des poteaux (37,5 ft) : la hauteur d'Anaheim (+11,8 ft au-dessus
-    de l'arche) laissait les flammes flotter en l'air sur notre arche. À vérifier en jeu (y = base ou centre du billboard).
+    seule fois (41 images à 32 im/s, son finishlineflame) quand le vainqueur passe l'arrivée à la fin de la course
+    (1er passage du leader sur la ligne après le drapeau à damier, même logique que le commissaire d'Anaheim).
+    Taille 45 (Anaheim), base du billboard en haut des torches posées sur la poutre au-dessus des poteaux (40,35 ft) :
+    la hauteur d'Anaheim (+11,8 ft au-dessus de l'arche) laissait les flammes flotter en l'air sur notre arche. À vérifier en jeu (y = base ou centre du billboard).
   - craie : un decal par piste (blanc 242, ~1,6 ft, image colonne -> x, ligne -> z, angle 0, comme la craie d'Anaheim) :
       * deux traits le long des bords du couloir de départ, de la rangée de grilles à la jonction avec le tour ;
       * la ligne de holeshot en travers de la 1re bosse après le départ, sur sa crête, sur toute la largeur de la bosse.
@@ -30,7 +30,7 @@ CHALK_W, CHALK_RGB = 1.6, 242
 LAPS = {'SX1': LS.sx1, 'SX2': LS.sx2, 'SX3': LS.sx3}
 
 def arch_top():
-    """top of the arch pillars (= top of the FINISH beam) in finish_arch.jm: pillar x = 0 (model origin) and 2 x ARCH_X."""
+    """top of the flame torches above the arch pillars in finish_arch.jm: pillar x = 0 (model origin) and 2 x ARCH_X."""
     V = [tuple(map(float, l.split()[:2])) for l in open(f'{ROOT}/assets/props/finish_arch.jm').read().split('\n')[3:] if len(l.split()) == 8]
     return max(y for x, y in V if abs(x) < 2.8)
 
@@ -50,7 +50,7 @@ def frames(seq):
 JS = '''/*
 USLAND 2026 SX - flammes de l'arrivée (repris du frills.js de MX Simulator SX 2026 Anaheim 1, positions adaptées).
 billboards 0-1 : flammes sur les 2 poteaux de l'arche FINISH, cachées au repos.
-Elles jouent une fois à la chute de la grille, puis une fois quand le vainqueur passe la ligne d'arrivée.
+Elles jouent une seule fois : quand le vainqueur passe la ligne d'arrivée à la fin de la course.
 */
 function _chain(prev, s) { if (typeof prev === "function") prev(s); }
 
@@ -64,7 +64,6 @@ var finishFlames2 = mx.read_texture('%(P)s/js/pyro/finishflames2.seq');
 var totalFrames = %(nf)d;
 var currentFrame = totalFrames + 1;       // > totalFrames = not playing
 var secondsSinceUpdate = 0;
-var dropFired = false;
 
 mx.color_billboard(0, 1, 1, 1, 0);
 mx.color_billboard(1, 1, 1, 1, 0);
@@ -94,8 +93,6 @@ function updateWinner() {
 }
 
 function finishPyro(seconds) {
-    var drop = mx.get_gate_drop_time();
-    if (!dropFired && drop >= 0 && mx.seconds >= drop) { dropFired = true; fireFinishFlames(); }
     updateWinner();
     if (currentFrame <= totalFrames && seconds - secondsSinceUpdate >= 1 / 32.0) {
         secondsSinceUpdate = seconds;

@@ -26,7 +26,7 @@ TEAM = dict(riders=['B.PIGOIS', 'R.OPPLIGER', 'M.SONNERAT', 'E.VIDALENC'], coach
 NAVY, RED, WHITE = (22, 27, 58), (225, 30, 60), (250, 250, 250)
 GOLD = (246, 190, 0)
 ARCH_X = 22.0          # pillar centre, ft from the lane centre: past the 4 ft side walls of the finish jumps (flat ground on SX1-3)
-GRATE = dict(parts=[(1.5, 3.2), (2.7, 3.8), (1.5, 2.4)], gap=0.4, t=0.06)   # cross shape (width, length) ft, from the gate backwards
+GRATE = dict(parts=[(1.5, 3.2), (2.7, 3.8), (1.5, 2.4)], gap=2.5, t=0.06)   # cross shape (width, length) ft, from the gate backwards; v13b: gap 0.4 -> 2.5 = fallen gate (2.375 ft) + 0.125, the gate lands against the grate, not on it
 
 # ------------------------------------------------------------------ mesh builder
 class Mesh:
@@ -830,6 +830,7 @@ def sign_pair(m, name, xc, yb, width, gap, thick, black, metal, step=1.6):
 ARCH_CLEAR = 30.0      # beam bottom above the statue base
 AP = 2.1               # pillar half size (4.2 ft square)
 BEAM = (30.0, 37.5)    # beam y range
+TORCH = 2.85          # v13b: flame torch on the beam above each pillar (base 0.3 + stick + cup), flames start at its top
 BLK, SEAM, GREY = (14, 15, 17), (44, 46, 50), (150, 154, 160)
 
 def _rot(im, draw, box, angle=90):
@@ -939,6 +940,11 @@ def arch_model(pal):
     m.rbox(-X - AP - 0.6, X + AP + 0.6, BEAM[0], BEAM[1], -2.4, 2.4, 0.5, 0,
            {'-z': P['beam'], '+z': P['beam'], '*': P['black']}, P['black'])
     sign_pair(m, 'arch_sign', 0.0, BEAM[1] - 0.05, 22.0, 1.6, 0.3, P['black'], P['metal'])   # two cut plates (front / back) tied by rods, on the beam
+    for s in (-1, 1):                                                         # v13b: flame torches on the beam, above each pillar
+        cx, y = s * X, BEAM[1]                                                # (the finish flames of pyro_chalk.py come out of them)
+        m.rbox(cx - 0.45, cx + 0.45, y, y + 0.3, -0.45, 0.45, 0.15, 1, {'*': P['black']}, P['black'])                 # base plate
+        m.rbox(cx - 0.22, cx + 0.22, y + 0.3, y + TORCH - 0.35, -0.22, 0.22, 0.2, 1, {'*': P['metal']}, P['metal'])   # stick
+        m.rbox(cx - 0.36, cx + 0.36, y + TORCH - 0.35, y + TORCH, -0.36, 0.36, 0.3, 1, {'*': P['black']}, P['black'])  # nozzle cup
     for i, v in enumerate(m.V): m.V[i] = (v[0] + ARCH_X,) + tuple(v[1:])            # v12b: origin = foot of the -x pillar (flat ground)
     return m
 

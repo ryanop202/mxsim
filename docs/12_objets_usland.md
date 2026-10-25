@@ -169,3 +169,12 @@ Ces règles viennent des retours sur la v12. Les relire **avant** de dessiner un
 - Camion-citerne JGSX (`watertruck`) **gardé** (demandé) ; l'icône U est un petit modèle à nous (`watertruck_u`,
   `scripts/sticker_usland.py`) moulé sur le haut des deux flancs de la citerne, posé avec la même position / le même angle.
 - Matrix, bulldozer, bobcat retirés ; citerne (`watertank`) → pick-up USLAND + vélo.
+
+## v13b — grates reculées, torches sur l'arche
+
+- **Grates** : en jeu la grille tombe vers les pilotes (sur la grate). La grate commence maintenant **2,5 ft** derrière la
+  charnière (avant : 0,4 ft) = longueur de la grille couchée (2,375 ft) + 0,125 ft : la grille tombée arrive contre la grate,
+  pas dessus. Sol plat sous les 66 grates (écart 0,000 ft).
+- **Torches** : un petit bâton de flamme (socle noir, tige alu, coupelle noire, 2,85 ft) sur la poutre au-dessus de chaque
+  poteau de l'arche FINISH, dans le modèle de l'arche (un objet posé seul serait remis au sol par le jeu). Les flammes de
+  `pyro_chalk.py` partent du haut des torches, **seulement quand le vainqueur passe l'arrivée**.

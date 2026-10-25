@@ -1,21 +1,20 @@
 /*
 USLAND 2026 SX - flammes de l'arrivée (repris du frills.js de MX Simulator SX 2026 Anaheim 1, positions adaptées).
 billboards 0-1 : flammes sur les 2 poteaux de l'arche FINISH, cachées au repos.
-Elles jouent une fois à la chute de la grille, puis une fois quand le vainqueur passe la ligne d'arrivée.
+Elles jouent une seule fois : quand le vainqueur passe la ligne d'arrivée à la fin de la course.
 */
 function _chain(prev, s) { if (typeof prev === "function") prev(s); }
 
 var finishFlameSound = mx.add_sound("@USLAND2026SX1/js/sounds/finishlineflame.raw");
 mx.set_sound_freq(finishFlameSound, 44100);
 mx.set_sound_vol(finishFlameSound, 1.0);
-mx.set_sound_pos(finishFlameSound, 674.1, 37.5, 890.0);
+mx.set_sound_pos(finishFlameSound, 674.1, 40.3, 890.0);
 
 var finishFlames = mx.read_texture('@USLAND2026SX1/js/pyro/finishflames.seq');
 var finishFlames2 = mx.read_texture('@USLAND2026SX1/js/pyro/finishflames2.seq');
 var totalFrames = 41;
 var currentFrame = totalFrames + 1;       // > totalFrames = not playing
 var secondsSinceUpdate = 0;
-var dropFired = false;
 
 mx.color_billboard(0, 1, 1, 1, 0);
 mx.color_billboard(1, 1, 1, 1, 0);
@@ -45,8 +44,6 @@ function updateWinner() {
 }
 
 function finishPyro(seconds) {
-    var drop = mx.get_gate_drop_time();
-    if (!dropFired && drop >= 0 && mx.seconds >= drop) { dropFired = true; fireFinishFlames(); }
     updateWinner();
     if (currentFrame <= totalFrames && seconds - secondsSinceUpdate >= 1 / 32.0) {
         secondsSinceUpdate = seconds;
