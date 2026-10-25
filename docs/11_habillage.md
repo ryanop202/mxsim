@@ -68,3 +68,15 @@ Convention d'angle (statues et decals) : l'axe z local du modèle / l'axe vertic
 - Tuffs : au bord du couloir (`TUFF_EDGE` = 16,5 ft), y = milieu du sol local, contrôle « ni enterré ni en l'air de plus de 0,5 ft ».
 - Minimap : le jeu étire `map.png` sur tout le terrain (vu en jeu) → l'image couvre tout le terrain. Elle ne peut pas être plus
   « zoomée » sans réduire le terrain de chaque piste.
+
+## v13b — flammes d'arrivée + craie (`scripts/pyro_chalk.py`, fichiers bruts dans `assets/sx2026`)
+
+- **Flammes** : 2 billboards (`finishflames`, `finishflames2` d'Anaheim 1) posés sur le haut des 2 poteaux de l'arche FINISH
+  (base à 37,5 ft, taille 45). `frills.js` les cache au repos et les joue une fois à la chute de la grille, puis une fois
+  quand le vainqueur passe la ligne (même logique de dernier tour que le commissaire d'Anaheim). Son `finishlineflame`.
+  Pas de jets de feu au départ ni de boule de feu (v13 annulée). Hauteur à vérifier en jeu (y = base ou centre du billboard).
+- **Craie** (un decal par piste, `decal/chalk_SXn.png`, blanc 242, 1,6 ft) : deux traits le long des bords du couloir de
+  départ (grilles → jonction avec le tour ; le trait intérieur s'arrête où un virage serré le ferait revenir en arrière) et
+  la **ligne de holeshot** en travers de la crête de la 1re bosse après le départ (SX1 : 136 ft après la jonction,
+  SX2 : 16 ft, SX3 : 64 ft), sur toute la largeur de la bosse.
+- Non testé en jeu.

@@ -1348,9 +1348,8 @@ def tent_texture():
             if nm == 'USLAND': paste_logo(im, box, WHITE)
             else: logo(im, nm, box, on='dark')
         img.paste(panel((2 * H_, V_), 1008, val, ao=0).resize((1008, 96), Image.LANCZOS), (8, 8 + k * 104))
-    def roof(im):                                                           # roof panel (triangle drawn in a square)
+    def roof(im):                                                           # roof panel: plain navy (as seen and approved, v12b)
         d = ImageDraw.Draw(im); W, H = im.size; d.rectangle([0, 0, W, H], fill=ROOF)
-        logo(im, 'ICON', (W * 0.38, H * 0.50, W * 0.62, H * 0.80))
     img.paste(panel((10, 10), 400, roof, ao=0).resize((400, 400), Image.LANCZOS), (8, 330))
     def plain(im):
         d = ImageDraw.Draw(im); W, H = im.size; d.rectangle([0, 0, W, H], fill=ROOF)

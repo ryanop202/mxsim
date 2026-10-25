@@ -161,3 +161,11 @@ Ces règles viennent des retours sur la v12. Les relire **avant** de dessiner un
 **Méthode**
 - Toujours un **aperçu 3D** avant de mettre en jeu, vérifié soi-même dans le navigateur (onglet par onglet) avant de l'envoyer.
 - Poser des questions avant un gros changement ; demander les images de référence (une vue « fil de fer » aide beaucoup).
+
+## v12b — tente et camion-citerne
+
+- Tente JGSX (`ezup`) → `tent_usland` (10 x 10 ft, toit bleu marine uni, bandeau : USLAND devant / derrière, RBT et FOX sur
+  les côtés). Toit et bandeau du même bleu (le dessous du toit est décalé de 0,06 ft pour éviter le scintillement).
+- Camion-citerne JGSX (`watertruck`) **gardé** (demandé) ; l'icône U est un petit modèle à nous (`watertruck_u`,
+  `scripts/sticker_usland.py`) moulé sur le haut des deux flancs de la citerne, posé avec la même position / le même angle.
+- Matrix, bulldozer, bobcat retirés ; citerne (`watertank`) → pick-up USLAND + vélo.
