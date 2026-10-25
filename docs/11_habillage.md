@@ -68,3 +68,17 @@ Convention d'angle (statues et decals) : l'axe z local du modèle / l'axe vertic
 - Tuffs : au bord du couloir (`TUFF_EDGE` = 16,5 ft), y = milieu du sol local, contrôle « ni enterré ni en l'air de plus de 0,5 ft ».
 - Minimap : le jeu étire `map.png` sur tout le terrain (vu en jeu) → l'image couvre tout le terrain. Elle ne peut pas être plus
   « zoomée » sans réduire le terrain de chaque piste.
+
+## v13 — flammes et craie (repris de MX Simulator SX 2026 Anaheim 1)
+
+Sources données par l'utilisateur : `sx2026.medium.saf` (ressources communes) et `sx2026r01anaheim1_medium.saf` (piste).
+Format `.saf` : en-tête `taille chemin` par ligne, ligne `-`, puis les fichiers bout à bout. Extraits dans `refs/sx2026/` (non versionné).
+
+- **Flammes** (`scripts/pyro_chalk.py`, `frills.js` de chaque dossier) : partie « Start Pyro » du `frills.js` d'Anaheim, positions adaptées.
+  - billboards 3-8 : jets de feu sur le portique de départ (taille 10, y 9,75 = haut de la structure), en boucle **jusqu'à la chute de la grille** ;
+  - à la chute : boule de feu (taille 100, 60 ft derrière la grille) + **flammes sur les 2 piliers de l'arche d'arrivée** (taille 45,
+    11,8 ft au-dessus de l'arche, comme Anaheim), une fois, avec les sons (`js/sounds`).
+  - Comme à Anaheim, les flammes de l'arrivée partent **au départ** (pas au passage du vainqueur).
+- **Craie** : à Anaheim, un seul decal `chalk.png` trace les bords du couloir de départ (lignes blanches ~1,6 ft). Chez nous :
+  `decal/chalk_SX1..3.png`, bords du couloir de départ de la grille à la jonction, posé en dernier dans `decals`.
+- Non testé en jeu (sens / hauteur des billboards, chargement de `frills.js`).

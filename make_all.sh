@@ -65,6 +65,7 @@ build() {
   run dress_sx.py               # habillage : grilles, grillages, tuff blocks, routes, paddock, decor, decals, drapeaux (needs refs)
   run props_usland.py           # v12 : objets USLAND faits maison -> assets/props (specs contrôlées)
   run place_props.py            # v12 : les pose à la place des objets JGSX (hospitality, pick-ups + vélos, grilles, grates, portique, arche)
+  run pyro_chalk.py            # v13 : flammes (départ / arrivée) + craie du départ, repris de SX 2026 Anaheim 1
   run minimap.py                # map.png de chaque dossier (vue de dessus sans lignes)
   run validate_sx.py            # build/validation.json (39 checks)
   run laptime.py                # build/laptime.json (estimate, not measured in game)

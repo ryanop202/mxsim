@@ -163,6 +163,13 @@ for fname in ('statues', 'decals', 'timing_gates'):
     for d_ in paths:
         for tok in open(f'{DIST}/{d_}/{fname}').read().split():
             if tok.startswith('@USLAND2026'): refs2.add(tok[1:])
+for d_ in paths:                                                     # v13: pyro billboards, frills.js, .seq frames
+    for fname in ('billboards', 'frills.js'):
+        if os.path.exists(f'{DIST}/{d_}/{fname}'):
+            for tok in re.findall(r'@USLAND2026[^\s"\'()]+', open(f'{DIST}/{d_}/{fname}').read()): refs2.add(tok[1:])
+for r_ in list(refs2):
+    if r_.endswith('.seq') and os.path.exists(f'{DIST}/{r_}'):
+        for tok in re.findall(r'@USLAND2026\S+', open(f'{DIST}/{r_}').read()): refs2.add(tok[1:])
 miss = [r_ for r_ in refs2 if not os.path.exists(f'{DIST}/{r_}')]
 nd = sum(1 for _ in open(f'{SX1D}/decals'))
 gl = [l for l in open(f'{SX1D}/timing_gates') if l.startswith('[') and 'start_gate.jm' in l]          # v12: USLAND gates

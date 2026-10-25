@@ -67,6 +67,11 @@ Tu reprends un projet commencé dans une autre conversation. Lis dans cet ordre 
   des tours, objets) ; `./make_all.sh build` complet à relancer sur le PC qui a les archives.
 - Pistes d'amélioration notées dans `docs/10_suite_et_idees.md`.
 
+## v13 (flammes + craie)
+
+- `scripts/pyro_chalk.py` (après `place_props.py`) : flammes du départ / de l'arrivée et craie du départ, repris de la piste
+  officielle SX 2026 Anaheim 1 (doc 11 § v13). Sources dans `refs/sx2026/` (non versionné, extrait des `.saf`).
+
 ## Pièges connus
 
 - Axes : x = colonne, z = ligne de la heightmap ; z vers le **bas** sur les images. Cap 0° = +x (est), −90° = −z (« nord », haut de l'image).
