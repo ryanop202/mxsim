@@ -15,6 +15,20 @@ G = Grid(11, 0.28975); N = G.N; S = G.s
 TW = LIB['sx_lateral']['top_width']
 T_MAIN, T_JUMP, T_WHOOP, T_BERM = range(4)
 
+def render_split_blend(grid, out, seg, split, u0, top_width, band=10.0):
+    """v10: double line rendered as ONE block whose height goes smoothly from the left half to the right half over a band
+    in the middle (engine.render_split leaves a step when the halves differ: "la premiere bosse pas tres smooth")."""
+    from engine import sx_wall
+    st, pl, pr = split; prof = np.maximum(pl, pr); L = len(prof) * 0.1; c, s_ = np.cos(seg['t']), np.sin(seg['t'])
+    half = top_width / 2 + 8.0; u0 = u0 + st
+    pts = np.array([(seg['x0'] + uu * c - vv * s_, seg['z0'] + uu * s_ + vv * c) for uu in (u0, u0 + L) for vv in (-half, half)])
+    sl, X, Z = grid.window(pts[:, 0].min(), pts[:, 0].max(), pts[:, 1].min(), pts[:, 1].max())
+    dx, dz = X - seg['x0'], Z - seg['z0']; u = dx * c + dz * s_ - u0; v = -dx * s_ + dz * c
+    a = np.interp(u / 0.1, np.arange(len(pl)), pl, left=0, right=0); b = np.interp(u / 0.1, np.arange(len(pr)), pr, left=0, right=0)
+    w = np.clip(v / band + 0.5, 0, 1); w = w * w * (3 - 2 * w)                       # v > 0 = right of the riding direction
+    h = (a * (1 - w) + b * w) * sx_wall(np.abs(v) - top_width / 2)
+    out[sl] = np.maximum(out[sl], h)
+
 def build():
     jumps = np.zeros((N, N)); whoops = np.zeros((N, N)); berms = np.zeros((N, N))
     p = LT.stt(); secs, turns = [], []
@@ -22,7 +36,7 @@ def build():
         if g['kind'] == 'S':
             for prof, u0, name in g['sections']:
                 render_lane_block(G, whoops if 'whoops' in name else jumps, g, prof, u0, TW)
-                for sp in LS.SPLITS.get(name, []): render_split(G, jumps, g, sp, u0, TW)
+                for sp in LS.SPLITS.get(name, []): render_split_blend(G, jumps, g, sp, u0, TW)
                 secs.append(dict(lane=g['tag'], name=name, s0=g['s0'] + u0, length=len(prof) * 0.1, hmax=float(prof.max()),
                                  items=LS.COMBOS[name]['items']))
         elif g['kind'] == 'T':

@@ -70,6 +70,10 @@ def lane(tokens):
             u, p = unit(t[1]); p = p * (t[2] / p.max()); i = np.nonzero(p >= 0.85 * t[2])[0]; i0, i1 = i[0], i[-1]
             w = np.sin(np.linspace(0, np.pi, i1 - i0 + 1)) ** 2; seg = p[i0:i1 + 1]
             p[i0:i1 + 1] = seg - (seg - t[2] * t[3]) * w
+            if len(t) > 4:                        # v13d: longer dip, crest to crest = t[4] ft (Saint-Thibery: "un long creux")
+                m = i0 + int(np.argmin(p[i0:i1 + 1])); c1 = int(np.argmax(p[:m])); c2 = m + int(np.argmax(p[m:]))
+                n = int(round(t[4] / 0.1)); tt = np.linspace(0, 1, n); lin = p[c1] + (p[c2] - p[c1]) * tt
+                p = np.r_[p[:c1], lin - (lin - t[2] * t[3]) * np.sin(np.pi * tt) ** 2, p[c2 + 1:]]
             kind = u['kind']; name = f'{t[1]} (dip H {t[2]:.1f}, bottom {t[2] * t[3]:.1f})'; uid = ALIAS.get(t[1], t[1])
         elif isinstance(t, tuple) and t[0] == 'trapeze':
             # v13b ('trapeze', H, up, top, down): one clean mound - rounded climb, short flat top, long gentle descent (Saint-Thibery

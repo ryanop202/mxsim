@@ -2,16 +2,17 @@
 START = west end. Every bump is a measured JGSX unit (lib/) unless marked 'scaled' (height scaled, same shape/length),
 'landing' (scaled, back side replaced by a gentle slope) or 'trapeze' (synthetic mound) - asked by the user in game tests.
 
-Lap (v9, after the 5th in-game test):
+Lap (v10, after the 6th in-game test; v10 fixes the curbs left by the v9 rounding):
   L7  along the stands, eastbound : small double right at the turn exit (landing turned around: steep side to the turn),
       11 whoops, triple close to the turn (approved)
   high berm turn (90, big radius) -> east lane northbound : bigger SX triple (Cleveland g29 x1.15) (approved)
-  tight turn -> L1 north, westbound : triple, triple, bump, table, bump, 2 bumps, foot of the bumps rounded
+  tight turn -> L1 north, westbound : triple, triple, bump, table, bump, 2 bumps, foot of the bumps rounded (approved)
   left turn -> west column southbound : finish double, round normal landing (Glendale g83 at 10 ft), curve right after
-  one 90 curve (r 16) -> L4 eastbound : roller, bump, roller, freestyle jump (approved)
-  bowl (left 180, half berm) -> L3 westbound : low roller, 2 bumps, raised dip (table dug between table and double), 2 bumps
+  one 90 curve (r 16) -> L4 eastbound : wheel tap (the user's word: roller, medium bump, roller), freestyle jump (approved)
+  bowl (left 180, half berm) -> L3 westbound : low roller (approved), bumps 2 and 3 fused into one long raised dip (crest to
+      crest 40 ft, bottom 2.75 ft), then 3 bumps, foot of the bumps rounded
   U (right 180) -> L2 eastbound : long triple right at the turn exit (inside half of the 1st bump 4.2 ft), triple, double,
-      same gaps, foot of the bumps rounded
+      same gaps, foot of the bumps rounded; the two halves of the 1st bump blend over 10 ft (no step)
   -> middle lane southbound : bump, table, bump (approved)
   -> L6 westbound : jumpable roller right at the turn exit, flat straight (approved)
   U (left 180, half berm) -> L7
@@ -72,12 +73,24 @@ def even(units, lane, u0, end):
         if j < len(units) - 1: toks.append(('gap', round(g, 1)))
     return toks
 
-def rounded(s, R=30.0):
-    """v9: round the foot of the bumps (the user: "plat, bosse, plat, bosse" -> transitions). Grey closing with a ball of
-    radius R ft: only fills the concave corners at the foot of the faces, crests and faces above are unchanged."""
+def _close(P, R):
+    """grey closing with a ball of radius R ft, on a zero-padded copy; nothing is raised before the foot of the first bump
+    or after the foot of the last one (v10: v9 cut the padding and left a curb at the start/end of the section)."""
     from scipy.ndimage import grey_closing
-    P, u0, name = s; n = int(R / 0.1); y = np.arange(-n, n + 1) * 0.1
-    return (grey_closing(P, structure=np.sqrt(R * R - y * y) - R), u0, name)
+    n = int(R / 0.1); y = np.arange(-n, n + 1) * 0.1; pad = np.zeros(n + 2)
+    C = grey_closing(np.r_[pad, P, pad], structure=np.sqrt(R * R - y * y) - R)[len(pad):len(pad) + len(P)]
+    from scipy.signal import find_peaks
+    pk, _ = find_peaks(np.r_[0, P, 0], prominence=0.3); pk = pk - 1      # only between the first and the last crest
+    if len(pk): C[:pk[0]] = P[:pk[0]]; C[pk[-1]:] = P[pk[-1]:]
+    else: C = P.copy()
+    return np.maximum(C, P)
+
+def rounded(s, R=30.0):
+    """v9: round the foot of the bumps (the user: "plat, bosse, plat, bosse" -> transitions). Only fills the concave
+    corners at the foot of the faces; crests and faces above are unchanged. Split halves (double lines) too (v10)."""
+    P, u0, name = s
+    if name in LS.SPLITS: LS.SPLITS[name] = [(st, _close(pl, R), _close(pr, R)) for st, pl, pr in LS.SPLITS[name]]
+    return (_close(P, R), u0, name)
 
 def stt():
     ox, oz = STT_ORIGIN
@@ -88,8 +101,8 @@ def stt():
     l4 = [ROLLER, SA[1], 'Glendale_g63_3'] + fmx
     p.straight(XBOWL - x_l4, [sec('STT-L4 roller, bosse, roller, saut freestyle', l4, 14.0)], tag='L4 roller, bump, roller, freestyle jump')
     p.turn(+180, RB, BIG, tag='bowl (L4 -> L3)')
-    l3 = [('scale', SA[0], 2.0), SA[1], SA[2], ('dip', TABLE_B, 5.5, 0.5), SA[1], SA[0]]   # v9: 1st bump a low roller, table -> raised dip
-    p.straight(XBOWL - XU, [sec('STT-L3 3 bosses, table, 2 bosses', even(l3, XBOWL - XU, 4.0, 16.0), 4.0)], tag='L3 3 bumps, table, 2 bumps')
+    l3 = [('scale', SA[0], 2.0), ('dip', TABLE_B, 5.5, 0.5, 40.0), SA[2], SA[1], SA[0]]   # v10: roller, bumps 2+3 fused (long raised dip), 3 bumps
+    p.straight(XBOWL - XU, [rounded(sec('STT-L3 roller, long creux, 3 bosses', even(l3, XBOWL - XU, 4.0, 16.0), 4.0))], tag='L3 roller, long raised dip, 3 bumps')
     p.turn(-180, RB, BIG2, tag='U L3 -> L2 (rays)')
     L2 = (XMID - RS) - XU
     first = ('split', ('scale', SA[1], 4.8), ('scale', SA[1], 4.2))         # v9: inside (right) half closer to a normal bump
