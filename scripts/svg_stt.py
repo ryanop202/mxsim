@@ -6,18 +6,19 @@ import numpy as np
 import layouts_sx as LS, layouts_stt as LT
 from starts import StartRoute
 
-ox, oz = LT.STT_ORIGIN; p = LT.stt(); smp = p.samples(6.0)
-X0, Z0, K = ox - 130, oz - 62, 1.06                    # ft -> px
+ox, oz = LT.STT_ORIGIN; p = LT.stt(); smp = p.samples(12.0)
+AX0, AX1, AZ0, AZ1 = LT.ARENA
+X0, Z0 = ox + AX0 - 12, oz + AZ0 - 12; K = 680.0 / (AX1 - AX0 + 24)                    # ft -> px
 P = lambda x, z: ((x - X0) * K, (z - Z0) * K)
 f = lambda v: f'{v:.0f}'
 out = []
-ZF_ = LT.ZF; FEN = ZF_ + 47.0                          # south fence
+FEN = AZ1
 W, Hh = 680, int((oz + FEN + 38 - Z0) * K)
 out.append(f'<svg width="100%" viewBox="0 0 {W} {Hh}" role="img"><title>Saint-Thibéry track map</title><desc>Proposed Saint-Thibéry SX layout: six east-west rows, an east lane, start at the west end, finish on the big centre table.</desc>')
 out.append(f'<rect x="0" y="0" width="{W}" height="{Hh}" fill="#3f6b32" rx="8"/>')
-a0, b0 = P(ox - 120, oz - 50); a1, b1 = P(ox + 475, oz + FEN)
+a0, b0 = P(ox + AX0, oz + AZ0); a1, b1 = P(ox + AX1, oz + FEN)
 out.append(f'<rect x="{f(a0)}" y="{f(b0)}" width="{f(a1 - a0)}" height="{f(b1 - b0)}" fill="#8a6342" stroke="#f2f2f2" stroke-width="2"/>')
-ta, tb = P(ox + 60, oz + FEN + 6); tc, td = P(ox + 470, oz + FEN + 20)
+ta, tb = P(ox + 60, oz + FEN + 6); tc, td = P(ox + AX1 - 10, oz + FEN + 20)
 out.append(f'<rect x="{f(ta)}" y="{f(tb)}" width="{f(tc - ta)}" height="{f(td - tb)}" fill="#8c8c90" rx="3"/>')
 out.append(f'<text class="ts" x="{f((ta + tc) / 2)}" y="{f((tb + td) / 2 + 4)}" text-anchor="middle" style="fill:#ffffff">Tribunes</text>')
 # berms (outer arc of each bermed turn)
@@ -56,7 +57,7 @@ for k in range(10, len(pts), 24):
 R = StartRoute(LS.STARTS['STT'], LS.N_GATES, LS.GATE_PITCH); s = R.samples(8.0); nx, nz = -np.sin(s['th']), np.cos(s['th'])
 for sg in (-1, 1):
     out.append('<polyline fill="none" stroke="#ffffff" stroke-width="1.5" points="' + ' '.join(f'{f(P(x + sg * a * w / 2, z + sg * b * w / 2)[0])},{f(P(x + sg * a * w / 2, z + sg * b * w / 2)[1])}' for x, z, a, b, w in zip(s['x'], s['z'], nx, nz, s['w'])) + '"/>')
-gx, gz = LS.STARTS['STT']['gate']; ga, gb = P(gx, gz - 44); gc, gd = P(gx, gz + 44)
+gx, gz = LS.STARTS['STT']['gate']; ga, gb = P(gx, gz - 42); gc, gd = P(gx, gz + 42)
 out.append(f'<line x1="{f(ga)}" y1="{f(gb)}" x2="{f(gc)}" y2="{f(gd)}" stroke="#e0242c" stroke-width="4"/>')
 sx, sy = P(gx, gz - 50); out.append(f'<text class="ts" x="{f(sx)}" y="{f(sy)}" text-anchor="middle" style="fill:#ffffff">Start</text>')
 # finish on the D table crest
@@ -67,8 +68,8 @@ fa, fb = P(c[0], c[1] - 17); fc, fd = P(c[0], c[1] + 17)
 out.append(f'<line x1="{f(fa)}" y1="{f(fb)}" x2="{f(fc)}" y2="{f(fd)}" stroke="#ffffff" stroke-width="5" stroke-dasharray="4 4"/>')
 out.append(f'<line x1="{f(fa)}" y1="{f(fb + 4)}" x2="{f(fc)}" y2="{f(fd)}" stroke="#111111" stroke-width="5" stroke-dasharray="4 4"/>')
 fx, fy = P(c[0], c[1] - 22); out.append(f'<text class="ts" x="{f(fx)}" y="{f(fy)}" text-anchor="middle" style="fill:#ffffff">Arrivée</text>')
-# row letters (west margin of each row)
-for t, z, x in zip('ABCDEF', (LT.ZA, LT.ZB, LT.ZC, LT.ZD, LT.ZE, LT.ZF), (-8, -8, LT.XM - 8, LT.XM - 8, 130, -8)):
-    lx, ly = P(ox + x + 40, oz + z - 22); out.append(f'<text class="th" x="{f(lx)}" y="{f(ly)}" style="fill:#ffffff">{t}</text>')
+# row labels
+for k, (t, x) in LT.ROWS.items():
+    lx, ly = P(ox + x, oz + LT.Z[k] - 20); out.append(f'<text class="th" x="{f(lx)}" y="{f(ly)}" style="fill:#ffffff">{t}</text>')
 out.append('</svg>')
 print('\n'.join(out))
