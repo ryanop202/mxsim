@@ -6,7 +6,7 @@
     "lane": "finish straight: triple + on-off Detroit (v5)",
     "name": "SX1-F petite bosse, gros single, single + on-off (ligne d arrivee)",
     "s0": 18.0,
-    "length": 198.0,
+    "length": 197.8,
     "hmax": 5.794
    },
    {
@@ -126,7 +126,10 @@
     220.0,
     368.0
    ],
-   "finish": null,
+   "finish": [
+    "SX1-D step-up, triple on table (longer), off",
+    0
+   ],
    "merge": [
     462.0,
     290.0
@@ -471,8 +474,8 @@
   }
  },
  "tiles": {
-  "SX Main": 3364662,
-  "Jumps Sx": 492977,
+  "SX Main": 3364694,
+  "Jumps Sx": 492945,
   "WhoopsV2": 102713,
   "Berm Exit Sx": 119708,
   "Sand Straight": 0,
@@ -482,30 +485,30 @@
  },
  "combos": {
   "SX1-F petite bosse, gros single, single + on-off (ligne d arrivee)": {
-   "length": 198.0,
+   "length": 197.8,
    "items": [
     [
-     "split Glendale_g40_2 | Arlington_g37_0",
+     "split Glendale_g66_1 | Arlington_g37_0",
      0.0,
-     27.700000000000003,
+     27.5,
      3.36
     ],
     [
      "Arlington_g1_2",
-     33.0,
-     80.7,
+     32.8,
+     80.5,
      5.794
     ],
     [
      "Arlington_g37_1",
-     83.5,
-     111.4,
+     83.3,
+     111.2,
      3.662
     ],
     [
      "Detroit_g35_2",
-     123.4,
-     197.9,
+     123.2,
+     197.7,
      5.793
     ]
    ]

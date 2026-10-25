@@ -56,7 +56,7 @@ def sx1():
     ox, oz = SX1_ORIGIN
     xe, xw, z0 = 520.0, 150.0, 395.0
     p = Path(ox + 77, oz + z0, 0.0, 'SX1')
-    p.straight(xe - 77, [sec('SX1-F petite bosse, gros single, single + on-off (ligne d arrivee)', [('split', 'Glendale_g40_2', SA[0]), 'Arlington_g1_2', SA[1], ('gap', 12.0), 'Detroit_g35_2'], 18.0)], tag='finish straight: triple + on-off Detroit (v5)')
+    p.straight(xe - 77, [sec('SX1-F petite bosse, gros single, single + on-off (ligne d arrivee)', [('split', 'Glendale_g66_1', SA[0]), 'Arlington_g1_2', SA[1], ('gap', 12.0), 'Detroit_g35_2'], 18.0)], tag='finish straight: triple + on-off Detroit (v5)')
     p.turn(+180, RB, BIG, tag='T1 first turn')
     p.straight(xe - xw, [sec('SX1-A S-GROS-S ecarte, 3 S, GROS, S, GROS', [SA[0], ('gap', 8.5), 'Arlington_g37_2', ('gap', 5.0), SA[1], SA[2], SC[0], SC[1], 'Custom1_g29_3', SC[3], 'Arlington_g37_2'], 6.0)], tag='A 2e, 7e et derniere bosses grosses, entree ecartee (v7)')
     p.turn(-180, RB, BIG2, tag='T2')
