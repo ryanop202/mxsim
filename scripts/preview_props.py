@@ -46,7 +46,7 @@ def main(models, out):
         A = PP.arch_pose(key, T)
         report[key] = {k: (round(v, 2) if isinstance(v, float) else v) for k, v in A.items() if k not in ('pillars',)}
         scenes['arch_' + key] = dict(terrain=terrain_patch(T, A['cx'], A['cz'], 80),
-                                     objs=[dict(m=PP.ARCH_MODEL[key], t=PP.ARCH_MODEL[key], x=A['x'], y=A['y'], z=A['z'], a=A['a'])],
+                                     objs=[dict(m=f'finish_arch_{key}', t='finish_arch', x=A['cx'], y=float(PP.h_at(T, A['cx'], A['cz'])), z=A['cz'], a=A['a'])],   # v13b: centred, game-like (ground under the origin)
                                      cam=[A['cx'], A['crest'] + 6, A['cz']], back=A['f'], info=dict(A, x=A['cx'], z=A['cz']))
     G = PP.start_gates('SX1')
     objs = [dict(m='start_grate', t='start_grate', x=x, y=y, z=z, a=a) for x, y, z, a in PP.grate_poses('SX1', T)]

@@ -186,3 +186,12 @@ Ces règles viennent des retours sur la v12. Les relire **avant** de dessiner un
   vers la remorque : 12 bannières par stand. Contrôlé : à ≥ 92 ft des lignes de course, rien à moins de 9 ft, sol plat.
 - **Angles** : tous nos objets sont écrits avec un angle entre −π et π (les vélos à a + π = 4,7 / 6,27 étaient de travers
   dans certains pick-ups en jeu).
+
+## v13b — arche ancrée au milieu (vu en jeu : arche SX2 décalée d'un demi-portique)
+
+- En jeu, l'arche SX2 (origine au pied d'un poteau) apparaissait décalée sur le côté, un poteau sur le saut, alors que
+  l'aperçu 3D était juste. C'était le seul de nos modèles avec l'origine hors du milieu.
+- Maintenant (`props_place.centred_arch`) : un modèle par piste `finish_arch_SXn.jm` (texture `finish_arch.png`), origine au
+  **milieu du couloir sur la ligne d'arrivée**, modèle symétrique autour, **abaissé de la hauteur du sol à cet endroit** (crête
+  du saut : SX1 8,8 ft, SX2 6,0 ft, SX3 8,8 ft) puisque le jeu pose l'objet sur le sol sous son origine. Pieds des poteaux
+  toujours sur le plat à côté du saut. Même rendu dans l'aperçu (vérifié : x 652–702 sur SX2). À vérifier en jeu.

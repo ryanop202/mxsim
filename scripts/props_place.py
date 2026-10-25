@@ -128,3 +128,22 @@ def stand_banners(c, a):
         for j, nm in enumerate(STAND['returns']):
             q = c + f * u_end + xl * (STAND['front'] - P / 2 - j * P); out.append((float(q[0]), float(q[1]), statue_ang(*(f * side)), nm))
     return out
+
+def centred_arch(key, T, outd=None):
+    """v13b - seen in game (SX2): the arch with its origin at a pillar foot came out shifted sideways by half its width
+    (one pillar on the jump), while the 3D preview was right. Our other models all have their origin in the middle; the arch
+    was the only off-centre one. Robust version: origin back in the middle of the lane on the finish line (model symmetric
+    about it), and the whole model lowered by the height of the ground there (the jump crest), because the game puts a
+    statue on the ground under its origin (the v12 arch with its origin on the crest floated). Pillar feet stay on the flat
+    ground beside the jump. One model per track (the crest height differs): finish_arch_<key>.jm, texture finish_arch.png.
+    Returns the statue pose."""
+    A = arch_pose(key, T); drop = float(h_at(T, A['cx'], A['cz'])) - A['y']
+    outd = outd or PU.OUTD; L = open(f'{outd}/finish_arch.jm').read().split('\n')
+    nv = int(L[2].split()[0]); out = L[:3]
+    for l in L[3:3 + nv]:
+        v = l.split(); x, y = float(v[0]) - PU.ARCH_X, float(v[1]) - drop
+        out.append(' '.join([f'{x:.6f}', f'{y:.6f}'] + v[2:]))
+    out += L[3 + nv:]
+    name = f'finish_arch_{key}'
+    open(f'{outd}/{name}.jm', 'w', newline='\n').write('\n'.join(out))
+    return dict(x=A['cx'], y=0.0, z=A['cz'], a=A['a'], model=name, drop=drop)

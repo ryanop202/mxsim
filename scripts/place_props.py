@@ -20,7 +20,7 @@ import props_place as PP
 import props_usland as PU
 
 OUT = ROOT + '/tracks'; P = '@' + F['SX1']; A = f'{OUT}/{F["SX1"]}'
-OURS = ('hospitality_usland', 'pickup_usland', 'bike_trainer', 'banner', 'finish_arch', 'start_gantry', 'start_grate', 'tent_usland', 'watertruck_u')
+OURS = ('finish_arch_SX1', 'finish_arch_SX2', 'finish_arch_SX3', 'hospitality_usland', 'pickup_usland', 'bike_trainer', 'banner', 'finish_arch', 'start_gantry', 'start_grate', 'tent_usland', 'watertruck_u')
 REPLACED = ('semi_1', 'transit', 'watertank', 'matrixa2', 'dozer', 'bobcat', 'ezup')   # watertruck kept (asked)
 
 def line(x, y, z, a, model, tex):
@@ -82,7 +82,7 @@ def main():
             continue
         keep.append(l)
     for key in ('SX1', 'SX2', 'SX3'):
-        Ap = PP.arch_pose(key, T); new.append(line(Ap['x'], Ap['y'], Ap['z'], Ap['a'], PP.ARCH_MODEL[key], PP.ARCH_MODEL[key]))
+        Ac = PP.centred_arch(key, T); new.append(line(Ac['x'], Ac['y'], Ac['z'], Ac['a'], Ac['model'], 'finish_arch'))   # v13b: origin in the middle
         g = PP.gantry_pose(key, T); new.append(line(g['x'], g['y'], g['z'], g['a'], 'start_gantry', 'start_gantry'))
         for x, y, z, a in PP.grate_poses(key, T): new.append(line(x, y, z, a, 'start_grate', 'start_grate'))
     out = '\n'.join(keep + new) + '\n'

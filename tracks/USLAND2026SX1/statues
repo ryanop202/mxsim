@@ -597,7 +597,7 @@
 [407.372258 0.000000 588.034512] 1.557793 @USLAND2026SX1/statue/banner.jm @USLAND2026SX1/statue/banner_rbt.png null
 [407.211017 0.000000 600.433464] 1.557793 @USLAND2026SX1/statue/banner.jm @USLAND2026SX1/statue/banner_fox.png null
 [487.680500 0.000000 618.707000] -0.000400 @USLAND2026SX1/statue/tent_usland.jm @USLAND2026SX1/statue/tent_usland.png null
-[182.500000 0.003636 140.000000] 1.570796 @USLAND2026SX1/statue/finish_arch.jm @USLAND2026SX1/statue/finish_arch.png null
+[182.500000 0.000000 118.000000] 1.570796 @USLAND2026SX1/statue/finish_arch_SX1.jm @USLAND2026SX1/statue/finish_arch.png null
 [112.000000 -0.000087 360.000000] 1.570797 @USLAND2026SX1/statue/start_gantry.jm @USLAND2026SX1/statue/start_gantry.png null
 [112.000000 -0.000087 318.000000] 1.570797 @USLAND2026SX1/statue/start_grate.jm @USLAND2026SX1/statue/start_grate.png null
 [112.000000 -0.000087 322.000000] 1.570797 @USLAND2026SX1/statue/start_grate.jm @USLAND2026SX1/statue/start_grate.png null
@@ -621,7 +621,7 @@
 [112.000000 -0.000087 394.000000] 1.570797 @USLAND2026SX1/statue/start_grate.jm @USLAND2026SX1/statue/start_grate.png null
 [112.000000 -0.000087 398.000000] 1.570797 @USLAND2026SX1/statue/start_grate.jm @USLAND2026SX1/statue/start_grate.png null
 [112.000000 -0.000087 402.000000] 1.570797 @USLAND2026SX1/statue/start_grate.jm @USLAND2026SX1/statue/start_grate.png null
-[655.000000 -0.000087 250.000000] 0.000000 @USLAND2026SX1/statue/finish_arch.jm @USLAND2026SX1/statue/finish_arch.png null
+[677.000000 0.000000 250.000000] 0.000000 @USLAND2026SX1/statue/finish_arch_SX2.jm @USLAND2026SX1/statue/finish_arch.png null
 [815.000000 -0.000087 425.000000] -3.141593 @USLAND2026SX1/statue/start_gantry.jm @USLAND2026SX1/statue/start_gantry.png null
 [773.000000 -0.000087 425.000000] -3.141593 @USLAND2026SX1/statue/start_grate.jm @USLAND2026SX1/statue/start_grate.png null
 [777.000000 -0.000087 425.000000] -3.141593 @USLAND2026SX1/statue/start_grate.jm @USLAND2026SX1/statue/start_grate.png null
@@ -645,7 +645,7 @@
 [849.000000 -0.000087 425.000000] -3.141593 @USLAND2026SX1/statue/start_grate.jm @USLAND2026SX1/statue/start_grate.png null
 [853.000000 -0.000087 425.000000] -3.141593 @USLAND2026SX1/statue/start_grate.jm @USLAND2026SX1/statue/start_grate.png null
 [857.000000 -0.000087 425.000000] -3.141593 @USLAND2026SX1/statue/start_grate.jm @USLAND2026SX1/statue/start_grate.png null
-[674.063276 -0.000087 912.000000] 1.570796 @USLAND2026SX1/statue/finish_arch.jm @USLAND2026SX1/statue/finish_arch.png null
+[674.063276 0.000000 890.000000] 1.570796 @USLAND2026SX1/statue/finish_arch_SX3.jm @USLAND2026SX1/statue/finish_arch.png null
 [788.000000 -0.000087 965.000000] -1.570797 @USLAND2026SX1/statue/start_gantry.jm @USLAND2026SX1/statue/start_gantry.png null
 [788.000000 -0.000087 1007.000000] -1.570797 @USLAND2026SX1/statue/start_grate.jm @USLAND2026SX1/statue/start_grate.png null
 [788.000000 -0.000087 1003.000000] -1.570797 @USLAND2026SX1/statue/start_grate.jm @USLAND2026SX1/statue/start_grate.png null
