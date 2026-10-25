@@ -184,11 +184,11 @@
     "hmax": 6.24
    },
    {
-    "lane": "W2 small (double ligne)-big-small (depart) + big triple (arrivee) (v11)",
+    "lane": "W2 small (double ligne)-big-small (depart) + triple (arrivee 6,0 ft) (v13b)",
     "name": "SX2-W2 small big small + big triple",
     "s0": 2181.2411259668634,
     "length": 262.90000000000003,
-    "hmax": 7.915
+    "hmax": 7.351
    },
    {
     "lane": "F triple de singles normaux (v5)",
@@ -489,8 +489,8 @@
   }
  },
  "tiles": {
-  "SX Main": 3364694,
-  "Jumps Sx": 492945,
+  "SX Main": 3364852,
+  "Jumps Sx": 492787,
   "WhoopsV2": 102713,
   "Berm Exit Sx": 119708,
   "Sand Straight": 0,
@@ -994,10 +994,10 @@
      3.188
     ],
     [
-     "Custom1_g29_2",
+     "Custom1_g29_2 (H 6.0)",
      120.89999999999999,
      160.2,
-     7.915
+     6.0
     ],
     [
      "Custom1_g29_3",
