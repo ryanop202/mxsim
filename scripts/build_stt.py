@@ -34,7 +34,11 @@ def build():
                 jj, ii = np.meshgrid(np.arange(sl[1].start, sl[1].stop), np.arange(sl[0].start, sl[0].stop))
                 phi = np.arctan2(ii * S - g['cz'], jj * S - g['cx']); rel = np.angle(np.exp(1j * (phi - phi0))) * sgn
                 u = rel / np.radians(abs(g['ang'])); w = np.clip((u - 0.45) / 0.15, 0, 1); w = w * w * (3 - 2 * w)
-                berms[sl] = np.maximum(berms[sl], tmp[sl] * w)
+                gain = getattr(LT, 'BERM90_GAIN', 1.0) if abs(abs(g['ang']) - 90) < 1 else 1.0
+                berms[sl] = np.maximum(berms[sl], tmp[sl] * w * gain)
+            elif g.get('berm') and abs(abs(g['ang']) - 90) < 1 and getattr(LT, 'BERM90_GAIN', 1.0) != 1.0:
+                tmp = np.zeros((N, N)); sl = render_berm_stamp(G, tmp, g['berm'], g['cx'], g['cz'], turn_mid_angle(g), ang_scale=berm_ang_scale(g['berm'], g['ang']))
+                berms[sl] = np.maximum(berms[sl], tmp[sl] * LT.BERM90_GAIN)          # v6: 90 deg berms higher (user)
             elif g.get('berm'): render_berm_stamp(G, berms, g['berm'], g['cx'], g['cz'], turn_mid_angle(g), ang_scale=berm_ang_scale(g['berm'], g['ang']))
             turns.append(dict(tag=g['tag'], angle=g['ang'], r=g['r'], berm=g.get('berm')))
     H = np.maximum.reduce([jumps, whoops, berms])

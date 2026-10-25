@@ -46,7 +46,7 @@ LAST_SPLITS = []   # filled by lane(): [(start_ft, prof_left, prof_right)] for (
 
 
 def lane(tokens):
-    """tokens: list of uid strings, ('gap', ft), ('whoops', key, n), ('split', left_uid, right_uid), ('scale', uid, H).
+    """tokens: list of uid strings, ('gap', ft), ('whoops', key, n), ('split', left_uid, right_uid), ('scale', uid, H), ('landing', uid, H, back_ft).
     A split = double line: two measured units side by side, each on half of the lane width (left / right in the riding
     direction). Its slot in the returned (full-width) profile is left at 0; the halves are rendered separately (LAST_SPLITS).
     Returns (profile, items[(name, start_ft, end_ft, H)])."""
@@ -62,6 +62,11 @@ def lane(tokens):
             # v13b ('scale', uid, H): a measured unit with its height scaled to H ft (same length / shape), e.g. a finish jump
             # judged too high in game; the walls follow (they are extruded from this profile)
             u, p = unit(t[1]); p = p * (t[2] / p.max()); kind = u['kind']; name = f'{t[1]} (H {t[2]:.1f})'; uid = ALIAS.get(t[1], t[1])
+        elif isinstance(t, tuple) and t[0] == 'landing':
+            # v13b ('landing', uid, H, back_ft): measured unit scaled to H, its back side replaced by a gentle cosine slope
+            # back_ft long (Saint-Thibery freestyle landing: "la deuxieme partie de la reception plus douce")
+            u, p = unit(t[1]); p = p * (t[2] / p.max()); k = int(np.nonzero(p >= 0.9 * t[2])[0][-1]); n = int(round(t[3] / 0.1))
+            p = np.r_[p[:k], p[k] * (1 + np.cos(np.linspace(0, np.pi, n))) / 2]; kind = u['kind']; name = f'{t[1]} (landing H {t[2]:.1f})'; uid = ALIAS.get(t[1], t[1])
         elif isinstance(t, tuple) and t[0] == 'split':
             pa, pb = unit(t[1])[1], unit(t[2])[1]; n = max(len(pa), len(pb))
             if len(t) > 3 and t[3] == 'end':      # v11: both bumps END together (keeps the rhythm of the next jump on both lines)
