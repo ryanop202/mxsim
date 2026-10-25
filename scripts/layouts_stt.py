@@ -1,4 +1,4 @@
-"""Saint-Thibéry v4 (corrections drawn on v3) / v3 - from the user's drawing on the drone top view (the track drawn as a ribbon: both lane edges).
+"""Saint-Thibéry v5 (user's corrections after the first in-game test of v4) / v4 (corrections drawn on v3) / v3 - from the user's drawing on the drone top view (the track drawn as a ribbon: both lane edges).
 SX arena, no sand. North = top, stands = south, START = west end. Rows of bumps = lanes (photo px x 0.48 ft):
     L1  north fence         westbound   long rhythm (singles)
     L2                      eastbound   rhythm with two big singles
@@ -17,45 +17,50 @@ Every bump is a measured JGSX unit (lib/), no new shape. Local coords: x east, z
 import numpy as np
 from engine import Path
 import layouts_sx as LS
-from layouts_sx import L, sec, _start, SA, SD, SC, BB, TABLE_A, TABLE_B, TABLE9, RB, RS, BIG, BIG2, SMALL, SMALL2
+from layouts_sx import L, sec, _start, SA, SD, SC, BB, TABLE_A, TABLE_B, TABLE9, BIG_TRIPLE, RB, RS, BIG, BIG2, SMALL, SMALL2
 
-STT_ORIGIN = (160.0, 100.0)
-Z = dict(L1=0.0, L2=43.0, L3=86.0, L4=129.0, L6=206.0, L7=249.0)
-XWL, XBOWL, XU, XMID, XEL, XU67 = -15.0, 295.0, 70.0, 364.0, 411.0, -5.0   # west column, bowl centre, L3/L2 U, middle lane, east lane, L6/L7 U
-ARENA = (-110.0, 440.0, -24.0, 274.0)                                     # fence box (x0, x1, z0, z1), local
+STT_ORIGIN = (160.0, 170.0)
+# v5: L1 moved 70 ft north (room for a real finish double + the curve), east lane 10 ft further east (room after the turn)
+Z = dict(L1=-70.0, L2=43.0, L3=86.0, L4=129.0, L6=206.0, L7=249.0)
+XWL, XBOWL, XU, XMID, XEL, XU67 = -15.0, 295.0, 70.0, 364.0, 421.0, -5.0   # west column, bowl centre, L3/L2 U, middle lane, east lane, L6/L7 U
+ARENA = (-110.0, 450.0, -94.0, 274.0)                                     # fence box (x0, x1, z0, z1), local
 ROWS = dict(L1=('L1', XU + 40), L2=('L2', XU + 40), L3=('L3', XU + 40), L4=('L4', 100.0), L6=('L6', 40.0), L7=('L7', 40.0))
-FINISH_SEC = 'STT-ouest saut d arrivee'
-# v4: berm only on the second half of these turns (user: "un virage 180 mais qu'il n'y ait que la moitie de l'appui")
-HALF_BERM = ('bowl (L4 -> L3)', 'U L6 -> L7', 'L7 -> east lane')
-TINY, SMALL_B, MED = 'Custom_g32_1', 'Glendale_g40_2', 'Detroit_g34_0'      # 1.9 / 2.5 / 4.1 ft
+FINISH_SEC = 'STT-ouest saut d arrivee (double JGSX)'
+HALF_BERM = ('bowl (L4 -> L3)', 'U L6 -> L7', 'L7 -> east lane')         # v4: berm only on the second half of these turns
+ROLLER, ROLLER2, SMALL_B = 'Custom1_g30_1', 'Glendale_g65_2', 'Glendale_g40_2'   # 1.9 / 1.6 / 2.5 ft
 R45 = 30.0                                                                   # the curve west column -> L4: two 45 deg bends
+FIN_TAKEOFF, FIN_LANDING = 'Custom1_g30_2', 'Arlington_g30_2'               # JGSX finish double 8.8 -> 11.2 ft (Cleveland / Test Track g30)
 
 def stt():
     ox, oz = STT_ORIGIN
-    a_col = 54.0                                                             # west column straight (finish jump)
+    fin = [FIN_TAKEOFF, ('gap', 15.0), FIN_LANDING]                          # v5: real finish jump, landing a bit closer (JGSX gap 21.9)
+    a_col = len(L('tmp', fin)) * 0.1 + 10.0                                  # west column straight: the finish double + 10 ft
     d_diag = (Z['L4'] - (Z['L1'] + RS) - a_col - R45 * np.sin(np.radians(45)) - R45 * (1 - np.cos(np.radians(45)))) / np.sin(np.radians(45))
     x_l4 = XWL + R45 * (1 - np.cos(np.radians(45))) + d_diag * np.sin(np.radians(45)) + R45 * np.sin(np.radians(45))
     p = Path(ox + x_l4, oz + Z['L4'], 0.0, 'STT')                         # L4, after the curve, eastbound
-    p.straight(XBOWL - x_l4, [sec('STT-L4 moyenne, petite, gros appel + gros dome', [MED, SMALL_B, ('gap', 12.0), 'Arlington_g37_2', TABLE9], 12.0)], tag='L4 medium, small, big kicker + big dome')
+    # v5: normal bump, roller, then the freestyle jump: finish-jump take-off, landing twice as high as v4 (dome 9 -> 18 ft, scaled)
+    p.straight(XBOWL - x_l4, [sec('STT-L4 bosse, roller, saut freestyle', [SA[1], ROLLER2, ('gap', 12.0), FIN_TAKEOFF, ('gap', 15.0), ('scale', TABLE9, 18.0)], 4.0)], tag='L4 bump, roller, freestyle jump')
     p.turn(+180, RB, BIG, tag='bowl (L4 -> L3)')
-    p.straight(XBOWL - XU, [sec('STT-L3 triple on table, off', SD[2:4] + [TABLE_A] + SA[:2], 12.0)], tag='L3 triple on table / off')
+    p.straight(XBOWL - XU, [sec('STT-L3 triple on table, off', [SD[0], SD[3], TABLE_A] + SA[:2], 12.0)], tag='L3 (first bump lower) triple on table / off')
     p.turn(-180, RB, BIG2, tag='U L3 -> L2 (rays)')
-    p.straight((XMID - RS) - XU, [sec('STT-L2 rythmique, 2 gros singles', [SC[0], 'Arlington_g37_2', SC[1], SC[2], 'Arlington_g1_2'], 30.0)], tag='L2 rhythm + 2 big singles')
+    p.straight((XMID - RS) - XU, [sec('STT-L2 triple, triple, double', SA[:3] + SD[:3] + [SC[0], SC[1]], 3.0)], tag='L2 triple, triple, double right after the U')
     p.turn(-90, RS, SMALL, tag='L2 -> middle lane')
-    p.straight((Z['L6'] - RS) - (Z['L2'] + RS), [sec('STT-mid triple', SC[:3], 18.0)], tag='middle lane, triple')
+    Lmid = (Z['L6'] - RS) - (Z['L2'] + RS); mid = [SC[2], TABLE_B, SC[3]]
+    p.straight(Lmid, [sec('STT-mid bosse, table, bosse', mid, (Lmid - len(L('tmp', mid)) * 0.1) / 2)], tag='middle lane: bump, table, bump')
     p.turn(-90, RS, SMALL2, tag='middle lane -> L6')
-    p.straight((XMID - RS) - XU67, [], tag='L6 flat straight, westbound')
+    L6 = (XMID - RS) - XU67
+    p.straight(L6, [sec('STT-L6 roller a sauter', [SMALL_B], L6 / 2 - 14.0)], tag='L6 straight with a jumpable roller')
     p.turn(+180, RB, BIG, tag='U L6 -> L7')
-    p.straight((XEL - RS) - XU67, [sec('STT-L7 12 whoops puis petit triple', [('whoops', 'Custom_0', 12), ('gap', 35.0), 'Custom1_g30_1', SMALL_B, TINY], 16.0)], tag='L7 whoops + small triple')
+    p.straight((XEL - RS) - XU67, [sec('STT-L7 12 whoops puis triple', [('whoops', 'Custom_0', 12), ('gap', 30.0)] + SA[3:6], 12.0)], tag='L7 whoops + triple')
     p.turn(+90, RS, SMALL, tag='L7 -> east lane')
-    Lns = (Z['L7'] - RS) - (Z['L1'] + RS); tri = SA[3:6]
-    p.straight(Lns, [sec('STT-east triple central', tri, (Lns - len(L('tmp', tri)) * 0.1) / 2)], tag='east lane, central triple')
+    Lns = (Z['L7'] - RS) - (Z['L1'] + RS)
+    p.straight(Lns, [sec('STT-east gros triple SX', BIG_TRIPLE, (Lns - len(L('tmp', BIG_TRIPLE)) * 0.1) / 2)], tag='east lane, big SX triple (Cleveland g29, as SX2)')
     p.turn(+90, RS, SMALL2, tag='east lane -> L1')
-    p.straight((XEL - RS) - (XWL + RS), [sec('STT-L1 triple, triple, bosse, table, bosse, 2 bosses', SA[:3] + SD[:3] + [SA[3], TABLE_B, SA[4], SA[0], 'Custom_g47_1'], 2.0)], tag='L1 along the north fence')
+    p.straight((XEL - RS) - (XWL + RS), [sec('STT-L1 triple, triple, bosse, table, bosse, 2 bosses', SA[:3] + SD[:3] + [SA[3], TABLE_B, SA[0], SA[0], SA[0]], 16.0)], tag='L1 along the north fence')
     p.turn(+90, RS, SMALL, tag='L1 -> west column')
-    p.straight(a_col, [sec(FINISH_SEC, ['Custom1_g29_3'], 3.0)], tag='west column: finish jump')
+    p.straight(a_col, [sec(FINISH_SEC, fin, 4.0)], tag='west column: finish double')
     p.turn(+45, R45, None, tag='curve 1/2')
-    p.straight(d_diag, [sec('STT-courbe toute petite bosse', [TINY], (d_diag - len(L('tmp', [TINY])) * 0.1) / 2)], tag='curve: very small bump')
+    p.straight(d_diag, [sec('STT-courbe roller', [ROLLER], (d_diag - len(L('tmp', [ROLLER])) * 0.1) / 2)], tag='curve: roller')
     p.turn(+45, R45, None, tag='curve 2/2')
     _start('STT', ox, oz, gate=(-100.0, 167.0), heading=0.0,
            route=[('S', 350.0), ('T', +90, 40.0, None), ('TO', (XBOWL + RB, Z['L4'] - RB))],
