@@ -173,8 +173,8 @@ Ces règles viennent des retours sur la v12. Les relire **avant** de dessiner un
 ## v13b — grates reculées, torches sur l'arche
 
 - **Grates** : vu en jeu (capture), la grille tombe **vers l'avant** (côté piste) autour de sa charnière. La grate commence
-  donc **0,2 ft** derrière la charnière, pile sous la moto (un essai à 2,5 ft laissait un trou). Forme : partie étroite courte
-  (2,4 ft) devant, large (3,8 ft) au milieu, étroite longue (3,2 ft) derrière. Sol plat sous les 66 grates.
+  donc **0,2 ft** derrière la charnière, pile sous la moto (un essai à 2,5 ft laissait un trou). Longueur 6,8 ft (s'arrête à la roue arrière). Forme : partie étroite courte
+  (1,8 ft) devant, large 2,4 x 2,8 ft au milieu (sous les repose-pieds), étroite longue (2,2 ft) derrière. Sol plat sous les 66 grates.
 - **Torches** : un petit bâton de flamme (socle noir, tige alu, coupelle noire, 2,85 ft) sur la poutre au-dessus de chaque
   poteau de l'arche FINISH, dans le modèle de l'arche (un objet posé seul serait remis au sol par le jeu). Les flammes de
   `pyro_chalk.py` partent du haut des torches, **seulement quand le vainqueur passe l'arrivée**.
