@@ -1080,16 +1080,17 @@ def grate_outline():
 def grate_texture():
     img = Image.new('RGB', (1024, 1024), (110, 86, 60)); d = ImageDraw.Draw(img)
     steel, edge, hole = (178, 182, 186), (206, 209, 213), (92, 72, 52)
-    poly, zend = grate_outline(); wmax = max(w for w, _ in GRATE['parts']); L = -zend
+    poly, zend = grate_outline(); wmax = max(w for w, _ in GRATE['parts']); L = -zend - GRATE['gap']   # sheet only (not the gap)
     x0, y0 = 8, 8; x1, y1 = x0 + int(wmax * PXF), y0 + int(L * PXF)
     d.rectangle([x0, y0, x1, y1], fill=steel); cw, chh = 13, 8                 # small diamonds (expanded metal), one continuous sheet
     for j, y in enumerate(np.arange(y0 + 2, y1 - 2, chh / 2)):
         off = cw / 2 * (j % 2)
         for xx in np.arange(x0 + 2 + off - cw, x1, cw):
             d.polygon([(xx + 2, y + chh / 2), (xx + cw / 2, y + 1.2), (xx + cw - 2, y + chh / 2), (xx + cw / 2, y + chh - 1.2)], fill=hole)
-    P_ = [(x0 + (x + wmax / 2) * PXF, y0 + (-zz) * PXF) for x, zz in poly]
+    P_ = [(x0 + (x + wmax / 2) * PXF, y0 + (-zz - GRATE['gap']) * PXF) for x, zz in poly]
     d.line(P_ + [P_[0]], fill=edge, width=9, joint='curve')                    # flat border following the cut outline
     pal = palette(img, ['steel', 'edge', 'dark'], [steel, edge, (70, 70, 72)])
+    assert y1 < 1024 - 128, 'grate sheet runs into the palette squares'
     pal.update(top=(x0, y0, x1, y1), wmax=wmax, L=L)
     return img, pal
 
@@ -1097,7 +1098,7 @@ def grate_model(pal):
     """one grate per gate, cut from one sheet (cross outline), local z = riding direction, gate at z = 0, runs backwards."""
     m = Mesh(1024, 1024); P = pal; t = GRATE['t']; poly, zend = grate_outline()
     x0, y0, x1, y1 = P['top']; wmax, L = P['wmax'], P['L']
-    uv = lambda x, z: m.uv_px(x0 + (x + wmax / 2) / wmax * (x1 - x0), y0 + (-z) / L * (y1 - y0))
+    uv = lambda x, z: m.uv_px(x0 + (x + wmax / 2) / wmax * (x1 - x0), y0 + (-z - GRATE['gap']) / L * (y1 - y0))   # v13b: from the sheet front
     tris = _ear_clip(poly); ed = m.uv_px(*P['edge'][1])
     for i, j, k in tris:
         m.tri_fan([np.array([poly[q][0], t, poly[q][1]]) for q in (i, j, k)], np.array([0, 1.0, 0]), [uv(*poly[q]) for q in (i, j, k)])
