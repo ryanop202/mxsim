@@ -150,3 +150,15 @@ ligne de départ dégagée jusqu'à la jonction ; aucun virage plat > 25°. Glob
 | SX3 F | pain de sucre x 400-430 (sortie du sable) → 98 ft → triple x 528-634 → 24 ft → double d'arrivée x 658-788 (places v9) |
 | SX3 départ | grille (788, 965) vers l'ouest, bord nord droit (z ≈ 918), 92 → 40 ft, demi-tour à droite **à plat** R 24 → jonction (480, 890) |
 | Toutes | portes dans le bon sens (vecteur = sens de la course), 22-32 portes ; terre partout ; minimaps cadrées |
+
+### v13b — trous dans le sable de SX3 (`scripts/sand_holes.py`, appelé par `build_sx.py`)
+
+- Demande : « le sable est plat, je veux de vrais trous creusés dans le terrain ». Tracé, emplacement et surface sable inchangés.
+- Le **J de sable (GL)** est creusé : creux réguliers perpendiculaires à la ligne, sur toute la largeur du sable, **tous les
+  36,5 ft, 2,16 ft de profondeur**, forme en cosinus (bords arrondis), 13 périodes entières centrées sur la section : on entre
+  et on sort au niveau de la piste (pas de bosse ajoutée). Les petites ondulations (< 1 ft) sont remplacées par les creux,
+  les tables du sable (> 1,5 ft) sont gardées (les creux s'arrêtent en douceur 2 à 10 ft avant leur pied).
+- Mesure : sable de **JGSX 2026 Scuttle** (piste JGSX installée sur le PC : 20 colonnes, espacement médian 36,8 ft,
+  écart-type 1,7 ; crête → creux 2,16 ft). Le stamp Glendale du dépôt ne pouvait pas servir (creux ramenés à 0 à la mesure).
+- Le virage de sable en S (GR, surtout un berm) n'est pas creusé. Seul le sable change (vérifié pixel par pixel), non testé en jeu.
+- Vues : `docs/img/sable_GL_dessus.png` (avant / après), `docs/img/sable_GL_profil.png` (profil sur la ligne).

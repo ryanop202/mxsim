@@ -473,6 +473,21 @@
    "length": 384.73013943785895
   }
  },
+ "sand_holes": {
+  "GL": {
+   "holes": 13,
+   "spacing": 36.5,
+   "depth": 2.16,
+   "s_first": 33.7,
+   "s_last": 508.1,
+   "sand_on_line": [
+    26.9,
+    514.9
+   ],
+   "deepest": 2.74,
+   "px_dug": 214335
+  }
+ },
  "tiles": {
   "SX Main": 3364694,
   "Jumps Sx": 492945,
