@@ -69,6 +69,11 @@ Tu reprends un projet commencé dans une autre conversation. Lis dans cet ordre 
 
 ## Pièges connus
 
+- **Objets posés (`statues`) : l'axe +z local va vers (sin a, cos a)** — vu en jeu (v12b : vélos sortis des pick-ups, grates devant
+  les grilles). Ce n'est PAS la convention des grilles de `timing_gates` (pilote vers (−sin a, −cos a)). Utiliser
+  `props_place.statue_ang` / `statue_fwd`. Le jeu pose un objet sur le sol **sous son origine** : origine sur du plat
+  (l'arche a son origine au pied d'un poteau).
+
 - Axes : x = colonne, z = ligne de la heightmap ; z vers le **bas** sur les images. Cap 0° = +x (est), −90° = −z (« nord », haut de l'image).
   Dans `Path.turn`, angle > 0 = virage à **gauche** (cap qui diminue).
 - `timing_gates` : la grille regarde f = (−sin a, −cos a). Porte `half [centre] [vecteur]` : le vecteur va **dans le sens de la course** (longueur = half), la ligne de la porte est perpendiculaire (erreur de la v10).

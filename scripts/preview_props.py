@@ -14,9 +14,10 @@ import props_usland as PU
 import props_place as PP
 
 def jm_arrays(path):
-    L = open(path).read().split('\n'); nv, nt = map(int, L[2].split())
-    V = np.array([[float(t) for t in l.split()] for l in L[3:3 + nv]], np.float32)
-    I = np.array([int(l) for l in L[3 + nv:3 + nv + 3 * nt]], np.uint32)
+    L = open(path).read().splitlines()                                          # JM1 (ours) or JM2 (JGSX: name + material lines)
+    k = next(i for i, l in enumerate(L) if i > 0 and len(l.split()) == 2 and all(t.isdigit() for t in l.split())); nv, nt = map(int, L[k].split())
+    V = np.array([[float(t) for t in l.split()[:8]] for l in L[k + 1:k + 1 + nv]], np.float32)
+    I = np.array([int(l) for l in L[k + 1 + nv:k + 1 + nv + 3 * nt]], np.uint32)
     b = lambda a: base64.b64encode(np.ascontiguousarray(a).tobytes()).decode()
     return dict(pos=b(V[:, 0:3]), nrm=b(V[:, 3:6]), uv=b(V[:, 6:8]), idx=b(I))
 
@@ -44,27 +45,29 @@ def main(models, out):
     for key in ('SX1', 'SX2', 'SX3'):
         A = PP.arch_pose(key, T)
         report[key] = {k: (round(v, 2) if isinstance(v, float) else v) for k, v in A.items() if k not in ('pillars',)}
-        scenes['arch_' + key] = dict(terrain=terrain_patch(T, A['x'], A['z'], 80),
-                                     objs=[dict(m=PP.ARCH_MODEL[key], t=PP.ARCH_MODEL[key], x=A['x'], y=A['y'], z=A['z'], a=A['a'])],
-                                     cam=[A['x'], A['crest'] + 6, A['z']], back=A['f'], info=A)
+        scenes['arch_' + key] = dict(terrain=terrain_patch(T, A['cx'], A['cz'], 80),
+                                     objs=[dict(m=f'finish_arch_{key}', t='finish_arch', x=A['cx'], y=float(PP.h_at(T, A['cx'], A['cz'])), z=A['cz'], a=A['a'])],   # v13b: centred, game-like (ground under the origin)
+                                     cam=[A['cx'], A['crest'] + 6, A['cz']], back=A['f'], info=dict(A, x=A['cx'], z=A['cz']))
     G = PP.start_gates('SX1')
     objs = [dict(m='start_grate', t='start_grate', x=x, y=y, z=z, a=a) for x, y, z, a in PP.grate_poses('SX1', T)]
     objs += [dict(m='start_gate', t='start_gate', x=g[0], y=g[1], z=g[2], a=g[3]) for g in PP.start_gates('SX1')]
     gp = PP.gantry_pose('SX1', T); objs.append(dict(m='start_gantry', t='start_gantry', x=gp['x'], y=gp['y'], z=gp['z'], a=gp['a']))
     cx = np.mean([g[0] for g in G]); cz = np.mean([g[2] for g in G])
     scenes['start_SX1'] = dict(terrain=terrain_patch(T, cx - 8, cz, 62, step=2), objs=objs, cam=[cx, 0, cz])
-    pad = [dict(m='hospitality_usland', t='hospitality_usland', x=0, y=0, z=0, a=np.pi / 2)]       # long side along x, module towards +z
+    pad = [dict(m='hospitality_usland', t='hospitality_usland', x=0, y=0, z=0, a=-np.pi / 2)]   # entrance (+x local) towards +z       # long side along x, module towards +z
     for k in range(3):
-        pad.append(dict(m='pickup_usland', t='pickup_usland', x=38 + k * 10, y=0, z=14, a=np.pi))
-        b = PP.bike_in_pickup(38 + k * 10, 0, 14, np.pi); pad.append(dict(m='bike_trainer', t='bike_trainer', **b))
-    for side in (-1, 1):                                                          # same 4 banners, same order, each side of the carpet
-        for k, nm in enumerate(PU.BANNERS):
-            x = (-50.0 if side < 0 else 12.6) + k * 12.4
-            pad.append(dict(m='banner', t='banner_' + nm.lower(), x=x, y=0, z=29, a=0.0))
+        pad.append(dict(m='pickup_usland', t='pickup_usland', x=75 + k * 10, y=0, z=14, a=0.0))
+        b = PP.bike_in_pickup(75 + k * 10, 0, 14, 0.0); pad.append(dict(m='bike_trainer', t='bike_trainer', **b))
+    for bx, bz, ba, nm in PP.stand_banners((0.0, 0.0), -np.pi / 2):              # v13b: same stand as in the tracks
+        pad.append(dict(m='banner', t='banner_' + nm.lower(), x=bx, y=0, z=bz, a=ba))
+    pad.append(dict(m='tent_usland', t='tent_usland', x=-30, y=0, z=-26, a=0.0))
+    pad.append(dict(m='watertruck', t='watertruck', x=40, y=0, z=-26, a=-np.pi / 2))      # JGSX water truck (kept) + our U sticker
+    pad.append(dict(m='watertruck_u', t='watertruck_u', x=40, y=0, z=-26, a=-np.pi / 2))
     scenes['paddock'] = dict(objs=pad, cam=[-5, 3, 10])
     names = {o['m'] for s in scenes.values() for o in s['objs']}
     texs = {o['t'] for s in scenes.values() for o in s['objs']}
-    data = dict(models={n: jm_arrays(f'{models}/{n}.jm') for n in names}, tex={t: png_uri(f'{models}/{t}.png') for t in texs},
+    src = lambda f: f'{models}/{f}' if os.path.exists(f'{models}/{f}') else f'{ROOT}/tracks/{FOLDERS["SX1"]}/statue/{f}'   # JGSX models kept in the tracks
+    data = dict(models={n: jm_arrays(src(f'{n}.jm')) for n in names}, tex={t: png_uri(src(f'{t}.png')) for t in texs},
                 scenes=scenes, team=PU.TEAM)
     html = open(f'{ROOT}/scripts/preview_props.html', encoding='utf-8').read().replace('/*DATA*/null', json.dumps(data, default=float))
     open(out, 'w', encoding='utf-8').write(html)

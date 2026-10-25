@@ -86,7 +86,7 @@ function geo(n) {
 // MXS statue: local z axis -> world (-sin a, -cos a)  =>  three rotation.y = a + PI
 function statue(o) {
   const mesh = new THREE.Mesh(geo(o.m), new THREE.MeshLambertMaterial({ map: tex(o.t), side: THREE.DoubleSide }));
-  mesh.position.set(o.x, o.y, o.z); mesh.rotation.order = 'YXZ'; mesh.rotation.y = o.a + Math.PI;
+  mesh.position.set(o.x, o.y, o.z); mesh.rotation.order = 'YXZ'; mesh.rotation.y = (o.m === 'start_gate') ? o.a + Math.PI : o.a;   // statues: local +z -> (sin a, cos a) as in the game; gates keep their own convention
   if (o.m === 'start_gate') mesh.rotation.x = -(90 + 20) * Math.PI / 180;   // raised like in the game (gate01 is modelled flat)
   return mesh;
 }

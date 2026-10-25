@@ -6,7 +6,7 @@
     "lane": "finish straight: triple + on-off Detroit (v5)",
     "name": "SX1-F petite bosse, gros single, single + on-off (ligne d arrivee)",
     "s0": 18.0,
-    "length": 198.0,
+    "length": 197.8,
     "hmax": 5.794
    },
    {
@@ -126,7 +126,10 @@
     220.0,
     368.0
    ],
-   "finish": null,
+   "finish": [
+    "SX1-D step-up, triple on table (longer), off",
+    0
+   ],
    "merge": [
     462.0,
     290.0
@@ -181,11 +184,11 @@
     "hmax": 6.24
    },
    {
-    "lane": "W2 small (double ligne)-big-small (depart) + big triple (arrivee) (v11)",
+    "lane": "W2 small (double ligne)-big-small (depart) + triple (arrivee 6,0 ft) (v13b)",
     "name": "SX2-W2 small big small + big triple",
     "s0": 2181.2411259668634,
     "length": 262.90000000000003,
-    "hmax": 7.915
+    "hmax": 7.351
    },
    {
     "lane": "F triple de singles normaux (v5)",
@@ -470,9 +473,24 @@
    "length": 384.73013943785895
   }
  },
+ "sand_holes": {
+  "GL": {
+   "holes": 13,
+   "spacing": 36.5,
+   "depth": 2.16,
+   "s_first": 33.7,
+   "s_last": 508.1,
+   "sand_on_line": [
+    26.9,
+    514.9
+   ],
+   "deepest": 2.74,
+   "px_dug": 214335
+  }
+ },
  "tiles": {
-  "SX Main": 3364662,
-  "Jumps Sx": 492977,
+  "SX Main": 3364852,
+  "Jumps Sx": 492787,
   "WhoopsV2": 102713,
   "Berm Exit Sx": 119708,
   "Sand Straight": 0,
@@ -482,30 +500,30 @@
  },
  "combos": {
   "SX1-F petite bosse, gros single, single + on-off (ligne d arrivee)": {
-   "length": 198.0,
+   "length": 197.8,
    "items": [
     [
-     "split Glendale_g40_2 | Arlington_g37_0",
+     "split Glendale_g66_1 | Arlington_g37_0",
      0.0,
-     27.700000000000003,
+     27.5,
      3.36
     ],
     [
      "Arlington_g1_2",
-     33.0,
-     80.7,
+     32.8,
+     80.5,
      5.794
     ],
     [
      "Arlington_g37_1",
-     83.5,
-     111.4,
+     83.3,
+     111.2,
      3.662
     ],
     [
      "Detroit_g35_2",
-     123.4,
-     197.9,
+     123.2,
+     197.7,
      5.793
     ]
    ]
@@ -976,10 +994,10 @@
      3.188
     ],
     [
-     "Custom1_g29_2",
+     "Custom1_g29_2 (H 6.0)",
      120.89999999999999,
      160.2,
-     7.915
+     6.0
     ],
     [
      "Custom1_g29_3",

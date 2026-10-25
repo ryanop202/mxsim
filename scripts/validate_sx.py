@@ -142,7 +142,7 @@ for l in open(f'{SX1D}/statues'):
     if any(f'/{m}.jm' in l for m in ('finish_arch', 'start_gantry', 'start_grate', 'bike_trainer')): continue   # v12: over / on the track on purpose (checked below)
     nums = [float(t) for t in re.findall(r'-?\d+\.?\d*', l.split('@')[0])]; x, y, z, a = nums[:4]; model = l.split()[4].split('/')[-1][:-3]
     if model not in BB: BB[model] = _bbox(model)
-    lo, hi = BB[model]; f_ = np.array([-np.sin(a), -np.cos(a)]); n_ = np.array([f_[1], -f_[0]])
+    lo, hi = BB[model]; f_ = np.array([np.sin(a), np.cos(a)]); n_ = np.array([f_[1], -f_[0]])        # v12b: statue local +z -> (sin a, cos a)
     uu, vv = np.meshgrid(np.linspace(lo[2], hi[2], 7), np.linspace(-max(abs(lo[0]), abs(hi[0])), max(abs(lo[0]), abs(hi[0])), 5))
     q = np.c_[x + uu.ravel() * f_[0] + vv.ravel() * n_[0], z + uu.ravel() * f_[1] + vv.ravel() * n_[1]]
     q = q[(q[:, 0] > 0) & (q[:, 0] < T.size) & (q[:, 1] > 0) & (q[:, 1] < T.size)]
@@ -163,6 +163,13 @@ for fname in ('statues', 'decals', 'timing_gates'):
     for d_ in paths:
         for tok in open(f'{DIST}/{d_}/{fname}').read().split():
             if tok.startswith('@USLAND2026'): refs2.add(tok[1:])
+for d_ in paths:                                                     # v13: pyro billboards, frills.js, .seq frames
+    for fname in ('billboards', 'frills.js'):
+        if os.path.exists(f'{DIST}/{d_}/{fname}'):
+            for tok in re.findall(r'@USLAND2026[^\s"\'()]+', open(f'{DIST}/{d_}/{fname}').read()): refs2.add(tok[1:])
+for r_ in list(refs2):
+    if r_.endswith('.seq') and os.path.exists(f'{DIST}/{r_}'):
+        for tok in re.findall(r'@USLAND2026\S+', open(f'{DIST}/{r_}').read()): refs2.add(tok[1:])
 miss = [r_ for r_ in refs2 if not os.path.exists(f'{DIST}/{r_}')]
 nd = sum(1 for _ in open(f'{SX1D}/decals'))
 gl = [l for l in open(f'{SX1D}/timing_gates') if l.startswith('[') and 'start_gate.jm' in l]          # v12: USLAND gates
