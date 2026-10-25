@@ -6,7 +6,8 @@
   - arche FINISH sur la porte d'arrivée, portique au-dessus de la rangée de grilles, une grate par grille
   - commissaire d'arrivée déplacé à côté de l'arche (jamais sur un poteau)
   - copie assets/props/* dans tracks/<SX1>/statue/ (référencés @USLAND2026SX1/statue/...)
-v12b : camion-citerne, citerne, Matrix -> pick-ups USLAND (+ vélo) ; bulldozer, bobcat, tente retirés. Grillages, poteaux... restent.
+v12b : citerne -> pick-up USLAND (+ vélo) ; tente -> tente USLAND ; Matrix, bulldozer, bobcat retirés ; camion-citerne gardé
+      + autocollant icône U sur les deux flancs (watertruck_u, sticker_usland.py, même position / angle).
 Relançable : retire d'abord les objets USLAND déjà posés. Lancé par make_all.sh juste après dress_sx.py ; marche aussi seul
 (sans les archives de référence) sur les pistes déjà construites :  python3 scripts/place_props.py"""
 import os, sys, json, shutil, re
@@ -18,8 +19,8 @@ import props_place as PP
 import props_usland as PU
 
 OUT = ROOT + '/tracks'; P = '@' + F['SX1']; A = f'{OUT}/{F["SX1"]}'
-OURS = ('hospitality_usland', 'pickup_usland', 'bike_trainer', 'banner', 'finish_arch', 'start_gantry', 'start_grate')
-REPLACED = ('semi_1', 'transit', 'watertruck', 'watertank', 'matrixa2', 'dozer', 'bobcat', 'ezup')
+OURS = ('hospitality_usland', 'pickup_usland', 'bike_trainer', 'banner', 'finish_arch', 'start_gantry', 'start_grate', 'tent_usland', 'watertruck_u')
+REPLACED = ('semi_1', 'transit', 'watertank', 'matrixa2', 'dozer', 'bobcat', 'ezup')   # watertruck kept (asked)
 
 def line(x, y, z, a, model, tex):
     return f'[{x:.6f} {y:.6f} {z:.6f}] {a:.6f} {P}/statue/{model}.jm {P}/statue/{tex}.png null'
@@ -66,12 +67,17 @@ def main():
                     q = c + f * u + xl * 29.0
                     new.append(line(q[0], 0.0, q[1], PP.statue_ang(*xl), 'banner', 'banner_' + nm.lower()))   # parallel to the trailer
             continue
-        if m in ('watertruck', 'watertank', 'matrixa2'):          # v12b: the other JGSX vehicles -> more USLAND pickups (+ bike)
+        if m == 'ezup':                                            # v12b: JGSX tent -> USLAND tent (USLAND / RBT / FOX)
+            x, y, z, a, _ = parse(l); new.append(line(x, 0.0, z, a, 'tent_usland', 'tent_usland')); continue
+        if m == 'matrixa2': continue                               # v12b: the car under the tent: removed (a pickup does not fit)
+        if m == 'watertank':                                       # v12b: JGSX tank -> USLAND pickup (+ bike); the water truck stays
             x, y, z, a, _ = parse(l)
             new.append(line(x, 0.0, z, a, 'pickup_usland', 'pickup_usland'))
             b = PP.bike_in_pickup(x, 0.0, z, a); new.append(line(b['x'], b['y'], b['z'], b['a'], 'bike_trainer', 'bike_trainer'))
             continue
-        if m in ('dozer', 'bobcat', 'ezup'): continue              # v12b: third-party, removed
+        if m == 'watertruck':                                      # v12b: JGSX water truck kept + our U sticker (same pose)
+            x, y, z, a, _ = parse(l); keep.append(l); new.append(line(x, y, z, a, 'watertruck_u', 'watertruck_u')); continue
+        if m in ('dozer', 'bobcat'): continue                      # v12b: third-party, removed
         if m == 'transit':
             x, y, z, a, _ = parse(l)
             new.append(line(x, 0.0, z, a, 'pickup_usland', 'pickup_usland'))

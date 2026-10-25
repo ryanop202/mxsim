@@ -14,9 +14,10 @@ import props_usland as PU
 import props_place as PP
 
 def jm_arrays(path):
-    L = open(path).read().split('\n'); nv, nt = map(int, L[2].split())
-    V = np.array([[float(t) for t in l.split()] for l in L[3:3 + nv]], np.float32)
-    I = np.array([int(l) for l in L[3 + nv:3 + nv + 3 * nt]], np.uint32)
+    L = open(path).read().splitlines()                                          # JM1 (ours) or JM2 (JGSX: name + material lines)
+    k = next(i for i, l in enumerate(L) if i > 0 and len(l.split()) == 2 and all(t.isdigit() for t in l.split())); nv, nt = map(int, L[k].split())
+    V = np.array([[float(t) for t in l.split()[:8]] for l in L[k + 1:k + 1 + nv]], np.float32)
+    I = np.array([int(l) for l in L[k + 1 + nv:k + 1 + nv + 3 * nt]], np.uint32)
     b = lambda a: base64.b64encode(np.ascontiguousarray(a).tobytes()).decode()
     return dict(pos=b(V[:, 0:3]), nrm=b(V[:, 3:6]), uv=b(V[:, 6:8]), idx=b(I))
 
@@ -61,10 +62,14 @@ def main(models, out):
         for k, nm in enumerate(PU.BANNERS):
             x = (-50.0 if side < 0 else 12.6) + k * 12.4
             pad.append(dict(m='banner', t='banner_' + nm.lower(), x=x, y=0, z=29, a=0.0))
+    pad.append(dict(m='tent_usland', t='tent_usland', x=-30, y=0, z=-26, a=0.0))
+    pad.append(dict(m='watertruck', t='watertruck', x=40, y=0, z=-26, a=-np.pi / 2))      # JGSX water truck (kept) + our U sticker
+    pad.append(dict(m='watertruck_u', t='watertruck_u', x=40, y=0, z=-26, a=-np.pi / 2))
     scenes['paddock'] = dict(objs=pad, cam=[-5, 3, 10])
     names = {o['m'] for s in scenes.values() for o in s['objs']}
     texs = {o['t'] for s in scenes.values() for o in s['objs']}
-    data = dict(models={n: jm_arrays(f'{models}/{n}.jm') for n in names}, tex={t: png_uri(f'{models}/{t}.png') for t in texs},
+    src = lambda f: f'{models}/{f}' if os.path.exists(f'{models}/{f}') else f'{ROOT}/tracks/{FOLDERS["SX1"]}/statue/{f}'   # JGSX models kept in the tracks
+    data = dict(models={n: jm_arrays(src(f'{n}.jm')) for n in names}, tex={t: png_uri(src(f'{t}.png')) for t in texs},
                 scenes=scenes, team=PU.TEAM)
     html = open(f'{ROOT}/scripts/preview_props.html', encoding='utf-8').read().replace('/*DATA*/null', json.dumps(data, default=float))
     open(out, 'w', encoding='utf-8').write(html)

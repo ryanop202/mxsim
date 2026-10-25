@@ -1331,6 +1331,67 @@ def bike_model(pal):
     return m
 
 
+# ------------------------------------------------------------------ pop-up tent (EZ-up type, replaces the JGSX ezup)
+# 10 x 10 ft, toit en pyramide bleu marine USLAND, bandeau (0,8 ft) tout autour : USLAND devant et derrière, RBT et FOX sur
+# les côtés (un logo par face, centré, blanc). Pieds alu carrés avec lests, ciseaux sous le bandeau. Pas de collision.
+TENT = dict(half=5.0, eave=7.0, peak=9.6, val=0.8)
+ROOF = NAVY           # roof and valance: same navy
+
+def tent_texture():
+    img = Image.new('RGB', (1024, 1024), NAVY)
+    H_, V_ = TENT['half'], TENT['val']
+    for k, nm in enumerate(('USLAND', 'RBT', 'FOX')):                       # valance strips (10 x 0.8 ft each)
+        def val(im, nm=nm):
+            d = ImageDraw.Draw(im); W, H = im.size; d.rectangle([0, 0, W, H], fill=NAVY)
+            d.rectangle([0, H - 6, W, H], fill=RED)
+            box = (W * 0.25, H * 0.16, W * 0.75, H * 0.80)
+            if nm == 'USLAND': paste_logo(im, box, WHITE)
+            else: logo(im, nm, box, on='dark')
+        img.paste(panel((2 * H_, V_), 1008, val, ao=0).resize((1008, 96), Image.LANCZOS), (8, 8 + k * 104))
+    def roof(im):                                                           # roof panel (triangle drawn in a square)
+        d = ImageDraw.Draw(im); W, H = im.size; d.rectangle([0, 0, W, H], fill=ROOF)
+        logo(im, 'ICON', (W * 0.38, H * 0.50, W * 0.62, H * 0.80))
+    img.paste(panel((10, 10), 400, roof, ao=0).resize((400, 400), Image.LANCZOS), (8, 330))
+    def plain(im):
+        d = ImageDraw.Draw(im); W, H = im.size; d.rectangle([0, 0, W, H], fill=ROOF)
+    img.paste(panel((10, 10), 400, plain, ao=0).resize((400, 400), Image.LANCZOS), (420, 330))
+    pal = palette(img, ['navy', 'alu', 'dark', 'red'], [NAVY, (190, 193, 198), (22, 22, 24), RED])
+    pal.update(v_usland=('r', (8, 8, 1016, 104)), v_rbt=('r', (8, 112, 1016, 208)), v_fox=('r', (8, 216, 1016, 312)),
+               roof_logo=(8, 330, 408, 730), roof_plain=(420, 330, 820, 730))
+    return img, pal
+
+def tent_model(pal):
+    """local +z = front of the tent (USLAND side), y up, origin at the centre of the footprint on the ground."""
+    m = Mesh(1024, 1024); P = pal; h, e, pk, v = TENT['half'], TENT['eave'], TENT['peak'], TENT['val']
+    for sx in (-1, 1):                                                       # legs (telescopic: thicker lower part) + weights
+        for sz in (-1, 1):
+            x, z = sx * (h - 0.1), sz * (h - 0.1)
+            m.rbox(x - 0.09, x + 0.09, 0.0, 3.6, z - 0.09, z + 0.09, 0.03, 1, {'*': P['alu']}, P['alu'])
+            m.rbox(x - 0.07, x + 0.07, 3.6, e, z - 0.07, z + 0.07, 0.025, 1, {'*': P['alu']}, P['alu'])
+            m.rbox(x - 0.45, x + 0.45, 0.0, 0.25, z - 0.45, z + 0.45, 0.1, 1, {'*': P['dark']}, P['dark'])
+    C = [(-h + 0.1, -h + 0.1), (h - 0.1, -h + 0.1), (h - 0.1, h - 0.1), (-h + 0.1, h - 0.1)]
+    for i in range(4):                                                       # scissor truss under the valance
+        (ax_, az), (bx, bz) = C[i], C[(i + 1) % 4]
+        m.tube((ax_, e - v + 0.05, az), (bx, e - 0.05, bz), 0.035, P['alu']); m.tube((ax_, e - 0.05, az), (bx, e - v + 0.05, bz), 0.035, P['alu'])
+    # valance: 4 printed strips outside the frame (USLAND front + back, RBT left, FOX right), readable from outside
+    m.box(-h, h, e - v, e, h, h + 0.03, {'+z': P['v_usland'], '-z': P['navy'], '*': P['navy']})
+    m.box(-h, h, e - v, e, -h - 0.03, -h, {'-z': P['v_usland'], '+z': P['navy'], '*': P['navy']})
+    m.box(-h - 0.03, -h, e - v, e, -h, h, {'-x': P['v_rbt'], '+x': P['navy'], '*': P['navy']})
+    m.box(h, h + 0.03, e - v, e, -h, h, {'+x': P['v_fox'], '-x': P['navy'], '*': P['navy']})
+    # pyramid roof, slightly overhanging; front and back panels carry the U icon
+    o = 0.15; apex = np.array([0.0, pk, 0.0])
+    corners = [np.array([-h - o, e, h + o]), np.array([h + o, e, h + o]), np.array([h + o, e, -h - o]), np.array([-h - o, e, -h - o])]
+    for i in range(4):
+        a_, b_ = corners[i], corners[(i + 1) % 4]; N = np.cross(b_ - a_, apex - a_); N /= np.linalg.norm(N)
+        if N[1] < 0: N = -N
+        rx0, ry0, rx1, ry1 = P['roof_logo'] if i in (0, 2) else P['roof_plain']
+        uv = [m.uv_px(rx0, ry1), m.uv_px(rx1, ry1), m.uv_px((rx0 + rx1) / 2, ry0)]
+        m.tri_fan([a_, b_, apex], N, uv)
+        dn = np.array([0.0, 0.06, 0.0])                                     # underside 0.06 ft lower: no z-fighting with the roof
+        m.tri_fan([b_ - dn, a_ - dn, apex - dn], -N, [m.uv_px(*P['navy'][1])] * 3)
+    return m
+
+
 # ------------------------------------------------------------------ track banners (on the inner side of the fences)
 BANNER_FT = (12.0, 3.0, 0.6)    # width, height, bottom above the ground
 BANNERS = ['ICON', 'RBT', 'FOX', 'USLAND']          # USLAND at the far end, never next to the U icon
@@ -1351,7 +1412,7 @@ def banner_model(pal):
     return m
 
 # ------------------------------------------------------------------ specs (docs/12_objets_usland.md) : contrôlés à chaque génération
-BUDGET = {'hospitality_usland': 8000, 'pickup_usland': 6000, 'finish_arch': 3000, 'start_gantry': 12000, 'start_grate': 200, 'start_gate': 1500, 'bike_trainer': 8000, 'banner': 100}
+BUDGET = {'tent_usland': 2500, 'hospitality_usland': 8000, 'pickup_usland': 6000, 'finish_arch': 3000, 'start_gantry': 12000, 'start_grate': 200, 'start_gate': 1500, 'bike_trainer': 8000, 'banner': 100}
 def check_specs(outd):
     """JM + PNG checks: triangle budget, indices, UV in [0, 1], unit normals, texture size (power of two, <= 2048, RGB),
     model sizes. Returns the rows printed by build(); raises on any failure."""
@@ -1374,7 +1435,7 @@ def check_specs(outd):
     return rows
 
 # grain only on matte materials (raw steel, fabric covers). Paint, glass, chrome, printed banners stay clean.
-MATTE = {'start_grate': dict(grain=2.5, mottle=0.05), 'start_gate': dict(grain=1.0, mottle=0.02),
+MATTE = {'tent_usland': dict(grain=1.2, mottle=0.03), 'start_grate': dict(grain=2.5, mottle=0.05), 'start_gate': dict(grain=1.0, mottle=0.02),
          'start_gantry': dict(grain=1.2, mottle=0.025), 'finish_arch': dict(grain=1.0, mottle=0.025)}   # light: barely visible
 def weather(img, seed=7, grain=4.0, mottle=0.06):
     """realistic surface: fine grain + large soft mottling (dust, wear). Palette squares are kept flat."""
@@ -1386,7 +1447,7 @@ def weather(img, seed=7, grain=4.0, mottle=0.06):
     return Image.fromarray(np.clip(a, 0, 255).astype(np.uint8))
 
 # materials: glossy paint / glass / carbon vs matte steel, fabric, rubber. spec = (base level, {palette name: level})
-MATERIAL = {'hospitality_usland': (50, 1, 1, 1, 1), 'pickup_usland': (24, 0.45, 0.6, 0.6, 0.6),   # v12b: less shiny (seen in game)
+MATERIAL = {'tent_usland': (4, 0.3, 0.3, 0.3, 0.3), 'hospitality_usland': (50, 1, 1, 1, 1), 'pickup_usland': (24, 0.45, 0.6, 0.6, 0.6),   # v12b: less shiny (seen in game)
              'bike_trainer': (50, 1, 1, 1, 1),
             'start_gate': (16, 1, 0.35, 0.35, 0.35), 'start_grate': (16, 0.6, 0.35, 0.35, 0.35), 'finish_arch': (6, 0.5, 0.3, 0.3, 0.3),
             'start_gantry': (5, 0.5, 0.3, 0.3, 0.3), 'banner': (0, 0, 0, 0, 0)}
@@ -1406,7 +1467,7 @@ def spec_map(name, img, pal):
 def build(outd=OUTD):
     os.makedirs(outd, exist_ok=True); info = {}
     for name, tex, model in (('hospitality_usland', hospitality_texture, hospitality_model), ('pickup_usland', pickup_texture, pickup_model),
-                             ('finish_arch', arch_texture, arch_model), ('start_grate', grate_texture, grate_model), ('start_gate', gate_texture, gate_model), ('bike_trainer', bike_texture, bike_model),
+                             ('finish_arch', arch_texture, arch_model), ('start_grate', grate_texture, grate_model), ('start_gate', gate_texture, gate_model), ('bike_trainer', bike_texture, bike_model), ('tent_usland', tent_texture, tent_model),
                              ('start_gantry', gantry_texture, gantry_model)):
         img, pal = tex(); (weather(img, **MATTE[name]) if name in MATTE else img).save(f'{outd}/{name}.png', optimize=True)
         if name in SPEC: spec_map(name, img, pal).save(f'{outd}/{name}_spec.png', optimize=True)
