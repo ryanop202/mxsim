@@ -130,7 +130,9 @@ def main():
     lt = open(f'{SRC}/lighting').read(); sky = dict(re.findall(r'(sky_\w+) (@\S+)', lt))
     for k, ref in sky.items():
         src = f"{ROOT}/tracks/{ref[1:]}"; night_sky(src, f'{OUT}/sky/{os.path.basename(ref)}')
-    L = ['sun_vector [ -0.30\t0.90\t0.30 ]', 'sun_color [ 0.50 0.50 0.47 ]', 'ambient [ 0.42 0.42 0.44 ]', 'fog [ 0.02 0.025 0.045 ] 0.00010']
+    # v26: one strong flood from the side, same angle as the day sun -> relief on the bumps and the bikes (the game has only
+    # this one light; v22 put it overhead and weak: no shading, the bumps were hard to read)
+    L = ['sun_vector [ -0.6528\t0.3590\t0.6671 ]', 'sun_color [ 0.85 0.85 0.80 ]', 'ambient [ 0.30 0.31 0.36 ]', 'fog [ 0.02 0.025 0.045 ] 0.00010']
     L += [f'{k} @{NIGHT}/sky/{os.path.basename(v)}' for k, v in sky.items()]
     L += ['flare_vector [ -0.30\t0.90\t0.30 ]', 'dynamic_lighting 1']
     open(f'{OUT}/lighting', 'w', newline='\n').write('\n'.join(L) + '\n')

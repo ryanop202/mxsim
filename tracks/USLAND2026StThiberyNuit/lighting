@@ -1,6 +1,6 @@
-sun_vector [ -0.30	0.90	0.30 ]
-sun_color [ 0.50 0.50 0.47 ]
-ambient [ 0.42 0.42 0.44 ]
+sun_vector [ -0.6528	0.3590	0.6671 ]
+sun_color [ 0.85 0.85 0.80 ]
+ambient [ 0.30 0.31 0.36 ]
 fog [ 0.02 0.025 0.045 ] 0.00010
 sky_n @USLAND2026StThiberyNuit/sky/sky-n.png
 sky_e @USLAND2026StThiberyNuit/sky/sky-e.png

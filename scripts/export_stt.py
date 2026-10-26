@@ -93,7 +93,7 @@ def grass_tile(path, n=256):
                 if -10 < x0 < n + 10 and -10 < y0 < n + 10:
                     d.line([(x0, y0), (x0 + L * np.cos(a), y0 + L * np.sin(a))], fill=c, width=1)
     a_ = np.asarray(im, float) * (1 - 0.12 * np.clip(noise(150.0), 0, None))[:, :, None]   # darker clumps
-    ref = f'{ROOT}/assets/grass_jgsx/grass_tuft_green.png' if getattr(LT, 'GRASS_TUFTS', None) else f'{ROOT}/assets/grass_dvdb/grass_dvdb.png'
+    ref = f"{ROOT}/assets/grass_jgsx/{LT.GRASS_TUFTS['tex']}.png" if getattr(LT, 'GRASS_TUFTS', None) else f'{ROOT}/assets/grass_dvdb/grass_dvdb.png'
     if (getattr(LT, 'GRASS_DECALS', None) or getattr(LT, 'GRASS_TUFTS', None)) and os.path.exists(ref):   # v25: ground tile matches the tufts    # v23: same mean colour as the grass decals (gaps don't show)
         q = np.asarray(Image.open(ref).convert('RGBA'), float); m_ = q[:, :, 3] > 200; tgt = q[:, :, :3][m_].mean(0)
         a_ = a_ * (tgt / a_.reshape(-1, 3).mean(0))[None, None, :]
