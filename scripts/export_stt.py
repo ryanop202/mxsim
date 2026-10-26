@@ -83,8 +83,8 @@ def main():
     for l in txt.split('\n'):
         if l.endswith(':'): sec = l
         elif sec == 'startinggate:' and l.startswith('['):
-            v = l.split(']')[0][1:].split(); gy = float(h_at(H, float(v[0]), float(v[2])))     # v13: gates on the start platform
-            l = f'[{float(v[0]):.6f} {gy:.6f} {float(v[2]):.6f}] ' + l.split(']')[1].split()[0] + f' {SH}/statue/start_gate.jm {SH}/statue/start_gate.png @startgate.shp'
+            v = l.split(']')[0][1:].split()     # v14: y = 0 - the game puts the gate on the ground (the platform) itself; y 2.5 floated
+            l = f'[{float(v[0]):.6f} 0.000000 {float(v[2]):.6f}] ' + l.split(']')[1].split()[0] + f' {SH}/statue/start_gate.jm {SH}/statue/start_gate.png @startgate.shp'
         tl.append(l)
     open(f'{OUT}/timing_gates', 'w', newline='\n').write('\n'.join(tl))
     # statues: grates behind the gates (v13: no start gantry, no finish arch - new ones to come)
@@ -92,10 +92,20 @@ def main():
     G = [[float(v) for v in l.split(']')[0][1:].split()] + [float(l.split(']')[1].split()[0])] for l in gl]
     for x, y, z, a in G:
         f = np.array([-np.sin(a), -np.cos(a)]); q = np.array([[x, z]]) - np.outer(np.linspace(PU.GRATE['gap'], PU.GRATE['gap'] + 7, 8), f)
-        st.append(statue(x, float(h_at(H, q[:, 0], q[:, 1]).max()), z, PP.statue_ang(*f), 'start_grate', 'start_grate'))
+        st.append(statue(x, 0.0, z, PP.statue_ang(*f), 'start_grate', 'start_grate'))      # v14: y 0, the game puts it on the platform
     gx = float(np.mean([g[0] for g in G])); gz = float(np.mean([g[2] for g in G])); fa = G[0][3]
     fin = cps[normal[-1]]; c = np.array([fin[1], fin[2]]); f = np.array([fin[3], fin[4]]); f /= np.linalg.norm(f); n = np.array([-f[1], f[0]])
     if os.path.exists(f'{OUT}/statue/finish_arch_STT.jm'): os.remove(f'{OUT}/statue/finish_arch_STT.jm')
+    # v14: steel skin + frame of the freestyle ramp (props_usland fmx_ramp, origin = foot centre, +z = riding direction);
+    # the ramp itself is terrain (build_stt.extras), the model sits on it
+    R_ = getattr(LT, 'FMX_RAMP', None)
+    if R_ and os.path.exists(f'{ROOT}/assets/props/fmx_ramp.jm'):
+        for e in ('jm', 'png'): shutil.copy(f'{ROOT}/assets/props/fmx_ramp.{e}', f'{OUT}/statue/fmx_ramp.{e}')
+        import compose
+        k = compose.lane([('cut', 'Detroit_g31_1', R_['H'], 0.9)])[0]; il = int(np.argmax(k)) * 0.1
+        d_ = np.array([R_['aim'][0] - R_['lip'][0], R_['aim'][1] - R_['lip'][1]]); d_ /= np.linalg.norm(d_)
+        fx_, fz_ = R_['lip'][0] + LT.STT_ORIGIN[0] - d_[0] * il, R_['lip'][1] + LT.STT_ORIGIN[1] - d_[1] * il
+        st.append(f'[{fx_:.6f} 0.000000 {fz_:.6f}] {PP.statue_ang(*d_):.6f} {P}/statue/fmx_ramp.jm {P}/statue/fmx_ramp.png null')
     open(f'{OUT}/statues', 'w', newline='\n').write('\n'.join(st) + '\n')
     # decals (ground texture over the riding surface, obstacle and turn decals)
     R = StartRoute(LS.STARTS['STT'], LS.N_GATES, LS.GATE_PITCH)

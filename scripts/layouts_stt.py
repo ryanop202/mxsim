@@ -31,7 +31,7 @@ FIN = ['Custom1_g30_2', ('gap', 12.0), ('scale', 'Glendale_g83_2', 10.0)]   # v9
                                                                             # crest at the same distance as v8
 R_CURVE = 16.0                                                              # one 90 deg curve west column -> L4 (v8: 21.5 -> 16, room for L1 lower)
 R_HIGH = 21.5                                                               # the 90 after the whoops: big radius, big berm
-R_TIGHT = 8.0                                                               # v7: east lane -> L1 "plus serre"
+R_TIGHT = 11.0                                                              # v14: east lane -> L1 a bit wider (8 -> 11)
 Z = dict(L1=-21.3, L2=43.0, L3=86.0, L4=129.0, L6=206.0, L7=249.0)        # v8: L1 10 ft lower (east lane turns earlier)
 XWL, XBOWL, XU, XMID, XEL, XU67 = -35.0, 295.0, 40.0, 364.0, 445.0, -5.0   # v8: U L3 -> L2 20 ft west (L3 and L2 longer)
 ARENA = (-110.0, 475.0, Z['L1'] - 24.0, 274.0)                            # fence box (x0, x1, z0, z1), local
@@ -44,9 +44,9 @@ ROLLER, SMALL_B = 'Custom1_g30_1', 'Glendale_g40_2'                        # 1.9
 # v12: freestyle landing wider ("beaucoup de place", mostly on the right): section -> (from_ft, to_ft, left_ft, right_ft)
 # v13: start on a raised platform (gates and grates on it), a short descent right after the gate line (ft)
 START_GATE, START_HEADING = (-100.0, 175.0), 0.0                         # gate row centre (local), heading (deg)
-START_PLATFORM = dict(h=2.5, back=16.0, front=3.0, down=10.0, side=6.0, edge=2.5)
+START_PLATFORM = dict(h=6.0, back=16.0, front=5.0, down=40.0, side=6.0, edge=6.0)   # v14: big-berm height, gentler descent
 # v13: freestyle ramp beside the wheel tap (right, off the lane), turned slightly to face the wide part of the landing (local)
-FMX_RAMP = dict(lip=(98.0, 153.0), aim=(170.0, 147.0), H=7.5, width=8.0, side=0.5)
+FMX_RAMP = dict(lip=(98.0, 153.0), aim=(170.0, 150.0), H=7.5, width=8.0, side=0.5)   # v14: turned less (-4.8 -> -2.4 deg)
 WIDE = {'STT-L4 roller, bosse, roller, saut freestyle': (147.6, 212.6, 0.0, 9.0)}   # right only (L3 too close on the left); start corridor 8 ft south
 
 def up(units, k):
@@ -137,10 +137,10 @@ def stt():
     p.straight(XBOWL - XU, [rounded(sec('STT-L3 roller, long creux, 3 bosses', even(l3, XBOWL - XU, 4.0, 8.0), 4.0))], tag='L3 roller, bump, long raised dip, 3 bumps')
     p.turn(-180, RB, BIG2, tag='U L3 -> L2 (rays)')
     L2 = (XMID - RS) - XU
-    first = ('split', ('scale', SA[1], 4.8), ('scale', SA[1], 3.6))         # v13: inside (right) half lower again (4.2 -> 3.6)
+    first = ('split', ('scale', SA[1], 5.3), ('scale', SA[1], 3.6))         # v14: outside half more of a kicker (4.8 -> 5.3); inside 3.6
     l2 = even([first] + up([SA[2]], 1.25) + up([SA[0]], 1.35) +            # v13: 2nd bump a bit lower (5.0 -> 4.6)
-               up([SA[1], SA[2], SA[0]], 1.35) + up([SA[1], SA[2]], 1.35), L2, 0.0, 8.0)   # v12: 8 ft before the turn (user: 8 ft, never more)
-    p.straight(L2, [rounded(sec('STT-L2 long triple, triple, double (ecarts egaux)', l2, 0.0), lead_in=True)], tag='L2 long triple, triple, double, same gaps')
+               up([SA[1], SA[2], SA[0]], 1.35) + up([SA[1], SA[2]], 1.35), L2, -4.0, 8.0)   # v12: 8 ft before the turn (user: 8 ft, never more); v14: 1st bump 4 ft closer to the U
+    p.straight(L2, [rounded(sec('STT-L2 long triple, triple, double (ecarts egaux)', l2, -4.0), lead_in=True)], tag='L2 long triple, triple, double, same gaps')
     p.turn(-90, RS, SMALL, tag='L2 -> middle lane')
     Lmid = (Z['L6'] - RS) - (Z['L2'] + RS); mid = [SC[2], TABLE_B, SC[3]]
     p.straight(Lmid, [sec('STT-mid bosse, table, bosse', mid, (Lmid - len(L('tmp', mid)) * 0.1) / 2)], tag='middle lane: bump, table, bump')
@@ -157,8 +157,8 @@ def stt():
     p.straight(Lns, [rounded(sec('STT-east gros triple SX (plus gros)', big3, 30.0), interior=False, lead_in=True)], tag='east lane, bigger SX triple, less run-up')
     p.turn(+90, R_TIGHT, SMALL2, tag='east lane -> L1 (tight)')
     L1 = (XEL - R_TIGHT) - (XWL + RS)
-    l1 = spread([up(SA[:3], 1.2), up(SD[:3], 1.2), up([SA[3]], 1.2), [TABLE_B], up([SA[0]], 1.2), up([SA[0], SA[0]], 1.2)], L1, 16.0, 22.0, 8.0)
-    p.straight(L1, [rounded(sec('STT-L1 triple, triple, bosse, table, bosse, 2 bosses', l1, 16.0), lead_in=True)], tag='L1 along the north fence, wider gaps')
+    l1 = spread([[('scale', SA[0], 4.7)] + up(SA[1:3], 1.2), up(SD[:3], 1.2), up([SA[3]], 1.2), [TABLE_B], up([SA[0]], 1.2), up([SA[0], SA[0]], 1.2)], L1, 6.0, 22.0, 8.0)
+    p.straight(L1, [rounded(sec('STT-L1 triple, triple, bosse, table, bosse, 2 bosses', l1, 6.0), lead_in=True)], tag='L1 along the north fence, wider gaps')
     p.turn(+90, RS, SMALL, tag='L1 -> west column')
     nf = len(L('tmp', FIN)) * 0.1
     p.straight(a_col, [rounded(sec(FINISH_SEC, FIN, a_col - nf - 3.0))], tag='west column: room after the turn, short finish double, curve right after')
