@@ -213,6 +213,12 @@ def main():
         from scipy.ndimage import distance_transform_edt
         DF = np.load(f'{ROOT}/build/stt_dist.npy'); side = DF.shape[0] - 1.0; rg = np.random.default_rng(23); ng = 0
         dd = DF[::2, ::2]                                                 # 2 ft grid as before
+        from skimage.measure import find_contours                       # v27: one row of patches along the fence, at a constant
+        ring = max(find_contours(DF, GD['clear']), key=len)                # distance, so the grass edge runs parallel to the fence
+        Lr = np.r_[0, np.cumsum(np.hypot(*np.diff(ring, axis=0).T))]
+        for sv in np.arange(0, Lr[-1], 13.0):
+            k_ = min(int(np.searchsorted(Lr, sv)), len(ring) - 1); z_, x_ = ring[k_]
+            dec.append(f'[{x_:.6f} {z_:.6f}] {rg.uniform(-np.pi, np.pi):.6f} {GD["size"]:.6f} 1.000000 {P}/decal/grass_dvdb.png'); ng += 1
         for zz in np.arange(GD['step'] / 2, side, GD['step']):
             for xx in np.arange(GD['step'] / 2, side, GD['step']):
                 x_, z_ = xx + rg.uniform(-0.4, 0.4) * GD['step'], zz + rg.uniform(-0.4, 0.4) * GD['step']

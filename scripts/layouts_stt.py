@@ -2,7 +2,8 @@
 START = west end. Every bump is a measured JGSX unit (lib/) unless marked 'scaled' (height scaled, same shape/length),
 'landing' (scaled, back side replaced by a gentle slope) or 'trapeze' (synthetic mound) - asked by the user in game tests.
 
-Lap (v26: Scuttle normal grass (grass_5 / grass_30, dry tuft) all over the grass; night: strong side flood (day sun angle)
+Lap (v27: 3D grass removed (too heavy in game), DVDB grass patches back with a row along the fence (clean edge).
+  Before, v26: Scuttle normal grass (grass_5 / grass_30, dry tuft) all over the grass; night: strong side flood (day sun angle)
   for relief. Before, v25: night: track lit exactly like by day (day lightmap inside the fence), night around; dirt decals under the
   track ones; clean dirt/grass line at the fence (rounded distance field); start corners rounded (no cone); JGSX green 3D grass
   tufts instead of the DVDB patches. Before, v24: dirt (track decals) up to the fence, grass from the fence; start: one smooth slope from the platform up the bank,
@@ -71,10 +72,10 @@ NIGHT = dict(folder='USLAND2026StThiberyNuit', desc='USLAND: Saint-Thibery (nuit
 # v24: track-coloured decals over all the dirt up to the fence ("le contour marron clair")
 DIRT_DECALS = dict(size=26.0, step=10.0)
 # v23: grass decal patches over the grass (DVDBVisualsCompound grass.png, the user's choice): size ft, grid step ft, clear ft from the dirt
-GRASS_DECALS = None   # v25: DVDB grass patches replaced by the JGSX 3D grass tufts (user's choice)
+GRASS_DECALS = dict(size=45.0, step=26.0, clear=51.0)   # v27: DVDB grass patches back (3D tufts too heavy in game); centre >= fence + 23 ft: no fringe over the fence line
 # v25: 3D grass tufts (JGSX2026Scuttle grass_5 / grass_15 models sent by the user, green tuft texture) on the grass, from just
 # outside the fence to the top of the bank; jittered grid `step` ft, kept with probability p; 3rd-party files, local use only
-GRASS_TUFTS = dict(models=(('grass_5', 0.92), ('grass_30', 0.08)), tex='grass_tuft_dry', step=24.0, p=0.9, dmin=5.0, dmax=1e9)   # v26: Scuttle's normal grass (dry tuft) everywhere
+GRASS_TUFTS = None   # v27: removed (the game lagged with them)
 GRASS_OUTSIDE = dict(arena=True, keep=[(-140.0, -110.0, 97.0, 253.0)], dirt_to_fence=True)   # v24: start area = platform + ramps; dirt up to the fence
 # v19: the track sits in a pit: a giant grassed earth bank all around the dirt arena (and around the start area), as on the
 # drone photos. Height h ft, inner slope over `inner` ft (rounded toe and top), flat top `top` ft, outer slope `outer` ft.
