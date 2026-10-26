@@ -76,6 +76,17 @@ def lane(tokens):
             u, p = unit(t[1]); p = p * (t[2] / p.max()); c = int(np.argmax(p)); b_ = p[c:]
             n = int(round(len(b_) * t[3])); p = np.r_[p[:c], np.interp(np.linspace(0, len(b_) - 1, n), np.arange(len(b_)), b_)]
             kind = u['kind']; name = f'{t[1]} (H {t[2]:.1f}, back x{t[3]:.2f})'; uid = ALIAS.get(t[1], t[1])
+        elif isinstance(t, tuple) and t[0] == 'fuse':
+            # v13g ('fuse', uid, H1, H2, bottom, span, f): two humps fused by a raised dip (Saint-Thibery L3). Both outer faces are
+            # the front face of the table uid (2nd one mirrored), crests H1 / H2 ft, crest to crest span ft, valley bottom at
+            # bottom ft, placed at f of the span (f > 0.5: shorter, steeper climb to the 2nd hump - "un peu plus raide")
+            u, q = unit(t[1]); H1, H2, bo, span, f = t[2:7]; q = q / q.max(); i = np.nonzero(q >= 0.85)[0][0]
+            d = np.diff(q); c1 = i + int(np.nonzero(d[i:] <= 0.002)[0][0]) if np.any(d[i:] <= 0.002) else i
+            face = q[:c1 + 1] / q[c1]; nd, nu = int(round(span * f / 0.1)), int(round(span * (1 - f) / 0.1))
+            down = bo + (H1 - bo) * (1 + np.cos(np.linspace(0, np.pi, nd))) / 2
+            upv = bo + (H2 - bo) * (1 - np.cos(np.linspace(0, np.pi, nu))) / 2
+            p = np.r_[face * H1, down[1:], upv[1:], (face * H2)[::-1][1:]]
+            kind = u['kind']; name = f'{t[1]} (fuse {H1:.1f}/{H2:.1f}, bottom {bo:.1f})'; uid = ALIAS.get(t[1], t[1])
         elif isinstance(t, tuple) and t[0] == 'dip':
             # v13c ('dip', uid, H, bottom): a table scaled to H whose top is dug into a raised dip (bottom = fraction of H):
             # between a table and a double, the valley does not reach the floor (Saint-Thibery L3, asked by the user)

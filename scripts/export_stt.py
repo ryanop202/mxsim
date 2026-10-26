@@ -1,6 +1,6 @@
 """Saint-Thibéry -> game folder tracks/USLAND2026StThibery (first playable version of the v4 track map).
 Own terrain / tilemap / shading / timing gates / statues / decals / flaggers / minimap; textures and models are the shared
-USLAND ones (@USLAND2026SX1/..., installed with the USLAND pack), like SX2 and SX3. No fence, no paddock, no flames yet.
+USLAND ones (@USLAND2026SX1/..., installed with the USLAND pack), like SX2 and SX3. No fence, no paddock, no flames, no start gantry / finish arch (v13: removed, new ones to come).
 Works without the reference archives. Run: python3 scripts/export_stt.py"""
 import os, sys, shutil
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -82,26 +82,20 @@ def main():
     tl, sec = [], None
     for l in txt.split('\n'):
         if l.endswith(':'): sec = l
-        elif sec == 'startinggate:' and l.startswith('['): l = ' '.join(l.split()[:4]) + f' {SH}/statue/start_gate.jm {SH}/statue/start_gate.png @startgate.shp'
+        elif sec == 'startinggate:' and l.startswith('['):
+            v = l.split(']')[0][1:].split(); gy = float(h_at(H, float(v[0]), float(v[2])))     # v13: gates on the start platform
+            l = f'[{float(v[0]):.6f} {gy:.6f} {float(v[2]):.6f}] ' + l.split(']')[1].split()[0] + f' {SH}/statue/start_gate.jm {SH}/statue/start_gate.png @startgate.shp'
         tl.append(l)
     open(f'{OUT}/timing_gates', 'w', newline='\n').write('\n'.join(tl))
-    # statues: grates behind the gates, gantry over the gate row, finish arch (centred on the finish line, lowered by the crest)
+    # statues: grates behind the gates (v13: no start gantry, no finish arch - new ones to come)
     st = []; gl = [l for l in tl if l.startswith('[') and '@startgate.shp' in l]
     G = [[float(v) for v in l.split(']')[0][1:].split()] + [float(l.split(']')[1].split()[0])] for l in gl]
     for x, y, z, a in G:
         f = np.array([-np.sin(a), -np.cos(a)]); q = np.array([[x, z]]) - np.outer(np.linspace(PU.GRATE['gap'], PU.GRATE['gap'] + 7, 8), f)
         st.append(statue(x, float(h_at(H, q[:, 0], q[:, 1]).max()), z, PP.statue_ang(*f), 'start_grate', 'start_grate'))
     gx = float(np.mean([g[0] for g in G])); gz = float(np.mean([g[2] for g in G])); fa = G[0][3]
-    st.append(statue(gx, 0.0, gz, PP.statue_ang(-np.sin(fa), -np.cos(fa)), 'start_gantry', 'start_gantry'))
     fin = cps[normal[-1]]; c = np.array([fin[1], fin[2]]); f = np.array([fin[3], fin[4]]); f /= np.linalg.norm(f); n = np.array([-f[1], f[0]])
-    pil = [c + n * sg * PU.ARCH_X for sg in (-1, 1)]
-    plates = [h_at(H, *(np.array([q + n * u + f * v for u in (-1.5, 0, 1.5) for v in (-1.5, 0, 1.5)]).T)) for q in pil]
-    ypil = float(min(pp.min() for pp in plates)); drop = float(h_at(H, *c)) - ypil
-    Lm = open(f'{PU.OUTD}/finish_arch.jm').read().split('\n'); nv = int(Lm[2].split()[0]); o = Lm[:3]
-    for l in Lm[3:3 + nv]:
-        v = l.split(); o.append(' '.join([f'{float(v[0]) - PU.ARCH_X:.6f}', f'{float(v[1]) - drop:.6f}'] + v[2:]))
-    open(f'{OUT}/statue/finish_arch_STT.jm', 'w', newline='\n').write('\n'.join(o + Lm[3 + nv:]))
-    st.append(statue(c[0], 0.0, c[1], PP.statue_ang(*f), 'finish_arch_STT', 'finish_arch', shared=False))
+    if os.path.exists(f'{OUT}/statue/finish_arch_STT.jm'): os.remove(f'{OUT}/statue/finish_arch_STT.jm')
     open(f'{OUT}/statues', 'w', newline='\n').write('\n'.join(st) + '\n')
     # decals (ground texture over the riding surface, obstacle and turn decals)
     R = StartRoute(LS.STARTS['STT'], LS.N_GATES, LS.GATE_PITCH)
@@ -127,8 +121,8 @@ def main():
     a = ndi.gaussian_filter(m.astype(float), 1.5)
     Image.fromarray((np.clip(np.dstack([rgb, a]), 0, 1) * 255).astype(np.uint8), 'RGBA').save(f'{OUT}/map.png')
     return dict(lap=p.s, gates=len(G), checkpoints=len(cps), first=len(first), normal=len(normal), statues=len(st), decals=len(dec),
-                arch_drop=round(drop, 2), arch_plate_slope=round(float(max(np.ptp(pp) for pp in plates)), 2),
-                pillar_to_line=round(float(min(tr.query(q)[0] for q in pil)), 1), flagger=[round(v, 1) for v in fl], flagger_dist=round(float(tr.query(fl)[0]), 1))
+                gate_y=round(float(np.mean([g[1] for g in G])), 2), grate_y=round(float(np.mean([float(l.split()[1]) for l in st])), 2),
+                flagger=[round(v, 1) for v in fl], flagger_dist=round(float(tr.query(fl)[0]), 1))
 
 if __name__ == '__main__':
     print(main())

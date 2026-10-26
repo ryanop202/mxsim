@@ -2,7 +2,8 @@
 START = west end. Every bump is a measured JGSX unit (lib/) unless marked 'scaled' (height scaled, same shape/length),
 'landing' (scaled, back side replaced by a gentle slope) or 'trapeze' (synthetic mound) - asked by the user in game tests.
 
-Lap (v12, after the 7th in-game test):
+Lap (v13, after the 8th in-game test: wheel tap 3rd roller = 1st, bowl berm x0.85, fused double 5.0 / 5.5 ft with a
+  steeper climb to the 2nd hump, L2 inside half 3.6 ft and 2nd bump 4.6 ft, start platform, freestyle ramp, no arches):
   L7  along the stands, eastbound : small double right at the turn exit (landing turned around), 11 whoops, triple (approved)
   high berm turn (90, big radius) -> east lane northbound : bigger SX triple (Cleveland g29 x1.15), first take-off foot
       rounded (smoother), landing 8.8 ft with a 35 % longer back (gentler), crest at the same place
@@ -38,9 +39,14 @@ ROWS = dict(L1=('L1', XU + 50), L2=('L2', XU + 50), L3=('L3', XU + 50), L4=('L4'
 FINISH_SEC = 'STT-ouest saut d arrivee (court)'
 HALF_BERM = ('bowl (L4 -> L3)', 'U L6 -> L7')                             # berm only on the second half of these turns
 BERM90_GAIN = 1.4                                                           # berms of the 90 deg turns higher (v6)
-BERM_GAIN = {'L7 -> east lane (real high berm)': 1.2}                      # v7: that one a bit lower
+BERM_GAIN = {'L7 -> east lane (real high berm)': 1.2, 'bowl (L4 -> L3)': 0.85}   # v13: bowl berm a bit lower                      # v7: that one a bit lower
 ROLLER, SMALL_B = 'Custom1_g30_1', 'Glendale_g40_2'                        # 1.9 / 2.5 ft
 # v12: freestyle landing wider ("beaucoup de place", mostly on the right): section -> (from_ft, to_ft, left_ft, right_ft)
+# v13: start on a raised platform (gates and grates on it), a short descent right after the gate line (ft)
+START_GATE, START_HEADING = (-100.0, 175.0), 0.0                         # gate row centre (local), heading (deg)
+START_PLATFORM = dict(h=2.5, back=16.0, front=3.0, down=10.0, side=6.0, edge=2.5)
+# v13: freestyle ramp beside the wheel tap (right, off the lane), turned slightly to face the wide part of the landing (local)
+FMX_RAMP = dict(lip=(98.0, 153.0), aim=(170.0, 147.0), H=7.5, width=8.0, side=0.5)
 WIDE = {'STT-L4 roller, bosse, roller, saut freestyle': (147.6, 212.6, 0.0, 9.0)}   # right only (L3 too close on the left); start corridor 8 ft south
 
 def up(units, k):
@@ -122,17 +128,18 @@ def stt():
     p = Path(ox + x_l4, oz + Z['L4'], 0.0, 'STT')                          # L4, after the curve, eastbound (straight)
     # v12: kicker cut clean at its first edge (lip kept at 6.9 ft and at the same place) with a straight back; landing climb
     # straighter and steeper (22 ft, slope 1.0), same flat (same place) and same descent
-    fmx = [('gap', 8.5), ('cut', 'Detroit_g31_1', 6.9, 0.9), ('gap', 24.2), ('trapeze', 18.0, 22.0, 8.0, 35.0, 'lin', 4.0)]
-    l4 = [ROLLER, SA[1], 'Glendale_g63_3'] + fmx                            # wheel tap (roller, medium bump, roller) + freestyle
+    fmx = [('gap', 5.0), ('cut', 'Detroit_g31_1', 6.9, 0.9), ('gap', 24.2), ('trapeze', 18.0, 22.0, 8.0, 35.0, 'lin', 4.0)]
+    l4 = [ROLLER, SA[1], ('gap', 6.0), ROLLER] + fmx                         # wheel tap (v13: 3rd = same roller as the 1st) + freestyle
     p.straight(XBOWL - x_l4, [sec('STT-L4 roller, bosse, roller, saut freestyle', l4, 14.0)], tag='L4 roller, bump, roller, freestyle jump')
     p.turn(+180, RB, BIG, tag='bowl (L4 -> L3)')
-    l3 = [('scale', SA[0], 2.0), SA[1], ('dip', TABLE_B, 6.3, 0.35, 46.0, 'sym'), SA[2], SA[1], SA[0]]   # v11: roller, bump, fused double
+    l3 = [('scale', SA[0], 2.0), SA[1], ('fuse', TABLE_B, 5.0, 5.5, 2.2, 46.0, 0.58), SA[2], SA[1], SA[0]]   # v11: roller, bump, fused double
                                                                             # (2nd hump = mirror of the 1st), 3 bumps
     p.straight(XBOWL - XU, [rounded(sec('STT-L3 roller, long creux, 3 bosses', even(l3, XBOWL - XU, 4.0, 8.0), 4.0))], tag='L3 roller, bump, long raised dip, 3 bumps')
     p.turn(-180, RB, BIG2, tag='U L3 -> L2 (rays)')
     L2 = (XMID - RS) - XU
-    first = ('split', ('scale', SA[1], 4.8), ('scale', SA[1], 4.2))         # v9: inside (right) half closer to a normal bump
-    l2 = even([first] + up([SA[2], SA[0]], 1.35) + up([SA[1], SA[2], SA[0]], 1.35) + up([SA[1], SA[2]], 1.35), L2, 0.0, 8.0)   # v12: 8 ft before the turn (user: 8 ft, never more)
+    first = ('split', ('scale', SA[1], 4.8), ('scale', SA[1], 3.6))         # v13: inside (right) half lower again (4.2 -> 3.6)
+    l2 = even([first] + up([SA[2]], 1.25) + up([SA[0]], 1.35) +            # v13: 2nd bump a bit lower (5.0 -> 4.6)
+               up([SA[1], SA[2], SA[0]], 1.35) + up([SA[1], SA[2]], 1.35), L2, 0.0, 8.0)   # v12: 8 ft before the turn (user: 8 ft, never more)
     p.straight(L2, [rounded(sec('STT-L2 long triple, triple, double (ecarts egaux)', l2, 0.0), lead_in=True)], tag='L2 long triple, triple, double, same gaps')
     p.turn(-90, RS, SMALL, tag='L2 -> middle lane')
     Lmid = (Z['L6'] - RS) - (Z['L2'] + RS); mid = [SC[2], TABLE_B, SC[3]]
@@ -156,7 +163,7 @@ def stt():
     nf = len(L('tmp', FIN)) * 0.1
     p.straight(a_col, [rounded(sec(FINISH_SEC, FIN, a_col - nf - 3.0))], tag='west column: room after the turn, short finish double, curve right after')
     p.turn(+90, R_CURVE, None, tag='curve west column -> L4')
-    _start('STT', ox, oz, gate=(-100.0, 175.0), heading=0.0,
+    _start('STT', ox, oz, gate=START_GATE, heading=START_HEADING,
            route=[('S', 360.0), ('T', +90, 30.0, None), ('TO', (XBOWL + RB, Z['L4'] - RB))],
            narrow=[(0.0, None), (8.0, None), (42.0, 30.0)], end_w=30.0,
            finish=(FINISH_SEC, 0))

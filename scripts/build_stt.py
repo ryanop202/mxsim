@@ -29,6 +29,33 @@ def render_split_blend(grid, out, seg, split, u0, top_width, band=10.0):
     h = (a * (1 - w) + b * w) * sx_wall(np.abs(v) - top_width / 2)
     out[sl] = np.maximum(out[sl], h)
 
+def extras():
+    """v13: start platform (gates + grates on it, descent right after the gate line) and the freestyle ramp beside the
+    wheel tap (steel-like: near-vertical sides). Shapes asked by the user in game tests, not measured units."""
+    import compose
+    E = np.zeros((N, N)); ox, oz = LT.STT_ORIGIN; st = LS.STARTS['STT']
+    P = getattr(LT, 'START_PLATFORM', None)
+    if P:
+        gx, gz = LT.START_GATE[0] + ox, LT.START_GATE[1] + oz
+        a = np.radians(LT.START_HEADING); c, s_ = np.cos(a), np.sin(a); half = (LS.N_GATES - 1) / 2 * LS.GATE_PITCH + P['side']
+        r = P['back'] + P['edge'] + half + P['front'] + P['down'] + 5
+        sl, X, Z = G.window(gx - r, gx + r, gz - r, gz + r); u = (X - gx) * c + (Z - gz) * s_; v = -(X - gx) * s_ + (Z - gz) * c
+        uu = np.clip((u - P['front']) / P['down'], 0, 1)
+        prof = np.where(u <= P['front'], np.clip((u + P['back'] + P['edge']) / P['edge'], 0, 1), (1 + np.cos(np.pi * uu)) / 2)
+        lat = np.clip((half + P['edge'] - np.abs(v)) / P['edge'], 0, 1)
+        E[sl] = np.maximum(E[sl], P['h'] * prof * lat)
+    R = getattr(LT, 'FMX_RAMP', None)
+    if R:
+        k = compose.lane([('cut', 'Detroit_g31_1', R['H'], 0.9)])[0]; il = int(np.argmax(k)) * 0.1
+        lx, lz = R['lip'][0] + ox, R['lip'][1] + oz
+        d = np.array([R['aim'][0] - R['lip'][0], R['aim'][1] - R['lip'][1]]); d /= np.linalg.norm(d)
+        x0, z0 = lx - d[0] * il, lz - d[1] * il; L = len(k) * 0.1; w = R['width'] / 2 + R['side'] + 1
+        sl, X, Z = G.window(min(x0, x0 + d[0] * L) - w, max(x0, x0 + d[0] * L) + w, min(z0, z0 + d[1] * L) - w, max(z0, z0 + d[1] * L) + w)
+        u = (X - x0) * d[0] + (Z - z0) * d[1]; v = -(X - x0) * d[1] + (Z - z0) * d[0]
+        h = np.interp(u / 0.1, np.arange(len(k)), k, left=0, right=0) * np.clip(1 - (np.abs(v) - R['width'] / 2) / R['side'], 0, 1)
+        E[sl] = np.maximum(E[sl], h)
+    return E
+
 def build():
     jumps = np.zeros((N, N)); whoops = np.zeros((N, N)); berms = np.zeros((N, N))
     p = LT.stt(); secs, turns = [], []
@@ -51,7 +78,7 @@ def build():
                 jj, ii = np.meshgrid(np.arange(sl[1].start, sl[1].stop), np.arange(sl[0].start, sl[0].stop))
                 phi = np.arctan2(ii * S - g['cz'], jj * S - g['cx']); rel = np.angle(np.exp(1j * (phi - phi0))) * sgn
                 u = rel / np.radians(abs(g['ang'])); w = np.clip((u - 0.45) / 0.15, 0, 1); w = w * w * (3 - 2 * w)
-                gain = getattr(LT, 'BERM_GAIN', {}).get(g.get('tag'), getattr(LT, 'BERM90_GAIN', 1.0)) if abs(abs(g['ang']) - 90) < 1 else 1.0
+                gain = getattr(LT, 'BERM_GAIN', {}).get(g.get('tag'), getattr(LT, 'BERM90_GAIN', 1.0) if abs(abs(g['ang']) - 90) < 1 else 1.0)   # v13: per-turn gain on 180s too
                 berms[sl] = np.maximum(berms[sl], tmp[sl] * w * gain)
             elif g.get('berm') and abs(abs(g['ang']) - 90) < 1 and getattr(LT, 'BERM90_GAIN', 1.0) != 1.0:
                 tmp = np.zeros((N, N)); sl = render_berm_stamp(G, tmp, g['berm'], g['cx'], g['cz'], turn_mid_angle(g), ang_scale=berm_ang_scale(g['berm'], g['ang']))
@@ -59,6 +86,7 @@ def build():
             elif g.get('berm'): render_berm_stamp(G, berms, g['berm'], g['cx'], g['cz'], turn_mid_angle(g), ang_scale=berm_ang_scale(g['berm'], g['ang']))
             turns.append(dict(tag=g['tag'], angle=g['ang'], r=g['r'], berm=g.get('berm')))
     H = np.maximum.reduce([jumps, whoops, berms])
+    H = np.maximum(H, extras())                                  # v13: start platform + freestyle ramp
     TN = 2 ** 11; t = lambda a: a[:-1:2, :-1:2][:TN, :TN]
     tiles = np.full((TN, TN), T_MAIN, np.uint8)
     tiles[t(jumps) > 0.05] = T_JUMP; tiles[t(whoops) > 0.05] = T_WHOOP; tiles[t(berms) > 0.05] = T_BERM
