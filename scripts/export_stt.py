@@ -93,6 +93,10 @@ def grass_tile(path, n=256):
                 if -10 < x0 < n + 10 and -10 < y0 < n + 10:
                     d.line([(x0, y0), (x0 + L * np.cos(a), y0 + L * np.sin(a))], fill=c, width=1)
     a_ = np.asarray(im, float) * (1 - 0.12 * np.clip(noise(150.0), 0, None))[:, :, None]   # darker clumps
+    ref = f'{ROOT}/assets/grass_dvdb/grass_dvdb.png'
+    if getattr(LT, 'GRASS_DECALS', None) and os.path.exists(ref):    # v23: same mean colour as the grass decals (gaps don't show)
+        q = np.asarray(Image.open(ref).convert('RGBA'), float); m_ = q[:, :, 3] > 200; tgt = q[:, :, :3][m_].mean(0)
+        a_ = a_ * (tgt / a_.reshape(-1, 3).mean(0))[None, None, :]
     a_ = np.clip(a_, 0, 255).astype(np.uint8)
     with open(path, 'wb') as fh: fh.write(f'P6\n{n} {n}\n255\n'.encode()); fh.write(a_.tobytes())
 
@@ -176,6 +180,24 @@ def main():
     # decals (ground texture over the riding surface, obstacle and turn decals)
     R = StartRoute(LS.STARTS['STT'], LS.N_GATES, LS.GATE_PITCH)
     dec = surface_decals(p, R) + obstacle_and_turn_decals(p)
+    # v23: grass decals (DVDBVisualsCompound grass.png, chosen by the user; 3rd-party file, local use only) laid like DVDB does:
+    # 45 ft patches, random rotation, jittered grid every 26 ft (each spot covered ~3 times), on the grass only (>= 6 ft from dirt)
+    GD = getattr(LT, 'GRASS_DECALS', None)
+    if GD and getattr(LT, 'GRASS_OUTSIDE', None):
+        os.makedirs(f'{OUT}/decal', exist_ok=True)
+        for e in ('', '_tnorm'): shutil.copy(f"{ROOT}/assets/grass_dvdb/grass_dvdb{e}.png", f"{OUT}/decal/grass_dvdb{e}.png")
+        from scipy.ndimage import distance_transform_edt
+        x0, x1, z0, z1 = LT.ARENA; side = (H.shape[0] - 1) * S; g = np.arange(0, side, 2.0); GX, GZ = np.meshgrid(g - LT.STT_ORIGIN[0], g - LT.STT_ORIGIN[1])
+        dirt = (GX >= x0) & (GX <= x1) & (GZ >= z0) & (GZ <= z1)
+        for a0_, a1_, b0_, b1_ in LT.GRASS_OUTSIDE.get('keep', []): dirt |= (GX >= a0_) & (GX <= a1_) & (GZ >= b0_) & (GZ <= b1_)
+        dd = distance_transform_edt(~dirt) * 2.0; rg = np.random.default_rng(23); ng = 0
+        for zz in np.arange(GD['step'] / 2, side, GD['step']):
+            for xx in np.arange(GD['step'] / 2, side, GD['step']):
+                x_, z_ = xx + rg.uniform(-0.4, 0.4) * GD['step'], zz + rg.uniform(-0.4, 0.4) * GD['step']
+                i_, j_ = min(int(z_ / 2.0), dd.shape[0] - 1), min(int(x_ / 2.0), dd.shape[1] - 1)
+                if dd[i_, j_] < GD['clear'] or not (0 < x_ < side and 0 < z_ < side): continue
+                dec.append(f'[{x_:.6f} {z_:.6f}] {rg.uniform(-np.pi, np.pi):.6f} {GD["size"]:.6f} 1.000000 {P}/decal/grass_dvdb.png'); ng += 1
+        print('grass decals', ng)
     open(f'{OUT}/decals', 'w', newline='\n').write('\n'.join(dec) + '\n')
     # flaggers: 30 s board behind the gate row, finish flagger beside the finish line on flat ground away from the lanes
     smp = p.samples(1.0); tr = cKDTree(np.c_[smp['x'], smp['z']])

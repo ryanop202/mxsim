@@ -2,7 +2,7 @@
 START = west end. Every bump is a measured JGSX unit (lib/) unless marked 'scaled' (height scaled, same shape/length),
 'landing' (scaled, back side replaced by a gentle slope) or 'trapeze' (synthetic mound) - asked by the user in game tests.
 
-Lap (v22: flat terrace under the fences (no tilt), fences around rounded corners, steep bank right behind the start with a
+Lap (v23: grass decal patches (DVDB grass) on the grass. Before, v22: flat terrace under the fences (no tilt), fences around rounded corners, steep bank right behind the start with a
   flat back to it; night: 10 poles on flat pads, light points (lamp_glow) on the lamps. Before, v21: track frozen. Arena bank 42 ft, gentler (inner 160 ft); fences 28 ft up the slope; start platform 10 ft;
   realistic grass tile; night version (export_stt_night.py, 20 light poles, lights baked in the lightmap). Before, v20: arena bank 36.7 ft with a gentle inner slope; wooden fence (fence_wood) at its foot all around; track centred
   on the terrain. Before, v19, 14th test: L2 1st bump less steep (lip 0.75) with a softer entry; L1 1st bump 6 ft after the turn (triple in,
@@ -64,6 +64,8 @@ FMX_RAMP = dict(lip=(98.0, 153.0), aim=(170.0, 150.0), H=7.5, width=8.0, side=0.
 # v18: grass all around the dirt arena (as on the drone photos); dirt kept under the start area (local box x0, x1, z0, z1)
 # v21: night version (USLAND2026StThiberyNuit): light poles on the bank, `d` ft from the dirt area, lights baked in the lightmap
 NIGHT = dict(folder='USLAND2026StThiberyNuit', desc='USLAND: Saint-Thibery (nuit)', d=45.0, n_long=5, n_short=3, keep_every=2, pad=(7.0, 15.0))
+# v23: grass decal patches over the grass (DVDBVisualsCompound grass.png, the user's choice): size ft, grid step ft, clear ft from the dirt
+GRASS_DECALS = dict(size=45.0, step=26.0, clear=16.0)
 GRASS_OUTSIDE = dict(arena=True, keep=[(-126.0, -105.0, 108.0, 242.0)])   # v22: dirt area ends right behind the start platform
 # v19: the track sits in a pit: a giant grassed earth bank all around the dirt arena (and around the start area), as on the
 # drone photos. Height h ft, inner slope over `inner` ft (rounded toe and top), flat top `top` ft, outer slope `outer` ft.
