@@ -64,6 +64,18 @@ def lane(tokens):
             u, p = unit(t[1]); p = p * (t[2] / p.max()); kind = u['kind']; name = f'{t[1]} (H {t[2]:.1f})'; uid = ALIAS.get(t[1], t[1])
             if len(t) > 3 and t[3] == 'flip':     # v13c ('scale', uid, H, 'flip'): turned around (Saint-Thibery: steep side to the turn)
                 p = p[::-1].copy(); name += ' flip'
+        elif isinstance(t, tuple) and t[0] == 'cut':
+            # v13f ('cut', uid, H, back_slope): a kicker cut at its first edge (where the face stops being steep), scaled so the
+            # edge is at H, then a straight back side (Saint-Thibery freestyle kicker: "a la premiere arete, fais droit")
+            u, p = unit(t[1]); d = np.diff(p) / 0.1; im = int(np.argmax(d)); e = im + int(np.nonzero(d[im:] < 0.6)[0][0])
+            p = p[:e + 1] * (t[2] / p[e]); n = int(round(t[2] / t[3] / 0.1))
+            p = np.r_[p, t[2] * (1 - np.arange(1, n + 1) / n)]; kind = u['kind']; name = f'{t[1]} (cut H {t[2]:.1f})'; uid = ALIAS.get(t[1], t[1])
+        elif isinstance(t, tuple) and t[0] == 'stretch':
+            # v13f ('stretch', uid, H, k): scaled to H, the side after the crest stretched k times longer (gentler landing,
+            # same crest place) - Saint-Thibery big triple landing "un peu plus longue"
+            u, p = unit(t[1]); p = p * (t[2] / p.max()); c = int(np.argmax(p)); b_ = p[c:]
+            n = int(round(len(b_) * t[3])); p = np.r_[p[:c], np.interp(np.linspace(0, len(b_) - 1, n), np.arange(len(b_)), b_)]
+            kind = u['kind']; name = f'{t[1]} (H {t[2]:.1f}, back x{t[3]:.2f})'; uid = ALIAS.get(t[1], t[1])
         elif isinstance(t, tuple) and t[0] == 'dip':
             # v13c ('dip', uid, H, bottom): a table scaled to H whose top is dug into a raised dip (bottom = fraction of H):
             # between a table and a double, the valley does not reach the floor (Saint-Thibery L3, asked by the user)
@@ -82,7 +94,11 @@ def lane(tokens):
             # freestyle landing, asked by the user: "juste une montee, avec un petit plat et une descente"). Not a measured unit.
             H_, up_, top_, dn_ = t[1:5]
             c = lambda n: (1 - np.cos(np.linspace(0, np.pi, n))) / 2
-            p = H_ * np.r_[c(int(up_ / 0.1)), np.ones(int(top_ / 0.1)), c(int(dn_ / 0.1))[::-1]]
+            climb = c(int(up_ / 0.1))
+            if len(t) > 5 and t[5] == 'lin':      # v13f: straight climb with short rounded ends (f ft) - "moins ronde, plus droite"
+                f = t[6]; x = np.arange(int(up_ / 0.1)) * 0.1; m = 1.0 / (up_ - f)
+                climb = np.where(x < f, m * x * x / (2 * f), np.where(x > up_ - f, 1 - m * (up_ - x) ** 2 / (2 * f), m * (x - f / 2)))
+            p = H_ * np.r_[climb, np.ones(int(top_ / 0.1)), c(int(dn_ / 0.1))[::-1]]
             kind = 'T'; name = f'trapeze H {H_:.1f} ({up_:.0f}/{top_:.0f}/{dn_:.0f} ft)'; uid = None
         elif isinstance(t, tuple) and t[0] == 'landing':
             # v13b ('landing', uid, H, back_ft): measured unit scaled to H, its back side replaced by a gentle cosine slope

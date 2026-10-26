@@ -37,6 +37,9 @@ def build():
             for prof, u0, name in g['sections']:
                 render_lane_block(G, whoops if 'whoops' in name else jumps, g, prof, u0, TW)
                 for sp in LS.SPLITS.get(name, []): render_split_blend(G, jumps, g, sp, u0, TW)
+                if name in getattr(LT, 'WIDE', {}):          # v12: a wider block over part of the section (freestyle landing)
+                    a0, a1, wl, wr = LT.WIDE[name]; i0, i1 = int(a0 / 0.1), int(a1 / 0.1)
+                    render_lane_block(G, jumps, g, prof[i0:i1], u0 + a0, TW + wl + wr, v_off=(wr - wl) / 2)
                 secs.append(dict(lane=g['tag'], name=name, s0=g['s0'] + u0, length=len(prof) * 0.1, hmax=float(prof.max()),
                                  items=LS.COMBOS[name]['items']))
         elif g['kind'] == 'T':

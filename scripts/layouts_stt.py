@@ -2,21 +2,23 @@
 START = west end. Every bump is a measured JGSX unit (lib/) unless marked 'scaled' (height scaled, same shape/length),
 'landing' (scaled, back side replaced by a gentle slope) or 'trapeze' (synthetic mound) - asked by the user in game tests.
 
-Lap (v11, after the 6th in-game test + follow-up; v10 fixed the curbs left by the v9 rounding):
-  L7  along the stands, eastbound : small double right at the turn exit (landing turned around: steep side to the turn),
-      11 whoops, triple close to the turn (approved)
-  high berm turn (90, big radius) -> east lane northbound : bigger SX triple (Cleveland g29 x1.15) (approved)
-  tight turn -> L1 north, westbound : triple, triple, bump, table, bump, 2 bumps, foot of the bumps rounded (approved)
-  left turn -> west column southbound : finish double, round normal landing (Glendale g83 at 10 ft), curve right after
-  one 90 curve (r 16) -> L4 eastbound : wheel tap (the user's word: roller, medium bump, roller), freestyle jump (approved)
-  bowl (left 180, half berm) -> L3 westbound : low roller (approved), bump, fused double (long raised dip, crest to crest
-      40 ft, bottom 2.75 ft, symmetric: 2nd hump as steep as the 1st), 3 bumps ending 8 ft before the U, feet rounded
-  U (right 180) -> L2 eastbound : long triple right at the turn exit (inside half of the 1st bump 4.2 ft), triple, double,
-      same gaps, foot of the bumps rounded; the two halves of the 1st bump blend over 10 ft (no step)
+Lap (v12, after the 7th in-game test):
+  L7  along the stands, eastbound : small double right at the turn exit (landing turned around), 11 whoops, triple (approved)
+  high berm turn (90, big radius) -> east lane northbound : bigger SX triple (Cleveland g29 x1.15), first take-off foot
+      rounded (smoother), landing 8.8 ft with a 35 % longer back (gentler), crest at the same place
+  tight turn -> L1 north, westbound : triple, triple, bump, table, bump, 2 bumps, feet rounded, first take-off smoother
+  left turn -> west column southbound : finish double, round normal landing (Glendale g83 at 10 ft) (approved)
+  one 90 curve (r 16) -> L4 eastbound : wheel tap (roller, medium bump, roller) (approved), freestyle jump: kicker cut clean
+      at its first edge (lip 6.9 ft, same place) with a straight back; landing climb straight and steeper (22 ft, slope 1.0),
+      same flat and descent, 9 ft wider on the right (start corridor moved 8 ft south)
+  bowl (left 180, half berm) -> L3 westbound : low roller, bump (approved), fused double longer and deeper (crests 5.5 ft,
+      bottom 2.2 ft, crest to crest 46 ft, faces 0.5), 3 bumps ending 8 ft before the U (user: 8 ft, never more)
+  U (right 180) -> L2 eastbound : long triple right at the turn exit (split 1st bump, smoother take-off), triple, double,
+      same gaps, feet rounded, ends 8 ft before the turn
   -> middle lane southbound : bump, table, bump (approved)
   -> L6 westbound : jumpable roller right at the turn exit, flat straight (approved)
   U (left 180, half berm) -> L7
-Start: 22 gates at the west end, eastbound behind the freestyle jump (between L4 and L6), left into the bowl.
+Start: 22 gates at the west end (v12: 8 ft further south), eastbound behind the freestyle jump (between L4 and L6), left into the bowl.
 Local coords: x east, z south (image down)."""
 import numpy as np
 from engine import Path
@@ -38,6 +40,8 @@ HALF_BERM = ('bowl (L4 -> L3)', 'U L6 -> L7')                             # berm
 BERM90_GAIN = 1.4                                                           # berms of the 90 deg turns higher (v6)
 BERM_GAIN = {'L7 -> east lane (real high berm)': 1.2}                      # v7: that one a bit lower
 ROLLER, SMALL_B = 'Custom1_g30_1', 'Glendale_g40_2'                        # 1.9 / 2.5 ft
+# v12: freestyle landing wider ("beaucoup de place", mostly on the right): section -> (from_ft, to_ft, left_ft, right_ft)
+WIDE = {'STT-L4 roller, bosse, roller, saut freestyle': (147.6, 212.6, 0.0, 9.0)}   # right only (L3 too close on the left); start corridor 8 ft south
 
 def up(units, k):
     """measured singles scaled by k; gaps kept."""
@@ -73,42 +77,63 @@ def even(units, lane, u0, end):
         if j < len(units) - 1: toks.append(('gap', round(g, 1)))
     return toks
 
-def _close(P, R):
-    """grey closing with a ball of radius R ft, on a zero-padded copy; nothing is raised before the foot of the first bump
-    or after the foot of the last one (v10: v9 cut the padding and left a curb at the start/end of the section)."""
+def _close(P, R, interior=True, keep_in=False, R_in=40.0):
+    """Grey closing with a ball (radius R ft) on a zero-padded copy: fills the concave corners at the foot of the bumps,
+    crests and faces above are unchanged. interior: between the first and the last crest only (v10: no curb at the ends).
+    keep_in (v12, "plus smooth le premier appel"): also rounds the foot of the first bump with a ball of R_in ft; the
+    fillet is kept in front of the section. Returns (profile, lead_ft) - lead_ft = length added in front."""
     from scipy.ndimage import grey_closing
-    n = int(R / 0.1); y = np.arange(-n, n + 1) * 0.1; pad = np.zeros(n + 2)
-    C = grey_closing(np.r_[pad, P, pad], structure=np.sqrt(R * R - y * y) - R)[len(pad):len(pad) + len(P)]
     from scipy.signal import find_peaks
-    pk, _ = find_peaks(np.r_[0, P, 0], prominence=0.3); pk = pk - 1      # only between the first and the last crest
-    if len(pk): C[:pk[0]] = P[:pk[0]]; C[pk[-1]:] = P[pk[-1]:]
-    else: C = P.copy()
-    return np.maximum(C, P)
+    def cl(Q, r):
+        n = int(r / 0.1); y = np.arange(-n, n + 1) * 0.1
+        return grey_closing(Q, structure=np.sqrt(r * r - y * y) - r)
+    npad = int(max(R, R_in) / 0.1) + 2; Q = np.r_[np.zeros(npad), P, np.zeros(npad)]; out = Q.copy()
+    pk, _ = find_peaks(np.r_[0, Q, 0], prominence=0.3); pk = pk - 1
+    if len(pk) == 0: return P.copy(), 0.0
+    if interior: out[pk[0]:pk[-1]] = cl(Q, R)[pk[0]:pk[-1]]
+    if keep_in: out[:pk[0]] = cl(Q, R_in)[:pk[0]]
+    out = np.maximum(out, Q)
+    nz = np.nonzero(out[:npad] > 1e-4)[0]; lead = (npad - nz[0]) if (keep_in and len(nz)) else 0
+    return out[npad - lead:npad + len(P)], lead * 0.1
 
-def rounded(s, R=30.0):
-    """v9: round the foot of the bumps (the user: "plat, bosse, plat, bosse" -> transitions). Only fills the concave
-    corners at the foot of the faces; crests and faces above are unchanged. Split halves (double lines) too (v10)."""
-    P, u0, name = s
-    if name in LS.SPLITS: LS.SPLITS[name] = [(st, _close(pl, R), _close(pr, R)) for st, pl, pr in LS.SPLITS[name]]
-    return (_close(P, R), u0, name)
+def rounded(s, R=30.0, interior=True, lead_in=False):
+    """v9: round the foot of the bumps (the user: "plat, bosse, plat, bosse" -> transitions). Split halves (double lines)
+    too (v10). lead_in (v12): smoother first take-off - on the split halves when the section starts with a split."""
+    P, u0, name = s; sp = LS.SPLITS.get(name, [])
+    first_split = bool(sp) and sp[0][0] < 1.0
+    if sp:
+        new = []
+        for k, (st, pl, pr) in enumerate(sp):
+            li = lead_in and k == 0 and first_split
+            (a, la), (b, lb) = _close(pl, R, True, li), _close(pr, R, True, li); ld = max(la, lb)
+            a = np.r_[np.zeros(int(round((ld - la) / 0.1))), a]; b = np.r_[np.zeros(int(round((ld - lb) / 0.1))), b]
+            n = max(len(a), len(b)); new.append((st - ld, np.pad(a, (0, n - len(a))), np.pad(b, (0, n - len(b)))))
+        LS.SPLITS[name] = new
+    C, lead = _close(P, R, interior, lead_in and not first_split)
+    if lead:                                   # profile starts lead ft earlier: shift the items and the splits
+        c = LS.COMBOS[name]; c['items'] = [(n_, a_ + lead, b_ + lead, h_) for n_, a_, b_, h_ in c['items']]
+        if name in LS.SPLITS: LS.SPLITS[name] = [(st + lead, pl, pr) for st, pl, pr in LS.SPLITS[name]]
+    return (C, u0 - lead, name)
 
 def stt():
     ox, oz = STT_ORIGIN
     a_col = Z['L4'] - R_CURVE - RS - Z['L1']                               # west column straight
     x_l4 = XWL + R_CURVE
     p = Path(ox + x_l4, oz + Z['L4'], 0.0, 'STT')                          # L4, after the curve, eastbound (straight)
-    fmx = ['Detroit_g31_1', ('gap', 12.0), ('trapeze', 18.0, 30.0, 8.0, 35.0)]   # v7: steep short kicker, one clean landing mound
-    l4 = [ROLLER, SA[1], 'Glendale_g63_3'] + fmx
+    # v12: kicker cut clean at its first edge (lip kept at 6.9 ft and at the same place) with a straight back; landing climb
+    # straighter and steeper (22 ft, slope 1.0), same flat (same place) and same descent
+    fmx = [('gap', 8.5), ('cut', 'Detroit_g31_1', 6.9, 0.9), ('gap', 24.2), ('trapeze', 18.0, 22.0, 8.0, 35.0, 'lin', 4.0)]
+    l4 = [ROLLER, SA[1], 'Glendale_g63_3'] + fmx                            # wheel tap (roller, medium bump, roller) + freestyle
     p.straight(XBOWL - x_l4, [sec('STT-L4 roller, bosse, roller, saut freestyle', l4, 14.0)], tag='L4 roller, bump, roller, freestyle jump')
     p.turn(+180, RB, BIG, tag='bowl (L4 -> L3)')
-    l3 = [('scale', SA[0], 2.0), SA[1], ('dip', TABLE_B, 5.5, 0.5, 40.0, 'sym'), SA[2], SA[1], SA[0]]   # v11: roller, bump, fused double
+    l3 = [('scale', SA[0], 2.0), SA[1], ('dip', TABLE_B, 6.3, 0.35, 46.0, 'sym'), SA[2], SA[1], SA[0]]   # v11: roller, bump, fused double
                                                                             # (2nd hump = mirror of the 1st), 3 bumps
     p.straight(XBOWL - XU, [rounded(sec('STT-L3 roller, long creux, 3 bosses', even(l3, XBOWL - XU, 4.0, 8.0), 4.0))], tag='L3 roller, bump, long raised dip, 3 bumps')
     p.turn(-180, RB, BIG2, tag='U L3 -> L2 (rays)')
     L2 = (XMID - RS) - XU
     first = ('split', ('scale', SA[1], 4.8), ('scale', SA[1], 4.2))         # v9: inside (right) half closer to a normal bump
-    l2 = even([first] + up([SA[2], SA[0]], 1.35) + up([SA[1], SA[2], SA[0]], 1.35) + up([SA[1], SA[2]], 1.35), L2, 0.0, 12.0)
-    p.straight(L2, [rounded(sec('STT-L2 long triple, triple, double (ecarts egaux)', l2, 0.0))], tag='L2 long triple, triple, double, same gaps')
+    l2 = even([first] + up([SA[2], SA[0]], 1.35) + up([SA[1], SA[2], SA[0]], 1.35) + up([SA[1], SA[2]], 1.35), L2, 0.0, 8.0)   # v12: 8 ft before the turn (user: 8 ft, never more)
+    p.straight(L2, [rounded(sec('STT-L2 long triple, triple, double (ecarts egaux)', l2, 0.0), lead_in=True)], tag='L2 long triple, triple, double, same gaps')
     p.turn(-90, RS, SMALL, tag='L2 -> middle lane')
     Lmid = (Z['L6'] - RS) - (Z['L2'] + RS); mid = [SC[2], TABLE_B, SC[3]]
     p.straight(Lmid, [sec('STT-mid bosse, table, bosse', mid, (Lmid - len(L('tmp', mid)) * 0.1) / 2)], tag='middle lane: bump, table, bump')
@@ -120,17 +145,18 @@ def stt():
     p.straight(L7, [sec('STT-L7 petit double, 11 whoops, triple', l7, 1.5)], tag='L7 small double at the turn exit, 11 whoops, triple')
     p.turn(+90, R_HIGH, BIG, tag='L7 -> east lane (real high berm)')
     Lns = (Z['L7'] - R_HIGH) - (Z['L1'] + R_TIGHT)
-    big3 = [('scale', 'Custom1_g29_2', 9.1), ('gap', 0.5), ('scale', 'Custom1_g29_3', 6.9), ('gap', 1.6), ('scale', 'Arlington_g29_2', 8.45)]  # v8: x1.15
-    p.straight(Lns, [sec('STT-east gros triple SX (plus gros)', big3, 30.0)], tag='east lane, bigger SX triple, less run-up')
+    big3 = [('scale', 'Custom1_g29_2', 9.1), ('gap', 0.5), ('scale', 'Custom1_g29_3', 6.9), ('gap', 1.6), ('stretch', 'Arlington_g29_2', 8.8, 1.35)]  # v8: x1.15
+    # v12: landing a bit higher (8.45 -> 8.8 ft), its back 35 % longer (gentler), crest at the same place
+    p.straight(Lns, [rounded(sec('STT-east gros triple SX (plus gros)', big3, 30.0), interior=False, lead_in=True)], tag='east lane, bigger SX triple, less run-up')
     p.turn(+90, R_TIGHT, SMALL2, tag='east lane -> L1 (tight)')
     L1 = (XEL - R_TIGHT) - (XWL + RS)
     l1 = spread([up(SA[:3], 1.2), up(SD[:3], 1.2), up([SA[3]], 1.2), [TABLE_B], up([SA[0]], 1.2), up([SA[0], SA[0]], 1.2)], L1, 16.0, 22.0, 8.0)
-    p.straight(L1, [rounded(sec('STT-L1 triple, triple, bosse, table, bosse, 2 bosses', l1, 16.0))], tag='L1 along the north fence, wider gaps')
+    p.straight(L1, [rounded(sec('STT-L1 triple, triple, bosse, table, bosse, 2 bosses', l1, 16.0), lead_in=True)], tag='L1 along the north fence, wider gaps')
     p.turn(+90, RS, SMALL, tag='L1 -> west column')
     nf = len(L('tmp', FIN)) * 0.1
     p.straight(a_col, [rounded(sec(FINISH_SEC, FIN, a_col - nf - 3.0))], tag='west column: room after the turn, short finish double, curve right after')
     p.turn(+90, R_CURVE, None, tag='curve west column -> L4')
-    _start('STT', ox, oz, gate=(-100.0, 167.0), heading=0.0,
+    _start('STT', ox, oz, gate=(-100.0, 175.0), heading=0.0,
            route=[('S', 360.0), ('T', +90, 30.0, None), ('TO', (XBOWL + RB, Z['L4'] - RB))],
            narrow=[(0.0, None), (8.0, None), (42.0, 30.0)], end_w=30.0,
            finish=(FINISH_SEC, 0))
