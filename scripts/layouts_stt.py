@@ -2,7 +2,8 @@
 START = west end. Every bump is a measured JGSX unit (lib/) unless marked 'scaled' (height scaled, same shape/length),
 'landing' (scaled, back side replaced by a gentle slope) or 'trapeze' (synthetic mound) - asked by the user in game tests.
 
-Lap (v16, 11th test: bowl 18 ft earlier after the freestyle landing (L3 gaps 3 ft); L2 left take-off 4.7 ft, concave
+Lap (v17, 12th test: L3 last 2 bumps 4 ft further apart (room before the U); L2 smoother entry on both halves (lead-in
+  ball 15 ft, kick curve kept); L1 1st bump 5 ft after the turn, less round top, smoother entry. Before, v16, 11th test: bowl 18 ft earlier after the freestyle landing (L3 gaps 3 ft); L2 left take-off 4.7 ft, concave
   bottom and rolled-over top, right half a normal 3.6 ft bump; rhythm landings fuller (L1, L2, L3); L1 1st bump 8 ft after
   the turn, between measured and kick; fused double 1st hump 4.4 ft, straight climb to the 2nd. Before, v15, 10th test: start platform 8 ft with a straight descent; L3 turns 6 ft earlier (roller 1 ft after the bowl, 5 ft
   before the U); L2 take-off = concave kicker ("kick"), 3rd bump 5.2 ft; east lane -> L1 = the big 90 of the whoops (r 21.5,
@@ -77,14 +78,14 @@ def spread(groups, lane, u0, end, g_in):
         if k < len(groups) - 1: toks.append(('gap', g_out))
     return toks
 
-def even(units, lane, u0, end):
-    """v8: same gap between every bump of the lane (the user: not 3, 3, 2)."""
+def even(units, lane, u0, end, last_extra=0.0):
+    """v8: same gap between every bump of the lane (the user: not 3, 3, 2). v17: last_extra ft more before the last unit."""
     unit_len = lambda u: len(L('tmp', [u])) * 0.1
-    g = (lane - u0 - end - sum(unit_len(u) for u in units)) / max(1, len(units) - 1)
+    g = (lane - u0 - end - last_extra - sum(unit_len(u) for u in units)) / max(1, len(units) - 1)
     toks = []
     for j, u in enumerate(units):
         toks.append(u)
-        if j < len(units) - 1: toks.append(('gap', round(g, 1)))
+        if j < len(units) - 1: toks.append(('gap', round(g + (last_extra if j == len(units) - 2 else 0.0), 1)))
     return toks
 
 def _close(P, R, interior=True, keep_in=False, R_in=40.0):
@@ -113,7 +114,7 @@ def _full(q, k):
     if pc > 0: q[c:] = q[c:] + k * q[c:] * (pc - q[c:]) / pc
     return q
 
-def rounded(s, R=30.0, interior=True, lead_in=False, full=0.0):
+def rounded(s, R=30.0, interior=True, lead_in=False, full=0.0, R_in=40.0):
     """v9: round the foot of the bumps (the user: "plat, bosse, plat, bosse" -> transitions). Split halves (double lines)
     too (v10). lead_in (v12): smoother first take-off - on the split halves when the section starts with a split."""
     P, u0, name = s; sp = LS.SPLITS.get(name, [])
@@ -129,11 +130,11 @@ def rounded(s, R=30.0, interior=True, lead_in=False, full=0.0):
         new = []
         for k, (st, pl, pr) in enumerate(sp):
             li = lead_in and k == 0 and first_split
-            (a, la), (b, lb) = _close(pl, R, True, li), _close(pr, R, True, li); ld = max(la, lb)
+            (a, la), (b, lb) = _close(pl, R, True, li, R_in), _close(pr, R, True, li, R_in); ld = max(la, lb)
             a = np.r_[np.zeros(int(round((ld - la) / 0.1))), a]; b = np.r_[np.zeros(int(round((ld - lb) / 0.1))), b]
             n = max(len(a), len(b)); new.append((st - ld, np.pad(a, (0, n - len(a))), np.pad(b, (0, n - len(b)))))
         LS.SPLITS[name] = new
-    C, lead = _close(P, R, interior, lead_in and not first_split)
+    C, lead = _close(P, R, interior, lead_in and not first_split, R_in)
     if lead:                                   # profile starts lead ft earlier: shift the items and the splits
         c = LS.COMBOS[name]; c['items'] = [(n_, a_ + lead, b_ + lead, h_) for n_, a_, b_, h_ in c['items']]
         if name in LS.SPLITS: LS.SPLITS[name] = [(st + lead, pl, pr) for st, pl, pr in LS.SPLITS[name]]
@@ -152,13 +153,13 @@ def stt():
     p.turn(+180, RB, BIG, tag='bowl (L4 -> L3)')
     l3 = [('scale', SA[0], 2.0), SA[1], ('fuse', TABLE_B, 4.4, 5.5, 2.2, 46.0, 0.58, 4.0), SA[2], SA[1], SA[0]]   # v11: roller, bump, fused double
                                                                             # (2nd hump = mirror of the 1st), 3 bumps
-    p.straight(XBOWL - XU, [rounded(sec('STT-L3 roller, long creux, 3 bosses', even(l3, XBOWL - XU, 0.5, 4.0), 0.5), full=0.3)], tag='L3 roller, bump, long raised dip, 3 bumps')
+    p.straight(XBOWL - XU, [rounded(sec('STT-L3 roller, long creux, 3 bosses', even(l3, XBOWL - XU, 0.5, 1.0, 4.0), 0.5), full=0.3)], tag='L3 roller, bump, long raised dip, 3 bumps')
     p.turn(-180, RB, BIG2, tag='U L3 -> L2 (rays)')
     L2 = (XMID - RS) - XU
     first = ('split', ('kick', SA[1], 4.7, 0.95, 0.7), ('scale', SA[1], 3.6))   # v16: left lower, rolls over at the top; right normal         # v14: outside half more of a kicker (4.8 -> 5.3); inside 3.6
     l2 = even([first] + up([SA[2]], 1.25) + [('scale', SA[0], 5.2)] +            # v13: 2nd bump a bit lower (5.0 -> 4.6)
                up([SA[1], SA[2], SA[0]], 1.35) + up([SA[1], SA[2]], 1.35), L2, -4.0, 8.0)   # v12: 8 ft before the turn (user: 8 ft, never more); v14: 1st bump 4 ft closer to the U
-    p.straight(L2, [rounded(sec('STT-L2 long triple, triple, double (ecarts egaux)', l2, -4.0), full=0.3)], tag='L2 long triple, triple, double, same gaps')
+    p.straight(L2, [rounded(sec('STT-L2 long triple, triple, double (ecarts egaux)', l2, -4.0), full=0.3, lead_in=True, R_in=15.0)], tag='L2 long triple, triple, double, same gaps')
     p.turn(-90, RS, SMALL, tag='L2 -> middle lane')
     Lmid = (Z['L6'] - RS) - (Z['L2'] + RS); mid = [SC[2], TABLE_B, SC[3]]
     p.straight(Lmid, [sec('STT-mid bosse, table, bosse', mid, (Lmid - len(L('tmp', mid)) * 0.1) / 2)], tag='middle lane: bump, table, bump')
@@ -175,8 +176,8 @@ def stt():
     p.straight(Lns, [rounded(sec('STT-east gros triple SX (plus gros)', big3, 30.0), interior=False, lead_in=True)], tag='east lane, bigger SX triple, less run-up')
     p.turn(+90, R_TIGHT, BIG, tag='east lane -> L1 (high berm, as after the whoops)')
     L1 = (XEL - R_TIGHT) - (XWL + RS)
-    l1 = spread([[('kick', SA[0], 4.4, 0.8, 0.6)] + up(SA[1:3], 1.2), up(SD[:3], 1.2), up([SA[3]], 1.2), [TABLE_B], up([SA[0]], 1.2), up([SA[0], SA[0]], 1.2)], L1, 8.0, 22.0, 7.45)   # v15: gaps 8 -> 7.2 ft (L1 shorter with the big turn, keeps 22 ft before the finish turn)
-    p.straight(L1, [rounded(sec('STT-L1 triple, triple, bosse, table, bosse, 2 bosses', l1, 8.0), full=0.3)], tag='L1 along the north fence, wider gaps')
+    l1 = spread([[('kick', SA[0], 4.4, 0.8, 0.8)] + up(SA[1:3], 1.2), up(SD[:3], 1.2), up([SA[3]], 1.2), [TABLE_B], up([SA[0]], 1.2), up([SA[0], SA[0]], 1.2)], L1, 5.0, 22.0, 7.45)   # v15: gaps 8 -> 7.2 ft (L1 shorter with the big turn, keeps 22 ft before the finish turn)
+    p.straight(L1, [rounded(sec('STT-L1 triple, triple, bosse, table, bosse, 2 bosses', l1, 5.0), full=0.3, lead_in=True, R_in=15.0)], tag='L1 along the north fence, wider gaps')
     p.turn(+90, RS, SMALL, tag='L1 -> west column')
     nf = len(L('tmp', FIN)) * 0.1
     p.straight(a_col, [rounded(sec(FINISH_SEC, FIN, a_col - nf - 3.0))], tag='west column: room after the turn, short finish double, curve right after')
