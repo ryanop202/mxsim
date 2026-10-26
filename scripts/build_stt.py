@@ -48,26 +48,44 @@ def dirt_region(GX, GZ):
     for a0_, a1_, b0_, b1_ in getattr(LT, 'GRASS_OUTSIDE', {}).get('keep', []): m |= (GX >= a0_) & (GX <= a1_) & (GZ >= b0_) & (GZ <= b1_)
     return m
 
+def region_dist(step=1.0, close_r=45.0):
+    """v25: distance (ft) to the dirt area on a `step` ft world grid, the area's inner corners rounded (binary closing, radius
+    close_r) so the bank has no crease / cone where the start area meets the arena. Returns (d, iz, ix, GX, GZ); also saved to
+    build/stt_dist.npy (1 ft grid, world origin) for export (tiles, fence line, decals, night light)."""
+    from scipy.ndimage import distance_transform_edt, binary_closing
+    ox, oz = LT.STT_ORIGIN; side = (N - 1) * S
+    g = np.arange(0, side + step / 2, step); GX, GZ = np.meshgrid(g - ox, g - oz)
+    from scipy.ndimage import binary_opening
+    x0, x1, z0, z1 = LT.ARENA; m = (GX >= x0) & (GX <= x1) & (GZ >= z0) & (GZ <= z1)
+    for a0_, a1_, b0_, b1_ in getattr(LT, 'GRASS_OUTSIDE', {}).get('keep', []):     # v25: start area with rounded outer corners
+        sb = (GX >= a0_) & (GX <= a1_ + 40) & (GZ >= b0_) & (GZ <= b1_); ko = int(30.0 / step); yo, xo = np.mgrid[-ko:ko + 1, -ko:ko + 1]
+        m |= binary_opening(sb, structure=(xo * xo + yo * yo) <= ko * ko) & (GX <= a1_)
+    k = int(close_r / step); yy, xx = np.mgrid[-k:k + 1, -k:k + 1]
+    m = binary_closing(m, structure=(xx * xx + yy * yy) <= k * k)
+    d, (iz, ix) = distance_transform_edt(~m, return_indices=True); d = d * step
+    if step == 1.0: np.save(f'{OUT}/stt_dist.npy', d.astype(np.float32))
+    return d, iz, ix, GX, GZ
+
 def bank_h(step=1.0):
     """v24: bank height on a `step` ft grid over the whole terrain. Starts at the height of the nearest ground of the dirt area
     (start platform 10 ft, floor 0) and rises in one smoothstep slope to h; flat terrace under the fence; shorter slope behind
     the start (start_inner), blended along the edge (start_blend) so the corners merge into the rest of the bank."""
     from scipy.ndimage import distance_transform_edt
     B_ = LT.ARENA_BANK; ox, oz = LT.STT_ORIGIN; side = (N - 1) * S
-    g = np.arange(0, side + step / 2, step); GX, GZ = np.meshgrid(g - ox, g - oz)
-    dirt = dirt_region(GX, GZ)
-    d, (iz, ix) = distance_transform_edt(~dirt, return_indices=True); d = d * step
+    d, iz, ix, GX, GZ = region_dist(step)
     base = plat_h(GX, GZ)[iz, ix]                                               # ground height at the nearest dirt point
     a0_, a1_, b0_, b1_ = LT.GRASS_OUTSIDE['keep'][0]; sb = (GX >= a0_) & (GX <= a1_) & (GZ >= b0_) & (GZ <= b1_)
     w = (1 - ss_(distance_transform_edt(~sb) * step / B_['start_blend']))[iz, ix]   # 1 on the start edge, fading along the edge
     from scipy.ndimage import gaussian_filter                                  # v24: no crease where the nearest edge switches
-    w = gaussian_filter(w, 12.0 / step); k_ = ss_(d / 25.0); base = base * (1 - k_) + gaussian_filter(base, 12.0 / step) * k_
+    w = gaussian_filter(w, 40.0 / step)                                         # v25: wide blends -> no crease / cone where the
+    k_ = ss_(d / 30.0); base = gaussian_filter(base, 6.0 / step) * (1 - k_) + gaussian_filter(base, 25.0 / step) * k_   # nearest edge switches
     inner = B_['inner'] + (B_['start_inner'] - B_['inner']) * w
     if B_.get('terrace'):
         ta, tw = B_['terrace']; ta_, tb_ = ta - tw / 2, ta + tw / 2
         d = np.where(d < ta_, d, np.where(d <= tb_, ta_, d - tw))
     up = base + (B_['h'] - base) * ss_(d / inner)
-    return np.where(d <= inner + B_['top'], up, B_['h'] * (1 - ss_((d - inner - B_['top']) / B_['outer'])))
+    hb = np.where(d <= inner + B_['top'], up, B_['h'] * (1 - ss_((d - inner - B_['top']) / B_['outer'])))
+    return np.where(d > 0, hb, np.minimum(hb, plat_h(GX, GZ)))                  # v25: inside: never above the real ground (no trench at the edge)
 
 def extras():
     """v13: start platform (gates + grates on it, descent right after the gate line) and the freestyle ramp beside the
@@ -78,7 +96,10 @@ def extras():
     if P:                                        # v24: platform with smooth side ramps (plat_h), full resolution
         gx, gz = LT.START_GATE[0] + ox, LT.START_GATE[1] + oz; r = P['back'] + (LS.N_GATES - 1) / 2 * LS.GATE_PITCH + P['side'] + P['side_ramp'] + P['front'] + P['down'] + 5
         sl, X, Z = G.window(gx - r, gx + r, gz - r, gz + r)
-        E[sl] = np.maximum(E[sl], plat_h(X - ox, Z - oz))
+        from scipy.ndimage import map_coordinates
+        dreg = region_dist(1.0)[0]                                             # v25: platform only inside the (rounded) dirt area
+        inside = map_coordinates(dreg, [Z.ravel(), X.ravel()], order=1).reshape(X.shape) <= 0.5
+        E[sl] = np.maximum(E[sl], plat_h(X - ox, Z - oz) * inside)
     R = getattr(LT, 'FMX_RAMP', None)
     if R and not R.get('model'):                 # v18: a steel model (statue with collision) replaces the dirt ramp
         k = compose.lane([('cut', 'Detroit_g31_1', R['H'], 0.9)])[0]; il = int(np.argmax(k)) * 0.1

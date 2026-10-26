@@ -2,7 +2,9 @@
 START = west end. Every bump is a measured JGSX unit (lib/) unless marked 'scaled' (height scaled, same shape/length),
 'landing' (scaled, back side replaced by a gentle slope) or 'trapeze' (synthetic mound) - asked by the user in game tests.
 
-Lap (v24: dirt (track decals) up to the fence, grass from the fence; start: one smooth slope from the platform up the bank,
+Lap (v25: night: track lit exactly like by day (day lightmap inside the fence), night around; dirt decals under the
+  track ones; clean dirt/grass line at the fence (rounded distance field); start corners rounded (no cone); JGSX green 3D grass
+  tufts instead of the DVDB patches. Before, v24: dirt (track decals) up to the fence, grass from the fence; start: one smooth slope from the platform up the bank,
   merged at the corners; fence closed loop; thicker ribbon on map.png; night lightmap with the day key light (relief). Before, v23: grass decal patches (DVDB grass) on the grass. Before, v22: flat terrace under the fences (no tilt), fences around rounded corners, steep bank right behind the start with a
   flat back to it; night: 10 poles on flat pads, light points (lamp_glow) on the lamps. Before, v21: track frozen. Arena bank 42 ft, gentler (inner 160 ft); fences 28 ft up the slope; start platform 10 ft;
   realistic grass tile; night version (export_stt_night.py, 20 light poles, lights baked in the lightmap). Before, v20: arena bank 36.7 ft with a gentle inner slope; wooden fence (fence_wood) at its foot all around; track centred
@@ -68,7 +70,10 @@ NIGHT = dict(folder='USLAND2026StThiberyNuit', desc='USLAND: Saint-Thibery (nuit
 # v24: track-coloured decals over all the dirt up to the fence ("le contour marron clair")
 DIRT_DECALS = dict(size=26.0, step=10.0)
 # v23: grass decal patches over the grass (DVDBVisualsCompound grass.png, the user's choice): size ft, grid step ft, clear ft from the dirt
-GRASS_DECALS = dict(size=45.0, step=26.0, clear=50.0)   # v24: patches stop at the fence (centre >= fence + 22 ft)
+GRASS_DECALS = None   # v25: DVDB grass patches replaced by the JGSX 3D grass tufts (user's choice)
+# v25: 3D grass tufts (JGSX2026Scuttle grass_5 / grass_15 models sent by the user, green tuft texture) on the grass, from just
+# outside the fence to the top of the bank; jittered grid `step` ft, kept with probability p; 3rd-party files, local use only
+GRASS_TUFTS = dict(models=(('grass_5', 0.7), ('grass_15', 0.3)), tex='grass_tuft_green', step=26.0, p=0.85, dmin=6.0, dmax=200.0)
 GRASS_OUTSIDE = dict(arena=True, keep=[(-140.0, -110.0, 97.0, 253.0)], dirt_to_fence=True)   # v24: start area = platform + ramps; dirt up to the fence
 # v19: the track sits in a pit: a giant grassed earth bank all around the dirt arena (and around the start area), as on the
 # drone photos. Height h ft, inner slope over `inner` ft (rounded toe and top), flat top `top` ft, outer slope `outer` ft.

@@ -44,9 +44,7 @@ def bake(H, P):
         lam = np.clip((nrm * u).sum(2), 0, 1)                                   # surface facing the lamp
         cosang = -(u @ aim); spot = np.clip((cosang - 0.55) / 0.35, 0, 1) ** 1.5    # flood cone aimed at the far side of the track
         E += 8.0e6 * lam * spot / (r * r + 15000.0)                         # v22: 10 poles (was 20) -> stronger lamps
-    key = np.array([-0.6528, 0.3590, 0.6671]); key /= np.linalg.norm(key)        # v24: same low key direction as the day sun
-    lamk = np.clip(nrm @ key, 0, 1); E = E * (0.30 + 1.55 * lamk)               # relief shading so the bumps read like by day
-    E = 255.0 * (1 - np.exp(-E / 135.0))                                        # soft exposure, a bit brighter (v24: 170 -> 135)
+    E = 255.0 * (1 - np.exp(-E / 170.0))                                        # soft exposure (v24 key-light modulation removed)
     full = zoom(E, H.shape[0] / n, order=1)[:H.shape[0], :H.shape[1]]
     return np.clip(full, 0, 255).astype(np.uint8)
 
@@ -119,6 +117,12 @@ def main():
     open(f'{OUT}/statues', 'w', newline='\n').write('\n'.join(st) + '\n')
     # lightmap
     sh = bake(H, P); N = H.shape[0]
+    # v25: inside the fence the ground keeps the DAY lightmap (bumps exactly as by day), night outside, blended over 25 ft
+    day = np.fromfile(f'{SRC}/shading.ppm', dtype=np.uint8, offset=len(f'P6\n{N} {N}\n255\n'.encode())).reshape(N, N, 3)[:, :, 0].astype(float)
+    DF = np.load(f'{ROOT}/build/stt_dist.npy'); jj = np.arange(N) * S
+    dN = DF[np.clip(jj.astype(int), 0, DF.shape[0] - 1)][:, np.clip(jj.astype(int), 0, DF.shape[1] - 1)]
+    t = np.clip((dN - LT.FENCE['off']) / 25.0, 0, 1); w = t * t * (3 - 2 * t)
+    sh = np.clip(day * (1 - w) + sh.astype(float) * w, 0, 255).astype(np.uint8)
     for nm, img in (('shading.ppm', sh), ('shadingx2.ppm', (sh // 2).astype(np.uint8))):
         with open(f'{OUT}/{nm}', 'wb') as fh: fh.write(f'P6\n{N} {N}\n255\n'.encode()); fh.write(np.repeat(img[:, :, None], 3, axis=2).tobytes())
     # sky + lighting
