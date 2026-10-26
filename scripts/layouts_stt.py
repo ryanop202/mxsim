@@ -2,7 +2,9 @@
 START = west end. Every bump is a measured JGSX unit (lib/) unless marked 'scaled' (height scaled, same shape/length),
 'landing' (scaled, back side replaced by a gentle slope) or 'trapeze' (synthetic mound) - asked by the user in game tests.
 
-Lap (v17, 12th test: L3 last 2 bumps 4 ft further apart (room before the U); L2 smoother entry on both halves (lead-in
+Lap (v18, 13th test: L2 1st bump lower (4.3 / 3.3 ft); L1 1st bump back to the v13 one (measured 4.0 ft, 16 ft after the
+  turn); freestyle side ramp = the user's steel model ramp_50 (with collision), no dirt ramp; grass all around the arena.
+  Before, v17, 12th test: L3 last 2 bumps 4 ft further apart (room before the U); L2 smoother entry on both halves (lead-in
   ball 15 ft, kick curve kept); L1 1st bump 5 ft after the turn, less round top, smoother entry. Before, v16, 11th test: bowl 18 ft earlier after the freestyle landing (L3 gaps 3 ft); L2 left take-off 4.7 ft, concave
   bottom and rolled-over top, right half a normal 3.6 ft bump; rhythm landings fuller (L1, L2, L3); L1 1st bump 8 ft after
   the turn, between measured and kick; fused double 1st hump 4.4 ft, straight climb to the 2nd. Before, v15, 10th test: start platform 8 ft with a straight descent; L3 turns 6 ft earlier (roller 1 ft after the bowl, 5 ft
@@ -51,7 +53,11 @@ ROLLER, SMALL_B = 'Custom1_g30_1', 'Glendale_g40_2'                        # 1.9
 START_GATE, START_HEADING = (-100.0, 175.0), 0.0                         # gate row centre (local), heading (deg)
 START_PLATFORM = dict(h=8.0, back=16.0, front=5.0, down=44.0, side=6.0, edge=8.0, lin=6.0)   # v15: higher, straighter descent (fillets 6 ft)
 # v13: freestyle ramp beside the wheel tap (right, off the lane), turned slightly to face the wide part of the landing (local)
-FMX_RAMP = dict(lip=(98.0, 153.0), aim=(170.0, 150.0), H=7.5, width=8.0, side=0.5)   # v14: turned less (-4.8 -> -2.4 deg)
+FMX_RAMP = dict(lip=(98.0, 153.0), aim=(170.0, 150.0), H=7.5, width=8.0, side=0.5,
+                model='ramp_50', model_len=18.47)   # v18: the user's steel FMX ramp (ramp_50.jm/.shp, lip 9 ft, 4 ft wide)
+                                                    # replaces the dirt ramp; its lip is put where the dirt lip was
+# v18: grass all around the dirt arena (as on the drone photos); dirt kept under the start area (local box x0, x1, z0, z1)
+GRASS_OUTSIDE = dict(arena=True, keep=[(-140.0, -105.0, 108.0, 242.0)])
 WIDE = {'STT-L4 roller, bosse, roller, saut freestyle': (147.6, 212.6, 0.0, 9.0)}   # right only (L3 too close on the left); start corridor 8 ft south
 
 def up(units, k):
@@ -156,7 +162,7 @@ def stt():
     p.straight(XBOWL - XU, [rounded(sec('STT-L3 roller, long creux, 3 bosses', even(l3, XBOWL - XU, 0.5, 1.0, 4.0), 0.5), full=0.3)], tag='L3 roller, bump, long raised dip, 3 bumps')
     p.turn(-180, RB, BIG2, tag='U L3 -> L2 (rays)')
     L2 = (XMID - RS) - XU
-    first = ('split', ('kick', SA[1], 4.7, 0.95, 0.7), ('scale', SA[1], 3.6))   # v16: left lower, rolls over at the top; right normal         # v14: outside half more of a kicker (4.8 -> 5.3); inside 3.6
+    first = ('split', ('kick', SA[1], 4.3, 0.9, 0.7), ('scale', SA[1], 3.3))   # v16: left lower, rolls over at the top; right normal         # v14: outside half more of a kicker (4.8 -> 5.3); inside 3.6
     l2 = even([first] + up([SA[2]], 1.25) + [('scale', SA[0], 5.2)] +            # v13: 2nd bump a bit lower (5.0 -> 4.6)
                up([SA[1], SA[2], SA[0]], 1.35) + up([SA[1], SA[2]], 1.35), L2, -4.0, 8.0)   # v12: 8 ft before the turn (user: 8 ft, never more); v14: 1st bump 4 ft closer to the U
     p.straight(L2, [rounded(sec('STT-L2 long triple, triple, double (ecarts egaux)', l2, -4.0), full=0.3, lead_in=True, R_in=15.0)], tag='L2 long triple, triple, double, same gaps')
@@ -176,8 +182,9 @@ def stt():
     p.straight(Lns, [rounded(sec('STT-east gros triple SX (plus gros)', big3, 30.0), interior=False, lead_in=True)], tag='east lane, bigger SX triple, less run-up')
     p.turn(+90, R_TIGHT, BIG, tag='east lane -> L1 (high berm, as after the whoops)')
     L1 = (XEL - R_TIGHT) - (XWL + RS)
-    l1 = spread([[('kick', SA[0], 4.4, 0.8, 0.8)] + up(SA[1:3], 1.2), up(SD[:3], 1.2), up([SA[3]], 1.2), [TABLE_B], up([SA[0]], 1.2), up([SA[0], SA[0]], 1.2)], L1, 5.0, 22.0, 7.45)   # v15: gaps 8 -> 7.2 ft (L1 shorter with the big turn, keeps 22 ft before the finish turn)
-    p.straight(L1, [rounded(sec('STT-L1 triple, triple, bosse, table, bosse, 2 bosses', l1, 5.0), full=0.3, lead_in=True, R_in=15.0)], tag='L1 along the north fence, wider gaps')
+    # v18: 1st bump back to the v13 one (measured, 4.0 ft, 16 ft after the turn, rounded foot) - the user: 'celle qui etait bien'
+    l1 = even(up(SA[:3], 1.2) + up(SD[:3], 1.2) + up([SA[3]], 1.2) + [TABLE_B] + up([SA[0]], 1.2) + up([SA[0], SA[0]], 1.2), L1, 16.0, 22.0)
+    p.straight(L1, [rounded(sec('STT-L1 triple, triple, bosse, table, bosse, 2 bosses', l1, 16.0), full=0.3, lead_in=True, R_in=40.0)], tag='L1 along the north fence, wider gaps')
     p.turn(+90, RS, SMALL, tag='L1 -> west column')
     nf = len(L('tmp', FIN)) * 0.1
     p.straight(a_col, [rounded(sec(FINISH_SEC, FIN, a_col - nf - 3.0))], tag='west column: room after the turn, short finish double, curve right after')

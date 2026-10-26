@@ -49,7 +49,7 @@ def extras():
         lat = np.clip((half + P['edge'] - np.abs(v)) / P['edge'], 0, 1)
         E[sl] = np.maximum(E[sl], P['h'] * prof * lat)
     R = getattr(LT, 'FMX_RAMP', None)
-    if R:
+    if R and not R.get('model'):                 # v18: a steel model (statue with collision) replaces the dirt ramp
         k = compose.lane([('cut', 'Detroit_g31_1', R['H'], 0.9)])[0]; il = int(np.argmax(k)) * 0.1
         lx, lz = R['lip'][0] + ox, R['lip'][1] + oz
         d = np.array([R['aim'][0] - R['lip'][0], R['aim'][1] - R['lip'][1]]); d /= np.linalg.norm(d)

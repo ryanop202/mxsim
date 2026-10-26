@@ -70,12 +70,37 @@ def surface_decals(p, R):
         out.append(decal(smp['x'][i] + rng.normal(0, 5), smp['z'][i] + rng.normal(0, 5), rng.uniform(-np.pi, np.pi), 4.84, 'Tearoff'))
     return out
 
+def grass_tile(path, n=128):
+    """v18: tileable grass texture (128 x 128 PPM like the SX1 tiles): periodic noise (FFT), greens with a few dry blades."""
+    r = np.random.default_rng(7); F = np.fft.fftfreq(n)[:, None] ** 2 + np.fft.fftfreq(n)[None, :] ** 2
+    def noise(scale):
+        w = np.fft.ifft2(np.fft.fft2(r.normal(size=(n, n))) * np.exp(-F * scale)).real; return (w - w.mean()) / w.std()
+    a, b, c = noise(300.0), noise(3000.0), noise(40.0)
+    base = np.array([66, 98, 42], float); dry = np.array([112, 116, 62], float)
+    t = np.clip(0.5 + 0.22 * b, 0, 1)[:, :, None]; img = base * (1 - t * 0.5) + dry * t * 0.5
+    img = img * (1 + 0.10 * a[:, :, None] + 0.07 * c[:, :, None])
+    img = np.clip(img, 0, 255).astype(np.uint8)
+    with open(path, 'wb') as fh: fh.write(f'P6\n{n} {n}\n255\n'.encode()); fh.write(img.tobytes())
+
 def main():
     H, p, rep = B.build(); H = H.astype(np.float64); tiles = np.load(f'{ROOT}/build/stt_tiles.npy')
+    GR = getattr(LT, 'GRASS_OUTSIDE', None)
+    if GR:                                       # v18: grass tile (after the SX1 tiles) outside the arena fence box, dirt kept under the start
+        TN = tiles.shape[0]; g = (np.arange(TN) * 2 + 0.5) * S; GX, GZ = np.meshgrid(g - LT.STT_ORIGIN[0], g - LT.STT_ORIGIN[1])
+        x0, x1, z0, z1 = LT.ARENA; dirt = (GX >= x0) & (GX <= x1) & (GZ >= z0) & (GZ <= z1)
+        for a0_, a1_, b0_, b1_ in GR.get('keep', []): dirt |= (GX >= a0_) & (GX <= a1_) & (GZ >= b0_) & (GZ <= b1_)
+        gi = sum(1 for l in open(f'{ROOT}/tracks/USLAND2026SX1/tileinfo') if l.strip() == 'addtile')   # grass = next block index
+        tiles = np.where(dirt, tiles, gi).astype(np.uint8)
     os.makedirs(f'{OUT}/statue', exist_ok=True)
     terrain(H, tiles)
     A = f'{ROOT}/tracks/USLAND2026SX1'
     for f in ('tileinfo', 'lighting'): shutil.copy(f'{A}/{f}', f'{OUT}/{f}')
+    if GR:                                       # v18: grass tile appended to the SX1 tileinfo (5th block), own texture
+        os.makedirs(f'{OUT}/tiles', exist_ok=True); grass_tile(f'{OUT}/tiles/grass.ppm')
+        ti = open(f'{OUT}/tileinfo').read(); blk = ti.split('addtile')[0]
+        blk = blk.replace('name Main', 'name Grass').replace('@USLAND2026SX1/tiles/dirt.ppm', f'{P}/tiles/grass.ppm')
+        blk = blk.replace('r=123 g=73 b=52', 'r=72 g=104 b=46')
+        open(f'{OUT}/tileinfo', 'w', newline='\n').write(ti.rstrip('\n') + '\n\n' + blk.strip('\n') + '\naddtile\n\n')
     open(f'{OUT}/desc', 'w', newline='\n').write(DESC + '\n'); open(f'{OUT}/billboards', 'w').close()
     # timing gates (JGSX method, timing.py) + our gate model on the starting gates
     txt, cps, first, normal, sM, sF = gates(p, LS.STARTS['STT'])
@@ -96,16 +121,16 @@ def main():
     gx = float(np.mean([g[0] for g in G])); gz = float(np.mean([g[2] for g in G])); fa = G[0][3]
     fin = cps[normal[-1]]; c = np.array([fin[1], fin[2]]); f = np.array([fin[3], fin[4]]); f /= np.linalg.norm(f); n = np.array([-f[1], f[0]])
     if os.path.exists(f'{OUT}/statue/finish_arch_STT.jm'): os.remove(f'{OUT}/statue/finish_arch_STT.jm')
-    # v14: steel skin + frame of the freestyle ramp (props_usland fmx_ramp, origin = foot centre, +z = riding direction);
-    # the ramp itself is terrain (build_stt.extras), the model sits on it
+    # v18: the user's steel FMX ramp (fmxRamp.rar: ramp_50.jm / .png / _norm.png / .shp collision). Model: foot at the origin,
+    # rides towards local -z, lip (9 ft) at z = -model_len. Lip put where the dirt ramp lip was, facing the same way.
     R_ = getattr(LT, 'FMX_RAMP', None)
-    if R_ and os.path.exists(f'{ROOT}/assets/props/fmx_ramp.jm'):
-        for e in ('jm', 'png'): shutil.copy(f'{ROOT}/assets/props/fmx_ramp.{e}', f'{OUT}/statue/fmx_ramp.{e}')
-        import compose
-        k = compose.lane([('cut', 'Detroit_g31_1', R_['H'], 0.9)])[0]; il = int(np.argmax(k)) * 0.1
+    if R_ and R_.get('model'):
+        src = f"{ROOT}/assets/fmx_ramp_user"
+        for e in ('.jm', '.png', '_norm.png', '.shp'): shutil.copy(f"{src}/{R_['model']}{e}", f"{OUT}/statue/{R_['model']}{e}")
         d_ = np.array([R_['aim'][0] - R_['lip'][0], R_['aim'][1] - R_['lip'][1]]); d_ /= np.linalg.norm(d_)
-        fx_, fz_ = R_['lip'][0] + LT.STT_ORIGIN[0] - d_[0] * il, R_['lip'][1] + LT.STT_ORIGIN[1] - d_[1] * il
-        st.append(f'[{fx_:.6f} 0.000000 {fz_:.6f}] {PP.statue_ang(*d_):.6f} {P}/statue/fmx_ramp.jm {P}/statue/fmx_ramp.png null')
+        fx_, fz_ = R_['lip'][0] + LT.STT_ORIGIN[0] - d_[0] * R_['model_len'], R_['lip'][1] + LT.STT_ORIGIN[1] - d_[1] * R_['model_len']
+        m_ = R_['model']
+        st.append(f'[{fx_:.6f} 0.000000 {fz_:.6f}] {PP.statue_ang(-d_[0], -d_[1]):.6f} {P}/statue/{m_}.jm {P}/statue/{m_}.png {P}/statue/{m_}.shp')
     open(f'{OUT}/statues', 'w', newline='\n').write('\n'.join(st) + '\n')
     # decals (ground texture over the riding surface, obstacle and turn decals)
     R = StartRoute(LS.STARTS['STT'], LS.N_GATES, LS.GATE_PITCH)
