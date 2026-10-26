@@ -74,6 +74,8 @@ def lane(tokens):
                 m = i0 + int(np.argmin(p[i0:i1 + 1])); c1 = int(np.argmax(p[:m])); c2 = m + int(np.argmax(p[m:]))
                 n = int(round(t[4] / 0.1)); tt = np.linspace(0, 1, n); lin = p[c1] + (p[c2] - p[c1]) * tt
                 p = np.r_[p[:c1], lin - (lin - t[2] * t[3]) * np.sin(np.pi * tt) ** 2, p[c2 + 1:]]
+                if len(t) > 5 and t[5] == 'sym':  # v13e: 2nd hump = mirror of the 1st (same steepness both sides, user)
+                    m = c1 + n // 2; p = np.r_[p[:m + 1], p[:m][::-1]]
             kind = u['kind']; name = f'{t[1]} (dip H {t[2]:.1f}, bottom {t[2] * t[3]:.1f})'; uid = ALIAS.get(t[1], t[1])
         elif isinstance(t, tuple) and t[0] == 'trapeze':
             # v13b ('trapeze', H, up, top, down): one clean mound - rounded climb, short flat top, long gentle descent (Saint-Thibery
