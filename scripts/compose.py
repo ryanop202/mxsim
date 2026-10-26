@@ -45,13 +45,15 @@ def whoops(key, n):
 LAST_SPLITS = []   # filled by lane(): [(start_ft, prof_left, prof_right)] for ('split', left_uid, right_uid) tokens
 
 
-def kick(uid, H, s):
-    """v13h: a measured bump scaled to H whose take-off face is replaced by a concave curve (y = H (x/Lf)^2, Lf = 2H/s): flat at
-    the bottom, steeper and steeper up to slope s at the lip, then the measured top and back. Saint-Thibery: "une courbe en bas
-    de l'appel, que ca kick, que ca envoie haut" (the rounded foot made the take-off long and flat)."""
+def kick(uid, H, s, a=1.0):
+    """v13h: a measured bump scaled to H whose take-off face is replaced by a concave curve: flat at the bottom, the slope grows
+    linearly up to s at a*Lf (a = 1: y = H (x/Lf)^2, sharp lip), then (a < 1, v13i) rolls over linearly to 0 at the crest
+    ("plus plat sur le haut"); Lf = 2H/s. Then the measured top and back. Saint-Thibery: "une courbe en bas de l'appel"."""
     q = unit(uid)[1]; q = q * (H / q.max()); c = int(np.argmax(q)); Lf = 2.0 * H / s
     x = np.arange(int(round(Lf / 0.1))) * 0.1
-    return np.r_[H * (x / Lf) ** 2, q[c:]]
+    sl = np.where(x < a * Lf, s * x / (a * Lf), s * (Lf - x) / max((1 - a) * Lf, 1e-9))
+    y = np.r_[0, np.cumsum(sl[:-1]) * 0.1]; y *= H / max(y[-1] + sl[-1] * 0.1, 1e-9)
+    return np.r_[y, q[c:]]
 
 def lane(tokens):
     """tokens: list of uid strings, ('gap', ft), ('whoops', key, n), ('split', left_uid, right_uid), ('scale', uid, H), ('landing', uid, H, back_ft).
@@ -74,7 +76,7 @@ def lane(tokens):
                 p = p[::-1].copy(); name += ' flip'
         elif isinstance(t, tuple) and t[0] == 'kick':
             # v13h ('kick', uid, H, s): see kick()
-            u = unit(t[1])[0]; p = kick(t[1], t[2], t[3]); kind = u['kind']; name = f'{t[1]} (kick H {t[2]:.1f}, lip {t[3]:.1f})'; uid = ALIAS.get(t[1], t[1])
+            u = unit(t[1])[0]; p = kick(*t[1:]); kind = u['kind']; name = f'{t[1]} (kick H {t[2]:.1f}, lip {t[3]:.1f})'; uid = ALIAS.get(t[1], t[1])
         elif isinstance(t, tuple) and t[0] == 'cut':
             # v13f ('cut', uid, H, back_slope): a kicker cut at its first edge (where the face stops being steep), scaled so the
             # edge is at H, then a straight back side (Saint-Thibery freestyle kicker: "a la premiere arete, fais droit")
@@ -96,6 +98,9 @@ def lane(tokens):
             face = q[:c1 + 1] / q[c1]; nd, nu = int(round(span * f / 0.1)), int(round(span * (1 - f) / 0.1))
             down = bo + (H1 - bo) * (1 + np.cos(np.linspace(0, np.pi, nd))) / 2
             upv = bo + (H2 - bo) * (1 - np.cos(np.linspace(0, np.pi, nu))) / 2
+            if len(t) > 7:                        # v13i: straight climb to the 2nd hump, rounded ends t[7] ft ("moins rond")
+                f_ = t[7]; Lu = nu * 0.1; xx = np.linspace(0, Lu, nu); m_ = 1.0 / (Lu - f_)
+                upv = bo + (H2 - bo) * np.where(xx < f_, m_ * xx * xx / (2 * f_), np.where(xx > Lu - f_, 1 - m_ * (Lu - xx) ** 2 / (2 * f_), m_ * (xx - f_ / 2)))
             p = np.r_[face * H1, down[1:], upv[1:], (face * H2)[::-1][1:]]
             kind = u['kind']; name = f'{t[1]} (fuse {H1:.1f}/{H2:.1f}, bottom {bo:.1f})'; uid = ALIAS.get(t[1], t[1])
         elif isinstance(t, tuple) and t[0] == 'dip':
@@ -132,7 +137,7 @@ def lane(tokens):
                 if isinstance(x, tuple) and x[0] == 'scale':                  # v13b: scaled half (Saint-Thibery L2)
                     q = unit(x[1])[1]; return q * (x[2] / q.max())
                 if isinstance(x, tuple) and x[0] == 'kick':                   # v13h: concave take-off half
-                    return kick(x[1], x[2], x[3])
+                    return kick(*x[1:])
                 return unit(x)[1]
             pa, pb = _half(t[1]), _half(t[2]); n = max(len(pa), len(pb))
             if len(t) > 3 and t[3] == 'end':      # v11: both bumps END together (keeps the rhythm of the next jump on both lines)
