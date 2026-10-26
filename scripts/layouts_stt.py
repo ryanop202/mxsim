@@ -2,7 +2,9 @@
 START = west end. Every bump is a measured JGSX unit (lib/) unless marked 'scaled' (height scaled, same shape/length),
 'landing' (scaled, back side replaced by a gentle slope) or 'trapeze' (synthetic mound) - asked by the user in game tests.
 
-Lap (v18, 13th test: L2 1st bump lower (4.3 / 3.3 ft); L1 1st bump back to the v13 one (measured 4.0 ft, 16 ft after the
+Lap (v19, 14th test: L2 1st bump less steep (lip 0.75) with a softer entry; L1 1st bump 6 ft after the turn (triple in,
+  not quad); giant grassed earth bank around the arena (22 ft, the track in a pit); track moved 65 ft east on the terrain.
+  Before, v18, 13th test: L2 1st bump lower (4.3 / 3.3 ft); L1 1st bump back to the v13 one (measured 4.0 ft, 16 ft after the
   turn); freestyle side ramp = the user's steel model ramp_50 (with collision), no dirt ramp; grass all around the arena.
   Before, v17, 12th test: L3 last 2 bumps 4 ft further apart (room before the U); L2 smoother entry on both halves (lead-in
   ball 15 ft, kick curve kept); L1 1st bump 5 ft after the turn, less round top, smoother entry. Before, v16, 11th test: bowl 18 ft earlier after the freestyle landing (L3 gaps 3 ft); L2 left take-off 4.7 ft, concave
@@ -33,7 +35,7 @@ from engine import Path
 import layouts_sx as LS
 from layouts_sx import L, sec, _start, SA, SD, SC, BB, TABLE_A, TABLE_B, TABLE9, BIG_TRIPLE, RB, RS, BIG, BIG2, SMALL, SMALL2
 
-STT_ORIGIN = (175.0, 170.0)
+STT_ORIGIN = (240.0, 170.0)                                                # v19: 65 ft east so the arena bank fits in the terrain
 FIN = ['Custom1_g30_2', ('gap', 12.0), ('scale', 'Glendale_g83_2', 10.0)]   # v9: round normal landing (Glendale g83 double landing, 7.9 -> 10 ft),
                                                                             # crest at the same distance as v8
 R_CURVE = 16.0                                                              # one 90 deg curve west column -> L4 (v8: 21.5 -> 16, room for L1 lower)
@@ -58,6 +60,9 @@ FMX_RAMP = dict(lip=(98.0, 153.0), aim=(170.0, 150.0), H=7.5, width=8.0, side=0.
                                                     # replaces the dirt ramp; its lip is put where the dirt lip was
 # v18: grass all around the dirt arena (as on the drone photos); dirt kept under the start area (local box x0, x1, z0, z1)
 GRASS_OUTSIDE = dict(arena=True, keep=[(-140.0, -105.0, 108.0, 242.0)])
+# v19: the track sits in a pit: a giant grassed earth bank all around the dirt arena (and around the start area), as on the
+# drone photos. Height h ft, inner slope over `inner` ft (rounded toe and top), flat top `top` ft, outer slope `outer` ft.
+ARENA_BANK = dict(h=22.0, inner=36.0, top=14.0, outer=44.0)
 WIDE = {'STT-L4 roller, bosse, roller, saut freestyle': (147.6, 212.6, 0.0, 9.0)}   # right only (L3 too close on the left); start corridor 8 ft south
 
 def up(units, k):
@@ -162,10 +167,10 @@ def stt():
     p.straight(XBOWL - XU, [rounded(sec('STT-L3 roller, long creux, 3 bosses', even(l3, XBOWL - XU, 0.5, 1.0, 4.0), 0.5), full=0.3)], tag='L3 roller, bump, long raised dip, 3 bumps')
     p.turn(-180, RB, BIG2, tag='U L3 -> L2 (rays)')
     L2 = (XMID - RS) - XU
-    first = ('split', ('kick', SA[1], 4.3, 0.9, 0.7), ('scale', SA[1], 3.3))   # v16: left lower, rolls over at the top; right normal         # v14: outside half more of a kicker (4.8 -> 5.3); inside 3.6
+    first = ('split', ('kick', SA[1], 4.3, 0.75, 0.7), ('scale', SA[1], 3.3))   # v19: less steep (0.9 -> 0.75)   # v16: left lower, rolls over at the top; right normal         # v14: outside half more of a kicker (4.8 -> 5.3); inside 3.6
     l2 = even([first] + up([SA[2]], 1.25) + [('scale', SA[0], 5.2)] +            # v13: 2nd bump a bit lower (5.0 -> 4.6)
                up([SA[1], SA[2], SA[0]], 1.35) + up([SA[1], SA[2]], 1.35), L2, -4.0, 8.0)   # v12: 8 ft before the turn (user: 8 ft, never more); v14: 1st bump 4 ft closer to the U
-    p.straight(L2, [rounded(sec('STT-L2 long triple, triple, double (ecarts egaux)', l2, -4.0), full=0.3, lead_in=True, R_in=15.0)], tag='L2 long triple, triple, double, same gaps')
+    p.straight(L2, [rounded(sec('STT-L2 long triple, triple, double (ecarts egaux)', l2, -4.0), full=0.3, lead_in=True, R_in=22.0)], tag='L2 long triple, triple, double, same gaps')
     p.turn(-90, RS, SMALL, tag='L2 -> middle lane')
     Lmid = (Z['L6'] - RS) - (Z['L2'] + RS); mid = [SC[2], TABLE_B, SC[3]]
     p.straight(Lmid, [sec('STT-mid bosse, table, bosse', mid, (Lmid - len(L('tmp', mid)) * 0.1) / 2)], tag='middle lane: bump, table, bump')
@@ -183,8 +188,8 @@ def stt():
     p.turn(+90, R_TIGHT, BIG, tag='east lane -> L1 (high berm, as after the whoops)')
     L1 = (XEL - R_TIGHT) - (XWL + RS)
     # v18: 1st bump back to the v13 one (measured, 4.0 ft, 16 ft after the turn, rounded foot) - the user: 'celle qui etait bien'
-    l1 = even(up(SA[:3], 1.2) + up(SD[:3], 1.2) + up([SA[3]], 1.2) + [TABLE_B] + up([SA[0]], 1.2) + up([SA[0], SA[0]], 1.2), L1, 16.0, 22.0)
-    p.straight(L1, [rounded(sec('STT-L1 triple, triple, bosse, table, bosse, 2 bosses', l1, 16.0), full=0.3, lead_in=True, R_in=40.0)], tag='L1 along the north fence, wider gaps')
+    l1 = even(up(SA[:3], 1.2) + up(SD[:3], 1.2) + up([SA[3]], 1.2) + [TABLE_B] + up([SA[0]], 1.2) + up([SA[0], SA[0]], 1.2), L1, 6.0, 22.0)
+    p.straight(L1, [rounded(sec('STT-L1 triple, triple, bosse, table, bosse, 2 bosses', l1, 6.0), full=0.3, lead_in=True, R_in=15.0)], tag='L1 along the north fence, wider gaps')
     p.turn(+90, RS, SMALL, tag='L1 -> west column')
     nf = len(L('tmp', FIN)) * 0.1
     p.straight(a_col, [rounded(sec(FINISH_SEC, FIN, a_col - nf - 3.0))], tag='west column: room after the turn, short finish double, curve right after')

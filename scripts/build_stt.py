@@ -58,6 +58,17 @@ def extras():
         u = (X - x0) * d[0] + (Z - z0) * d[1]; v = -(X - x0) * d[1] + (Z - z0) * d[0]
         h = np.interp(u / 0.1, np.arange(len(k)), k, left=0, right=0) * np.clip(1 - (np.abs(v) - R['width'] / 2) / R['side'], 0, 1)
         E[sl] = np.maximum(E[sl], h)
+    B_ = getattr(LT, 'ARENA_BANK', None)
+    if B_:                                       # v19: earth bank around the arena (distance to the dirt area, 1 ft grid)
+        from scipy.ndimage import distance_transform_edt, map_coordinates
+        side = (N - 1) * S; n1 = int(side) + 1; g = np.arange(n1, dtype=float); GX, GZ = np.meshgrid(g - ox, g - oz)
+        x0, x1, z0, z1 = LT.ARENA; dirt = (GX >= x0) & (GX <= x1) & (GZ >= z0) & (GZ <= z1)
+        for a0_, a1_, b0_, b1_ in getattr(LT, 'GRASS_OUTSIDE', {}).get('keep', []): dirt |= (GX >= a0_) & (GX <= a1_) & (GZ >= b0_) & (GZ <= b1_)
+        d = distance_transform_edt(~dirt)
+        ss = lambda t: (lambda t_: t_ * t_ * (3 - 2 * t_))(np.clip(t, 0, 1))
+        h = B_['h'] * np.where(d <= B_['inner'] + B_['top'], ss(d / B_['inner']), 1 - ss((d - B_['inner'] - B_['top']) / B_['outer']))
+        jj = np.arange(N) * S; JX, JZ = np.meshgrid(jj, jj)
+        E = np.maximum(E, map_coordinates(h, [JZ.ravel(), JX.ravel()], order=1).reshape(N, N))
     return E
 
 def build():
