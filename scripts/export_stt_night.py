@@ -44,7 +44,9 @@ def bake(H, P):
         lam = np.clip((nrm * u).sum(2), 0, 1)                                   # surface facing the lamp
         cosang = -(u @ aim); spot = np.clip((cosang - 0.55) / 0.35, 0, 1) ** 1.5    # flood cone aimed at the far side of the track
         E += 8.0e6 * lam * spot / (r * r + 15000.0)                         # v22: 10 poles (was 20) -> stronger lamps
-    E = 255.0 * (1 - np.exp(-E / 170.0))                                        # soft exposure: no burnt white near the poles
+    key = np.array([-0.6528, 0.3590, 0.6671]); key /= np.linalg.norm(key)        # v24: same low key direction as the day sun
+    lamk = np.clip(nrm @ key, 0, 1); E = E * (0.30 + 1.55 * lamk)               # relief shading so the bumps read like by day
+    E = 255.0 * (1 - np.exp(-E / 135.0))                                        # soft exposure, a bit brighter (v24: 170 -> 135)
     full = zoom(E, H.shape[0] / n, order=1)[:H.shape[0], :H.shape[1]]
     return np.clip(full, 0, 255).astype(np.uint8)
 

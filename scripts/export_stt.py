@@ -103,10 +103,13 @@ def grass_tile(path, n=256):
 def main():
     H, p, rep = B.build(); H = H.astype(np.float64); tiles = np.load(f'{ROOT}/build/stt_tiles.npy')
     GR = getattr(LT, 'GRASS_OUTSIDE', None)
-    if GR:                                       # v18: grass tile (after the SX1 tiles) outside the arena fence box, dirt kept under the start
+    if GR:                                       # v18/v24: grass tile outside, dirt inside and (v24) up to the fence
+        from scipy.ndimage import distance_transform_edt
         TN = tiles.shape[0]; g = (np.arange(TN) * 2 + 0.5) * S; GX, GZ = np.meshgrid(g - LT.STT_ORIGIN[0], g - LT.STT_ORIGIN[1])
-        x0, x1, z0, z1 = LT.ARENA; dirt = (GX >= x0) & (GX <= x1) & (GZ >= z0) & (GZ <= z1)
-        for a0_, a1_, b0_, b1_ in GR.get('keep', []): dirt |= (GX >= a0_) & (GX <= a1_) & (GZ >= b0_) & (GZ <= b1_)
+        dirt = B.dirt_region(GX, GZ)
+        if GR.get('dirt_to_fence') and getattr(LT, 'FENCE', None):
+            tb = LT.ARENA_BANK.get('terrace', (LT.FENCE['off'], 0))
+            dirt = distance_transform_edt(~dirt) * 2 * S <= LT.FENCE['off'] + tb[1] / 2
         gi = sum(1 for l in open(f'{ROOT}/tracks/USLAND2026SX1/tileinfo') if l.strip() == 'addtile')   # grass = next block index
         tiles = np.where(dirt, tiles, gi).astype(np.uint8)
     os.makedirs(f'{OUT}/statue', exist_ok=True)
@@ -153,19 +156,23 @@ def main():
     FE = getattr(LT, 'FENCE', None)
     if FE:
         for e in ('jm', 'png'): shutil.copy(f"{ROOT}/assets/props/{FE['model']}.{e}", f"{OUT}/statue/{FE['model']}.{e}")
-        # v22: one open path at distance `off` from the dirt area (on the flat terrace cut in the bank), rounded around the
-        # arena corners (arcs), open at the start area (the steep bank closes it there)
-        x0, x1, z0, z1 = LT.ARENA; o = FE['off']; k_ = getattr(LT, 'GRASS_OUTSIDE', {}).get('keep', [])
-        sz0, sz1 = (k_[0][2], k_[0][3]) if k_ else ((z0 + z1) / 2, (z0 + z1) / 2)
-        arc = lambda c, a0_, a1_: [np.array(c) + o * np.array([np.cos(t), np.sin(t)]) for t in np.linspace(a0_, a1_, 9)]
-        path = [np.array([x0 - o, sz0 - o])]
-        path += arc((x0, z0), np.pi, 1.5 * np.pi)                         # NW corner (x east, z south: angle from +x towards +z)
-        path += arc((x1, z0), 1.5 * np.pi, 2 * np.pi)                     # NE
-        path += arc((x1, z1), 0.0, 0.5 * np.pi)                           # SE
-        path += arc((x0, z1), 0.5 * np.pi, np.pi)                         # SW
-        path += [np.array([x0 - o, sz1 + o])]
-        pts = [path[0]]                                                   # resample every step ft along the path
-        seg = [(path[i], path[i + 1]) for i in range(len(path) - 1)]
+        # v24: closed loop at distance `off` from the dirt area (on the flat terrace), around the start area too; arcs at the
+        # convex corners, sharp at the concave ones
+        x0, x1, z0, z1 = LT.ARENA; o = FE['off']; sx0, sx1, sz0, sz1 = LT.GRASS_OUTSIDE['keep'][0]
+        poly = np.array([(x0, z0), (x1, z0), (x1, z1), (x0, z1), (x0, sz1), (sx0, sz1), (sx0, sz0), (x0, sz0)], float)
+        nP = len(poly); path = []
+        for i_ in range(nP):
+            pv, cv, nv_ = poly[i_ - 1], poly[i_], poly[(i_ + 1) % nP]
+            t1 = (cv - pv) / np.linalg.norm(cv - pv); t2 = (nv_ - cv) / np.linalg.norm(nv_ - cv)
+            n1, n2 = np.array([t1[1], -t1[0]]), np.array([t2[1], -t2[0]])     # outward normals (clockwise outline, z down)
+            if t1[0] * t2[1] - t1[1] * t2[0] > 0:                              # convex: arc around the corner
+                a_s, a_e = np.arctan2(n1[1], n1[0]), np.arctan2(n2[1], n2[0])
+                if a_e < a_s: a_e += 2 * np.pi
+                path += [cv + o * np.array([np.cos(t), np.sin(t)]) for t in np.linspace(a_s, a_e, 9)]
+            else:
+                path.append(cv + o * (n1 + n2))
+        path.append(path[0])
+        seg = [(path[i], path[i + 1]) for i in range(len(path) - 1) if np.linalg.norm(path[i + 1] - path[i]) > 1e-6]
         L_ = np.cumsum([0] + [np.linalg.norm(b - a) for a, b in seg]); m_ = max(1, int(round(L_[-1] / FE['step']))); stp = L_[-1] / m_
         def at(sv):
             i = min(int(np.searchsorted(L_, sv, 'right')) - 1, len(seg) - 1); a, b = seg[i]
@@ -180,6 +187,19 @@ def main():
     # decals (ground texture over the riding surface, obstacle and turn decals)
     R = StartRoute(LS.STARTS['STT'], LS.N_GATES, LS.GATE_PITCH)
     dec = surface_decals(p, R) + obstacle_and_turn_decals(p)
+    # v24: track-coloured decals over all the dirt up to the fence (the light-brown look of the track, between track and fence)
+    DD = getattr(LT, 'DIRT_DECALS', None)
+    if DD and getattr(LT, 'FENCE', None):
+        from scipy.ndimage import distance_transform_edt
+        side = (H.shape[0] - 1) * S; g = np.arange(0, side, 2.0); GX, GZ = np.meshgrid(g - LT.STT_ORIGIN[0], g - LT.STT_ORIGIN[1])
+        dd2 = distance_transform_edt(~B.dirt_region(GX, GZ)) * 2.0; rg2 = np.random.default_rng(24); ndd = 0; lim = LT.FENCE['off'] - DD['size'] / 2 + 2
+        for zz in np.arange(DD['step'] / 2, side, DD['step']):
+            for xx in np.arange(DD['step'] / 2, side, DD['step']):
+                x_, z_ = xx + rg2.uniform(-0.3, 0.3) * DD['step'], zz + rg2.uniform(-0.3, 0.3) * DD['step']
+                i_, j_ = min(int(z_ / 2.0), dd2.shape[0] - 1), min(int(x_ / 2.0), dd2.shape[1] - 1)
+                if dd2[i_, j_] > lim: continue
+                dec.append(decal(x_, z_, rg2.uniform(-np.pi, np.pi), DD['size'], 'track')); ndd += 1
+        print('dirt decals', ndd)
     # v23: grass decals (DVDBVisualsCompound grass.png, chosen by the user; 3rd-party file, local use only) laid like DVDB does:
     # 45 ft patches, random rotation, jittered grid every 26 ft (each spot covered ~3 times), on the grass only (>= 6 ft from dirt)
     GD = getattr(LT, 'GRASS_DECALS', None)
@@ -187,9 +207,8 @@ def main():
         os.makedirs(f'{OUT}/decal', exist_ok=True)
         for e in ('', '_tnorm'): shutil.copy(f"{ROOT}/assets/grass_dvdb/grass_dvdb{e}.png", f"{OUT}/decal/grass_dvdb{e}.png")
         from scipy.ndimage import distance_transform_edt
-        x0, x1, z0, z1 = LT.ARENA; side = (H.shape[0] - 1) * S; g = np.arange(0, side, 2.0); GX, GZ = np.meshgrid(g - LT.STT_ORIGIN[0], g - LT.STT_ORIGIN[1])
-        dirt = (GX >= x0) & (GX <= x1) & (GZ >= z0) & (GZ <= z1)
-        for a0_, a1_, b0_, b1_ in LT.GRASS_OUTSIDE.get('keep', []): dirt |= (GX >= a0_) & (GX <= a1_) & (GZ >= b0_) & (GZ <= b1_)
+        side = (H.shape[0] - 1) * S; g = np.arange(0, side, 2.0); GX, GZ = np.meshgrid(g - LT.STT_ORIGIN[0], g - LT.STT_ORIGIN[1])
+        dirt = B.dirt_region(GX, GZ)
         dd = distance_transform_edt(~dirt) * 2.0; rg = np.random.default_rng(23); ng = 0
         for zz in np.arange(GD['step'] / 2, side, GD['step']):
             for xx in np.arange(GD['step'] / 2, side, GD['step']):
@@ -215,7 +234,7 @@ def main():
     shade = LightSource(300, 40).hillshade(Hc, vert_exag=3 / (side / M)); col = cm.terrain(np.clip(Hc / 12.0, 0, 1))[:, :, :3]
     base = np.dstack([shade] * 3) * 0.75 + 0.25
     rgb = np.where((Hc > 0.15)[:, :, None], base * (0.65 + 0.35 * col), base * np.array([0.78, 0.62, 0.45]))
-    gxx, gzz = np.meshgrid(g1, g1); d, _ = tr.query(np.c_[gxx.ravel(), gzz.ravel()]); m = (d.reshape(M, M) < 24)
+    gxx, gzz = np.meshgrid(g1, g1); d, _ = tr.query(np.c_[gxx.ravel(), gzz.ravel()]); m = (d.reshape(M, M) < 40)   # v24: thicker ribbon (bigger on the in-game map)
     a = ndi.gaussian_filter(m.astype(float), 1.5)
     Image.fromarray((np.clip(np.dstack([rgb, a]), 0, 1) * 255).astype(np.uint8), 'RGBA').save(f'{OUT}/map.png')
     return dict(lap=p.s, gates=len(G), checkpoints=len(cps), first=len(first), normal=len(normal), statues=len(st), decals=len(dec),
