@@ -2,7 +2,8 @@
 START = west end. Every bump is a measured JGSX unit (lib/) unless marked 'scaled' (height scaled, same shape/length),
 'landing' (scaled, back side replaced by a gentle slope) or 'trapeze' (synthetic mound) - asked by the user in game tests.
 
-Lap (v21: track frozen. Arena bank 42 ft, gentler (inner 160 ft); fences 28 ft up the slope; start platform 10 ft;
+Lap (v22: flat terrace under the fences (no tilt), fences around rounded corners, steep bank right behind the start with a
+  flat back to it; night: 10 poles on flat pads, light points (lamp_glow) on the lamps. Before, v21: track frozen. Arena bank 42 ft, gentler (inner 160 ft); fences 28 ft up the slope; start platform 10 ft;
   realistic grass tile; night version (export_stt_night.py, 20 light poles, lights baked in the lightmap). Before, v20: arena bank 36.7 ft with a gentle inner slope; wooden fence (fence_wood) at its foot all around; track centred
   on the terrain. Before, v19, 14th test: L2 1st bump less steep (lip 0.75) with a softer entry; L1 1st bump 6 ft after the turn (triple in,
   not quad); giant grassed earth bank around the arena (22 ft, the track in a pit); track moved 65 ft east on the terrain.
@@ -55,18 +56,21 @@ ROLLER, SMALL_B = 'Custom1_g30_1', 'Glendale_g40_2'                        # 1.9
 # v12: freestyle landing wider ("beaucoup de place", mostly on the right): section -> (from_ft, to_ft, left_ft, right_ft)
 # v13: start on a raised platform (gates and grates on it), a short descent right after the gate line (ft)
 START_GATE, START_HEADING = (-100.0, 175.0), 0.0                         # gate row centre (local), heading (deg)
-START_PLATFORM = dict(h=10.0, back=16.0, front=5.0, down=55.0, side=6.0, edge=10.0, lin=6.0)   # v21: higher (8 -> 10 ft), same descent slope   # v15: higher, straighter descent (fillets 6 ft)
+START_PLATFORM = dict(h=10.0, back=40.0, front=5.0, down=55.0, side=6.0, edge=10.0, lin=6.0)   # v21: higher (8 -> 10 ft), same descent slope   # v15: higher, straighter descent (fillets 6 ft)
 # v13: freestyle ramp beside the wheel tap (right, off the lane), turned slightly to face the wide part of the landing (local)
 FMX_RAMP = dict(lip=(98.0, 153.0), aim=(170.0, 150.0), H=7.5, width=8.0, side=0.5,
                 model='ramp_50', model_len=18.47)   # v18: the user's steel FMX ramp (ramp_50.jm/.shp, lip 9 ft, 4 ft wide)
                                                     # replaces the dirt ramp; its lip is put where the dirt lip was
 # v18: grass all around the dirt arena (as on the drone photos); dirt kept under the start area (local box x0, x1, z0, z1)
 # v21: night version (USLAND2026StThiberyNuit): light poles on the bank, `d` ft from the dirt area, lights baked in the lightmap
-NIGHT = dict(folder='USLAND2026StThiberyNuit', desc='USLAND: Saint-Thibery (nuit)', d=45.0, n_long=5, n_short=3)
-GRASS_OUTSIDE = dict(arena=True, keep=[(-140.0, -105.0, 108.0, 242.0)])
+NIGHT = dict(folder='USLAND2026StThiberyNuit', desc='USLAND: Saint-Thibery (nuit)', d=45.0, n_long=5, n_short=3, keep_every=2, pad=(7.0, 15.0))
+GRASS_OUTSIDE = dict(arena=True, keep=[(-126.0, -105.0, 108.0, 242.0)])   # v22: dirt area ends right behind the start platform
 # v19: the track sits in a pit: a giant grassed earth bank all around the dirt arena (and around the start area), as on the
 # drone photos. Height h ft, inner slope over `inner` ft (rounded toe and top), flat top `top` ft, outer slope `outer` ft.
-ARENA_BANK = dict(h=42.0, inner=160.0, top=14.0, outer=70.0)   # v21: a bit higher, much gentler (inner max slope ~0.4)   # v20: 2/3 higher (22 -> 36.7 ft), much gentler inner slope (max ~0.58)
+ARENA_BANK = dict(h=42.0, inner=160.0, top=14.0, outer=70.0, terrace=(28.0, 6.0),
+                  steep=dict(inner=40.0, z=(108.0, 242.0), x_max=-110.0, blend=18.0, blend_x=12.0))
+# v22: terrace = flat strip (at d ft, w ft wide) cut in the bank under the fence (objects tilt with the ground);
+# steep = behind the start the bank rises over 40 ft only, right behind the platform ("presque collee au depart")   # v21: a bit higher, much gentler (inner max slope ~0.4)   # v20: 2/3 higher (22 -> 36.7 ft), much gentler inner slope (max ~0.58)
 # v20: wooden post-and-rail fence (scripts/fence_wood.py) in the grass at the foot of the bank, `off` ft outside the dirt area
 FENCE = dict(model='fence_wood', off=28.0, step=8.0)   # v21: up in the slope (~3 ft up), not on the flat
 WIDE = {'STT-L4 roller, bosse, roller, saut freestyle': (147.6, 212.6, 0.0, 9.0)}   # right only (L3 too close on the left); start corridor 8 ft south

@@ -149,26 +149,28 @@ def main():
     FE = getattr(LT, 'FENCE', None)
     if FE:
         for e in ('jm', 'png'): shutil.copy(f"{ROOT}/assets/props/{FE['model']}.{e}", f"{OUT}/statue/{FE['model']}.{e}")
+        # v22: one open path at distance `off` from the dirt area (on the flat terrace cut in the bank), rounded around the
+        # arena corners (arcs), open at the start area (the steep bank closes it there)
         x0, x1, z0, z1 = LT.ARENA; o = FE['off']; k_ = getattr(LT, 'GRASS_OUTSIDE', {}).get('keep', [])
-        if k_:
-            sx0, sx1, sz0, sz1 = k_[0]
-            poly = [(x0, z0), (x1, z0), (x1, z1), (x0, z1), (x0, sz1), (sx0, sz1), (sx0, sz0), (x0, sz0)]   # clockwise (x east, z south)
-        else:
-            poly = [(x0, z0), (x1, z0), (x1, z1), (x0, z1)]
-        P_ = np.array(poly); n_ = len(P_); ofs = []
-        for i_ in range(n_):                                  # offset each edge outwards by o (rectilinear outline)
-            a_, b_ = P_[i_], P_[(i_ + 1) % n_]; t_ = (b_ - a_) / np.linalg.norm(b_ - a_); nrm = np.array([t_[1], -t_[0]])
-            ofs.append((a_ + nrm * o, b_ + nrm * o, t_, nrm))
-        for i_ in range(n_):                                  # corners: intersect consecutive offset edges
-            a1, b1, t1, _ = ofs[i_ - 1]; a2, b2, t2, _ = ofs[i_]
-            M_ = np.array([t1, -t2]).T; uu = np.linalg.solve(M_, a2 - a1); ofs[i_ - 1] = (a1, a1 + t1 * uu[0], t1, ofs[i_ - 1][3]); ofs[i_] = (a1 + t1 * uu[0], b2, t2, ofs[i_][3])
+        sz0, sz1 = (k_[0][2], k_[0][3]) if k_ else ((z0 + z1) / 2, (z0 + z1) / 2)
+        arc = lambda c, a0_, a1_: [np.array(c) + o * np.array([np.cos(t), np.sin(t)]) for t in np.linspace(a0_, a1_, 9)]
+        path = [np.array([x0 - o, sz0 - o])]
+        path += arc((x0, z0), np.pi, 1.5 * np.pi)                         # NW corner (x east, z south: angle from +x towards +z)
+        path += arc((x1, z0), 1.5 * np.pi, 2 * np.pi)                     # NE
+        path += arc((x1, z1), 0.0, 0.5 * np.pi)                           # SE
+        path += arc((x0, z1), 0.5 * np.pi, np.pi)                         # SW
+        path += [np.array([x0 - o, sz1 + o])]
+        pts = [path[0]]                                                   # resample every step ft along the path
+        seg = [(path[i], path[i + 1]) for i in range(len(path) - 1)]
+        L_ = np.cumsum([0] + [np.linalg.norm(b - a) for a, b in seg]); m_ = max(1, int(round(L_[-1] / FE['step']))); stp = L_[-1] / m_
+        def at(sv):
+            i = min(int(np.searchsorted(L_, sv, 'right')) - 1, len(seg) - 1); a, b = seg[i]
+            return a + (b - a) * (sv - L_[i]) / max(np.linalg.norm(b - a), 1e-9)
         nf = 0
-        for a_, b_, t_, nrm in ofs:
-            Lseg = float(np.linalg.norm(b_ - a_)); m_ = max(1, int(round(Lseg / FE['step']))); stp = Lseg / m_
-            for q in range(m_):
-                c_ = a_ + t_ * (q + 0.5) * stp + np.array(LT.STT_ORIGIN)
-                # model: +z = rails side -> towards the track (-nrm); x along the fence
-                st.append(f"[{c_[0]:.6f} 0.000000 {c_[1]:.6f}] {PP.statue_ang(-nrm[0], -nrm[1]):.6f} {P}/statue/{FE['model']}.jm {P}/statue/{FE['model']}.png null"); nf += 1
+        for q in range(m_):
+            pa, pb = at(q * stp), at((q + 1) * stp); c_ = (pa + pb) / 2 + np.array(LT.STT_ORIGIN); t_ = (pb - pa) / np.linalg.norm(pb - pa)
+            inw = np.array([-t_[1], t_[0]])                               # path runs clockwise: inward = left of the direction
+            st.append(f"[{c_[0]:.6f} 0.000000 {c_[1]:.6f}] {PP.statue_ang(inw[0], inw[1]):.6f} {P}/statue/{FE['model']}.jm {P}/statue/{FE['model']}.png null"); nf += 1
         print('fence sections', nf)
     open(f'{OUT}/statues', 'w', newline='\n').write('\n'.join(st) + '\n')
     # decals (ground texture over the riding surface, obstacle and turn decals)

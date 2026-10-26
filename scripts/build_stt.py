@@ -66,7 +66,15 @@ def extras():
         for a0_, a1_, b0_, b1_ in getattr(LT, 'GRASS_OUTSIDE', {}).get('keep', []): dirt |= (GX >= a0_) & (GX <= a1_) & (GZ >= b0_) & (GZ <= b1_)
         d = distance_transform_edt(~dirt)
         ss = lambda t: (lambda t_: t_ * t_ * (3 - 2 * t_))(np.clip(t, 0, 1))
-        h = B_['h'] * np.where(d <= B_['inner'] + B_['top'], ss(d / B_['inner']), 1 - ss((d - B_['inner'] - B_['top']) / B_['outer']))
+        if B_.get('terrace'):                    # v22: flat strip under the fence: the profile pauses at d = a for w ft
+            ta, tw = B_['terrace']; a_, b_ = ta - tw / 2, ta + tw / 2
+            d = np.where(d < a_, d, np.where(d <= b_, a_, d - tw))
+        inner = np.full_like(d, B_['inner'])
+        if B_.get('steep'):                      # v22: steep bank right behind the start
+            st_ = B_['steep']; za, zb = st_['z']; bl = st_['blend']
+            wz = np.clip(1 - np.maximum(za - GZ, GZ - zb) / bl, 0, 1); wx = np.clip((st_['x_max'] - GX) / st_.get('blend_x', bl), 0, 1)
+            w_ = ss(wz) * ss(wx); inner = B_['inner'] + (st_['inner'] - B_['inner']) * w_
+        h = B_['h'] * np.where(d <= inner + B_['top'], ss(d / inner), 1 - ss((d - inner - B_['top']) / B_['outer']))
         jj = np.arange(N) * S; JX, JZ = np.meshgrid(jj, jj)
         E = np.maximum(E, map_coordinates(h, [JZ.ravel(), JX.ravel()], order=1).reshape(N, N))
     return E

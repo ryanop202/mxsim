@@ -20,13 +20,10 @@ POLE = dict(head=42.4, src=f'{ROOT}/tracks/USLAND2026SX1/statue', tilt=0.30)   #
 def poles():
     """pole feet (local x, z) on the bank, d ft outside the dirt arena box, and the inward aim (unit, local)."""
     x0, x1, z0, z1 = LT.ARENA; d = NG['d']; out = []
-    for i in range(NG['n_long']):
+    for i in range(1, NG['n_long'], 2):                                         # v22: one out of two (user)
         x = x0 + (x1 - x0) * (i + 0.5) / NG['n_long']
         out += [((x, z0 - d), (0.0, 1.0)), ((x, z1 + d), (0.0, -1.0))]
-    for i in range(NG['n_short']):
-        z = z0 + (z1 - z0) * (i + 0.5) / NG['n_short']
-        out.append(((x1 + d, z), (-1.0, 0.0)))
-        if i != NG['n_short'] // 2: out.append(((x0 - d, z), (1.0, 0.0)))   # west side: not behind the start area (middle)
+    out.append(((x1 + d, (z0 + z1) / 2), (-1.0, 0.0)))                          # east side middle
     sx0 = LT.GRASS_OUTSIDE['keep'][0][0]; zc = (z0 + z1) / 2
     out.append(((sx0 - d, zc), (1.0, 0.0)))                                    # behind the start, lights the gates
     for cx, cz, ax, az in ((x0, z0, 1, 1), (x1, z0, -1, 1), (x1, z1, -1, -1), (x0, z1, 1, -1)):   # corners
@@ -46,7 +43,7 @@ def bake(H, P):
         v = np.dstack([L[0] - X, L[1] - h2, L[2] - Z]); r = np.linalg.norm(v, axis=2); u = v / r[:, :, None]
         lam = np.clip((nrm * u).sum(2), 0, 1)                                   # surface facing the lamp
         cosang = -(u @ aim); spot = np.clip((cosang - 0.55) / 0.35, 0, 1) ** 1.5    # flood cone aimed at the far side of the track
-        E += 4.5e6 * lam * spot / (r * r + 15000.0)
+        E += 8.0e6 * lam * spot / (r * r + 15000.0)                         # v22: 10 poles (was 20) -> stronger lamps
     E = 255.0 * (1 - np.exp(-E / 170.0))                                        # soft exposure: no burnt white near the poles
     full = zoom(E, H.shape[0] / n, order=1)[:H.shape[0], :H.shape[1]]
     return np.clip(full, 0, 255).astype(np.uint8)
@@ -58,6 +55,38 @@ def night_sky(src, dst):
     out = a * np.array([0.05, 0.06, 0.12]) + np.array([2, 3, 8])
     st = (r.random(sky.shape) < 0.0009) & sky; out[st] = r.uniform(160, 255, (st.sum(), 1))
     Image.fromarray(np.clip(out, 0, 255).astype(np.uint8)).save(dst, optimize=True)
+
+GLOW = dict(lamps=[(-6.7, 44.1), (-2.0, 44.1), (2.3, 44.1), (6.9, 44.1)], x=1.9, size=5.0)   # lamp faces (local z, y) of lightpole.jm
+
+def pads(H, P):
+    """v22: a flat round pad under every pole (objects tilt with the ground): flat within pad[0] ft, blended out to pad[1] ft."""
+    ox, oz = LT.STT_ORIGIN; r0, r1 = NG['pad']; H = H.copy()
+    for (px, pz), _ in P:
+        fx, fz = px + ox, pz + oz; i0, j0 = int(fz / S), int(fx / S); h0 = float(H[i0, j0]); k = int(r1 / S) + 2
+        sl = (slice(i0 - k, i0 + k + 1), slice(j0 - k, j0 + k + 1)); ii, jj = np.mgrid[sl]
+        r = np.hypot(ii * S - fz, jj * S - fx); t = np.clip((r - r0) / (r1 - r0), 0, 1); w = t * t * (3 - 2 * t)
+        H[sl] = h0 + (H[sl] - h0) * w
+    return H
+
+def glow_model(path_jm, path_png):
+    """v22: light points: at each of the 4 lamps, 3 crossed double-sided quads with a radial glow (RGBA, alpha), in the pole's
+    own coordinates (same position and angle as the pole statue). Not a real light: the ground light is baked in the lightmap."""
+    n = 128; yy, xx = np.mgrid[0:n, 0:n]; r = np.hypot(xx - n / 2 + 0.5, yy - n / 2 + 0.5) / (n / 2)
+    a = np.clip(1 - r, 0, 1) ** 1.6; rgb = np.dstack([np.full((n, n), 255), np.full((n, n), 246), 228 - 40 * r.clip(0, 1)])
+    Image.fromarray(np.dstack([rgb, a * 255]).clip(0, 255).astype(np.uint8), 'RGBA').save(path_png)
+    V, I = [], []; h = GLOW['size'] / 2
+    def quad(c, e1, e2, nrm):
+        for sg in (1, -1):
+            b0 = len(V); nn = nrm * sg
+            for (u, v) in ((-1, -1), (1, -1), (1, 1), (-1, 1)):
+                q = c + e1 * u * h + e2 * v * h; V.append((*q, *nn, (u + 1) / 2, (v + 1) / 2))
+            I.extend([b0, b0 + 1, b0 + 2, b0, b0 + 2, b0 + 3] if sg > 0 else [b0, b0 + 2, b0 + 1, b0, b0 + 3, b0 + 2])
+    X, Y, Z = np.eye(3)
+    for z, y in GLOW['lamps']:
+        c = np.array([GLOW['x'], y, z]); quad(c, Y, Z, X); quad(c, X, Y, Z); quad(c, X, Z, Y)
+    L = ['JM1', '0.000000 0.000000 1.000000 1.000000 1.000000', f'{len(V)} {len(I) // 3}']
+    L += [' '.join(f'{v:.6f}' for v in row) for row in V] + [str(i) for i in I] + ['']
+    open(path_jm, 'w', newline='\n').write('\n'.join(L))
 
 def main():
     H = np.load(f'{ROOT}/build/stt_H.npy').astype(np.float64); ox, oz = LT.STT_ORIGIN
@@ -76,9 +105,15 @@ def main():
         f = f"lightpole{'.' + e if e in ('jm', 'png') else e}"
         if os.path.exists(f"{POLE['src']}/{f}"): shutil.copy(f"{POLE['src']}/{f}", f'{OUT}/statue/{f}')
     P = poles(); st = open(f'{OUT}/statues').read().rstrip('\n').split('\n')
+    H = pads(H, P)                                                              # v22: flat pads under the poles (night terrain)
+    hmin, hmax = float(H.min()) - 0.5, float(H.max()) + 0.5
+    open(f'{OUT}/terrain.hf', 'w', newline='\n').write(f'11 {S:.6f} {hmin:.6f} {hmax:.6f}\n')
+    Image.fromarray(np.round((H - hmin) / (hmax - hmin) * 65535).astype(np.uint16)).save(f'{OUT}/terrain.png')
+    glow_model(f'{OUT}/statue/lamp_glow.jm', f'{OUT}/statue/lamp_glow.png')
     for (px, pz), (ax, az) in P:                                                # lamps face local +x -> world (cos a, -sin a)
         a = float(np.arctan2(-az, ax))
         st.append(f'[{px + ox:.6f} 0.000000 {pz + oz:.6f}] {a:.6f} @{NIGHT}/statue/lightpole.jm @{NIGHT}/statue/lightpole.png null')
+        st.append(f'[{px + ox:.6f} 0.000000 {pz + oz:.6f}] {a:.6f} @{NIGHT}/statue/lamp_glow.jm @{NIGHT}/statue/lamp_glow.png null')
     open(f'{OUT}/statues', 'w', newline='\n').write('\n'.join(st) + '\n')
     # lightmap
     sh = bake(H, P); N = H.shape[0]
@@ -89,12 +124,12 @@ def main():
     lt = open(f'{SRC}/lighting').read(); sky = dict(re.findall(r'(sky_\w+) (@\S+)', lt))
     for k, ref in sky.items():
         src = f"{ROOT}/tracks/{ref[1:]}"; night_sky(src, f'{OUT}/sky/{os.path.basename(ref)}')
-    L = ['sun_vector [ -0.30\t0.90\t0.30 ]', 'sun_color [ 0.55 0.55 0.52 ]', 'ambient [ 0.20 0.21 0.26 ]', 'fog [ 0.02 0.025 0.045 ] 0.00010']
+    L = ['sun_vector [ -0.30\t0.90\t0.30 ]', 'sun_color [ 0.50 0.50 0.47 ]', 'ambient [ 0.42 0.42 0.44 ]', 'fog [ 0.02 0.025 0.045 ] 0.00010']
     L += [f'{k} @{NIGHT}/sky/{os.path.basename(v)}' for k, v in sky.items()]
     L += ['flare_vector [ -0.30\t0.90\t0.30 ]', 'dynamic_lighting 1']
     open(f'{OUT}/lighting', 'w', newline='\n').write('\n'.join(L) + '\n')
     lit = sh[int((oz + 120) / S), int((ox + 180) / S)]
-    return dict(poles=len(P), statues=len(st), shade_track_centre=int(lit), shade_min=int(sh.min()), shade_max=int(sh.max()))
+    return dict(pads=NG['pad'], poles=len(P), statues=len(st), shade_track_centre=int(lit), shade_min=int(sh.min()), shade_max=int(sh.max()))
 
 if __name__ == '__main__':
     print(main())
