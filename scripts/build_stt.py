@@ -41,7 +41,11 @@ def extras():
         r = P['back'] + P['edge'] + half + P['front'] + P['down'] + 5
         sl, X, Z = G.window(gx - r, gx + r, gz - r, gz + r); u = (X - gx) * c + (Z - gz) * s_; v = -(X - gx) * s_ + (Z - gz) * c
         uu = np.clip((u - P['front']) / P['down'], 0, 1)
-        prof = np.where(u <= P['front'], np.clip((u + P['back'] + P['edge']) / P['edge'], 0, 1), (1 + np.cos(np.pi * uu)) / 2)
+        down = (1 + np.cos(np.pi * uu)) / 2
+        if P.get('lin'):                                   # v15: straight descent with rounded ends (fillets lin ft)
+            Ld, f = P['down'], P['lin']; x = np.clip(u - P['front'], 0, Ld); m = 1.0 / (Ld - f)
+            down = 1 - np.where(x < f, m * x * x / (2 * f), np.where(x > Ld - f, 1 - m * (Ld - x) ** 2 / (2 * f), m * (x - f / 2)))
+        prof = np.where(u <= P['front'], np.clip((u + P['back'] + P['edge']) / P['edge'], 0, 1), down)
         lat = np.clip((half + P['edge'] - np.abs(v)) / P['edge'], 0, 1)
         E[sl] = np.maximum(E[sl], P['h'] * prof * lat)
     R = getattr(LT, 'FMX_RAMP', None)

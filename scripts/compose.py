@@ -45,6 +45,14 @@ def whoops(key, n):
 LAST_SPLITS = []   # filled by lane(): [(start_ft, prof_left, prof_right)] for ('split', left_uid, right_uid) tokens
 
 
+def kick(uid, H, s):
+    """v13h: a measured bump scaled to H whose take-off face is replaced by a concave curve (y = H (x/Lf)^2, Lf = 2H/s): flat at
+    the bottom, steeper and steeper up to slope s at the lip, then the measured top and back. Saint-Thibery: "une courbe en bas
+    de l'appel, que ca kick, que ca envoie haut" (the rounded foot made the take-off long and flat)."""
+    q = unit(uid)[1]; q = q * (H / q.max()); c = int(np.argmax(q)); Lf = 2.0 * H / s
+    x = np.arange(int(round(Lf / 0.1))) * 0.1
+    return np.r_[H * (x / Lf) ** 2, q[c:]]
+
 def lane(tokens):
     """tokens: list of uid strings, ('gap', ft), ('whoops', key, n), ('split', left_uid, right_uid), ('scale', uid, H), ('landing', uid, H, back_ft).
     A split = double line: two measured units side by side, each on half of the lane width (left / right in the riding
@@ -64,6 +72,9 @@ def lane(tokens):
             u, p = unit(t[1]); p = p * (t[2] / p.max()); kind = u['kind']; name = f'{t[1]} (H {t[2]:.1f})'; uid = ALIAS.get(t[1], t[1])
             if len(t) > 3 and t[3] == 'flip':     # v13c ('scale', uid, H, 'flip'): turned around (Saint-Thibery: steep side to the turn)
                 p = p[::-1].copy(); name += ' flip'
+        elif isinstance(t, tuple) and t[0] == 'kick':
+            # v13h ('kick', uid, H, s): see kick()
+            u = unit(t[1])[0]; p = kick(t[1], t[2], t[3]); kind = u['kind']; name = f'{t[1]} (kick H {t[2]:.1f}, lip {t[3]:.1f})'; uid = ALIAS.get(t[1], t[1])
         elif isinstance(t, tuple) and t[0] == 'cut':
             # v13f ('cut', uid, H, back_slope): a kicker cut at its first edge (where the face stops being steep), scaled so the
             # edge is at H, then a straight back side (Saint-Thibery freestyle kicker: "a la premiere arete, fais droit")
@@ -120,6 +131,8 @@ def lane(tokens):
             def _half(x):
                 if isinstance(x, tuple) and x[0] == 'scale':                  # v13b: scaled half (Saint-Thibery L2)
                     q = unit(x[1])[1]; return q * (x[2] / q.max())
+                if isinstance(x, tuple) and x[0] == 'kick':                   # v13h: concave take-off half
+                    return kick(x[1], x[2], x[3])
                 return unit(x)[1]
             pa, pb = _half(t[1]), _half(t[2]); n = max(len(pa), len(pb))
             if len(t) > 3 and t[3] == 'end':      # v11: both bumps END together (keeps the rhythm of the next jump on both lines)
