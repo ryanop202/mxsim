@@ -70,17 +70,31 @@ def surface_decals(p, R):
         out.append(decal(smp['x'][i] + rng.normal(0, 5), smp['z'][i] + rng.normal(0, 5), rng.uniform(-np.pi, np.pi), 4.84, 'Tearoff'))
     return out
 
-def grass_tile(path, n=128):
-    """v18: tileable grass texture (128 x 128 PPM like the SX1 tiles): periodic noise (FFT), greens with a few dry blades."""
+def grass_tile(path, n=256):
+    """v21: more realistic tileable grass (256 x 256 PPM): mottled greens at several scales, thousands of short blades drawn with
+    wrap-around (seamless), a few dry yellowish blades and darker clumps."""
+    from PIL import ImageDraw
     r = np.random.default_rng(7); F = np.fft.fftfreq(n)[:, None] ** 2 + np.fft.fftfreq(n)[None, :] ** 2
     def noise(scale):
         w = np.fft.ifft2(np.fft.fft2(r.normal(size=(n, n))) * np.exp(-F * scale)).real; return (w - w.mean()) / w.std()
-    a, b, c = noise(300.0), noise(3000.0), noise(40.0)
-    base = np.array([66, 98, 42], float); dry = np.array([112, 116, 62], float)
-    t = np.clip(0.5 + 0.22 * b, 0, 1)[:, :, None]; img = base * (1 - t * 0.5) + dry * t * 0.5
-    img = img * (1 + 0.10 * a[:, :, None] + 0.07 * c[:, :, None])
-    img = np.clip(img, 0, 255).astype(np.uint8)
-    with open(path, 'wb') as fh: fh.write(f'P6\n{n} {n}\n255\n'.encode()); fh.write(img.tobytes())
+    big, mid = noise(4000.0), noise(600.0)
+    base = np.array([58, 92, 38], float)
+    img = base[None, None, :] * (1 + 0.10 * big[:, :, None] + 0.07 * mid[:, :, None])
+    im = Image.fromarray(np.clip(img, 0, 255).astype(np.uint8)); d = ImageDraw.Draw(im)
+    greens = [(46, 78, 30), (64, 102, 40), (78, 118, 48), (90, 128, 56), (54, 88, 34)]
+    dry = [(122, 124, 70), (138, 132, 82)]
+    for k in range(9000):
+        x, y = r.uniform(0, n), r.uniform(0, n); L = r.uniform(3, 9); a = r.normal(-np.pi / 2, 0.45)
+        c = dry[r.integers(len(dry))] if r.random() < 0.06 else greens[r.integers(len(greens))]
+        c = tuple(int(np.clip(v * r.uniform(0.85, 1.15), 0, 255)) for v in c)
+        for ox_ in (-n, 0, n):
+            for oy_ in (-n, 0, n):
+                x0, y0 = x + ox_, y + oy_
+                if -10 < x0 < n + 10 and -10 < y0 < n + 10:
+                    d.line([(x0, y0), (x0 + L * np.cos(a), y0 + L * np.sin(a))], fill=c, width=1)
+    a_ = np.asarray(im, float) * (1 - 0.12 * np.clip(noise(150.0), 0, None))[:, :, None]   # darker clumps
+    a_ = np.clip(a_, 0, 255).astype(np.uint8)
+    with open(path, 'wb') as fh: fh.write(f'P6\n{n} {n}\n255\n'.encode()); fh.write(a_.tobytes())
 
 def main():
     H, p, rep = B.build(); H = H.astype(np.float64); tiles = np.load(f'{ROOT}/build/stt_tiles.npy')

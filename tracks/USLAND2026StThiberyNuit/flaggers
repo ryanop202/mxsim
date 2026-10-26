@@ -1,0 +1,24 @@
+[265.000009 0.000 497.000008]
+[264.999991 0.000 443.000008]
+8.4 1
+9
+@30sec_30.png
+@30sec_turn.seq
+@30sec_5.png
+@30sec_run.seq
+@30sec_done.png
+
+[323.000000 0.000 321.649798]
+8 -1
+@finish_green.png
+@finish_crossed.png
+@finish_white.png
+@checkerwave.seq
+
+
+
+[0.00000000 0.000 0.00000000]
+9.6 1
+3 4 5 -1
+@flagger_resting.png
+@flagger_waving.seq
