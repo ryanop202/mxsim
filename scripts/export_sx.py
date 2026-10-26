@@ -12,8 +12,9 @@ BUILD = ROOT + '/build'; OUT = ROOT + '/tracks'; REF = REF
 from names import FOLDERS as F, DESC as _DESC
 H = np.load(f'{BUILD}/H.npy').astype(np.float64); tiles = np.load(f'{BUILD}/tiles.npy')
 N = H.shape[0]; S = 0.28975; NE = 11
-if os.path.exists(OUT): shutil.rmtree(OUT)
-for f in F.values(): os.makedirs(f'{OUT}/{f}')
+for f in F.values():                      # usland race track: only the 3 compound folders are wiped (tracks/ holds other tracks)
+    if os.path.exists(f'{OUT}/{f}'): shutil.rmtree(f'{OUT}/{f}')
+    os.makedirs(f'{OUT}/{f}')
 A = f'{OUT}/{F["SX1"]}'; P = '@' + F['SX1']
 DET = f'{REF}/JGSX2026TestTracks/JGSX2026Detroit'
 copies = {'tiles/dirt.ppm': f'{REF}/JGMXDrDew/JGMXDrDew/tiles/dirt.ppm', 'tiles/hardpack.ppm': f'{REF}/JGMXDrDew/JGMXDrDew/tiles/hardpack.ppm', 'tiles/concrete.ppm': f'{REF}/JGMXDrDew/JGMXDrDew/tiles/concrete.ppm',

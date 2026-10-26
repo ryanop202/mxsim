@@ -19,6 +19,7 @@ cd mxsim
 
 **Juste jouer** : tout est dans Git (dépôt privé : textures et modèles JGSX/JGMX inclus). Après le clone, copier `tracks/USLAND2026SX1`, `USLAND2026SX2`, `USLAND2026SX3` dans le dossier des pistes de MX Simulator
 (sans les renommer : les textures sont partagées via `@USLAND2026SX1/...`). En jeu : « USLAND: 2026 SX 1 / SX 2 / SX 3 (sand) ».
+Nouvelle piste indépendante : copier aussi `tracks/USLANDRaceTrack` (dossier autonome) → en jeu « usland race track » (doc 13, **non testée en jeu**).
 
 **Modifier / reconstruire** :
 
@@ -41,6 +42,8 @@ Sous Windows : Git Bash ou WSL pour les `.sh` (les scripts Python marchent parto
 | SX 3 (sand) | 3349 ft (1021 m) | ~1:07 | 279 ft | sable Glendale (J + virage en S), hauteurs mélangées + triple Detroit, 10 whoops, on-off, step-up, triple sur table off quad, gros double |
 
 \* modèle point-masse grossier (`scripts/laptime.py`), **pas** un chrono mesuré en jeu.
+
+**usland race track** (v1b, doc 13) : terrain propre de 593,4 ft dans le stade RF Anaheim, tour 2891 ft (881 m), ~1:02 estimé*, départ USLAND 22 grilles → cuvette plate, 9 whoops JGSX, 5 couloirs bosses RF + JGSX, berms JGSX, arrivée sur un step-up RF. `./make_all.sh usland`.
 
 Vues de dessus : `viewer/figures/01_top_SX*.jpg` · profils : `viewer/figures/02_lanes_SX*.jpg` · visionneuse 3D : `viewer/index.html`.
 

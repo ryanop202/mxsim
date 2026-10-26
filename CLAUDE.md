@@ -66,6 +66,8 @@ Tu reprends un projet commencé dans une autre conversation. Lis dans cet ordre 
 - v3 à v10 testées en jeu ; v11 et **v12 pas encore testées en jeu**. Contrôles v12 faits sans les archives (portes, comptage
   des tours, objets) ; `./make_all.sh build` complet à relancer sur le PC qui a les archives.
 - Pistes d'amélioration notées dans `docs/10_suite_et_idees.md`.
+- **usland race track** (branche `usland-race-track`, doc 13) : piste indépendante `tracks/USLANDRaceTrack`, construite par
+  `rf_units.py` → `build_usland_rt.py` → `validate_usland_rt.py` (`./make_all.sh usland`, 30 contrôles). Non testée en jeu ; décor RBT en attente des fichiers `24.RBT`.
 
 ## Pièges connus
 

@@ -1,0 +1,326 @@
+name Main
+friction 1.0 0
+friction 1.2 1.5
+friction 1.1 15
+friction 1.2 30
+roll_resist 40.0 60.0 35.0
+roll_resist 50.0 70.0 45.0
+erode_depth 2.5
+erode_lower 50.0
+erode_upper 150.0
+erode_displacement 2.5
+erode_radius 5.0
+erode_inner_depth 1.25
+erode_inner_radius 2.0
+erode_min_slope -0.75
+erode_max_slope 0.75
+erode_off_speed 10.0
+erode_on_speed 50.0
+erode_slip_base_scale 1.0
+erode_slip_scale 1.0
+erode_slip_lower 0.0
+erode_slip_upper 5.0
+erode_downhill_scale 0.8
+erode_limit 0.00 1.0 2.25
+erode_limit 0.75 0.7 1.7
+erode_limit 1.5 0.3 0.75
+erode_limit 2.5 0.3 0.3
+erode_lateral_scale 0.025
+texture @USLANDRaceTrack/tiles/dirt.ppm
+roost texture=@splash.png count=4 slip_threshold=2.0 slow_speed=0.0 fast_speed=64.0 slow_angle=1.07 fast_angle=0.196 size=0.80 grow=2.3 drag=1.90 vscale=1.0 randomize=5.0 r=123 g=73 b=52 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=1024
+roost texture=@USLANDRaceTrack/roost/redroost.png count=8 dig=0.0 slip_threshold=2.0 slow_speed=0.0 fast_speed=64.0 slow_angle=1.07 fast_angle=0.196 size=1.5 grow=4.0 drag=2.0 vscale=1.0 randomize=5.0 r=255 g=255 b=255 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=1024
+treadmark texture=@USLANDRaceTrack/treads/dirt2x4.png size=4 aspect=0.5 spacing=3 speed_threshold=-20
+treadmark texture=@USLANDRaceTrack/treads/dirt2x8.png size=8 aspect=0.25 spacing=6
+addtile
+
+name Jumps Sx
+friction 1.0 0
+friction 1.2 1.5
+friction 1.1 15
+friction 1.2 30
+roll_resist 40.0 60.0 35.0
+roll_resist 50.0 70.0 45.0
+erode_depth 5.5
+erode_lower 50.0
+erode_upper 120.0
+erode_displacement 0.15
+erode_radius 3.0
+erode_inner_depth 5.55
+erode_inner_radius 1.5
+erode_min_slope -0.75
+erode_max_slope 0.75
+erode_off_speed 10.0
+erode_on_speed 16.0
+erode_slip_base_scale 1.0
+erode_slip_scale 1.0
+erode_slip_lower 0.0
+erode_slip_upper 5.0
+erode_downhill_scale 0.8
+erode_limit 0.00 4.00 6.00
+erode_limit 0.45 2.50 5.00
+erode_limit 0.95 0.80 4.00
+erode_limit 1.5 0.35 3.35
+erode_limit 2.25 0.25 3.25
+erode_limit 3.25 0.05 2.05
+texture @USLANDRaceTrack/tiles/dirt.ppm
+roost texture=@splash.png count=4 slip_threshold=2.0 slow_speed=0.0 fast_speed=64.0 slow_angle=1.07 fast_angle=0.196 size=0.80 grow=2.3 drag=1.90 vscale=1.0 randomize=5.0 r=123 g=73 b=52 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=1024
+roost texture=@USLANDRaceTrack/roost/redroost.png count=8 dig=0.0 slip_threshold=2.0 slow_speed=0.0 fast_speed=64.0 slow_angle=1.07 fast_angle=0.196 size=1.5 grow=4.0 drag=2.0 vscale=1.0 randomize=5.0 r=255 g=255 b=255 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=1024
+treadmark texture=@USLANDRaceTrack/treads/dirt2x4.png size=4 aspect=0.5 spacing=3 speed_threshold=-20
+treadmark texture=@USLANDRaceTrack/treads/dirt2x8.png size=8 aspect=0.25 spacing=6
+addtile
+
+name WhoopsV2
+friction 1.0 0
+friction 1.2 1.5
+friction 1.1 15
+friction 1.2 30
+roll_resist 40.1 60.0 35.0
+roll_resist 50.0 70.1 45.0
+erode_depth 6.5
+erode_lower 49.0
+erode_upper 144.0
+erode_displacement 0.85
+erode_radius 3.08
+erode_inner_depth 7.50
+erode_inner_radius 1.45
+erode_min_slope -0.75
+erode_max_slope 0.75
+erode_off_speed 7.0
+erode_on_speed 20.0
+erode_slip_base_scale 1.0
+erode_slip_scale 1.5
+erode_slip_lower 0.0
+erode_slip_upper 5.0
+erode_downhill_scale 0.8
+erode_limit 0.00 2.0 2.0
+erode_limit 0.75 1.5 1.5
+erode_limit 1.5 1.05 1.05
+erode_limit 2.00 0.5 0.75
+erode_limit 3.00 0.05 0.05
+erode_lateral_scale 1.75
+texture @USLANDRaceTrack/tiles/dirt.ppm
+roost texture=@splash.png count=4 slip_threshold=2.0 slow_speed=0.0 fast_speed=64.0 slow_angle=1.07 fast_angle=0.196 size=0.80 grow=2.3 drag=1.90 vscale=1.0 randomize=5.0 r=123 g=73 b=52 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=1024
+roost texture=@USLANDRaceTrack/roost/redroost.png count=8 dig=0.0 slip_threshold=2.0 slow_speed=0.0 fast_speed=64.0 slow_angle=1.07 fast_angle=0.196 size=1.5 grow=4.0 drag=2.0 vscale=1.0 randomize=5.0 r=255 g=255 b=255 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=1024
+treadmark texture=@USLANDRaceTrack/treads/dirt2x4.png size=4 aspect=0.5 spacing=3 speed_threshold=-20
+treadmark texture=@USLANDRaceTrack/treads/dirt2x8.png size=8 aspect=0.25 spacing=6
+addtile
+
+name Berm Exit Sx
+friction 1.0 0
+friction 1.2 1.5
+friction 1.1 15
+friction 1.2 30
+roll_resist 40.0 60.0 35.0
+roll_resist 50.0 70.0 45.0
+erode_depth 5.5
+erode_lower 50.0
+erode_upper 120.0
+erode_displacement 0.35
+erode_radius 2.25
+erode_inner_depth 7.55
+erode_inner_radius 1.5
+erode_min_slope -0.75
+erode_max_slope 0.75
+erode_off_speed 10.0
+erode_on_speed 16.0
+erode_slip_base_scale 1.0
+erode_slip_scale 1.0
+erode_slip_lower 0.0
+erode_slip_upper 5.0
+erode_downhill_scale 0.8
+erode_limit 0.00 3.00 6.00
+erode_limit 0.45 1.0 5.00
+erode_limit 0.95 0.35 3.00
+erode_limit 1.5 0.05 1.35
+erode_limit 2.25 0.05 0.75
+erode_limit 3.25 0.05 0.05
+erode_lateral_scale 1.5
+texture @USLANDRaceTrack/tiles/dirt.ppm
+roost texture=@splash.png count=4 slip_threshold=2.0 slow_speed=0.0 fast_speed=64.0 slow_angle=1.07 fast_angle=0.196 size=0.80 grow=2.3 drag=1.90 vscale=1.0 randomize=5.0 r=123 g=73 b=52 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=1024
+roost texture=@USLANDRaceTrack/roost/redroost.png count=8 dig=0.0 slip_threshold=2.0 slow_speed=0.0 fast_speed=64.0 slow_angle=1.07 fast_angle=0.196 size=1.5 grow=4.0 drag=2.0 vscale=1.0 randomize=5.0 r=255 g=255 b=255 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=1024
+treadmark texture=@USLANDRaceTrack/treads/dirt2x4.png size=4 aspect=0.5 spacing=3 speed_threshold=-20
+treadmark texture=@USLANDRaceTrack/treads/dirt2x8.png size=8 aspect=0.25 spacing=6
+addtile
+
+name Sand Straight
+friction 1.15 0
+friction 1.3 1.4
+friction 1.3 15
+friction 1.3 25
+roll_resist 85 105 95
+roll_resist 85 105 93
+roll_resist 103 115 85
+erode_depth 7.5
+erode_lower 50.0
+erode_upper 150.0
+erode_displacement 2.0
+erode_radius 4.00
+erode_inner_depth 3.25
+erode_inner_radius 2.5
+erode_min_slope -0.5
+erode_max_slope 0.5
+erode_off_speed 10.0
+erode_on_speed 50.0
+erode_slip_base_scale 1.0
+erode_slip_scale 1.5
+erode_slip_lower 0.0
+erode_slip_upper 5.0
+erode_downhill_scale 0.8
+erode_limit 0.00 2.0 2.0
+erode_limit 0.75 1.5 1.5
+erode_limit 1.5 1.05 1.05
+erode_limit 2.00 0.5 0.75
+erode_limit 3.00 0.05 0.05
+erode_lateral_scale 1.75
+texture @USLANDRaceTrack/tiles/sand.ppm
+roost texture=@USLANDRaceTrack/roost/hha.dust.png count=4 dig=1.0 slip_threshold=2.0 slow_speed=0.0 fast_speed=50.0 slow_angle=1 fast_angle=0.1 size=2.0 grow=2.0 drag=1.5 vscale=1.0 randomize=1 r=255 g=255 b=255 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=-256
+roost texture=@USLANDRaceTrack/roost/dirt4.png count=4 dig=0.0 slip_threshold=2.0 slow_speed=0.0 fast_speed=50.0 slow_angle=1.57 fast_angle=0.296 size=1.0 grow=2.5 drag=1.0 vscale=1.0 randomize=1 r=255 g=255 b=255 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=256
+treadmark texture=@USLANDRaceTrack/treads/sand1x4.png size=4 aspect=0.25 spacing=3 speed_threshold=-20
+treadmark texture=@USLANDRaceTrack/treads/sand1x8.png size=8 aspect=0.125 spacing=6
+addtile
+
+name Sand Bump Straight
+friction 1.15 0
+friction 1.3 1.4
+friction 1.3 15
+friction 1.3 25
+roll_resist 85 105 95
+roll_resist 85 105 93
+roll_resist 103 115 85
+erode_depth 6.25
+erode_lower 50.0
+erode_upper 150.0
+erode_displacement 3.75
+erode_radius 7.5
+erode_inner_depth 2.0
+erode_inner_radius 2.0
+erode_min_slope -0.5
+erode_max_slope 0.5
+erode_off_speed 10.0
+erode_on_speed 15.0
+erode_slip_base_scale 1.0
+erode_slip_scale 1.5
+erode_slip_lower 0.0
+erode_slip_upper 5.0
+erode_downhill_scale 1.5
+erode_limit 0.00 2.0 2.0
+erode_limit 0.75 1.5 1.5
+erode_limit 1.5 1.0 1.0
+erode_limit 2.00 0.5 0.5
+erode_limit 2.5 0.05 0.05
+erode_lateral_scale 0.13
+texture @USLANDRaceTrack/tiles/sand.ppm
+roost texture=@USLANDRaceTrack/roost/hha.dust.png count=4 dig=1.0 slip_threshold=2.0 slow_speed=0.0 fast_speed=50.0 slow_angle=1 fast_angle=0.1 size=2.0 grow=2.0 drag=1.5 vscale=1.0 randomize=1 r=255 g=255 b=255 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=-256
+roost texture=@USLANDRaceTrack/roost/dirt4.png count=4 dig=0.0 slip_threshold=2.0 slow_speed=0.0 fast_speed=50.0 slow_angle=1.57 fast_angle=0.296 size=1.0 grow=2.5 drag=1.0 vscale=1.0 randomize=1 r=255 g=255 b=255 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=256
+treadmark texture=@USLANDRaceTrack/treads/sand1x4.png size=4 aspect=0.25 spacing=3 speed_threshold=-20
+treadmark texture=@USLANDRaceTrack/treads/sand1x8.png size=8 aspect=0.125 spacing=6
+addtile
+
+name Sand Exit
+friction 1.15 0
+friction 1.3 1.4
+friction 1.3 15
+friction 1.3 25
+roll_resist 85 105 95
+roll_resist 85 105 93
+roll_resist 103 115 85
+erode_depth 5.5
+erode_lower 50.0
+erode_upper 120.0
+erode_displacement 0.5
+erode_radius 2.5
+erode_inner_depth 5.55
+erode_inner_radius 1.75
+erode_min_slope -0.65
+erode_max_slope 0.65
+erode_off_speed 10.0
+erode_on_speed 16.0
+erode_slip_base_scale 1.0
+erode_slip_scale 1.0
+erode_slip_lower 0.0
+erode_slip_upper 5.0
+erode_downhill_scale 0.8
+erode_limit 0.00 3.00 6.00
+erode_limit 0.45 3.00 5.00
+erode_limit 0.95 3.00 5.00
+erode_limit 1.5 2.0 3.35
+erode_limit 2.25 1.25 2.25
+erode_limit 3.25 0.25 1.05
+erode_limit 3.75 0.05 1.05
+erode_lateral_scale 1.5
+texture @USLANDRaceTrack/tiles/sand.ppm
+roost texture=@USLANDRaceTrack/roost/hha.dust.png count=4 dig=1.0 slip_threshold=2.0 slow_speed=0.0 fast_speed=50.0 slow_angle=1 fast_angle=0.1 size=2.0 grow=2.0 drag=1.5 vscale=1.0 randomize=1 r=255 g=255 b=255 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=-256
+roost texture=@USLANDRaceTrack/roost/dirt4.png count=4 dig=0.0 slip_threshold=2.0 slow_speed=0.0 fast_speed=50.0 slow_angle=1.57 fast_angle=0.296 size=1.0 grow=2.5 drag=1.0 vscale=1.0 randomize=1 r=255 g=255 b=255 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=256
+treadmark texture=@USLANDRaceTrack/treads/sand1x4.png size=4 aspect=0.25 spacing=3 speed_threshold=-20
+treadmark texture=@USLANDRaceTrack/treads/sand1x8.png size=8 aspect=0.125 spacing=6
+addtile
+
+name Sand Bump Solo
+friction 1.15 0
+friction 1.3 1.4
+friction 1.3 15
+friction 1.3 25
+roll_resist 85 105 95
+roll_resist 85 105 93
+roll_resist 103 115 85
+erode_depth 9.2
+erode_lower 75.0
+erode_upper 185.0
+erode_displacement 2.20
+erode_radius 4.5
+erode_inner_depth 1.5
+erode_inner_radius 1.8
+erode_min_slope -0.45
+erode_max_slope 0.26
+erode_off_speed 10.0
+erode_on_speed 15.0
+erode_slip_base_scale 1.0
+erode_slip_scale 1.5
+erode_slip_lower 0.0
+erode_slip_upper 5.0
+erode_downhill_scale 2.0
+erode_limit 0.00 1.20 1.20
+erode_limit 1.25 0.35 0.35
+erode_limit 1.75 0.15 0.15
+erode_limit 2.25 0.05 0.05
+erode_front_scale 1.0
+texture @USLANDRaceTrack/tiles/sand.ppm
+roost texture=@USLANDRaceTrack/roost/hha.dust.png count=4 dig=1.0 slip_threshold=2.0 slow_speed=0.0 fast_speed=50.0 slow_angle=1 fast_angle=0.1 size=2.0 grow=2.0 drag=1.5 vscale=1.0 randomize=1 r=255 g=255 b=255 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=-256
+roost texture=@USLANDRaceTrack/roost/dirt4.png count=4 dig=0.0 slip_threshold=2.0 slow_speed=0.0 fast_speed=50.0 slow_angle=1.57 fast_angle=0.296 size=1.0 grow=2.5 drag=1.0 vscale=1.0 randomize=1 r=255 g=255 b=255 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=256
+treadmark texture=@USLANDRaceTrack/treads/sand1x4.png size=4 aspect=0.25 spacing=3 speed_threshold=-20
+treadmark texture=@USLANDRaceTrack/treads/sand1x8.png size=8 aspect=0.125 spacing=6
+addtile
+
+name Road
+friction 1.0 0
+friction 1.2 1.5
+friction 1.1 15
+friction 1.2 30
+roll_resist 40.0 60.0 35.0
+roll_resist 50.0 70.0 45.0
+erode_depth 2.5
+erode_lower 50.0
+erode_upper 150.0
+erode_displacement 2.5
+erode_radius 5.0
+erode_inner_depth 1.25
+erode_inner_radius 2.0
+erode_min_slope -0.75
+erode_max_slope 0.75
+erode_off_speed 10.0
+erode_on_speed 50.0
+erode_slip_base_scale 1.0
+erode_slip_scale 1.0
+erode_slip_lower 0.0
+erode_slip_upper 5.0
+erode_downhill_scale 0.8
+erode_limit 0.00 1.0 2.25
+erode_limit 0.75 0.7 1.7
+erode_limit 1.5 0.3 0.75
+erode_limit 2.5 0.3 0.3
+erode_lateral_scale 0.025
+texture @USLANDRaceTrack/tiles/concrete.ppm
+treadmark texture=@USLANDRaceTrack/treads/dirt2x4.png size=4 aspect=0.5 spacing=3 speed_threshold=-20
+treadmark texture=@USLANDRaceTrack/treads/dirt2x8.png size=8 aspect=0.25 spacing=6
+addtile
+

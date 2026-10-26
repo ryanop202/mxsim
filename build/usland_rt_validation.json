@@ -1,0 +1,172 @@
+{
+ "checks": [
+  {
+   "name": "Fichiers de piste presents",
+   "ok": true,
+   "detail": "15 fichiers"
+  },
+  {
+   "name": "Nom en jeu",
+   "ok": true,
+   "detail": "'usland race track'"
+  },
+  {
+   "name": "Heightmap 2049 px a 0,28975 ft (593,4 ft)",
+   "ok": true,
+   "detail": "n=10, 0.28975 ft/px, (2049, 2049), uint16, cote 593.41 ft"
+  },
+  {
+   "name": "Heightmap relue = terrain construit",
+   "ok": true,
+   "detail": "ecart max 0.000089 ft (pas de quantification 0.000177 ft)"
+  },
+  {
+   "name": "Tilemap 1024 x 1024, tiles definis",
+   "ok": true,
+   "detail": "1048576 octets, max 3 < 9 blocs"
+  },
+  {
+   "name": "Toutes les references @USLANDRaceTrack/ existent",
+   "ok": true,
+   "detail": "156 references, toutes presentes"
+  },
+  {
+   "name": "Aucune dependance vers un autre dossier de piste",
+   "ok": true,
+   "detail": "dossier autonome (seulement @ressources internes du jeu)"
+  },
+  {
+   "name": "frills.js en ASCII pur",
+   "ok": true,
+   "detail": "les accents faisaient planter le jeu (v13b)"
+  },
+  {
+   "name": "Tour ferme",
+   "ok": true,
+   "detail": "tour 2891.5 ft (881 m)"
+  },
+  {
+   "name": "Chaque section tient dans son couloir (>= 8 ft avant le virage)",
+   "ok": true,
+   "detail": "F 14, A 26, B 34, C 33, D 23, E 11, R 11 ft libres"
+  },
+  {
+   "name": "Profils exportes = profils mesures (RF + JGSX)",
+   "ok": true,
+   "detail": "7 sections, ecart max 0.057 ft"
+  },
+  {
+   "name": "Pas de pains de sucre dans les enchainements",
+   "ok": true,
+   "detail": "toutes les S / B ont H / largeur a mi-hauteur <= 0,31"
+  },
+  {
+   "name": "Couloirs separes (>= 41 ft hors parties voisines)",
+   "ok": true,
+   "detail": "aucune paire < 41 ft"
+  },
+  {
+   "name": "Berms JGSX : stamps exacts, rien sur le dessus roulable (30,4 ft) d un autre couloir",
+   "ok": true,
+   "detail": "7 berms ; jupes au bord : T4->B 0.17 ft hors dessus, T5->E 0.25 ft hors dessus"
+  },
+  {
+   "name": "Virage 1 : cuvette plate, aucun berm",
+   "ok": true,
+   "detail": "hauteur max sur 40 ft de large : 0.000 ft (R 90)"
+  },
+  {
+   "name": "Pas de rebord au pied des obstacles",
+   "ok": true,
+   "detail": "marche max sol -> obstacle 0.127 ft (reference JGSX Detroit 0,133 ft)"
+  },
+  {
+   "name": "Terrain sans trou ni pic",
+   "ok": true,
+   "detail": "hauteurs 0.000 .. 10.60 ft"
+  },
+  {
+   "name": "Obstacles dans la boite des murs du stade RF (marge 8 ft)",
+   "ok": true,
+   "detail": "emprise x 37-458, z 34-566 ft (forme reelle : controle du stade plus bas)"
+  },
+  {
+   "name": "22 grilles au pas de 4 ft, sol plat (grilles + grates)",
+   "ok": true,
+   "detail": "22 grilles, pas 4.000-4.000 ft, face 90 deg (sud), hauteur max 0.000 ft"
+  },
+  {
+   "name": "Couloir de depart degage jusqu a la jonction",
+   "ok": true,
+   "detail": "409 ft, hauteur max 0.000 ft, largeur 92 -> 40 -> 30 ft"
+  },
+  {
+   "name": "Comptage des tours simule (depart -> 1er tour -> tour complet)",
+   "ok": true,
+   "detail": "28 portes ; 1er tour 25 portes, tour normal 27 portes, toutes franchies dans l ordre"
+  },
+  {
+   "name": "Portes du tour sur la ligne de course, dans le sens de la course",
+   "ok": true,
+   "detail": "distance max porte -> ligne 0.50 ft"
+  },
+  {
+   "name": "Arrivee sur la crete de l appel du step-up RF (couloir F)",
+   "ok": true,
+   "detail": "porte d arrivee en (65.0, 150.5), sol 8.75 ft"
+  },
+  {
+   "name": "Cones a >= 17 ft des lignes de course",
+   "ok": true,
+   "detail": "8 cones (1 par virage)"
+  },
+  {
+   "name": "Arche FINISH : poteaux hors piste, socles plats, hauteur libre",
+   "ok": true,
+   "detail": "poteaux a 22.0 ft des lignes, pente sous socles 0.36 ft, 21.2 ft au-dessus de la crete"
+  },
+  {
+   "name": "Grates et portique sur les 22 grilles",
+   "ok": true,
+   "detail": "oui"
+  },
+  {
+   "name": "Stade RF Anaheim (murs, tribunes, rochers) : >= 25 ft des lignes, >= 8 ft des obstacles",
+   "ok": true,
+   "detail": "17 modeles ; ligne la plus proche 26 ft, obstacle le plus proche 11 ft"
+  },
+  {
+   "name": "Flammes d arrivee (2 billboards) + frills.js",
+   "ok": true,
+   "detail": "2 billboards"
+  },
+  {
+   "name": "Chrono ESTIME (modele point-masse laptime.py, pas une mesure)",
+   "ok": true,
+   "detail": "62.5 s (fourchette 60.2 - 66.0 s)"
+  },
+  {
+   "name": "SX1, SX2, SX3 inchangees (git)",
+   "ok": true,
+   "detail": "aucune modification dans tracks/USLAND2026SX1-3"
+  }
+ ],
+ "passed": 30,
+ "total": 30,
+ "lap_s": {
+  "est": 62.474943152393514,
+  "range": [
+   60.16372314492668,
+   65.99319313453215
+  ]
+ },
+ "profile_errors": {
+  "URT-F finish lane: small bump + RF Anaheim 2 step-up (finish on the take-off) + single": 0.041024173173974395,
+  "URT-A whoops JGSX Cleveland (entry + 8)": 0.014061398104263182,
+  "URT-B JGSX entry + RF Anaheim 1 rhythm (big-big-mid-double) + RF on-off": 0.05665606343697678,
+  "URT-C JGSX double + RF Houston (double 4-4, on-off 6.0) + JGSX round big": 0.03683923303864315,
+  "URT-D JGSX single + RF big triple 8.5/5.5/7.3 + JGSX double": 0.03474783211626433,
+  "URT-E JGSX small bump + full RF Anaheim 1 lane + RF mid single 4.8": 0.037424513717411026,
+  "URT-R top lane: JGSX Arlington triple + RF Houston big-single-big-single + JGSX single": 0.038797296269835815
+ }
+}

@@ -74,13 +74,21 @@ build() {
   run figures_sx.py             # viewer/figures + viewer/terrain_data.js
   run figures_dress.py          # viewer/figures/05_habillage*.jpg
   run gen_docs.py               # docs/09_donnees_mesurees.md + docs/data/*.csv + docs/img/atlas_*.jpg
+  usland_rt
+}
+
+usland_rt() {                   # usland race track (doc 13): own terrain, independent of the compound; needs refs/rf only
+  run rf_units.py               # RF units measured from refs/rf/*.saf -> lib/rf_units.json
+  run build_usland_rt.py        # tracks/USLANDRaceTrack (terrain, tiles, gates, RF Anaheim stadium, USLAND start, decals)
+  run validate_usland_rt.py     # build/usland_rt_validation.json + viewer/figures/URT_*.png
 }
 
 case "$MODE" in
   all) analysis; build ;;
   analysis) analysis ;;
   build) need_refs; build ;;
+  usland) usland_rt ;;          # ./make_all.sh usland -> only the usland race track (no JGSX/JGMX archives needed)
   mx) need_refs; run mx_candidates.py; run mx_grad_profiles.py "$MXSIM_REF/JGMXDrDew/JGMXDrDew" MX_DrDew; run mx_preview.py; run build_compound.py; run export.py; run validate.py; run laptime.py mx ;;
-  *) echo "usage: $0 [all|build|analysis|mx]"; exit 2 ;;
+  *) echo "usage: $0 [all|build|analysis|mx|usland]"; exit 2 ;;
 esac
 echo; echo "done ($MODE)"

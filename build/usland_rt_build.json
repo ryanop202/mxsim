@@ -1,0 +1,450 @@
+{
+ "objects": {
+  "stadium RF Anaheim": 17,
+  "start_grate": 22,
+  "start_gantry": 1,
+  "finish_arch": 1,
+  "cones": 8
+ },
+ "arch": {
+  "centre": [
+   65.0,
+   150.5
+  ],
+  "crest_ft": 8.75,
+  "drop": 8.75,
+  "plate_slope": 0.36,
+  "pillar_ride_dist": 22.0,
+  "beam_clearance": 21.2
+ },
+ "decals": {
+  "total": 6272,
+  "riding": 4970,
+  "floor": 1194,
+  "holeshot": [
+   245.0,
+   365.0
+  ]
+ },
+ "flaggers": {
+  "board_30s": [
+   [
+    128.0,
+    87.0
+   ],
+   [
+    182.0,
+    87.0
+   ]
+  ],
+  "finish": [
+   29.2,
+   156.5
+  ],
+  "finish_ride_dist": 35.8
+ },
+ "folder": "USLANDRaceTrack",
+ "desc": "usland race track",
+ "lap_ft": 2891.4911033585986,
+ "start_ft": 409.37166941154067,
+ "merge": [
+  245.00000000000003,
+  380.0
+ ],
+ "heights": [
+  -0.5,
+  11.101
+ ],
+ "hmax": 10.601,
+ "gates": {
+  "n": 28,
+  "first": [
+   27,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12,
+   13,
+   14,
+   15,
+   16,
+   17,
+   18,
+   19,
+   20,
+   21,
+   22,
+   23,
+   24,
+   25,
+   26
+  ],
+  "normal": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12,
+   13,
+   14,
+   15,
+   16,
+   17,
+   18,
+   19,
+   20,
+   21,
+   22,
+   23,
+   24,
+   25,
+   26
+  ],
+  "s_merge": 588.7433388230813,
+  "s_finish": 76.30000000000001
+ },
+ "tiles": {
+  "Main": 789480,
+  "Jumps Sx": 195381,
+  "WhoopsV2": 21106,
+  "Berm Exit Sx": 42609
+ },
+ "sections": {
+  "URT-F finish lane: small bump + RF Anaheim 2 step-up (finish on the take-off) + single": {
+   "length": 277.5,
+   "items": [
+    {
+     "id": "Glendale_g40_2",
+     "start": 0.0,
+     "end": 27.7,
+     "H": 2.47,
+     "src": "JGSX"
+    },
+    {
+     "id": "RF_A2_cp21_0",
+     "start": 43.9,
+     "end": 84.0,
+     "H": 8.75,
+     "src": "RF"
+    },
+    {
+     "id": "RF_A2_cp21_1",
+     "start": 116.7,
+     "end": 231.3,
+     "H": 10.6,
+     "src": "RF"
+    },
+    {
+     "id": "Custom_g55_2",
+     "start": 247.5,
+     "end": 277.4,
+     "H": 3.6,
+     "src": "JGSX"
+    }
+   ]
+  },
+  "URT-A whoops JGSX Cleveland (entry + 8)": {
+   "length": 184.20000000000002,
+   "items": [
+    {
+     "id": "whoops Custom1_0 x9",
+     "start": 0.0,
+     "end": 184.1,
+     "H": 2.99,
+     "src": "JGSX"
+    }
+   ]
+  },
+  "URT-B JGSX entry + RF Anaheim 1 rhythm (big-big-mid-double) + RF on-off": {
+   "length": 329.20000000000005,
+   "items": [
+    {
+     "id": "Arlington_g37_0",
+     "start": 0.0,
+     "end": 27.4,
+     "H": 3.36,
+     "src": "JGSX"
+    },
+    {
+     "id": "RF_A1_cp22_0",
+     "start": 32.7,
+     "end": 82.7,
+     "H": 6.13,
+     "src": "RF"
+    },
+    {
+     "id": "RF_A1_cp22_1",
+     "start": 87.1,
+     "end": 138.2,
+     "H": 5.9,
+     "src": "RF"
+    },
+    {
+     "id": "RF_A1_cp22_2",
+     "start": 142.3,
+     "end": 178.2,
+     "H": 4.65,
+     "src": "RF"
+    },
+    {
+     "id": "RF_A1_cp22_3",
+     "start": 181.5,
+     "end": 207.9,
+     "H": 3.71,
+     "src": "RF"
+    },
+    {
+     "id": "RF_A1_cp22_4",
+     "start": 217.3,
+     "end": 245.2,
+     "H": 3.76,
+     "src": "RF"
+    },
+    {
+     "id": "RF_A1_cp22_6",
+     "start": 249.0,
+     "end": 329.1,
+     "H": 5.89,
+     "src": "RF"
+    }
+   ]
+  },
+  "URT-C JGSX double + RF Houston (double 4-4, on-off 6.0) + JGSX round big": {
+   "length": 327.8,
+   "items": [
+    {
+     "id": "Custom1_g71_3",
+     "start": 0.0,
+     "end": 30.3,
+     "H": 3.52,
+     "src": "JGSX"
+    },
+    {
+     "id": "Custom1_g71_5",
+     "start": 35.6,
+     "end": 70.3,
+     "H": 3.87,
+     "src": "JGSX"
+    },
+    {
+     "id": "RF_HOU_cp12_3",
+     "start": 74.1,
+     "end": 130.9,
+     "H": 4.39,
+     "src": "RF"
+    },
+    {
+     "id": "RF_HOU_cp12_4",
+     "start": 137.1,
+     "end": 160.8,
+     "H": 2.9,
+     "src": "RF"
+    },
+    {
+     "id": "RF_HOU_cp12_5",
+     "start": 168.6,
+     "end": 235.4,
+     "H": 6.0,
+     "src": "RF"
+    },
+    {
+     "id": "RF_HOU_cp12_6",
+     "start": 242.9,
+     "end": 271.4,
+     "H": 3.5,
+     "src": "RF"
+    },
+    {
+     "id": "Glendale_g30_0",
+     "start": 276.7,
+     "end": 327.7,
+     "H": 5.77,
+     "src": "JGSX"
+    }
+   ]
+  },
+  "URT-D JGSX single + RF big triple 8.5/5.5/7.3 + JGSX double": {
+   "length": 276.0,
+   "items": [
+    {
+     "id": "Arlington_g43_1",
+     "start": 0.0,
+     "end": 28.6,
+     "H": 3.6,
+     "src": "JGSX"
+    },
+    {
+     "id": "RF_A1_cp10_0",
+     "start": 57.6,
+     "end": 97.5,
+     "H": 8.5,
+     "src": "RF"
+    },
+    {
+     "id": "RF_A1_cp10_1",
+     "start": 102.4,
+     "end": 140.7,
+     "H": 5.53,
+     "src": "RF"
+    },
+    {
+     "id": "RF_A1_cp10_2",
+     "start": 145.2,
+     "end": 195.6,
+     "H": 7.26,
+     "src": "RF"
+    },
+    {
+     "id": "Custom_g55_2",
+     "start": 211.8,
+     "end": 241.7,
+     "H": 3.6,
+     "src": "JGSX"
+    },
+    {
+     "id": "Arlington_g43_2",
+     "start": 247.0,
+     "end": 275.9,
+     "H": 3.36,
+     "src": "JGSX"
+    }
+   ]
+  },
+  "URT-E JGSX small bump + full RF Anaheim 1 lane + RF mid single 4.8": {
+   "length": 354.8,
+   "items": [
+    {
+     "id": "Custom1_g30_1",
+     "start": 0.0,
+     "end": 26.9,
+     "H": 1.88,
+     "src": "JGSX"
+    },
+    {
+     "id": "RF_A1_cp3_0",
+     "start": 35.8,
+     "end": 60.7,
+     "H": 3.35,
+     "src": "RF"
+    },
+    {
+     "id": "RF_A1_cp3_1",
+     "start": 69.8,
+     "end": 96.5,
+     "H": 3.58,
+     "src": "RF"
+    },
+    {
+     "id": "RF_A1_cp3_2",
+     "start": 100.5,
+     "end": 144.1,
+     "H": 6.07,
+     "src": "RF"
+    },
+    {
+     "id": "RF_A1_cp3_3",
+     "start": 147.2,
+     "end": 203.8,
+     "H": 3.48,
+     "src": "RF"
+    },
+    {
+     "id": "RF_A1_cp3_4",
+     "start": 208.5,
+     "end": 277.9,
+     "H": 5.5,
+     "src": "RF"
+    },
+    {
+     "id": "RF_A1_cp3_5",
+     "start": 286.3,
+     "end": 313.1,
+     "H": 3.44,
+     "src": "RF"
+    },
+    {
+     "id": "RF_A1_cp7_1",
+     "start": 318.4,
+     "end": 354.7,
+     "H": 4.8,
+     "src": "RF"
+    }
+   ]
+  },
+  "URT-R top lane: JGSX Arlington triple + RF Houston big-single-big-single + JGSX single": {
+   "length": 323.8,
+   "items": [
+    {
+     "id": "Arlington_g1_1",
+     "start": 0.0,
+     "end": 28.9,
+     "H": 3.69,
+     "src": "JGSX"
+    },
+    {
+     "id": "Arlington_g1_3",
+     "start": 34.2,
+     "end": 66.1,
+     "H": 3.81,
+     "src": "JGSX"
+    },
+    {
+     "id": "Arlington_g37_4",
+     "start": 71.4,
+     "end": 103.7,
+     "H": 4.02,
+     "src": "JGSX"
+    },
+    {
+     "id": "RF_HOU_cp4_2",
+     "start": 109.0,
+     "end": 163.0,
+     "H": 6.0,
+     "src": "RF"
+    },
+    {
+     "id": "RF_HOU_cp4_3",
+     "start": 166.8,
+     "end": 195.0,
+     "H": 3.38,
+     "src": "RF"
+    },
+    {
+     "id": "RF_HOU_cp4_4",
+     "start": 199.9,
+     "end": 252.9,
+     "H": 5.91,
+     "src": "RF"
+    },
+    {
+     "id": "RF_HOU_cp4_5",
+     "start": 258.4,
+     "end": 286.2,
+     "H": 3.6,
+     "src": "RF"
+    },
+    {
+     "id": "Custom1_g29_1",
+     "start": 291.5,
+     "end": 323.7,
+     "H": 3.63,
+     "src": "JGSX"
+    }
+   ]
+  }
+ }
+}
