@@ -131,6 +131,31 @@ def main():
         fx_, fz_ = R_['lip'][0] + LT.STT_ORIGIN[0] - d_[0] * R_['model_len'], R_['lip'][1] + LT.STT_ORIGIN[1] - d_[1] * R_['model_len']
         m_ = R_['model']
         st.append(f'[{fx_:.6f} 0.000000 {fz_:.6f}] {PP.statue_ang(-d_[0], -d_[1]):.6f} {P}/statue/{m_}.jm {P}/statue/{m_}.png {P}/statue/{m_}.shp')
+    # v20: wooden fence around the dirt area (arena box + start area), in the grass at the foot of the bank
+    FE = getattr(LT, 'FENCE', None)
+    if FE:
+        for e in ('jm', 'png'): shutil.copy(f"{ROOT}/assets/props/{FE['model']}.{e}", f"{OUT}/statue/{FE['model']}.{e}")
+        x0, x1, z0, z1 = LT.ARENA; o = FE['off']; k_ = getattr(LT, 'GRASS_OUTSIDE', {}).get('keep', [])
+        if k_:
+            sx0, sx1, sz0, sz1 = k_[0]
+            poly = [(x0, z0), (x1, z0), (x1, z1), (x0, z1), (x0, sz1), (sx0, sz1), (sx0, sz0), (x0, sz0)]   # clockwise (x east, z south)
+        else:
+            poly = [(x0, z0), (x1, z0), (x1, z1), (x0, z1)]
+        P_ = np.array(poly); n_ = len(P_); ofs = []
+        for i_ in range(n_):                                  # offset each edge outwards by o (rectilinear outline)
+            a_, b_ = P_[i_], P_[(i_ + 1) % n_]; t_ = (b_ - a_) / np.linalg.norm(b_ - a_); nrm = np.array([t_[1], -t_[0]])
+            ofs.append((a_ + nrm * o, b_ + nrm * o, t_, nrm))
+        for i_ in range(n_):                                  # corners: intersect consecutive offset edges
+            a1, b1, t1, _ = ofs[i_ - 1]; a2, b2, t2, _ = ofs[i_]
+            M_ = np.array([t1, -t2]).T; uu = np.linalg.solve(M_, a2 - a1); ofs[i_ - 1] = (a1, a1 + t1 * uu[0], t1, ofs[i_ - 1][3]); ofs[i_] = (a1 + t1 * uu[0], b2, t2, ofs[i_][3])
+        nf = 0
+        for a_, b_, t_, nrm in ofs:
+            Lseg = float(np.linalg.norm(b_ - a_)); m_ = max(1, int(round(Lseg / FE['step']))); stp = Lseg / m_
+            for q in range(m_):
+                c_ = a_ + t_ * (q + 0.5) * stp + np.array(LT.STT_ORIGIN)
+                # model: +z = rails side -> towards the track (-nrm); x along the fence
+                st.append(f"[{c_[0]:.6f} 0.000000 {c_[1]:.6f}] {PP.statue_ang(-nrm[0], -nrm[1]):.6f} {P}/statue/{FE['model']}.jm {P}/statue/{FE['model']}.png null"); nf += 1
+        print('fence sections', nf)
     open(f'{OUT}/statues', 'w', newline='\n').write('\n'.join(st) + '\n')
     # decals (ground texture over the riding surface, obstacle and turn decals)
     R = StartRoute(LS.STARTS['STT'], LS.N_GATES, LS.GATE_PITCH)

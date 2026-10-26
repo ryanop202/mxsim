@@ -2,7 +2,8 @@
 START = west end. Every bump is a measured JGSX unit (lib/) unless marked 'scaled' (height scaled, same shape/length),
 'landing' (scaled, back side replaced by a gentle slope) or 'trapeze' (synthetic mound) - asked by the user in game tests.
 
-Lap (v19, 14th test: L2 1st bump less steep (lip 0.75) with a softer entry; L1 1st bump 6 ft after the turn (triple in,
+Lap (v20: arena bank 36.7 ft with a gentle inner slope; wooden fence (fence_wood) at its foot all around; track centred
+  on the terrain. Before, v19, 14th test: L2 1st bump less steep (lip 0.75) with a softer entry; L1 1st bump 6 ft after the turn (triple in,
   not quad); giant grassed earth bank around the arena (22 ft, the track in a pit); track moved 65 ft east on the terrain.
   Before, v18, 13th test: L2 1st bump lower (4.3 / 3.3 ft); L1 1st bump back to the v13 one (measured 4.0 ft, 16 ft after the
   turn); freestyle side ramp = the user's steel model ramp_50 (with collision), no dirt ramp; grass all around the arena.
@@ -35,7 +36,7 @@ from engine import Path
 import layouts_sx as LS
 from layouts_sx import L, sec, _start, SA, SD, SC, BB, TABLE_A, TABLE_B, TABLE9, BIG_TRIPLE, RB, RS, BIG, BIG2, SMALL, SMALL2
 
-STT_ORIGIN = (240.0, 170.0)                                                # v19: 65 ft east so the arena bank fits in the terrain
+STT_ORIGIN = (320.0, 225.0)                                                # v20: centred so the bigger arena bank fits in the terrain
 FIN = ['Custom1_g30_2', ('gap', 12.0), ('scale', 'Glendale_g83_2', 10.0)]   # v9: round normal landing (Glendale g83 double landing, 7.9 -> 10 ft),
                                                                             # crest at the same distance as v8
 R_CURVE = 16.0                                                              # one 90 deg curve west column -> L4 (v8: 21.5 -> 16, room for L1 lower)
@@ -62,7 +63,9 @@ FMX_RAMP = dict(lip=(98.0, 153.0), aim=(170.0, 150.0), H=7.5, width=8.0, side=0.
 GRASS_OUTSIDE = dict(arena=True, keep=[(-140.0, -105.0, 108.0, 242.0)])
 # v19: the track sits in a pit: a giant grassed earth bank all around the dirt arena (and around the start area), as on the
 # drone photos. Height h ft, inner slope over `inner` ft (rounded toe and top), flat top `top` ft, outer slope `outer` ft.
-ARENA_BANK = dict(h=22.0, inner=36.0, top=14.0, outer=44.0)
+ARENA_BANK = dict(h=36.7, inner=95.0, top=14.0, outer=60.0)   # v20: 2/3 higher (22 -> 36.7 ft), much gentler inner slope (max ~0.58)
+# v20: wooden post-and-rail fence (scripts/fence_wood.py) in the grass at the foot of the bank, `off` ft outside the dirt area
+FENCE = dict(model='fence_wood', off=4.0, step=8.0)
 WIDE = {'STT-L4 roller, bosse, roller, saut freestyle': (147.6, 212.6, 0.0, 9.0)}   # right only (L3 too close on the left); start corridor 8 ft south
 
 def up(units, k):
