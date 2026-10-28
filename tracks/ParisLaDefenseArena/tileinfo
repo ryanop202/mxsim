@@ -1,0 +1,58 @@
+name Parvis
+friction 1.0 0
+friction 1.2 1.5
+friction 1.1 15
+friction 1.2 30
+roll_resist 40.0 60.0 35.0
+roll_resist 50.0 70.0 45.0
+erode_depth 0.0
+erode_lower 50.0
+erode_upper 150.0
+erode_displacement 0.0
+erode_radius 5.0
+erode_inner_depth 0.0
+erode_inner_radius 2.0
+erode_min_slope -0.75
+erode_max_slope 0.75
+erode_off_speed 10.0
+erode_on_speed 50.0
+erode_slip_base_scale 1.0
+erode_slip_scale 1.0
+erode_slip_lower 0.0
+erode_slip_upper 5.0
+erode_downhill_scale 0.8
+erode_limit 0.00 1.0 2.25
+erode_limit 2.5 0.3 0.3
+erode_lateral_scale 0.025
+texture @ParisLaDefenseArena/tiles/plaza.ppm
+addtile
+
+name Sol arene
+friction 1.0 0
+friction 1.2 1.5
+friction 1.1 15
+friction 1.2 30
+roll_resist 40.0 60.0 35.0
+roll_resist 50.0 70.0 45.0
+erode_depth 0.0
+erode_lower 50.0
+erode_upper 150.0
+erode_displacement 0.0
+erode_radius 5.0
+erode_inner_depth 0.0
+erode_inner_radius 2.0
+erode_min_slope -0.75
+erode_max_slope 0.75
+erode_off_speed 10.0
+erode_on_speed 50.0
+erode_slip_base_scale 1.0
+erode_slip_scale 1.0
+erode_slip_lower 0.0
+erode_slip_upper 5.0
+erode_downhill_scale 0.8
+erode_limit 0.00 1.0 2.25
+erode_limit 2.5 0.3 0.3
+erode_lateral_scale 0.025
+texture @ParisLaDefenseArena/tiles/floor_tiles.ppm
+addtile
+

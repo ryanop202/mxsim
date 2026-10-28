@@ -1,0 +1,254 @@
+﻿mask(MNS-MNT>15m) area=28781 m2, centroid L93 643518.2 6866462.9
+max MNS 99.94 m NGF at L93 643579.3 6866511.8; MNT there 64.55
+mask min-area rect: 249.5 x 243.5 m, long axis grid-azimuth 90.00 deg => true azimuth 89.44 deg
+
+== Long-axis profiles (u toward true az 25,5), MNS-gref, at v offsets ==
+   u  | v= -70  v= -50  v= -25  v=   0  v=  25  v=  50  v=  70  | MNT(v=0)
+ -115 |    0.0    -0.3    -0.7    -0.8    -0.8    -0.8    -2.5  |   53.8
+ -110 |   -0.2    -0.4    -0.7    -0.7    -0.7    -0.7    -2.4  |   53.9
+ -105 |   -0.4    -0.5    -0.6    -0.6    -0.6    -0.6    -2.4  |   54.0
+ -100 |   -0.5    -0.4    -0.5    -0.5    -0.5    -0.5    -2.5  |   54.1
+  -95 |   -0.5    -0.4    -0.4     9.7    -0.4    -0.4    -2.4  |   54.2
+  -90 |   -0.4    28.5    26.8    26.4    27.1    28.9    -2.5  |   55.8
+  -85 |   30.4    29.5    27.7    27.2    28.0    29.8    12.5  |   58.1
+  -80 |   31.2    30.7    29.0    28.5    29.3    30.9    31.0  |   59.4
+  -75 |   32.0    32.0    30.8    30.1    30.9    32.0    31.6  |   60.4
+  -70 |   32.7    33.3    32.5    32.0    32.7    33.2    32.1  |   61.5
+  -65 |   33.4    34.7    34.4    34.1    34.5    34.4    32.5  |   62.7
+  -60 |   34.0    36.1    36.4    36.3    36.4    35.5    32.8  |   63.8
+  -55 |   34.6    37.2    38.4    38.6    38.3    36.6    33.2  |   65.0
+  -50 |   35.0    38.4    40.2    40.6    39.9    37.6    33.4  |   66.1
+  -45 |   35.5    39.4    41.7    42.3    41.4    38.5    33.8  |   67.3
+  -40 |   35.8    40.1    42.8    43.5    42.5    39.1    33.9  |   68.4
+  -35 |   36.0    40.5    43.4    44.0    43.0    39.4    34.0  |   69.6
+  -30 |   36.3    40.9    43.8    44.4    43.4    39.8    34.2  |   70.7
+  -25 |   36.3    41.0    44.0    44.6    43.6    39.8    34.1  |   71.9
+  -20 |   36.4    41.1    44.1    44.7    43.7    40.0    34.3  |   72.7
+  -15 |   36.3    41.1    44.1    44.8    43.7    40.0    34.2  |   72.7
+  -10 |   36.4    41.2    44.2    44.8    43.8    40.0    34.1  |   75.2
+   -5 |   36.5    41.3    44.3    44.9    43.9    40.1    34.3  |   79.2
+    0 |   36.5    41.3    44.3    44.9    43.9    40.1    34.2  |   83.2
+    5 |   36.5    41.4    44.4    44.9    43.9    40.2    34.3  |   87.0
+   10 |   36.4    41.3    44.3    45.0    44.0    40.1    34.2  |   86.0
+   15 |   36.5    41.3    44.3    44.9    43.9    40.1    34.1  |   83.7
+   20 |   36.5    41.3    44.4    44.9    43.9    40.1    34.2  |   81.5
+   25 |   36.4    41.3    44.4    45.0    43.9    40.0    34.1  |   79.3
+   30 |   36.4    41.3    44.3    44.9    43.8    39.9    34.2  |   77.1
+   35 |   36.4    41.2    44.2    44.8    43.8    39.9    34.1  |   74.8
+   40 |   36.3    41.1    44.1    44.8    43.7    39.8    33.9  |   72.6
+   45 |   36.3    41.0    44.1    44.7    43.6    39.7    34.1  |   70.4
+   50 |   36.1    40.8    43.9    44.6    43.5    39.5    34.0  |   68.9
+   55 |   36.1    40.7    43.8    44.4    43.3    39.4    34.0  |   67.7
+   60 |   36.1    40.6    43.6    44.3    43.2    39.3    33.9  |   66.4
+   65 |   41.9    43.8    40.7    41.1    42.9    39.0    33.5  |   61.8
+   70 |   42.6    44.2    -0.3     5.6    42.3    37.9    32.8  |   60.2
+   75 |   43.2    44.5    10.7    10.7    41.1    36.4    31.7  |   63.2
+   80 |   43.7    44.5    41.1    42.4    39.2    34.0    22.6  |   65.7
+   85 |   43.8    -0.8    43.1    40.5    36.3     4.0    -0.3  |   64.8
+   90 |   43.6     5.1    41.5    37.7    27.7    -0.2    -0.3  |   58.0
+   95 |   42.9     9.1    38.8    31.4     0.0    -0.1    -0.4  |   54.7
+  100 |   41.6    31.5    33.2     0.2     0.5    -0.3     NaN  |   54.8
+  105 |   39.2    31.2     0.3     0.3     0.6    -0.4     NaN  |   54.9
+  110 |   34.5     0.1     0.6     0.4    -0.1     NaN     NaN  |   55.0
+  115 |   -0.1     0.3     1.7     0.6    -0.2     NaN     NaN  |   55.1
+  120 |    0.1    -3.9     1.5     0.1     0.1     NaN     NaN  |   54.7
+  125 |   -2.9    -3.5     0.3     0.2     NaN     NaN     NaN  |   54.8
+
+== Cross-axis profiles (v>0 toward true az -64,5), MNS-gref, at u offsets ==
+   v  | u= -80  u= -60  u= -30  u=   0  u=  30  u=  60  u=  80  u= 100 
+ -100 |   20.3     0.1    -0.3    -0.6     6.1    -1.0    -0.4    -0.4 
+  -95 |   25.0     0.2     0.2     0.5     1.3     1.2    -0.6    -0.5 
+  -90 |   -0.7    -0.6    -0.5    -0.6    -0.5    -0.5    -0.6    -0.5 
+  -85 |   -0.6    24.2    30.6    29.9    26.5    29.9    42.5    42.3 
+  -80 |   14.1    32.1    32.7    32.8    32.7    32.8    43.0    42.0 
+  -75 |   31.1    33.2    34.6    34.7    34.7    34.5    43.4    41.8 
+  -70 |   31.2    34.0    36.3    36.5    36.4    36.1    43.7    41.6 
+  -65 |   31.2    34.6    37.7    37.9    37.9    37.4    44.0    41.0 
+  -60 |   31.1    35.3    39.0    39.3    39.1    38.6    44.2    31.3 
+  -55 |   30.9    35.7    40.0    40.4    40.3    39.7    44.4    31.4 
+  -50 |   30.7    36.1    40.9    41.3    41.3    40.6    44.5    31.5 
+  -45 |   30.4    36.3    41.7    42.4    42.3    42.0    44.6    33.6 
+  -40 |   30.0    36.4    42.6    43.1    43.0    42.3    44.6    37.6 
+  -35 |   29.7    36.5    43.1    43.6    43.6    42.8    44.6    36.6 
+  -30 |   29.4    36.5    43.5    44.0    44.0    43.3    44.4    34.9 
+  -25 |   29.0    36.4    43.8    44.3    44.3    43.6    41.1    33.2 
+  -20 |   28.9    36.5    44.1    44.6    44.5    43.9    10.9    31.3 
+  -15 |   28.5    36.4    44.2    44.8    44.7    44.1    11.1    11.0 
+  -10 |   28.6    36.5    44.4    44.9    44.9    44.3    10.6     0.1 
+   -5 |   28.5    36.4    44.4    44.9    44.9    44.3    42.8     0.2 
+    0 |   28.5    36.3    44.4    44.9    44.9    44.3    42.4     0.2 
+    5 |   28.5    36.5    44.4    44.9    44.8    44.2    41.9     0.2 
+   10 |   28.7    36.4    44.2    44.7    44.7    44.1    41.2     0.2 
+   15 |   28.9    36.5    44.0    44.5    44.5    43.8    40.7     0.3 
+   20 |   29.0    36.4    43.7    44.2    44.2    43.5    39.9     0.5 
+   25 |   29.3    36.4    43.4    43.9    43.8    43.2    39.2     0.5 
+   30 |   29.7    36.4    43.0    43.5    43.4    42.7    38.5     0.5 
+   35 |   30.0    36.3    42.4    42.9    42.8    41.9    37.3     0.5 
+   40 |   30.4    36.2    41.6    42.0    41.8    41.2    36.3     0.0 
+   45 |   30.6    35.9    40.7    41.1    40.9    40.3    35.0    -0.2 
+   50 |   30.9    35.5    39.8    40.1    39.9    39.3    34.0    -0.3 
+   55 |   31.1    35.1    38.6    38.9    38.9    38.2    32.8    -0.4 
+   60 |   31.1    34.4    37.4    37.6    37.5    37.0    30.9    -0.4 
+   65 |   31.2    33.7    35.9    36.1    36.0    35.5    28.5    -0.5 
+   70 |   31.0    32.8    34.2    34.2    34.2    33.9    22.6     NaN 
+   75 |   -3.3    31.8    32.3    32.2    32.2    32.1    -0.3     NaN 
+   80 |   -3.3    -3.1    -2.2    -1.2    -0.4    -0.3    -0.3     NaN 
+   85 |   -3.4    -3.1    -2.2    -1.3    -0.5    -0.3    -0.2     NaN 
+   90 |   -3.4    -3.2    -2.3    -1.4    -0.6    -0.3    -0.1     NaN 
+   95 |   -3.1    -3.1    -2.5    -1.5    -0.7    -0.3    -0.2     NaN 
+  100 |   28.9    -3.1    -2.2     1.9     0.6    -0.3    -0.2     NaN 
+
+== Perimeter: edge position & crown top (max MNS-gref in outer 25 m band) ==
+Side +v (true az -64,5 side) and -v side, per u:
+u= -110 | +v: edge    NaN crownTop    NaN at    0.0 | -v: edge    NaN crownTop    NaN at    0.0
+u= -105 | +v: edge    NaN crownTop    NaN at    0.0 | -v: edge    NaN crownTop    NaN at    0.0
+u= -100 | +v: edge    NaN crownTop    NaN at    0.0 | -v: edge    NaN crownTop    NaN at    0.0
+u=  -95 | +v: edge    NaN crownTop    NaN at    0.0 | -v: edge -120.0 crownTop   35.4 at -119.5
+u=  -90 | +v: edge   62.5 crownTop   29.5 at   58.0 | -v: edge -120.0 crownTop   38.7 at -119.5
+u=  -85 | +v: edge   69.0 crownTop   30.4 at   66.0 | -v: edge -120.0 crownTop   39.1 at -117.5
+u=  -80 | +v: edge  100.0 crownTop   28.9 at  100.0 | -v: edge -120.0 crownTop   35.3 at -114.0
+u=  -75 | +v: edge  102.5 crownTop   31.3 at   99.0 | -v: edge  -82.5 crownTop   32.2 at  -61.0
+u=  -70 | +v: edge  105.0 crownTop   31.3 at   98.5 | -v: edge  -84.5 crownTop   33.2 at  -60.0
+u=  -65 | +v: edge   79.0 crownTop   34.3 at   54.0 | -v: edge  -85.0 crownTop   34.3 at  -60.0
+u=  -60 | +v: edge   79.0 crownTop   35.2 at   54.0 | -v: edge  -85.0 crownTop   35.3 at  -60.0
+u=  -55 | +v: edge   79.0 crownTop   36.2 at   54.0 | -v: edge  -85.0 crownTop   36.2 at  -60.0
+u=  -50 | +v: edge   79.0 crownTop   37.0 at   54.0 | -v: edge  -85.0 crownTop   37.1 at  -60.0
+u=  -45 | +v: edge   79.5 crownTop   37.7 at   54.5 | -v: edge  -85.0 crownTop   37.8 at  -60.0
+u=  -40 | +v: edge  114.5 crownTop   28.9 at  104.0 | -v: edge  -85.0 crownTop   38.3 at  -60.0
+u=  -35 | +v: edge  117.5 crownTop   28.9 at  103.0 | -v: edge  -85.0 crownTop   38.7 at  -60.0
+u=  -30 | +v: edge  120.0 crownTop   32.3 at  115.0 | -v: edge  -85.0 crownTop   39.0 at  -60.0
+u=  -25 | +v: edge  120.0 crownTop   32.3 at  107.5 | -v: edge  -85.0 crownTop   39.0 at  -60.0
+u=  -20 | +v: edge  120.0 crownTop   32.3 at  118.5 | -v: edge  -85.0 crownTop   39.1 at  -60.0
+u=  -15 | +v: edge  120.0 crownTop   32.3 at  119.0 | -v: edge  -85.5 crownTop   39.1 at  -60.5
+u=  -10 | +v: edge  120.0 crownTop   32.3 at  107.5 | -v: edge  -85.0 crownTop   39.2 at  -60.0
+u=   -5 | +v: edge  120.0 crownTop   32.3 at  119.0 | -v: edge  -85.0 crownTop   39.3 at  -60.0
+u=    0 | +v: edge  120.0 crownTop   32.3 at  119.0 | -v: edge  -85.0 crownTop   39.3 at  -60.0
+u=    5 | +v: edge  120.0 crownTop   33.2 at  116.0 | -v: edge  -85.0 crownTop   39.3 at  -60.0
+u=   10 | +v: edge  120.0 crownTop   34.5 at  107.5 | -v: edge  -85.5 crownTop   39.2 at  -60.5
+u=   15 | +v: edge  120.0 crownTop   34.4 at  107.5 | -v: edge  -85.0 crownTop   39.2 at  -60.0
+u=   20 | +v: edge  120.0 crownTop   34.5 at  118.5 | -v: edge  -85.5 crownTop   39.1 at  -60.5
+u=   25 | +v: edge  120.0 crownTop   35.1 at  118.5 | -v: edge  -85.0 crownTop   39.2 at  -60.0
+u=   30 | +v: edge  120.0 crownTop   35.1 at  119.0 | -v: edge  -85.5 crownTop   39.0 at  -60.5
+u=   35 | +v: edge  120.0 crownTop   35.1 at  107.5 | -v: edge  -86.0 crownTop   38.9 at  -61.0
+u=   40 | +v: edge  120.0 crownTop   35.0 at  107.5 | -v: edge  -85.0 crownTop   39.0 at  -60.0
+u=   45 | +v: edge  120.0 crownTop   33.1 at  109.0 | -v: edge  -85.5 crownTop   38.9 at  -60.5
+u=   50 | +v: edge  120.0 crownTop   32.8 at  108.5 | -v: edge  -85.0 crownTop   38.7 at  -60.0
+u=   55 | +v: edge  120.0 crownTop   32.8 at  120.0 | -v: edge  -85.5 crownTop   38.6 at  -60.5
+u=   60 | +v: edge  120.0 crownTop   32.8 at  116.5 | -v: edge  -85.5 crownTop   39.0 at  -63.0
+u=   65 | +v: edge  120.0 crownTop   32.0 at  116.5 | -v: edge  -85.5 crownTop   42.9 at  -60.5
+u=   70 | +v: edge   79.0 crownTop   37.1 at   54.0 | -v: edge  -85.5 crownTop   43.5 at  -60.5
+u=   75 | +v: edge   78.0 crownTop   35.6 at   53.0 | -v: edge  -85.5 crownTop   44.0 at  -60.5
+u=   80 | +v: edge   70.0 crownTop   35.0 at   45.5 | -v: edge  -85.0 crownTop   44.2 at  -60.0
+u=   85 | +v: edge   49.5 crownTop   36.5 at   24.5 | -v: edge  -85.5 crownTop   44.0 at  -64.0
+u=   90 | +v: edge   27.5 crownTop   37.3 at    2.5 | -v: edge  -85.5 crownTop   43.7 at  -64.0
+u=   95 | +v: edge    6.0 crownTop   37.7 at  -19.0 | -v: edge  -85.5 crownTop   43.0 at  -85.5
+u=  100 | +v: edge    NaN crownTop    NaN at    0.0 | -v: edge  -85.5 crownTop   42.3 at  -85.0
+u=  105 | +v: edge    NaN crownTop    NaN at    0.0 | -v: edge  -84.5 crownTop   40.6 at  -82.5
+u=  110 | +v: edge    NaN crownTop    NaN at    0.0 | -v: edge  -83.0 crownTop   37.4 at  -82.5
+u=  115 | +v: edge    NaN crownTop    NaN at    0.0 | -v: edge  -80.5 crownTop   24.0 at  -79.0
+u=  120 | +v: edge    NaN crownTop    NaN at    0.0 | -v: edge    NaN crownTop    NaN at    0.0
+u=  125 | +v: edge    NaN crownTop    NaN at    0.0 | -v: edge    NaN crownTop    NaN at    0.0
+Ends (+u toward az 25,5, -u opposite), per v:
+v=  -95 | +u: edge    NaN crownTop    NaN at    0.0 | -u: edge  -96.0 crownTop   36.2 at  -84.0
+v=  -90 | +u: edge    NaN crownTop    NaN at    0.0 | -u: edge    NaN crownTop    NaN at    0.0
+v=  -85 | +u: edge  105.5 crownTop   43.2 at   90.0 | -u: edge  -67.5 crownTop   30.7 at  -63.0
+v=  -80 | +u: edge  115.5 crownTop   43.4 at   90.5 | -u: edge  -79.5 crownTop   32.3 at  -55.0
+v=  -75 | +u: edge  114.0 crownTop   43.6 at   89.0 | -u: edge  -86.0 crownTop   33.1 at  -61.0
+v=  -70 | +u: edge  112.5 crownTop   43.7 at   87.5 | -u: edge  -89.0 crownTop   33.6 at  -64.0
+v=  -65 | +u: edge  112.0 crownTop   43.8 at   87.0 | -u: edge  -92.0 crownTop   33.6 at  -67.0
+v=  -60 | +u: edge  110.5 crownTop   32.3 at   98.5 | -u: edge  -92.5 crownTop   33.7 at  -67.5
+v=  -55 | +u: edge  109.0 crownTop   32.3 at   97.5 | -u: edge  -93.5 crownTop   33.7 at  -68.5
+v=  -50 | +u: edge  108.5 crownTop   32.3 at   98.0 | -u: edge  -93.5 crownTop   33.7 at  -68.5
+v=  -45 | +u: edge  107.0 crownTop   44.4 at   82.0 | -u: edge  -93.5 crownTop   33.7 at  -68.5
+v=  -40 | +u: edge  105.5 crownTop   44.5 at   80.5 | -u: edge  -93.5 crownTop   33.6 at  -68.5
+v=  -35 | +u: edge  140.0 crownTop   18.1 at  140.0 | -u: edge  -93.5 crownTop   33.4 at  -68.5
+v=  -30 | +u: edge  140.0 crownTop   31.9 at  139.5 | -u: edge  -93.5 crownTop   33.4 at  -68.5
+v=  -25 | +u: edge  140.0 crownTop   31.5 at  140.0 | -u: edge  -93.5 crownTop   33.1 at  -68.5
+v=  -20 | +u: edge  140.0 crownTop   31.5 at  140.0 | -u: edge  -93.5 crownTop   33.0 at  -68.5
+v=  -15 | +u: edge  139.5 crownTop   31.5 at  136.5 | -u: edge  -93.5 crownTop   32.9 at  -68.5
+v=  -10 | +u: edge  137.0 crownTop   31.5 at  135.5 | -u: edge  -93.5 crownTop   32.8 at  -68.5
+v=   -5 | +u: edge  135.0 crownTop   31.5 at  134.0 | -u: edge  -93.5 crownTop   32.8 at  -68.5
+v=    0 | +u: edge  132.5 crownTop   25.9 at  132.5 | -u: edge  -93.5 crownTop   32.7 at  -68.5
+v=    5 | +u: edge   95.0 crownTop   42.8 at   77.0 | -u: edge  -93.5 crownTop   32.9 at  -68.5
+v=   10 | +u: edge   94.0 crownTop   42.5 at   76.0 | -u: edge  -93.5 crownTop   32.9 at  -68.5
+v=   15 | +u: edge   92.5 crownTop   42.4 at   75.0 | -u: edge  -93.0 crownTop   33.1 at  -68.0
+v=   20 | +u: edge   91.5 crownTop   42.2 at   73.5 | -u: edge  -93.5 crownTop   33.1 at  -68.5
+v=   25 | +u: edge   90.0 crownTop   42.9 at   65.0 | -u: edge  -93.5 crownTop   33.2 at  -68.5
+v=   30 | +u: edge   89.5 crownTop   42.5 at   64.5 | -u: edge  -93.5 crownTop   33.5 at  -68.5
+v=   35 | +u: edge   88.0 crownTop   41.8 at   63.5 | -u: edge  -93.5 crownTop   33.5 at  -68.5
+v=   40 | +u: edge   87.0 crownTop   41.1 at   62.0 | -u: edge  -93.0 crownTop   33.7 at  -68.0
+v=   45 | +u: edge   85.5 crownTop   40.4 at   62.0 | -u: edge  -93.0 crownTop   33.8 at  -68.0
+v=   50 | +u: edge   84.5 crownTop   39.4 at   61.0 | -u: edge  -93.0 crownTop   33.7 at  -68.0
+v=   55 | +u: edge   83.0 crownTop   38.3 at   61.0 | -u: edge  -92.0 crownTop   33.8 at  -67.0
+v=   60 | +u: edge   82.0 crownTop   37.1 at   57.5 | -u: edge  -90.5 crownTop   33.7 at  -65.5
+v=   65 | +u: edge   81.0 crownTop   35.6 at   58.5 | -u: edge  -88.0 crownTop   33.4 at  -63.0
+v=   70 | +u: edge   80.0 crownTop   34.0 at   55.0 | -u: edge  -84.5 crownTop   32.9 at  -59.5
+v=   75 | +u: edge   78.5 crownTop   32.2 at   55.0 | -u: edge  -78.0 crownTop   32.0 at  -53.0
+v=   80 | +u: edge    NaN crownTop    NaN at    0.0 | -u: edge    NaN crownTop    NaN at    0.0
+v=   85 | +u: edge    NaN crownTop    NaN at    0.0 | -u: edge    NaN crownTop    NaN at    0.0
+v=   90 | +u: edge    NaN crownTop    NaN at    0.0 | -u: edge    NaN crownTop    NaN at    0.0
+v=   95 | +u: edge    NaN crownTop    NaN at    0.0 | -u: edge    NaN crownTop    NaN at    0.0
+
+== Height map MNS-gref, 4 m cells; rows: u from +125 (top, toward az) to -115; cols: v from +100 (left) to -100 (right); char = floor(h/2.5) in 0-9A-Z ==
+  125                                   ..........................................     
+  121                                ..............................................    
+  117                             ..................................................   
+  113                         ............................32..............4BCCD5....   
+  109                      ..........................132...........4ACCCDDEEEEFF.....  
+  105                   ....................................4BBCCCCCCCCCFFFFFFGG2..... 
+  101                ................................2ABCCDDEEEECCCCCCCCGGGGGGGGG......
+   97            ..............................ABCCDDEEEEFFFFFFGGCCCC4..GGGGGHHHH......
+   93         ..........................4BCCDDEEEEEFFFFFGGGGGGGGG5......HHHHHHHHH......
+   89      .......................8CCCDDEEEEEFFFFFGGGGGGGGGGHHHHHH......HHHHHHHHH......
+   85   ..................1AACCDDDEEEEEFFFFFFGGGGGGGGHHHHHHHHHHHHH.....7HHHHHHHHH......
+   81 ..............7ABCCCDDDEEEEEFFFFFFGGGGGGGGHHHH8444HHHHHHHHHHHHHHHHHGHHHHHHH......
+   77 .........BBCCCCDDDDDEEEEFFFFFGGGGGGGGHHA44444444448HHHHHHHHHHHHHHHHHHHHHHGG......
+   73 .........CCCCDDDDEEEEFFFFFGGGGGG9444444444444444444IHHHHHHHHHHHHHHHHHHHGGGG......
+   69 .........CCCDDDEEEEFFFFFGGGGGGGB778965364211121..1.GIFHHHHHHHHHHHHHHGGGGGGG......
+   65 .........CCDDDEEEEFFFFFGGGGGGHHGGGGGGGGGGGGGGGGGGGGGHHHHHHHHHHHHHHGGGGGGGGF....1.
+   61 .........CCDDDEEEFFFFFGGGGGGHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHFGGGEGGGFFF......
+   57 .........CCDDDEEEFFFFFGGGGGHHHHHHHHHHHHHHHHHHHHHHHHHHHHHGGGGGGFFFFEEEEDDDCC....32
+   53 .........CCDDDEEEFFFFFGGGGGHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHGGGGGFFFFFEEEDDDCC......
+   49 .........CCDDDEEEFFFFGGGGGGHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHGGGGGFFFFFEEEDDDCC......
+   45 .........CCDDDEEEFFFFGGGGGHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHGGGGGGFFFFEEEDDDCC......
+   41 .........CCDDDEEEFFFFGGGGGHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHGGGGGFFFFEEEDDDCA....2.
+   37 .........CCDDDEEEFFFFGGGGGHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHGGGGGFFFFEEEDDDCC......
+   33 .........CCDDEEEEFFFFGGGGGHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHGGGGGFFFFEEEDDDCC....1.
+   29 .........CCDDDEEFFFFGGGGGGHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHGGGGGFFFFEEEDDDCC....21
+   25 .........CCDDEEEFFFFGGGGGHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHGGGGGFFFFEEEDDDC7......
+   21 .........CCDDEEEFFFFGGGGGHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHGGGGGFFFFEEEDDDCC....2.
+   17 .........CCDDEEEFFFFGGGGGHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHGGGGGFFFFEEEDDDCA......
+   13 .........CCDDEEEFFFFGGGGGHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHGGGGGFFFFEEEDDDCB....2.
+    9 .....1...CCDDEEEFFFFGGGGGHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHGGGGGFFFFEEEDDDCC......
+    5 .........CCDDEEEFFFFGGGGGHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHGGGGGFFFFEEEDDDCC......
+    1 .........CCDDEEEFFFFGGGGGHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHGGGGGFFFFEEEDDDC4......
+   -3 .........CCDDEEEFFFFGGGGGHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHGGGGGFFFFEEEDDDCB......
+   -7 .........CCDDEEEFFFFGGGGGGHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHGGGGGFFFFEEEDDDC7....2.
+  -11 .........CCDDEEEFFFFFGGGGGHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHGGGGGFFFFEEEDDDCC......
+  -15 .........CCDDEEEFFFFFGGGGGHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHGGGGGFFFFEEEDDCCC...132
+  -19 .........CCDDEEEEFFFFGGGGGHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHGGGGGFFFFEEEDDDCC......
+  -23 .........CCDDDEEEFFFFGGGGGHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHGGGGGGFFFFEEEDDDCC...13.
+  -27 .........CCDDEEEEFFFFGGGGGHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHGGGGGGFFFFEEEDDCCA....2.
+  -31 .....1...CCDDDEEEFFFFGGGGGGHHHHHHHHHHHHHHHHHHHHHHHHHHHHHGGGGGGFFFFFEEEDDDCC......
+  -35 .........CCDDDEEEFFFFFGGGGGGHHHHHHHHHHHHHHHHHHHHHHHHHHHGGGGGGGFFFFEEEEDDCCC....3.
+  -39 .........CCDDDEEEEFFFFGGGGGGGGHHHHHHHHHHHHHHHHHHHHHHHHGGGGGGGFFFFFEEEEDDDC5......
+  -43 .........CCDDDEEEEFFFFFFGGGGGGGGGGGHHHHHHHHHHHHHGGGGGGGGGGGGFFFFFFEEEDDDDCC...22.
+  -47 .........CCDDDEEEEEFFFFFFFGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGFFFFFFFEEEEEDDDDCA......
+  -51 .........CCDDDDEEEEEEFFFFFFFFFFFFFGGGGGGGGGGGGGGGGFFFFFFFFFFFFFEEEEEDDDDCC7....1.
+  -55 .........CCDDDDDEEEEEEEEFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEEEEEEEEDDDDCCC......
+  -59 .........CCCDDDDDEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEDDDDDDCCB......
+  -63 .........CCCDDDDDDDDDDEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEDDDDDDDDCCCC......
+  -67 .........CCCCDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDCCC3......
+  -71 C........BCCCCCDDDDDDDDDDDDDDCCCCCCCCCCCCCCCCCCCCCCCCCDDDDDDDDDDDDDDDCCCCC....333
+  -75 C.........CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCBCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCA....333
+  -79 9.........2CCCCCCCCCCCCCCCCCCBBBBBBBBBBBBBBBBBBBBBBBBBBCCCCCCCCCCCCCCCCCC....8333
+  -83  ...........BCCCCCCCCCCBBBBBBBBBBBBBBBBBBABBBBBBBBBBBBBBBBBBBCCCCCCCCCCB.....EEFF
+  -87   ...........2BCCBBBBBBBBBBBBBBAAAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBCCCB.......EEFF
+  -91    .............4BBBBBBBBBBAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBBBBBBBBB4.........EEEE
+  -95    ................................3333333333333.............................8BBB
+  -99     .............................................................................
+ -103      ............................................................................
+ -107       ...........................................................................
+ -111       ........................................................................   
+ -115        ....................................................................      
+

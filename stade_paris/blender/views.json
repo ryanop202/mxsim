@@ -1,0 +1,264 @@
+{
+ "ext_P1_entree_ouest": {
+  "loc": [
+   15,
+   118,
+   1.6
+  ],
+  "look": [
+   15,
+   82.5,
+   11
+  ],
+  "lens": 20,
+  "light": "day",
+  "ref": "833485-visuels-salles-de-spectacle-et-theatres-paris-la-defense-arena.jpg"
+ },
+ "ext_P2_angle_SO_crepuscule": {
+  "loc": [
+   -112,
+   128,
+   1.7
+  ],
+  "look": [
+   -30,
+   76,
+   17
+  ],
+  "lens": 20,
+  "light": "dusk",
+  "ref": "Paris La Defense Arena.jpg"
+ },
+ "ext_P3_angle_SO_jour": {
+  "loc": [
+   -58,
+   132,
+   11
+  ],
+  "look": [
+   -60,
+   80,
+   17
+  ],
+  "lens": 22,
+  "light": "day",
+  "ref": "1184435-visuels-salles-de-spectacle-et-theatres-paris-la-defense-arena.jpg"
+ },
+ "ext_P4_angle_SE_escalier": {
+  "loc": [
+   -122,
+   -118,
+   3.0
+  ],
+  "look": [
+   -62,
+   -76,
+   18
+  ],
+  "lens": 15,
+  "light": "day",
+  "ref": "paris_la_defense-arena_2b.jpg"
+ },
+ "ext_P6_aerien_nuit": {
+  "loc": [
+   -30,
+   -330,
+   95
+  ],
+  "look": [
+   0,
+   -40,
+   18
+  ],
+  "lens": 30,
+  "light": "night",
+  "ref": "paris-la-defense-arena-2p-architectes-and-associes_7.jpg"
+ },
+ "ext_vue_generale": {
+  "loc": [
+   -240,
+   -210,
+   150
+  ],
+  "look": [
+   5,
+   0,
+   12
+  ],
+  "lens": 35,
+  "light": "day"
+ },
+ "ext_facade_rapprochee": {
+  "loc": [
+   -30,
+   96,
+   6
+  ],
+  "look": [
+   -36,
+   82,
+   12
+  ],
+  "lens": 24,
+  "light": "day"
+ },
+ "int_P8_axe_depuis_sud": {
+  "loc": [
+   -80,
+   0,
+   23.5
+  ],
+  "look": [
+   40,
+   0,
+   9
+  ],
+  "lens": 15,
+  "light": "interior",
+  "ref": "52FCC24EX5BOPICPWXBWZCWSMU.jpg"
+ },
+ "int_P9_axe_haut": {
+  "loc": [
+   -79,
+   0,
+   21.5
+  ],
+  "look": [
+   30,
+   0,
+   4
+  ],
+  "lens": 13,
+  "light": "interior",
+  "ref": "DSC_0014-1-scaled.jpg"
+ },
+ "int_P10_angle_SO": {
+  "loc": [
+   -55,
+   62,
+   17.5
+  ],
+  "look": [
+   30,
+   -18,
+   21
+  ],
+  "lens": 13,
+  "light": "interior",
+  "ref": "paris-la-defense-arena_vinci_construction.jpg"
+ },
+ "int_P7_tribune_laterale": {
+  "loc": [
+   12,
+   -70,
+   25
+  ],
+  "look": [
+   -30,
+   35,
+   7
+  ],
+  "lens": 20,
+  "light": "interior",
+  "ref": "maxresdefault.jpg"
+ },
+ "int_P5_diagonale": {
+  "loc": [
+   -62,
+   -66,
+   26
+  ],
+  "look": [
+   20,
+   15,
+   6
+  ],
+  "lens": 18,
+  "light": "interior_dark",
+  "ref": "DSC_8654-1024x683.jpg"
+ },
+ "int_sol_vers_tribunes": {
+  "loc": [
+   0,
+   0,
+   1.7
+  ],
+  "look": [
+   -60,
+   30,
+   12
+  ],
+  "lens": 18,
+  "light": "interior"
+ },
+ "int_toiture": {
+  "loc": [
+   -5,
+   10,
+   2.0
+  ],
+  "look": [
+   10,
+   25,
+   40
+  ],
+  "lens": 14,
+  "light": "inspect"
+ },
+ "int_sieges_coursive": {
+  "loc": [
+   -20,
+   -64,
+   13.2
+  ],
+  "look": [
+   -34,
+   -50,
+   8
+  ],
+  "lens": 24,
+  "light": "interior"
+ },
+ "int_structure_rapprochee": {
+  "loc": [
+   -8,
+   -24,
+   28.5
+  ],
+  "look": [
+   20,
+   -44,
+   37
+  ],
+  "lens": 18,
+  "light": "inspect"
+ },
+ "ext_angle_NE_haut": {
+  "loc": [
+   165,
+   -150,
+   2.0
+  ],
+  "look": [
+   95,
+   -80,
+   24
+  ],
+  "lens": 22,
+  "light": "day"
+ },
+ "ext_couronne_angle_SO": {
+  "loc": [
+   -112,
+   108,
+   4.0
+  ],
+  "look": [
+   -80,
+   68,
+   22
+  ],
+  "lens": 24,
+  "light": "day"
+ }
+}

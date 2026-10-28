@@ -1,0 +1,6 @@
+sun_vector [ -0.55 0.55 0.63 ]
+sun_color [ 1.00 0.98 0.92 ]
+ambient [ 0.36 0.37 0.40 ]
+global_ambient [ 0.10 0.10 0.10 ]
+fog [ 0.75 0.80 0.87 ] 0.00005
+dynamic_lighting 1

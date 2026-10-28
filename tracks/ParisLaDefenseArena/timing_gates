@@ -1,0 +1,22 @@
+startinggate:
+[577.7113 0.000000 811.3071] 1.570796 @ParisLaDefenseArena/statue/gate_placeholder.jm @ParisLaDefenseArena/tex/steel_black-repeat.png @startgate.shp
+[577.7113 0.000000 803.4331] 1.570796 @ParisLaDefenseArena/statue/gate_placeholder.jm @ParisLaDefenseArena/tex/steel_black-repeat.png @startgate.shp
+[577.7113 0.000000 795.5591] 1.570796 @ParisLaDefenseArena/statue/gate_placeholder.jm @ParisLaDefenseArena/tex/steel_black-repeat.png @startgate.shp
+[577.7113 0.000000 787.6850] 1.570796 @ParisLaDefenseArena/statue/gate_placeholder.jm @ParisLaDefenseArena/tex/steel_black-repeat.png @startgate.shp
+[577.7113 0.000000 779.8110] 1.570796 @ParisLaDefenseArena/statue/gate_placeholder.jm @ParisLaDefenseArena/tex/steel_black-repeat.png @startgate.shp
+[577.7113 0.000000 771.9370] 1.570796 @ParisLaDefenseArena/statue/gate_placeholder.jm @ParisLaDefenseArena/tex/steel_black-repeat.png @startgate.shp
+[577.7113 0.000000 764.0630] 1.570796 @ParisLaDefenseArena/statue/gate_placeholder.jm @ParisLaDefenseArena/tex/steel_black-repeat.png @startgate.shp
+[577.7113 0.000000 756.1890] 1.570796 @ParisLaDefenseArena/statue/gate_placeholder.jm @ParisLaDefenseArena/tex/steel_black-repeat.png @startgate.shp
+[577.7113 0.000000 748.3150] 1.570796 @ParisLaDefenseArena/statue/gate_placeholder.jm @ParisLaDefenseArena/tex/steel_black-repeat.png @startgate.shp
+[577.7113 0.000000 740.4409] 1.570796 @ParisLaDefenseArena/statue/gate_placeholder.jm @ParisLaDefenseArena/tex/steel_black-repeat.png @startgate.shp
+[577.7113 0.000000 732.5669] 1.570796 @ParisLaDefenseArena/statue/gate_placeholder.jm @ParisLaDefenseArena/tex/steel_black-repeat.png @startgate.shp
+[577.7113 0.000000 724.6929] 1.570796 @ParisLaDefenseArena/statue/gate_placeholder.jm @ParisLaDefenseArena/tex/steel_black-repeat.png @startgate.shp
+checkpoints:
+131.2336 [603.9580 0.000000 768.0000] [0.0000 0.000000 -131.2336]
+72.1785 [735.1916 0.000000 840.1785] [72.1785 0.000000 -0.0000]
+131.2336 [882.8294 0.000000 768.0000] [0.0000 0.000000 131.2336]
+72.1785 [735.1916 0.000000 695.8215] [-72.1785 0.000000 -0.0000]
+firstlap:
+0 1 2 3 
+normallap:
+0 1 2 3 
