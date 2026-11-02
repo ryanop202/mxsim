@@ -129,7 +129,8 @@ def main():
         if l.endswith(':'): sec = l
         elif sec == 'startinggate:' and l.startswith('['):
             v = l.split(']')[0][1:].split()     # v14: y = 0 - the game puts the gate on the ground (the platform) itself; y 2.5 floated
-            l = f'[{float(v[0]):.6f} 0.000000 {float(v[2]):.6f}] ' + l.split(']')[1].split()[0] + f' {SH}/statue/start_gate.jm {SH}/statue/start_gate.png @startgate.shp'
+            # v30 (user): hollow red gate (USLAND gate without its plate), own model; same collision shape
+            l = f'[{float(v[0]):.6f} 0.000000 {float(v[2]):.6f}] ' + l.split(']')[1].split()[0] + f' {P}/statue/start_gate_frame.jm {P}/statue/start_gate_frame.png @startgate.shp'
         tl.append(l)
     open(f'{OUT}/timing_gates', 'w', newline='\n').write('\n'.join(tl))
     # statues: grates behind the gates (v13: no start gantry, no finish arch - new ones to come)
@@ -138,7 +139,7 @@ def main():
     gx = float(np.mean([g[0] for g in G])); gz = float(np.mean([g[2] for g in G])); fa = G[0][3]
     if getattr(LT, 'START_FLOOR', None):          # v28: ONE big floor (square mesh) behind the whole row, cut at each gate
         import stt_props; stt_props.build()
-        for nm in ('start_floor', 'stake_yellow'):
+        for nm in ('start_floor', 'stake_yellow', 'start_gate_frame'):
             for e in ('jm', 'png'): shutil.copy(f'{ROOT}/assets/props/{nm}.{e}', f'{OUT}/statue/{nm}.{e}')
         f = np.array([-np.sin(fa), -np.cos(fa)])
         st.append(f'[{gx:.6f} 0.000000 {gz:.6f}] {PP.statue_ang(*f):.6f} {P}/statue/start_floor.jm {P}/statue/start_floor.png null')

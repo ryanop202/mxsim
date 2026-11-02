@@ -187,9 +187,27 @@ def floor():
     return m, img
 
 
+def gate_frame():
+    """v30 (user): the USLAND start gate WITHOUT its black plate (no USLAND icon): only the red round-tube frame (inverted U,
+    rounded top corners) and the hinge tube - same size, hinge at the origin, laid flat like gate01 (as props_usland.gate_model)."""
+    from props_usland import pipe
+    img = Image.new('RGB', (256, 256), (205, 24, 34)); pal = palette(img, ['red'], [(205, 24, 34)])
+    m = Mesh(256, 256); w, h, r = GATE['w'], GATE['h'], GATE['r_tube']; yh = 0.0
+    cr = 0.34; x0, x1, y1 = -w / 2 + r, w / 2 - r, h
+    path = [(x0, yh, 0.0)]
+    for t in np.radians(np.linspace(180, 90, 12)): path.append((x0 + cr + cr * np.cos(t), y1 - cr + cr * np.sin(t), 0.0))
+    for t in np.radians(np.linspace(90, 0, 12)): path.append((x1 - cr + cr * np.cos(t), y1 - cr + cr * np.sin(t), 0.0))
+    path.append((x1, yh, 0.0))
+    pipe(m, path, r, pal['red'], closed=False, seg=12)
+    pipe(m, [(-GATE['pitch'] / 2, yh, 0.0), (GATE['pitch'] / 2, yh, 0.0)], r * 1.15, pal['red'], seg=12)
+    for i, v in enumerate(m.V):                                     # laid flat towards +z (same as the USLAND gate)
+        m.V[i] = (v[0], -v[2], v[1], v[3], -v[5], v[4], v[6], v[7])
+    return m, img
+
+
 def build(outd=OUTD):
     os.makedirs(outd, exist_ok=True); out = {}
-    for name, fn, mat in (('stake_yellow', stake, (8, 0.4, 1, 1, 1)), ('net_blue', net, (0, 0, 0, 0, 0)),
+    for name, fn, mat in (('start_gate_frame', gate_frame, (16, 1, 0.35, 0.35, 0.35)), ('stake_yellow', stake, (8, 0.4, 1, 1, 1)), ('net_blue', net, (0, 0, 0, 0, 0)),
                           ('start_floor', floor, (24, 0.6, 1, 1, 1))):
         m, img = fn(); nv, nt = m.write(f'{outd}/{name}.jm', mat); img.save(f'{outd}/{name}.png')
         V = np.array([v[:3] for v in m.V]); out[name] = (nv, nt, V.min(0).round(2).tolist(), V.max(0).round(2).tolist())
