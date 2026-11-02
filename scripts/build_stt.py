@@ -80,6 +80,18 @@ def bank_h(step=1.0):
     w = gaussian_filter(w, 40.0 / step)                                         # v25: wide blends -> no crease / cone where the
     k_ = ss_(d / 30.0); base = gaussian_filter(base, 6.0 / step) * (1 - k_) + gaussian_filter(base, 25.0 / step) * k_   # nearest edge switches
     inner = B_['inner'] + (B_['start_inner'] - B_['inner']) * w
+    SG = B_.get('straight')
+    if SG and B_.get('terrace'):                  # v29 (user's drawing): floor, short step to the fence terrace, ONE straight slope
+        ta, tw = B_['terrace']; ta_, tb_ = ta - tw / 2, ta + tw / 2
+        smax = lambda a, b, c: 0.5 * (a + b + np.sqrt((a - b) ** 2 + c * c))      # smooth max / min (rounded corners)
+        smin = lambda a, b, c: 0.5 * (a + b - np.sqrt((a - b) ** 2 + c * c))
+        terr = base + SG['terrace_h'] * ss_((d - (ta_ - SG['rise'])) / SG['rise'])
+        top = np.maximum(B_['h'] - base - SG['terrace_h'], 0.1)
+        rise = smax(SG['slope'] * (d - tb_), 0.0, SG['toe'] * SG['slope'])         # straight slope from the terrace, rounded toe
+        up = terr + smin(rise, top, SG['crest'] * SG['slope'])                      # ... up to h, rounded crest
+        d_top = tb_ + top / SG['slope'] + SG['crest']
+        hb = np.where(d <= d_top + B_['top'], up, B_['h'] * (1 - ss_((d - d_top - B_['top']) / B_['outer'])))
+        return np.where(d > 0, hb, np.minimum(hb, plat_h(GX, GZ)))
     if B_.get('terrace'):
         ta, tw = B_['terrace']; ta_, tb_ = ta - tw / 2, ta + tw / 2
         d = np.where(d < ta_, d, np.where(d <= tb_, ta_, d - tw))

@@ -138,7 +138,7 @@ def main():
     gx = float(np.mean([g[0] for g in G])); gz = float(np.mean([g[2] for g in G])); fa = G[0][3]
     if getattr(LT, 'START_FLOOR', None):          # v28: ONE big floor (square mesh) behind the whole row, cut at each gate
         import stt_props; stt_props.build()
-        for nm in ('start_floor', 'stake_yellow', 'net_blue'):
+        for nm in ('start_floor', 'stake_yellow'):
             for e in ('jm', 'png'): shutil.copy(f'{ROOT}/assets/props/{nm}.{e}', f'{OUT}/statue/{nm}.{e}')
         f = np.array([-np.sin(fa), -np.cos(fa)])
         st.append(f'[{gx:.6f} 0.000000 {gz:.6f}] {PP.statue_ang(*f):.6f} {P}/statue/start_floor.jm {P}/statue/start_floor.png null')
@@ -155,7 +155,9 @@ def main():
             c_, s_ = np.cos(g['t']), np.sin(g['t'])
             for prof, u0, name in g['sections']:
                 pk, _ = find_peaks(np.r_[0, prof, 0], prominence=SK['prom']); pk = pk - 1
+                skip = [(a_, b_) for n_, a_, b_, h_ in LS.COMBOS[name]['items'] if n_.startswith(('Detroit_g31_1 (cut', 'trapeze'))]   # v29: none on the freestyle kicker / landing
                 for k in pk:
+                    if any(a_ <= k * 0.1 <= b_ for a_, b_ in skip): continue
                     top = prof >= prof[k] - 0.15; a_ = k; b_ = k
                     while a_ > 0 and top[a_ - 1]: a_ -= 1
                     while b_ < len(prof) - 1 and top[b_ + 1]: b_ += 1
@@ -163,7 +165,7 @@ def main():
                     for uu in us:
                         for sg in (-1, 1):
                             x_ = g['x0'] + (u0 + uu) * c_ - sg * SK['v'] * s_; z_ = g['z0'] + (u0 + uu) * s_ + sg * SK['v'] * c_
-                            st.append(f'[{x_:.6f} 0.000000 {z_:.6f}] 0.000000 {P}/statue/stake_yellow.jm {P}/statue/stake_yellow.png null'); nsk += 1
+                            st.append(f'[{x_:.6f} 0.000000 {z_:.6f}] {PP.statue_ang(c_, s_):.6f} {P}/statue/stake_yellow.jm {P}/statue/stake_yellow.png null'); nsk += 1   # v29: flat paddle facing the riders
         print('stakes', nsk)
     # v28: blue nets on the outside of the turns asked by the user, on the berm crest (flat part: r + half lane + flat_off)
     NT = getattr(LT, 'NETS', None); nnet = 0
@@ -183,14 +185,29 @@ def main():
             keep = [i for i, u in enumerate(U_) if float(h_at(H, *(cc + u * (rc - 1.0)))) > 1.5]   # the bermed part (half berms: 2nd half)
             pts = U_[keep[0]:keep[-1] + 1]
             line = np.array([cc + u * rc for u in pts])
+            # v29: ONE continuous net per turn whose bottom follows the ground (user: no more square panels in steps)
+            import stt_props
+            def gnd(x, z):                                       # bilinear terrain height (world ft)
+                fx, fz = x / S, z / S; j, i = int(fx), int(fz); a, b = fx - j, fz - i
+                return float(H[i, j] * (1 - a) * (1 - b) + H[i, j + 1] * a * (1 - b) + H[i + 1, j] * (1 - a) * b + H[i + 1, j + 1] * a * b)
             Ls = np.r_[0, np.cumsum(np.linalg.norm(np.diff(line, axis=0), axis=1))]
-            m_ = max(1, int(round(Ls[-1] / NT['step']))); stp = Ls[-1] / m_
-            for q in range(m_):
-                pa = np.array([np.interp(q * stp, Ls, line[:, 0]), np.interp(q * stp, Ls, line[:, 1])])
-                pb = np.array([np.interp((q + 1) * stp, Ls, line[:, 0]), np.interp((q + 1) * stp, Ls, line[:, 1])])
-                mid = (pa + pb) / 2; inw = cc - mid; inw /= np.linalg.norm(inw)
-                st.append(f'[{mid[0]:.6f} 0.000000 {mid[1]:.6f}] {PP.statue_ang(inw[0], inw[1]):.6f} {P}/statue/net_blue.jm {P}/statue/net_blue.png null'); nnet += 1
-        print('net sections', nnet)
+            sv = np.linspace(0, Ls[-1], max(2, int(Ls[-1] / 1.0) + 1))
+            line1 = np.c_[np.interp(sv, Ls, line[:, 0]), np.interp(sv, Ls, line[:, 1])]
+            # origin on flat ground (the game puts the object on the ground under its origin and tilts it with the slope there)
+            best = None
+            for fr in np.linspace(0.0, 0.85, 18):
+                for q in (0.5, 0.3, 0.7):
+                    o = cc + (line1[int(q * (len(line1) - 1))] - cc) * fr
+                    hs = [gnd(o[0] + dx, o[1] + dz) for dx in (-3, 0, 3) for dz in (-3, 0, 3)]
+                    sc_ = max(hs) - min(hs)
+                    if best is None or sc_ < best[0] - 1e-6: best = (sc_, o)
+            org = best[1]
+            nm_ = f"net_{''.join(ch for ch in g['tag'] if ch.isalnum())[:24]}"
+            m_ = stt_props.net_ribbon(line1, gnd, org); m_.write(f'{OUT}/statue/{nm_}.jm', (0, 0, 0, 0, 0))
+            st.append(f'[{org[0]:.6f} 0.000000 {org[1]:.6f}] 0.000000 {P}/statue/{nm_}.jm {P}/statue/net_ribbon.png null'); nnet += 1
+            print('net', g['tag'], 'length %.0f ft, origin flatness %.3f ft' % (Ls[-1], best[0]))
+        shutil.copy(f'{ROOT}/assets/props/net_ribbon.png', f'{OUT}/statue/net_ribbon.png')
+        print('nets', nnet)
     fin = cps[normal[-1]]; c = np.array([fin[1], fin[2]]); f = np.array([fin[3], fin[4]]); f /= np.linalg.norm(f); n = np.array([-f[1], f[0]])
     if os.path.exists(f'{OUT}/statue/finish_arch_STT.jm'): os.remove(f'{OUT}/statue/finish_arch_STT.jm')
     # v18: the user's steel FMX ramp (fmxRamp.rar: ramp_50.jm / .png / _norm.png / .shp collision). Model: foot at the origin,

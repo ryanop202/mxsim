@@ -32,12 +32,84 @@ def prism(m, cx, cz, r, h, seg, side_uv, top_uv, top_r=0.6, cap=0.08):
     m.tri_fan(C[:-1][::-1], np.array([0, 1.0, 0]), [top_uv] * seg)
 
 
+PADDLE = dict(h=3.3, half=0.30, neck=0.16, foot=0.22, stem=0.05, stem_h=0.3, t=0.04, col=(214, 200, 34), edge=(170, 158, 22))
+
+def paddle_profile():
+    """v29: (y, half width) of the flat track-marker paddle (user's picture, the Acerbis kind, no logo): stem in the ground,
+    small foot, neck, straight body, half-elliptic top. y = 0 at ground level."""
+    P = PADDLE; prof = [(-P['stem_h'], P['stem']), (0.0, P['stem']), (0.001, P['foot']), (0.08, P['foot']),
+                        (0.16, P['neck'] + 0.02), (0.24, P['neck']), (0.32, P['neck'] + 0.03), (0.40, P['half'] * 0.85), (0.46, P['half'])]
+    yt = P['h'] - 1.5 * P['half'] * 1.6
+    prof.append((yt, P['half']))
+    for a in np.linspace(0, np.pi / 2, 10)[1:]:
+        prof.append((yt + (P['h'] - yt) * np.sin(a), max(P['half'] * np.cos(a), 0.004)))
+    return prof
+
 def stake():
-    img = Image.new('RGB', (256, 256), STAKE['col'])
-    pal = palette(img, ['paint', 'top'], [STAKE['col'], (210, 172, 12)])
-    m = Mesh(256, 256)
-    prism(m, 0.0, 0.0, STAKE['r'], STAKE['h'], STAKE['seg'], m.uv_px(*pal['paint'][1]), m.uv_px(*pal['top'][1]))
+    """v29: flat yellow paddle marker (all yellow, no logo), faces local +z (the riders) and -z; origin at ground level."""
+    img = Image.new('RGB', (256, 256), PADDLE['col'])
+    pal = palette(img, ['paint', 'edge'], [PADDLE['col'], PADDLE['edge']])
+    m = Mesh(256, 256); t = PADDLE['t'] / 2; prof = paddle_profile()
+    face = m.uv_px(64, 64); ed = m.uv_px(*pal['edge'][1])         # plain yellow area of the texture (above the palette)
+    for (y0, w0), (y1, w1) in zip(prof[:-1], prof[1:]):
+        for sg in (1, -1):
+            Q = [np.array([-w0, y0, sg * t]), np.array([w0, y0, sg * t]), np.array([w1, y1, sg * t]), np.array([-w1, y1, sg * t])]
+            m.tri_fan(Q, np.array([0, 0, sg * 1.0]), [face] * 4)
+        for sx in (1, -1):                                          # thin edges
+            Q = [np.array([sx * w0, y0, -t]), np.array([sx * w0, y0, t]), np.array([sx * w1, y1, t]), np.array([sx * w1, y1, -t])]
+            n = np.array([sx * (y1 - y0), -(w1 - w0), 0.0]); n /= np.linalg.norm(n) + 1e-12
+            m.tri_fan(Q, n, [ed] * 4)
     return m, img
+
+
+# ------------------------------------------------------------------ v29: continuous net following the ground
+NETR = dict(h=3.6, sink=0.3, post_every=8.0, post_h=4.1, post_w=0.11, Lmax=140.0, TW=4096, TH=320)
+
+def net_ribbon_texture():
+    """one texture for every turn net: u = arc length / Lmax, net (alpha mesh, square cells) in rows 0..255 with a dark blue
+    hem top and bottom; solid blue for the posts in rows 272..319."""
+    W_, H_ = NETR['TW'], NETR['TH']; img = Image.new('RGBA', (W_, H_), (0, 0, 0, 0)); d = ImageDraw.Draw(img)
+    pxu = W_ / NETR['Lmax']; cell = 0.30                            # 0.30 ft square cells
+    hem, col = (16, 34, 96, 255), (26, 56, 150, 225)
+    for x in np.arange(0, W_, cell * pxu): d.line([(x, 0), (x, 255)], fill=col, width=2)
+    pyv = 256 / (NETR['h'] + NETR['sink'])
+    for y in np.arange(0, 256, cell * pyv): d.line([(0, y), (W_, y)], fill=col, width=2)
+    d.rectangle([0, 0, W_, 9], fill=hem); d.rectangle([0, 246, W_, 255], fill=hem)
+    d.rectangle([0, 272, W_, H_ - 1], fill=(30, 76, 205, 255))
+    return img
+
+def net_ribbon(line_xz, ground, origin):
+    """mesh in the statue's frame (yaw 0, origin on flat ground): a double-sided net whose bottom follows the ground under
+    the line (sinks `sink` ft in) and top = ground + h, posts every `post_every` ft. line_xz: (n, 2) world points every ~1 ft;
+    ground(x, z) -> height; origin (x, z) -> ground height there is the statue's y = 0."""
+    m = Mesh(NETR['TW'], NETR['TH']); ox, oz = origin; g0 = ground(ox, oz)
+    L = np.r_[0, np.cumsum(np.linalg.norm(np.diff(line_xz, axis=0), axis=1))]
+    gy = np.array([ground(x, z) for x, z in line_xz]) - g0
+    # smooth the ground line a little along the net (no saw teeth from the 0.29 ft grid)
+    from scipy.ndimage import gaussian_filter1d
+    gy = gaussian_filter1d(gy, 1.0, mode='nearest')
+    bot = gy - NETR['sink']; top = gy + NETR['h']
+    U = lambda s: s / NETR['Lmax']; Vb, Vt = 1 - 255 / NETR['TH'], 1.0
+    for i in range(len(line_xz) - 1):
+        (xa, za), (xb, zb) = line_xz[i] - (ox, oz), line_xz[i + 1] - (ox, oz)
+        t = np.array([xb - xa, 0, zb - za]); n = np.cross(t, [0, 1, 0]); n /= np.linalg.norm(n) + 1e-12
+        P = [np.array([xa, bot[i], za]), np.array([xb, bot[i + 1], zb]), np.array([xb, top[i + 1], zb]), np.array([xa, top[i], za])]
+        uv = [(U(L[i]), Vb), (U(L[i + 1]), Vb), (U(L[i + 1]), Vt), (U(L[i]), Vt)]
+        for sg in (1, -1):
+            Q, T = (P, uv) if sg > 0 else (P[::-1], uv[::-1])
+            m.tri_fan(Q, n * sg, T)
+    post_uv = (0.5, 1 - 296 / NETR['TH'])
+    for s in np.arange(0, L[-1] + 0.1, L[-1] / max(1, round(L[-1] / NETR['post_every']))):
+        x_ = np.interp(s, L, line_xz[:, 0]) - ox; z_ = np.interp(s, L, line_xz[:, 1]) - oz; y_ = np.interp(s, L, gy)
+        w = NETR['post_w']
+        for (dx, dz, nx, nz) in ((w, 0, 1, 0), (-w, 0, -1, 0), (0, w, 0, 1), (0, -w, 0, -1)):
+            ex, ez = (0, w) if dx else (w, 0)
+            Q = [np.array([x_ + dx - ex, y_ - NETR['sink'], z_ + dz - ez]), np.array([x_ + dx + ex, y_ - NETR['sink'], z_ + dz + ez]),
+                 np.array([x_ + dx + ex, y_ + NETR['post_h'], z_ + dz + ez]), np.array([x_ + dx - ex, y_ + NETR['post_h'], z_ + dz - ez])]
+            m.tri_fan(Q, np.array([nx, 0, nz], float), [post_uv] * 4)
+        m.tri_fan([np.array([x_ - w, y_ + NETR['post_h'], z_ - w]), np.array([x_ + w, y_ + NETR['post_h'], z_ - w]),
+                   np.array([x_ + w, y_ + NETR['post_h'], z_ + w]), np.array([x_ - w, y_ + NETR['post_h'], z_ + w])], np.array([0, 1.0, 0]), [post_uv] * 4)
+    return m
 
 
 def net():
@@ -121,6 +193,7 @@ def build(outd=OUTD):
                           ('start_floor', floor, (24, 0.6, 1, 1, 1))):
         m, img = fn(); nv, nt = m.write(f'{outd}/{name}.jm', mat); img.save(f'{outd}/{name}.png')
         V = np.array([v[:3] for v in m.V]); out[name] = (nv, nt, V.min(0).round(2).tolist(), V.max(0).round(2).tolist())
+    net_ribbon_texture().save(f'{outd}/net_ribbon.png')
     return out
 
 
