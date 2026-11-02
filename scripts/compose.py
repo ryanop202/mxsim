@@ -46,7 +46,7 @@ LAST_SPLITS = []   # filled by lane(): [(start_ft, prof_left, prof_right)] for (
 
 
 def lane(tokens):
-    """tokens: list of uid strings, ('gap', ft), ('whoops', key, n), ('split', left_uid, right_uid).
+    """tokens: list of uid strings, ('gap', ft), ('whoops', key, n), ('split', left_uid, right_uid), ('scale', uid, H).
     A split = double line: two measured units side by side, each on half of the lane width (left / right in the riding
     direction). Its slot in the returned (full-width) profile is left at 0; the halves are rendered separately (LAST_SPLITS).
     Returns (profile, items[(name, start_ft, end_ft, H)])."""
@@ -58,6 +58,10 @@ def lane(tokens):
         split = None
         if isinstance(t, tuple) and t[0] == 'whoops':
             p = whoops(t[1], t[2]); kind = 'W'; name = f'whoops {t[1]} x{t[2]}'; uid = None
+        elif isinstance(t, tuple) and t[0] == 'scale':
+            # v13b ('scale', uid, H): a measured unit with its height scaled to H ft (same length / shape), e.g. a finish jump
+            # judged too high in game; the walls follow (they are extruded from this profile)
+            u, p = unit(t[1]); p = p * (t[2] / p.max()); kind = u['kind']; name = f'{t[1]} (H {t[2]:.1f})'; uid = ALIAS.get(t[1], t[1])
         elif isinstance(t, tuple) and t[0] == 'split':
             pa, pb = unit(t[1])[1], unit(t[2])[1]; n = max(len(pa), len(pb))
             if len(t) > 3 and t[3] == 'end':      # v11: both bumps END together (keeps the rhythm of the next jump on both lines)

@@ -52,6 +52,8 @@ for key, p in paths.items():
         berms[sl] = np.maximum(berms[sl], tmp[sl] * w)
         report[key].setdefault('start_berms', []).append(dict(berm=g['berm'], cx=g['cx'], cz=g['cz'], angle=g['ang']))
 H = np.maximum.reduce([jumps, whoops, berms, sand])
+import sand_holes                                                            # v13b: regular holes dug into the SX3 sand floor
+report['sand_holes'] = sand_holes.apply(G, H, paths['SX3'], GLENDALE_TILES, (T_SANDEXIT, T_SANDSOLO))
 TN = 2 ** 11
 def t(a): return a[:-1:2, :-1:2][:TN, :TN]
 tiles = np.full((TN, TN), T_MAIN, np.uint8)

@@ -66,8 +66,15 @@ Tu reprends un projet commencé dans une autre conversation. Lis dans cet ordre 
 - v3 à v10 testées en jeu ; v11 et **v12 pas encore testées en jeu**. Contrôles v12 faits sans les archives (portes, comptage
   des tours, objets) ; `./make_all.sh build` complet à relancer sur le PC qui a les archives.
 - Pistes d'amélioration notées dans `docs/10_suite_et_idees.md`.
+- **usland race track** (branche `usland-race-track`, doc 13) : piste indépendante `tracks/USLANDRaceTrack`, construite par
+  `rf_units.py` → `build_usland_rt.py` → `validate_usland_rt.py` (`./make_all.sh usland`, 30 contrôles). Non testée en jeu ; décor RBT en attente des fichiers `24.RBT`.
 
 ## Pièges connus
+
+- **Objets posés (`statues`) : l'axe +z local va vers (sin a, cos a)** — vu en jeu (v12b : vélos sortis des pick-ups, grates devant
+  les grilles). Ce n'est PAS la convention des grilles de `timing_gates` (pilote vers (−sin a, −cos a)). Utiliser
+  `props_place.statue_ang` / `statue_fwd`. Le jeu pose un objet sur le sol **sous son origine** : origine sur du plat
+  (l'arche a son origine au pied d'un poteau).
 
 - Axes : x = colonne, z = ligne de la heightmap ; z vers le **bas** sur les images. Cap 0° = +x (est), −90° = −z (« nord », haut de l'image).
   Dans `Path.turn`, angle > 0 = virage à **gauche** (cap qui diminue).

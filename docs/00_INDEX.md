@@ -15,6 +15,7 @@
 | 10 | `10_suite_et_idees.md` | limites connues, idées, prochaines étapes |
 | 11 | `11_habillage.md` | grilles de départ, grillages, paddock, paysage, decals, drapeaux (v9) |
 | 12 | `12_objets_usland.md` | **objets faits maison (v12)** : specs pour le jeu, remplacement de l'habillage JGSX, **règles de design** |
+| 13 | `13_usland_race_track.md` | **usland race track** : piste indépendante (stade RF Anaheim, bosses RF + JGSX, whoops / berms JGSX, départ USLAND), différences avec le plan, contrôles |
 
 Dossiers :
 - `data/` — tableaux CSV (séparateur `;`) : `sx_units`, `sx_blocks`, `sx_whoops`, `sx_berm_stamps`, `sx_floor_gaps`,
