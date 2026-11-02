@@ -2,7 +2,10 @@
 START = west end. Every bump is a measured JGSX unit (lib/) unless marked 'scaled' (height scaled, same shape/length),
 'landing' (scaled, back side replaced by a gentle slope) or 'trapeze' (synthetic mound) - asked by the user in game tests.
 
-Lap (v27: 3D grass removed (too heavy in game), DVDB grass patches back with a row along the fence (clean edge).
+Lap (v28, night only: 6 light poles (3 facing 3, L1 side / whoops side) low in a steeper slope right behind the fences,
+  each on a platform cut into the slope; yellow marker stakes on every bump crest (both ends); blue nets on the berms of 5
+  turns; one big square-mesh start floor behind the 22 gates, cut at each gate. Track itself unchanged.
+  Before, v27: 3D grass removed (too heavy in game), DVDB grass patches back with a row along the fence (clean edge).
   Before, v26: Scuttle normal grass (grass_5 / grass_30, dry tuft) all over the grass; night: strong side flood (day sun angle)
   for relief. Before, v25: night: track lit exactly like by day (day lightmap inside the fence), night around; dirt decals under the
   track ones; clean dirt/grass line at the fence (rounded distance field); start corners rounded (no cone); JGSX green 3D grass
@@ -79,7 +82,18 @@ GRASS_TUFTS = None   # v27: removed (the game lagged with them)
 GRASS_OUTSIDE = dict(arena=True, keep=[(-140.0, -110.0, 97.0, 253.0)], dirt_to_fence=True)   # v24: start area = platform + ramps; dirt up to the fence
 # v19: the track sits in a pit: a giant grassed earth bank all around the dirt arena (and around the start area), as on the
 # drone photos. Height h ft, inner slope over `inner` ft (rounded toe and top), flat top `top` ft, outer slope `outer` ft.
-ARENA_BANK = dict(h=42.0, inner=160.0, top=14.0, outer=70.0, terrace=(28.0, 6.0), start_inner=75.0, start_blend=90.0)
+ARENA_BANK = dict(h=42.0, inner=160.0, top=14.0, outer=70.0, terrace=(28.0, 6.0), start_inner=75.0, start_blend=90.0,
+                  steep=(10.0, 16.0))   # v28: right behind the fence terrace the bank rises steeper: +10 ft over 16 ft (then the gentle slope)
+# v28 (user): 3 light poles on each long side facing each other (whoops side = south, L1 side = north), low in the steep
+# slope right behind the fence, each on a flat platform cut into the slope (pole upright): d = ft from the dirt area
+POLES = dict(n=3, d=38.0, pad=(3.5, 7.0))
+# v28: yellow marker stakes on the crest of every bump, at both ends (lane edges), like the drone photos; v ft from the lane axis
+STAKES = dict(v=14.2, prom=0.6, table=6.0)
+# v28: blue nets on the outside of 5 turns (user), on the berm crest (drone photos: blue posts + net)
+NETS = dict(turns=['U L6 -> L7', 'L1 -> west column', 'U L3 -> L2 (rays)', 'L7 -> east lane (real high berm)',
+                   'east lane -> L1 (high berm, as after the whoops)'], step=8.0, flat_off=8.0)
+# v28: one big start floor (square mesh) behind the whole gate row instead of one grate per gate
+START_FLOOR = dict(back=22.0, side=2.5)
 # v24: the bank starts at the height of the ground it touches (the start platform: 10 ft) and rises in ONE smooth slope
 # (75 ft behind the start, blended into the 160 ft of the rest over ~90 ft along the edge, corners included).
 # v22: terrace = flat strip (at d ft, w ft wide) cut in the bank under the fence (objects tilt with the ground);

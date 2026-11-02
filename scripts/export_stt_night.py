@@ -18,7 +18,18 @@ SRC, OUT = f'{ROOT}/tracks/{DAY}', f'{ROOT}/tracks/{NIGHT}'
 POLE = dict(head=42.4, src=f'{ROOT}/tracks/USLAND2026SX1/statue', tilt=0.30)   # lamp height above the pole foot, aim tilt (rad, down)
 
 def poles():
-    """pole feet (local x, z) on the bank, d ft outside the dirt arena box, and the inward aim (unit, local)."""
+    """v28 (user): 3 poles on the L1 side (north) facing 3 on the whoops side (south), same x, low in the steep slope right
+    behind the fence (DF = POLES['d'] ft from the dirt area), lamps aimed across the track."""
+    PO = getattr(LT, 'POLES', None)
+    if PO:
+        x0, x1, z0, z1 = LT.ARENA; ox, oz = LT.STT_ORIGIN; DF = np.load(f'{ROOT}/build/stt_dist.npy'); out = []
+        for k in range(PO['n']):
+            x = x0 + (x1 - x0) * (k + 0.5) / PO['n']; col = DF[:, int(round(x + ox))]
+            for zs, step, aim in ((z0, -1, (0.0, 1.0)), (z1, 1, (0.0, -1.0))):
+                zi = int(round(zs + oz))
+                while 0 < zi < len(col) - 1 and col[zi] < PO['d']: zi += step
+                out.append(((x, zi - oz), aim))
+        return out
     x0, x1, z0, z1 = LT.ARENA; d = NG['d']; out = []
     for i in range(1, NG['n_long'], 2):                                         # v22: one out of two (user)
         x = x0 + (x1 - x0) * (i + 0.5) / NG['n_long']
@@ -60,12 +71,16 @@ GLOW = dict(lamps=[(-6.7, 44.1), (-2.0, 44.1), (2.3, 44.1), (6.9, 44.1)], x=1.9,
 
 def pads(H, P):
     """v22: a flat round pad under every pole (objects tilt with the ground): flat within pad[0] ft, blended out to pad[1] ft."""
-    ox, oz = LT.STT_ORIGIN; r0, r1 = NG['pad']; H = H.copy()
+    ox, oz = LT.STT_ORIGIN; PO = getattr(LT, 'POLES', None); r0, r1 = PO['pad'] if PO else NG['pad']; H = H.copy()
     for (px, pz), _ in P:
-        fx, fz = px + ox, pz + oz; i0, j0 = int(fz / S), int(fx / S); h0 = float(H[i0, j0]); k = int(r1 / S) + 2
+        fx, fz = px + ox, pz + oz; i0, j0 = int(fz / S), int(fx / S); k = int(r1 / S) + 2
         sl = (slice(i0 - k, i0 + k + 1), slice(j0 - k, j0 + k + 1)); ii, jj = np.mgrid[sl]
         r = np.hypot(ii * S - fz, jj * S - fx); t = np.clip((r - r0) / (r1 - r0), 0, 1); w = t * t * (3 - 2 * t)
-        H[sl] = h0 + (H[sl] - h0) * w
+        if PO:                                   # v28: platform CUT into the slope (level = lowest point of the flat disc)
+            h0 = float(H[sl][r <= r0].min()); hs = H[sl]
+            H[sl] = np.where(hs > h0, h0 + (hs - h0) * w, hs)
+        else:
+            h0 = float(H[i0, j0]); H[sl] = h0 + (H[sl] - h0) * w
     return H
 
 def glow_model(path_jm, path_png):

@@ -84,6 +84,9 @@ def bank_h(step=1.0):
         ta, tw = B_['terrace']; ta_, tb_ = ta - tw / 2, ta + tw / 2
         d = np.where(d < ta_, d, np.where(d <= tb_, ta_, d - tw))
     up = base + (B_['h'] - base) * ss_(d / inner)
+    if B_.get('steep') and B_.get('terrace'):           # v28: steeper slope right behind the fence terrace, same top height
+        sh, sw = B_['steep']; dd = np.clip(d - ta_, 0, None)
+        up = base + sh * ss_(dd / sw) + (B_['h'] - base - sh) * ss_(d / inner)
     hb = np.where(d <= inner + B_['top'], up, B_['h'] * (1 - ss_((d - inner - B_['top']) / B_['outer'])))
     return np.where(d > 0, hb, np.minimum(hb, plat_h(GX, GZ)))                  # v25: inside: never above the real ground (no trench at the edge)
 
