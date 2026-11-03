@@ -64,29 +64,29 @@ def stake():
 
 
 # ------------------------------------------------------------------ v29: continuous net following the ground
-NETR = dict(h=3.6, sink=0.3, post_every=8.0, post_h=4.1, post_w=0.11, Lmax=140.0, TW=4096, TH=320)
+NETR = dict(h=4.2, sink=0.3, post_every=8.0, post_h=4.7, post_w=0.11, tile=4.0, TW=1024, TH=1024, NR=896)   # v32: taller (3.6 -> 4.2 ft); one 4 ft
+# tile repeated along the net (the 4096 px texture of v31 was too big: the game shrank it and the mesh disappeared)
 
 def net_ribbon_texture():
-    """one texture for every turn net: u = arc length / Lmax, net (alpha mesh, square cells) in rows 0..255 with a black
-    hem top and bottom; solid black for the posts in rows 272..319. v31 (user): black, thick knotted cord (catch net)."""
-    W_, H_ = NETR['TW'], NETR['TH']; img = Image.new('RGBA', (W_, H_), (0, 0, 0, 0)); d = ImageDraw.Draw(img)
-    pxu = W_ / NETR['Lmax']; cell = 0.25                            # 0.25 ft square cells
-    pyv = 256 / (NETR['h'] + NETR['sink']); rg = np.random.default_rng(3)
-    hem, col, knot = (8, 8, 9, 255), (26, 26, 28, 250), (6, 6, 6, 255)
-    xs = np.arange(0, W_, cell * pxu); ys = np.arange(14, 244, cell * pyv)
-    for x in xs: d.line([(x, 0), (x, 255)], fill=col, width=2)
-    for y in ys: d.line([(0, y), (W_, y)], fill=col, width=3)
-    for x in xs:                                                    # knots + a lighter strand so it reads as rope
-        for y in ys:
-            d.rectangle([x - 1, y - 1.5, x + 1, y + 1.5], fill=knot)
-            g = int(rg.integers(40, 62)); d.point((x + 1, y - 1), fill=(g, g, g + 2, 255))
-    for y in ys: d.line([(0, y - 1), (W_, y - 1)], fill=(44, 44, 47, 230), width=1)
-    d.rectangle([0, 0, W_, 12], fill=hem); d.rectangle([0, 243, W_, 255], fill=hem)   # thick top / bottom ropes
-    d.rectangle([0, 272, W_, H_ - 1], fill=(20, 20, 22, 255))
+    """v32: one 4 ft wide tile of black knotted net (1024 px wide = 256 px / ft), repeated along every net: rows 0..NR-1 = net
+    height (sink + h), thick ropes top and bottom; rows NR+32.. = solid black for the posts. Square 0.2 ft cells (denser)."""
+    W_, H_, NR = NETR['TW'], NETR['TH'], NETR['NR']; img = Image.new('RGBA', (W_, H_), (0, 0, 0, 0)); d = ImageDraw.Draw(img)
+    pxu = W_ / NETR['tile']; pyv = NR / (NETR['h'] + NETR['sink']); cell = 0.2
+    hem, col, knot = (8, 8, 9, 255), (24, 24, 26, 255), (5, 5, 5, 255)
+    xs = np.arange(0, W_, cell * pxu); ys = np.arange(30, NR - 30, cell * pyv)
+    for x in xs: d.rectangle([x - 2, 0, x + 2, NR - 1], fill=col)                 # strands ~0.02 ft thick
+    for y in ys: d.rectangle([0, y - 2, W_, y + 2], fill=col)
+    for x in xs:
+        for y in ys: d.ellipse([x - 5, y - 5, x + 5, y + 5], fill=knot)           # knots
+    for y in ys: d.line([(0, y - 2), (W_, y - 2)], fill=(46, 46, 50, 255), width=1)   # a lighter edge so the rope reads
+    for x in xs: d.line([(x - 2, 0), (x - 2, NR - 1)], fill=(40, 40, 44, 255), width=1)
+    d.rectangle([0, 0, W_, 22], fill=hem); d.rectangle([0, NR - 23, W_, NR - 1], fill=hem)   # top / bottom ropes
+    d.rectangle([0, NR + 32, W_, H_ - 1], fill=(20, 20, 22, 255))
     return img
 
 
-NET_SHP = dict(r=0.9, every=1.2, rows=(0.9, 2.5), friction=1.0, spring=150, damping=250)   # v31: soft spheres (catch net)
+NET_SHP = dict(r=0.9, every=1.2, rows=(0.9, 2.5, 3.8), friction=1.0, spring=100, damping=5)   # v32: v31 (150 / 250) felt like a wall:
+# the damping term (force ~ damping x speed) is what stops the bike; 5 per sphere ~ loses ~25 ft/s going through (estimate)
 
 def net_shape(line_xz, ground, origin):
     """v31 (user: the net must slow the bike down): collision spheres along the net, same frame as net_ribbon (statue yaw 0,
@@ -104,7 +104,7 @@ def net_shape(line_xz, ground, origin):
 
 
 # ------------------------------------------------------------------ v31: black pylon (user's picture: the right one, all black)
-PYLON = dict(H=3.3, base_w=1.52, base_h=0.32, base_r=0.10, cyl_r=0.555, fillet=0.12, dome=0.03, seg=32)   # a bit lower than a bike
+PYLON = dict(H=4.125, base_w=1.52, base_h=0.32, base_r=0.10, cyl_r=0.555, fillet=0.12, dome=0.03, seg=32)   # a bit lower than a bike
 
 def _smooth(m, P, N, UV):
     """quad / triangle with one normal per vertex (smooth cylinder), front face = average normal side."""
@@ -177,12 +177,14 @@ def pylon():
                 [m.uv_px(256, 456), m.uv_px(256 + c1 * 40, 456 + s1 * 40), m.uv_px(256 + c0 * 40, 456 + s0 * 40)])
     return m, img
 
+PY_SHP = dict(spring=60, damping=4)   # v32 (user: v31 1000 / 200 = concrete block): you go through, it slows you and can knock you over
+
 def pylon_shape():
-    """hard collision (same stiffness as the FMX ramp): 4 spheres up the column + 4 low ones in the base corners."""
+    """v32: soft collision (PY_SHP): 4 spheres up the column + 4 low ones in the base corners."""
     P = PYLON; r = P['cyl_r']; rows = []
-    for y in np.linspace(P['base_h'] + r, P['H'] - r, 4): rows.append(f'0 {y:.4f} 0 {r} 1 1000 200')
+    for y in np.linspace(P['base_h'] + r, P['H'] - r, 4): rows.append(f"0 {y:.4f} 0 {r} 1 {PY_SHP['spring']} {PY_SHP['damping']}")
     for sx in (1, -1):
-        for sz in (1, -1): rows.append(f"{sx * 0.45:.4f} 0.3000 {sz * 0.45:.4f} 0.32 1 1000 200")
+        for sz in (1, -1): rows.append(f"{sx * 0.45:.4f} 0.3000 {sz * 0.45:.4f} 0.32 1 {PY_SHP['spring']} {PY_SHP['damping']}")
     return '\n'.join([str(len(rows))] + rows) + '\n'
 
 def net_ribbon(line_xz, ground, origin):
@@ -196,16 +198,23 @@ def net_ribbon(line_xz, ground, origin):
     from scipy.ndimage import gaussian_filter1d
     gy = gaussian_filter1d(gy, 1.0, mode='nearest')
     bot = gy - NETR['sink']; top = gy + NETR['h']
-    U = lambda s: s / NETR['Lmax']; Vb, Vt = 1 - 255 / NETR['TH'], 1.0
+    NR, TH = NETR['NR'], NETR['TH']; Vb, Vt = 1 - (NR - 1) / TH, 1.0; TL = NETR['tile']
     for i in range(len(line_xz) - 1):
-        (xa, za), (xb, zb) = line_xz[i] - (ox, oz), line_xz[i + 1] - (ox, oz)
-        t = np.array([xb - xa, 0, zb - za]); n = np.cross(t, [0, 1, 0]); n /= np.linalg.norm(n) + 1e-12
-        P = [np.array([xa, bot[i], za]), np.array([xb, bot[i + 1], zb]), np.array([xb, top[i + 1], zb]), np.array([xa, top[i], za])]
-        uv = [(U(L[i]), Vb), (U(L[i + 1]), Vb), (U(L[i + 1]), Vt), (U(L[i]), Vt)]
-        for sg in (1, -1):
-            Q, T = (P, uv) if sg > 0 else (P[::-1], uv[::-1])
-            m.tri_fan(Q, n * sg, T)
-    post_uv = (0.5, 1 - 296 / NETR['TH'])
+        A, B_ = line_xz[i] - (ox, oz), line_xz[i + 1] - (ox, oz)
+        t = np.array([B_[0] - A[0], 0, B_[1] - A[1]]); n = np.cross(t, [0, 1, 0]); n /= np.linalg.norm(n) + 1e-12
+        cuts = [L[i]] + [k * TL for k in range(int(L[i] // TL) + 1, int(L[i + 1] // TL) + 1) if L[i] < k * TL < L[i + 1]] + [L[i + 1]]
+        for sa, sb in zip(cuts[:-1], cuts[1:]):                      # split at the tile borders: u stays in [0, 1]
+            fa, fb = (sa - L[i]) / (L[i + 1] - L[i]), (sb - L[i]) / (L[i + 1] - L[i])
+            pa, pb = A + (B_ - A) * fa, A + (B_ - A) * fb
+            ba, bb = bot[i] + (bot[i + 1] - bot[i]) * fa, bot[i] + (bot[i + 1] - bot[i]) * fb
+            ta, tb = top[i] + (top[i + 1] - top[i]) * fa, top[i] + (top[i + 1] - top[i]) * fb
+            k0 = np.floor(sa / TL + 1e-9); ua, ub = sa / TL - k0, sb / TL - k0
+            P = [np.array([pa[0], ba, pa[1]]), np.array([pb[0], bb, pb[1]]), np.array([pb[0], tb, pb[1]]), np.array([pa[0], ta, pa[1]])]
+            uv = [(ua, Vb), (ub, Vb), (ub, Vt), (ua, Vt)]
+            for sg in (1, -1):
+                Q, T = (P, uv) if sg > 0 else (P[::-1], uv[::-1])
+                m.tri_fan(Q, n * sg, T)
+    post_uv = (0.5, 1 - (NETR['NR'] + 64) / NETR['TH'])
     for s in np.arange(0, L[-1] + 0.1, L[-1] / max(1, round(L[-1] / NETR['post_every']))):
         x_ = np.interp(s, L, line_xz[:, 0]) - ox; z_ = np.interp(s, L, line_xz[:, 1]) - oz; y_ = np.interp(s, L, gy)
         w = NETR['post_w']
