@@ -187,7 +187,8 @@ def main():
                 if g['kind'] != 'S' or not g.get('tag', '').startswith(W_['tag']): continue
                 c_, s_ = np.cos(g['t']), np.sin(g['t']); xa_, xb_ = W_['x']
                 ua_, ub_ = (xa_ - g['x0']) / c_, (xb_ - g['x0']) / c_                 # this lane runs along x
-                rows = tube_row((g['x0'] + ua_ * c_, g['z0'] + ua_ * s_), (g['x0'] + ub_ * c_, g['z0'] + ub_ * s_), W_['off'], sides=(W_['side'],))
+                rows = tube_row((g['x0'] + ua_ * c_, g['z0'] + ua_ * s_), (g['x0'] + ub_ * c_, g['z0'] + ub_ * s_), W_['off'], sides=(W_['side'],),
+                                model=W_.get('model', 'boudin_black'), segL=SP_.BOUDIN['L'])
                 st.extend(rows); nbd += len(rows)
         F_ = BD_.get('fmx'); R2_ = getattr(LT, 'FMX_RAMP', None)
         if F_ and R2_:

@@ -133,7 +133,7 @@ BALES = [  # v36 (user's 3 top views, red = remove, white = new, cleaned up to f
 # v35: first layout (2 facing pairs at each end of the top lane, the west ones removed in v36)
 # v35 (user's photo): black foam tubes, segments end to end along both edges of the lane (`off` ft from the lane axis to the tube
 # axis): from `before` ft before the whoops to half of them (L7), and along both sides of the freestyle gap (lip -> landing)
-BOUDINS = dict(whoops=dict(tag='L7 small double', x=(393.0, 513.0), side=-1, off=17.9),
+BOUDINS = dict(whoops=dict(tag='L7 small double', x=(393.0, 513.0), side=-1, off=17.9, model='boudin_plain'),   # v36b (user): same plain tube as the freestyle one
                fmx=dict(off=0.0, start=3.0, end=2.0, model='boudin_plain'))
 # v36 (user's marks): whoops: ONE side only (north, the infield side), along the small double and the first whoops, from x 393
 # to 513 (where the user's line stops); freestyle gap: one single line in the middle, plain black (no logo), segments touching

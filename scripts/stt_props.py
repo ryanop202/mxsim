@@ -152,7 +152,9 @@ def pylon_texture():
     sl = P['base_w'] - 2 * P['base_r']; yb = P['base_h'] - 0.05; pxu, pxv = 511 / sl, 112 / yb   # logo face: rows 520 (top) .. 632 (bottom)
     lh = 0.62 * yb; lw = lh * 4.43                                   # logo aspect 4.43 : 1
     _paste_logo(img, (256 - lw * pxu / 2, 576 - lh * pxv / 2, 256 + lw * pxu / 2, 576 + lh * pxv / 2))
-    img[640:1024] = _dirt(384, 512, 21)
+    # v36b (user): the pad must look like the track: the track's own dirt tile (SX1 tiles/dirt.ppm, 128 px) repeated
+    tile = np.asarray(Image.open(f'{ROOT}/tracks/USLAND2026SX1/tiles/dirt.ppm').convert('RGB')).astype(float)
+    img[640:1024] = np.tile(tile, (3, 4, 1))
     # v36: vertical logo on the column. u = angle (512 px = 2 pi r), v rows 298 (y = top of base) .. 2 (y = H). On the cylinder
     # u grows towards the viewer's LEFT on both the +z (angle 90) and the -z (angle 270) side -> the logo is mirrored in u.
     yc = P['pad_h'] + P['base_h']; pxu = 512 / (2 * np.pi * P['cyl_r']); pxv = 296 / (P['H'] - yc)
