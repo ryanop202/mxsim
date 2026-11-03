@@ -99,6 +99,10 @@ NETS = dict(turns=['U L6 -> L7', 'L1 -> west column', 'U L3 -> L2 (rays)', 'L7 -
                    'east lane -> L1 (high berm, as after the whoops)'], step=8.0, flat_off=8.0)
 # v28: one big start floor (square mesh) behind the whole gate row instead of one grate per gate
 START_FLOOR = dict(back=22.0, side=2.5)
+# v31 (user, 2026-11-03): black pylons (ATVMC shape, all black, hard collision) inside the turns, on the 9 points the user
+# drew on the top view (world ft, x, z)
+PYLONS = [(378.0, 292.2), (818.5, 299.6), (427.4, 363.5), (735.1, 359.1), (376.5, 410.3), (668.7, 402.2), (737.4, 483.9), (807.5, 513.6), (386.8, 529.3)]
+
 # v24: the bank starts at the height of the ground it touches (the start platform: 10 ft) and rises in ONE smooth slope
 # (75 ft behind the start, blended into the 160 ft of the rest over ~90 ft along the edge, corners included).
 # v22: terrace = flat strip (at d ft, w ft wide) cut in the bank under the fence (objects tilt with the ground);

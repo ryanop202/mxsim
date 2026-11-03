@@ -139,14 +139,17 @@ def main():
     gx = float(np.mean([g[0] for g in G])); gz = float(np.mean([g[2] for g in G])); fa = G[0][3]
     if getattr(LT, 'START_FLOOR', None):          # v28: ONE big floor (square mesh) behind the whole row, cut at each gate
         import stt_props; stt_props.build()
-        for nm in ('start_floor', 'stake_yellow', 'start_gate_frame'):
+        for nm in ('start_floor', 'stake_yellow', 'start_gate_frame', 'pylon_black'):
             for e in ('jm', 'png'): shutil.copy(f'{ROOT}/assets/props/{nm}.{e}', f'{OUT}/statue/{nm}.{e}')
+        shutil.copy(f'{ROOT}/assets/props/pylon_black.shp', f'{OUT}/statue/pylon_black.shp')
         f = np.array([-np.sin(fa), -np.cos(fa)])
         st.append(f'[{gx:.6f} 0.000000 {gz:.6f}] {PP.statue_ang(*f):.6f} {P}/statue/start_floor.jm {P}/statue/start_floor.png null')
     else:
         for x, y, z, a in G:
             f = np.array([-np.sin(a), -np.cos(a)])
             st.append(statue(x, 0.0, z, PP.statue_ang(*f), 'start_grate', 'start_grate'))      # v14: y 0, the game puts it on the platform
+    for x_, z_ in getattr(LT, 'PYLONS', []):      # v31: the user's black pylons inside the turns (hard collision)
+        st.append(f'[{x_:.6f} 0.000000 {z_:.6f}] 0.000000 {P}/statue/pylon_black.jm {P}/statue/pylon_black.png {P}/statue/pylon_black.shp')
     # v28: yellow marker stakes on the crest of every bump, both lane edges (drone photos)
     SK = getattr(LT, 'STAKES', None); nsk = 0
     if SK:
@@ -205,7 +208,8 @@ def main():
             org = best[1]
             nm_ = f"net_{''.join(ch for ch in g['tag'] if ch.isalnum())[:24]}"
             m_ = stt_props.net_ribbon(line1, gnd, org); m_.write(f'{OUT}/statue/{nm_}.jm', (0, 0, 0, 0, 0))
-            st.append(f'[{org[0]:.6f} 0.000000 {org[1]:.6f}] 0.000000 {P}/statue/{nm_}.jm {P}/statue/net_ribbon.png null'); nnet += 1
+            open(f'{OUT}/statue/{nm_}.shp', 'w', newline='\n').write(stt_props.net_shape(line1, gnd, org))   # v31: soft collision
+            st.append(f'[{org[0]:.6f} 0.000000 {org[1]:.6f}] 0.000000 {P}/statue/{nm_}.jm {P}/statue/net_ribbon.png {P}/statue/{nm_}.shp'); nnet += 1
             print('net', g['tag'], 'length %.0f ft, origin flatness %.3f ft' % (Ls[-1], best[0]))
         shutil.copy(f'{ROOT}/assets/props/net_ribbon.png', f'{OUT}/statue/net_ribbon.png')
         print('nets', nnet)
