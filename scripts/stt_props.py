@@ -104,8 +104,9 @@ def net_shape(line_xz, ground, origin):
 
 
 # ------------------------------------------------------------------ v31: black pylon (user's picture: the right one, all black)
-PYLON = dict(H=4.0, base_w=1.85, base_h=0.42, base_r=0.12, cyl_r=0.68, fillet=0.36, dome=0.07, seg=32,
-             pad_w=4.5, pad_h=0.45, pad_sink=0.45, pad_r=0.6, pad_in=0.55, col_logo=(0.95, 2.95))
+PYLON = dict(H=3.55, base_w=1.85, base_h=0.42, base_r=0.12, cyl_r=0.68, fillet=0.36, dome=0.07, seg=32,
+             pad_w=0.0, pad_h=0.0, pad_sink=0.0, pad_r=0.6, pad_in=0.55, col_logo=(0.5, 2.5))
+# v37 (user: the pad looked shiny / golden): no pad in the model any more, the bump is made in the terrain (PYLON_GROUND)
 # v36 (user): dirt pad 3x higher (0.15 -> 0.45 ft) and much wider (2.6 -> 4.5 ft); the pylon itself unchanged, standing on it
 # (top 3.7 -> 4.0 ft); Fly logo also on the column (vertical, reading upwards, +z and -z sides) between col_logo heights.
 # v35 (user): rounder top (fillet 0.14 -> 0.36), Fly Racing logo on two opposite sides of the base (base 0.32 -> 0.42 ft high so
@@ -179,17 +180,17 @@ def pylon():
     top; origin at the ground, centre. The export turns each pylon so its +z logo faces the riding line."""
     P = PYLON; m = Mesh(512, 1024); img = pylon_texture(); sg = P['seg']; y0 = P['pad_h']
     hb, wb, rb = P['base_h'], P['base_w'] / 2, P['base_r']; r, H, f = P['cyl_r'], P['H'], P['fillet']
-    # --- dirt pad: sloped sides from the ground (sunk pad_sink for slopes) to a flat top, rounded corners
-    pw = P['pad_w'] / 2; pin = P['pad_in']; po = _rsquare(pw, P['pad_r']); pt = _rsquare(pw - pin, P['pad_r'] - pin * 0.6)
+    # --- dirt pad: sloped sides from the ground (sunk pad_sink for slopes) to a flat top, rounded corners (v37: none, pad_w 0)
+    pw = max(P['pad_w'], 0.01) / 2; pin = P['pad_in']; po = _rsquare(pw, P['pad_r']); pt = _rsquare(pw - pin, P['pad_r'] - pin * 0.6)
     duv = lambda x, z: m.uv_px(256 + x / pw * 200, 832 + z / pw * 180)
-    for i in range(len(po)):
+    for i in (range(len(po)) if P['pad_w'] > 0 else ()):
         j = (i + 1) % len(po); (xa, za, aa), (xb, zb, ab) = po[i], po[j]; (xc, zc, _), (xd, zd, _) = pt[j], pt[i]
         na = np.array([np.cos(aa), 0.5, np.sin(aa)]); nb = np.array([np.cos(ab), 0.5, np.sin(ab)])
         _smooth(m, [(xa, -P['pad_sink'], za), (xb, -P['pad_sink'], zb), (xb, 0, zb), (xa, 0, za)], [na, nb, nb, na],
                 [duv(xa * 1.1, za * 1.1), duv(xb * 1.1, zb * 1.1), duv(xb, zb), duv(xa, za)])
         _smooth(m, [(xa, 0, za), (xb, 0, zb), (xc, y0, zc), (xd, y0, zd)], [na, nb, nb, na],
                 [duv(xa, za), duv(xb, zb), duv(xc, zc), duv(xd, zd)])
-    m.tri_fan([np.array([x, y0, z]) for x, z, _ in pt][::-1], np.array([0, 1.0, 0]), [duv(x, z) for x, z, _ in pt][::-1])
+    if P['pad_w'] > 0: m.tri_fan([np.array([x, y0, z]) for x, z, _ in pt][::-1], np.array([0, 1.0, 0]), [duv(x, z) for x, z, _ in pt][::-1])
     # --- base cushion on the pad
     out = _rsquare(wb, rb); n = len(out)
     per = np.r_[0, np.cumsum([np.hypot(out[(i + 1) % n][0] - out[i][0], out[(i + 1) % n][1] - out[i][1]) for i in range(n)])]
@@ -422,7 +423,7 @@ def floor_v28():
     return m, img
 
 
-GATE_BAR = 0.78   # ft above the hinge (user's drawing on the in-game top view: ~1/3 of the 2.3 ft gate)
+GATE_BAR = 1.52   # v37 (user): same distance but from the TOP (2.30 - 0.78); v36: 0.78 ft above the hinge
 
 def gate_frame():
     """v30 (user): the USLAND start gate WITHOUT its black plate (no USLAND icon): only the red round-tube frame (inverted U,

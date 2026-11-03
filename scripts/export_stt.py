@@ -191,7 +191,10 @@ def main():
                                 model=W_.get('model', 'boudin_black'), segL=SP_.BOUDIN['L'])
                 st.extend(rows); nbd += len(rows)
         F_ = BD_.get('fmx'); R2_ = getattr(LT, 'FMX_RAMP', None)
-        if F_ and R2_:
+        if F_ and F_.get('p0'):                    # v37: the user's line, explicit ends
+            rows = tube_row(F_['p0'], F_['p1'], 0.0, sides=(1,), model=F_.get('model', 'boudin_black'), segL=SP_.BOUDIN['L'])
+            st.extend(rows); nbd += len(rows)
+        elif F_ and R2_:
             lip = np.array(R2_['lip']) + np.array(LT.STT_ORIGIN); d_ = np.array(R2_['aim']) - np.array(R2_['lip']); d_ = d_ / np.linalg.norm(d_)
             # landing start: first point after the lip where the ground rises 1 ft above the gap floor
             land = None

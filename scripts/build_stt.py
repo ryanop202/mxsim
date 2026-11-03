@@ -38,7 +38,8 @@ def plat_h(XL, ZL):
     u = (XL - LT.START_GATE[0]) * c + (ZL - LT.START_GATE[1]) * s_; v = -(XL - LT.START_GATE[0]) * s_ + (ZL - LT.START_GATE[1]) * c
     Ld, f = P['down'], P['lin']; x = np.clip(u - P['front'], 0, Ld); m = 1.0 / (Ld - f)
     down = 1 - np.where(x < f, m * x * x / (2 * f), np.where(x > Ld - f, 1 - m * (Ld - x) ** 2 / (2 * f), m * (x - f / 2)))
-    prof = np.where(u < -P['back'] - 1.0, 0.0, np.where(u <= P['front'], 1.0, down))
+    prof = np.where(u < -P['back'] - (3.0 if LT.GRASS_OUTSIDE.get('west_wall') else 1.0), 0.0,   # v37: under the wall, no groove
+                     np.where(u <= P['front'], 1.0, down))
     half = (LS.N_GATES - 1) / 2 * LS.GATE_PITCH + P['side']
     lat = 1 - ss_((np.abs(v) - half) / P['side_ramp'])
     return P['h'] * prof * lat
@@ -60,8 +61,10 @@ def west_weight(d, iz, ix, step):
     from scipy.ndimage import distance_transform_edt, gaussian_filter
     ox, oz = LT.STT_ORIGIN; side = (N - 1) * S; g = np.arange(0, side + step / 2, step); GX, GZ = np.meshgrid(g - ox, g - oz)
     a0_, a1_, b0_, b1_ = _keep_rects()[0]; sb = (GX >= a0_) & (GX <= a1_ + 0.5) & (GZ >= b0_) & (GZ <= b1_)
-    w = (1 - ss_(distance_transform_edt(~sb) * step / LT.ARENA_BANK['start_blend']))[iz, ix]
-    return gaussian_filter(w, 40.0 / step)
+    WW = LT.GRASS_OUTSIDE.get('west_wall', {})
+    # v37: evaluated at the point itself (not at its nearest dirt point: that fans out at the corners -> streaks in the step)
+    w = 1 - ss_(distance_transform_edt(~sb) * step / WW.get('blend', LT.ARENA_BANK['start_blend']))
+    return gaussian_filter(w, WW.get('sigma', 40.0) / step)
 
 def region_dist(step=1.0, close_r=45.0):
     """v25: distance (ft) to the dirt area on a `step` ft world grid, the area's inner corners rounded (binary closing, radius
@@ -72,9 +75,16 @@ def region_dist(step=1.0, close_r=45.0):
     g = np.arange(0, side + step / 2, step); GX, GZ = np.meshgrid(g - ox, g - oz)
     from scipy.ndimage import binary_opening
     x0, x1, z0, z1 = LT.ARENA; m = (GX >= x0) & (GX <= x1) & (GZ >= z0) & (GZ <= z1)
+    WW0 = LT.GRASS_OUTSIDE.get('west_wall')
     for a0_, a1_, b0_, b1_ in _keep_rects():                                       # v25: start area with rounded outer corners
+        if WW0:                                  # v37: plain strip; the corners are rounded on the whole region below
+            m |= (GX >= a0_) & (GX <= a1_) & (GZ >= b0_) & (GZ <= b1_); continue
         sb = (GX >= a0_) & (GX <= a1_ + 40) & (GZ >= b0_) & (GZ <= b1_); ko = int(30.0 / step); yo, xo = np.mgrid[-ko:ko + 1, -ko:ko + 1]
         m |= binary_opening(sb, structure=(xo * xo + yo * yo) <= ko * ko) & (GX <= a1_)
+    if WW0:                                      # v37 (user: round it all): west corners of the dirt area rounded (radius corner_r)
+        ko = int(WW0['corner_r'] / step); yo, xo = np.mgrid[-ko:ko + 1, -ko:ko + 1]
+        mo = binary_opening(m, structure=(xo * xo + yo * yo) <= ko * ko)
+        m = np.where(GX <= _keep_rects()[0][1] + 1.5 * WW0['corner_r'], mo, m)
     k = int(close_r / step); yy, xx = np.mgrid[-k:k + 1, -k:k + 1]
     m = binary_closing(m, structure=(xx * xx + yy * yy) <= k * k)
     d, (iz, ix) = distance_transform_edt(~m, return_indices=True); d = d * step
@@ -98,20 +108,28 @@ def bank_h(step=1.0):
     w = gaussian_filter(w, 40.0 / step)                                         # v25: wide blends -> no crease / cone where the
     k_ = ss_(d / 30.0); base = gaussian_filter(base, 6.0 / step) * (1 - k_) + gaussian_filter(base, 25.0 / step) * k_   # nearest edge switches
     if getattr(LT, 'GRASS_OUTSIDE', {}).get('west_wall'):   # v36: the west wall starts AT the edge: no blur there (blur = small ditch)
-        raw = plat_h(GX, GZ)[iz, ix]; base = base * (1 - w) + raw * w
+        a0_, a1_, b0_, b1_ = _keep_rects()[0]                    # v37: platform height read straight across the wall (smooth in z;
+        raw = gaussian_filter(plat_h(np.clip(GX, a0_, a1_), np.clip(GZ, b0_, b1_)), 2.0 / step)   # the nearest-point read was jagged)
+        wr_ = west_weight(d, iz, ix, step); base = np.maximum(base * (1 - wr_) + raw * wr_, raw * ss_((wr_ - 0.5) / 0.3))   # no dip at the foot
     inner = B_['inner'] + (B_['start_inner'] - B_['inner']) * w
     SG = B_.get('straight')
     if SG and B_.get('terrace'):                  # v29 (user's drawing): floor, short step to the fence terrace, ONE straight slope
         ta, tw = B_['terrace']; ta_, tb_ = ta - tw / 2, ta + tw / 2
         smax = lambda a, b, c: 0.5 * (a + b + np.sqrt((a - b) ** 2 + c * c))      # smooth max / min (rounded corners)
         smin = lambda a, b, c: 0.5 * (a + b - np.sqrt((a - b) ** 2 + c * c))
-        WW = getattr(LT, 'GRASS_OUTSIDE', {}).get('west_wall'); th_ = SG['terrace_h'] + (WW['extra_h'] * w if WW else 0.0)   # v36: higher wall west
+        WW = getattr(LT, 'GRASS_OUTSIDE', {}).get('west_wall'); ww_ = west_weight(d, iz, ix, step) if WW else 0.0
+        th_ = SG['terrace_h'] + (WW['extra_h'] * ww_ if WW else 0.0)                  # v36: higher wall west
         terr = base + th_ * ss_((d - (ta_ - SG['rise'])) / SG['rise'])
-        top = np.maximum(B_['h'] - base - th_, 0.1)
+        hh_ = B_['h'] + (WW['top_h'] * ww_ if WW and WW.get('top_h') else 0.0)            # v37: higher bank on the west side
+        top = np.maximum(hh_ - base - th_, 0.1)
         rise = smax(SG['slope'] * (d - tb_), 0.0, SG['toe'] * SG['slope'])         # straight slope from the terrace, rounded toe
         up = terr + smin(rise, top, SG['crest'] * SG['slope'])                      # ... up to h, rounded crest
         d_top = tb_ + top / SG['slope'] + SG['crest']
-        hb = np.where(d <= d_top + B_['top'], up, B_['h'] * (1 - ss_((d - d_top - B_['top']) / B_['outer'])))
+        hb = np.where(d <= d_top + B_['top'], up, hh_ * (1 - ss_((d - d_top - B_['top']) / B_['outer'])))
+        if WW and WW.get('smooth'):              # v37: smooth the slope beyond the terrace (no crease at the corners)
+            k2 = ss_((d - (tb_ + 4.0)) / 10.0); hb = hb * (1 - k2) + gaussian_filter(hb, WW['smooth'] / step) * k2
+            k3 = np.clip(ww_ * 2 - 0.2, 0, 1) * (d > 0)                  # v37: mild smoothing of the west wall itself (no ripple)
+            hb = hb * (1 - k3) + gaussian_filter(hb, 1.5 / step) * k3
         return np.where(d > 0, hb, np.minimum(hb, plat_h(GX, GZ)))
     if B_.get('terrace'):
         ta, tw = B_['terrace']; ta_, tb_ = ta - tw / 2, ta + tw / 2
@@ -122,6 +140,24 @@ def bank_h(step=1.0):
         up = base + sh * ss_(dd / sw) + (B_['h'] - base - sh) * ss_(d / inner)
     hb = np.where(d <= inner + B_['top'], up, B_['h'] * (1 - ss_((d - inner - B_['top']) / B_['outer'])))
     return np.where(d > 0, hb, np.minimum(hb, plat_h(GX, GZ)))                  # v25: inside: never above the real ground (no trench at the edge)
+
+def pylon_ground(p):
+    """v37 (user): a small dirt bump IN the terrain under each pylon (flat top, smooth sides), or, for the turns in curb, a very
+    small berm arc around the pylon on the riding-line side. Added on top of the ground. Pylons from LT.PYLONS['points']."""
+    PG = getattr(LT, 'PYLON_GROUND', None); out = np.zeros((N, N))
+    if not PG or not getattr(LT, 'PYLONS', {}).get('points'): return out
+    smp = p.samples(1.0)
+    for k, (px, pz) in enumerate(LT.PYLONS['points']):
+        R = max(PG['mound']['r'], PG['curb']['r'] + 2 * PG['curb']['w']) + 1
+        sl, X, Z = G.window(px - R, px + R, pz - R, pz + R); r = np.hypot(X - px, Z - pz)
+        if k in PG['curb']['turns']:
+            C = PG['curb']; j = int(np.argmin(np.hypot(smp['x'] - px, smp['z'] - pz)))
+            a0 = np.arctan2(smp['z'][j] - pz, smp['x'][j] - px); da = np.angle(np.exp(1j * (np.arctan2(Z - pz, X - px) - a0)))
+            fa = 1 - ss_((np.abs(np.degrees(da)) - (C['arc'] / 2 - 30)) / 30)                 # arc facing the track, soft ends
+            out[sl] = np.maximum(out[sl], C['h'] * np.clip(1 - ((r - C['r']) / C['w']) ** 2, 0, 1) ** 1.5 * fa)
+        else:
+            M = PG['mound']; out[sl] = np.maximum(out[sl], M['h'] * (1 - ss_((r - M['r_flat']) / (M['r'] - M['r_flat']))))
+    return out
 
 def extras():
     """v13: start platform (gates + grates on it, descent right after the gate line) and the freestyle ramp beside the
@@ -185,6 +221,7 @@ def build():
             turns.append(dict(tag=g['tag'], angle=g['ang'], r=g['r'], berm=g.get('berm')))
     H = np.maximum.reduce([jumps, whoops, berms])
     H = np.maximum(H, extras())                                  # v13: start platform + freestyle ramp
+    H = H + pylon_ground(p)                                      # v37: dirt bump under each pylon / small curb (user)
     TN = 2 ** 11; t = lambda a: a[:-1:2, :-1:2][:TN, :TN]
     tiles = np.full((TN, TN), T_MAIN, np.uint8)
     tiles[t(jumps) > 0.05] = T_JUMP; tiles[t(whoops) > 0.05] = T_WHOOP; tiles[t(berms) > 0.05] = T_BERM

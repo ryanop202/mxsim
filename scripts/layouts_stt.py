@@ -82,7 +82,9 @@ GRASS_DECALS = dict(size=45.0, step=26.0, clear=51.0)   # v27: DVDB grass patche
 # outside the fence to the top of the bank; jittered grid `step` ft, kept with probability p; 3rd-party files, local use only
 GRASS_TUFTS = None   # v27: removed (the game lagged with them)
 GRASS_OUTSIDE = dict(arena=True, keep=[(-140.0, -110.0, 97.0, 253.0)], dirt_to_fence=True,
-                     west_wall=dict(z=True, shift=19.0, extra_h=2.0))
+                     west_wall=dict(z=True, shift=19.0, extra_h=4.0, top_h=4.0, blend=160.0, sigma=60.0, corner_r=45.0, smooth=4.0))
+# v37 (user): bank a bit higher at the start (wall +4 ft, top +4 ft on the west side), corners rounder and the slope smoothed
+# (sigma `smooth` ft beyond the fence terrace): no crease / staircase line at the corners
 # v36 (user): behind the start grate the border is ONE straight wall (no shelf, no detour around the start area): the start
 # strip (x -140..-110) runs along the whole west side, and on that side the fence step starts right at the dirt edge
 # (distance shifted by `shift` ft) and is `extra_h` ft higher   # v24: start area = platform + ramps; dirt up to the fence
@@ -96,7 +98,7 @@ ARENA_BANK = dict(h=42.0, inner=160.0, top=14.0, outer=70.0, terrace=(28.0, 6.0)
 # gentle slope + steep wall (v28 'steep', removed)
 # v29 (user's drawing): 3 light poles on each long side facing each other (whoops side = south, L1 side = north), at the
 # bottom, just inside the fence, on the flat dirt (no platform): d = ft from the dirt area (fence at 28)
-POLES = dict(n=3, d=22.5, pad=(2.5, 5.0), floor=True)   # v36 (user): at the foot of the fence border, IN the step, the step dug
+POLES = dict(n=3, d=20.5, pad=(2.0, 4.0), floor=True)   # v37 (user): a bit forward, smaller dig (some fences fell in the hole)   # v36 (user): at the foot of the fence border, IN the step, the step dug
 # around each pole down to the floor (pad level = lowest ground within pad[1]); v35: 31 (terrace), v29: 20
 # v28: yellow marker stakes on the crest of every bump, at both ends (lane edges), like the drone photos; v ft from the lane axis
 STAKES = dict(v=14.2, prom=0.6, table=6.0)
@@ -123,21 +125,28 @@ PYLONS = dict(half=15.2, margin=1.5,
 # Top lane (L1, z = 273.7): 2 facing pairs at each end, 19.5 ft each side of the lane axis; 2 at the inside corner of the turn
 # L1 -> west column (along both lane edges), 1 in the middle of the U L3 -> L2 (east of the pylon), 1 next to the pylon of
 # east lane -> L1 (as drawn, tilted).
-BALES = [  # v36 (user's 3 top views, red = remove, white = new, cleaned up to facing pairs / just outside the lane edges)
-         (788.3, 256.2, 0), (799.0, 256.2, 0), (788.3, 291.2, 0), (799.0, 291.2, 0),   # top lane, east end (view 72)
-         (815.8, 302.5, 62),                                                         # next to the pylon of east lane -> L1 (view 72)
-         (816.5, 308.1, 90), (816.5, 322.4, 90), (853.5, 308.1, 90), (853.5, 322.4, 90),   # east lane before the turn (view 73)
-         (372.8, 299.2, 90), (382.9, 291.9, 0),                                      # inside corner of L1 -> west column (kept)
-         (338.6, 298.4, 90), (381.2, 257.5, 0),                                      # outside of that turn, exit / entry (view 74)
-         (433.7, 359.3, 0)]                                                          # U L3 -> L2 (kept)
+BALES = [  # v37 (user's 4 top views: red dot = remove, white = add, 2 redrawn = moved closer to the track)
+         (816.5, 308.1, 90), (816.5, 315.25, 90), (816.5, 322.4, 90),        # east lane, landing of the SX triple: 3 each side
+         (853.5, 308.1, 90), (853.5, 315.25, 90), (853.5, 322.4, 90),
+         (816.5, 500.0, 90), (816.5, 507.15, 90), (816.5, 514.3, 90),        # east lane, flat before the take-off (turn exit)
+         (853.5, 500.0, 90), (853.5, 507.15, 90), (853.5, 514.3, 90),
+         (804.4, 525.4, 152),                                                # inside of the turn entry before the triple
+         (372.8, 299.2, 90), (382.9, 291.9, 0),                              # inside corner of L1 -> west column
+         (340.6, 298.7, 90), (380.9, 259.2, 0),                              # outside of that turn (moved ~2 ft towards the track)
+         (434.7, 359.3, 0)]                                                  # U L3 -> L2 (v37: 1 ft east, off the pylon bump)
+# v37: removed the 4 at the east end of the top lane and the tilted one at the pylon of east lane -> L1 (red dots)
 # v35: first layout (2 facing pairs at each end of the top lane, the west ones removed in v36)
 # v35 (user's photo): black foam tubes, segments end to end along both edges of the lane (`off` ft from the lane axis to the tube
 # axis): from `before` ft before the whoops to half of them (L7), and along both sides of the freestyle gap (lip -> landing)
-BOUDINS = dict(whoops=dict(tag='L7 small double', x=(393.0, 513.0), side=-1, off=17.9, model='boudin_plain'),   # v36b (user): same plain tube as the freestyle one
-               fmx=dict(off=0.0, start=3.0, end=2.0, model='boudin_plain'))
+BOUDINS = dict(whoops=dict(tag='L7 small double', x=(393.0, 513.0), side=-1, off=23.0, model='boudin_plain'),   # v37: off 17.9 -> 23 (it sat half on the whoops' side slopes, which reach z 523)   # v36b (user): same plain tube as the freestyle one
+               fmx=dict(p0=(497.1, 445.7), p1=(535.4, 448.7), model='boudin_plain'))   # v37: user's line (top view), lip -> landing corner
 # v36 (user's marks): whoops: ONE side only (north, the infield side), along the small double and the first whoops, from x 393
 # to 513 (where the user's line stops); freestyle gap: one single line in the middle, plain black (no logo), segments touching
 # v36 (user): no stakes on the steel freestyle ramp (v35); they go on the dirt take-off of the freestyle jump (L4) instead
+# v37 (user): the pylon stands on a small dirt bump made IN the terrain (same look as the bumps): flat top r_flat, down to 0 at r
+# (v35-v36: a dirt pad in the model: shiny). Turns in `curb` (L2 -> middle lane, middle lane -> L6): no bump, a very small
+# berm arc around the pylon on the track side instead.
+PYLON_GROUND = dict(mound=dict(h=0.45, r_flat=1.6, r=3.6), curb=dict(turns=(2, 3), h=0.35, r=2.6, w=0.9, arc=220.0))
 TURN_GATES = dict(half_lane=15.2, inner=2.0, outer=12.0, fr=(0.15, 0.85), fan=True, start_pad=4.0)
 
 # v24: the bank starts at the height of the ground it touches (the start platform: 10 ft) and rises in ONE smooth slope
