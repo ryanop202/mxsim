@@ -85,13 +85,14 @@ GRASS_OUTSIDE = dict(arena=True, keep=[(-140.0, -110.0, 97.0, 253.0)], dirt_to_f
 # v19: the track sits in a pit: a giant grassed earth bank all around the dirt arena (and around the start area), as on the
 # drone photos. Height h ft, inner slope over `inner` ft (rounded toe and top), flat top `top` ft, outer slope `outer` ft.
 ARENA_BANK = dict(h=42.0, inner=160.0, top=14.0, outer=70.0, terrace=(28.0, 6.0), start_inner=75.0, start_blend=90.0,
-                  straight=dict(slope=0.5, terrace_h=2.0, rise=3.0, toe=2.0, crest=12.0))
+                  straight=dict(slope=0.4, terrace_h=6.0, rise=6.0, toe=2.0, crest=12.0))
+# v35 (user): bank a bit less steep (0.5 -> 0.4) and the fence border 3x higher (step 2 -> 6 ft, over 6 ft instead of 3)
 # v29 (user's drawing on the v28 cross-section): flat dirt floor up to `rise` ft before the fence terrace, a short step up to
 # the terrace (terrace_h ft, fence on it, unchanged), then ONE straight slope (`slope`, rounded toe / crest) up to h - no more
 # gentle slope + steep wall (v28 'steep', removed)
 # v29 (user's drawing): 3 light poles on each long side facing each other (whoops side = south, L1 side = north), at the
 # bottom, just inside the fence, on the flat dirt (no platform): d = ft from the dirt area (fence at 28)
-POLES = dict(n=3, d=20.0, pad=(2.0, 4.0))
+POLES = dict(n=3, d=31.0, pad=(2.0, 4.0))   # v35 (user): poles moved back, onto the fence terrace behind the fence (was 20)
 # v28: yellow marker stakes on the crest of every bump, at both ends (lane edges), like the drone photos; v ft from the lane axis
 STAKES = dict(v=14.2, prom=0.6, table=6.0)
 # v28: blue nets on the outside of 5 turns (user), on the berm crest (drone photos: blue posts + net)
@@ -106,12 +107,26 @@ PYLONS = dict(half=15.2, margin=1.5,
               # v34 (user, 2026-11-03): red squares on 8 in-game top views (scale from the 1.85 ft base, rotation from the base
               # edges + the net); turn 8 (after the finish) has no square -> v33 spot kept. Estimate +-1 ft.
               # v33: spots drawn on 9 in-game screenshots (turn 7 pushed out of the lane).
-              points=[(665.3, 400.2), (427.8, 359.6), (733.9, 356.9), (733.4, 481.3), (387.9, 523.9),
-                      (809.5, 520.5), (812.2, 295.8), (375.7, 295.8), (376.6, 403.3)])
+              # v35 (user, top views): turns 3, 5, 7 moved again (red squares); v34 spots kept for the others
+              points=[(665.3, 400.2), (427.8, 359.6), (733.9, 356.9), (735.8, 481.7), (387.9, 523.9),
+                      (811.1, 521.8), (812.2, 295.8), (375.5, 292.0), (376.6, 403.3)])
 # v33 (user: "ça coupe les intérieurs de virage"): 3 timing gates per turn (entry, pylon, exit).
 # v34 (user): every turn gate starts AT the pylon (fan from the pylon through the riding line at entry / apex / exit, out to
 # `outer` ft past the outer lane edge): a tight inside line next to the pylon counts, going inside the pylon misses the gate.
 # start_pad: start straight gates (start-only + loop straight gates on the start merge straight) wider by this much per side
+# v35 (user's white rectangles on 6 top views, cleaned up): straw bales (x, z, long axis angle deg in the x-z plane).
+# Top lane (L1, z = 273.7): 2 facing pairs at each end, 19.5 ft each side of the lane axis; 2 at the inside corner of the turn
+# L1 -> west column (along both lane edges), 1 in the middle of the U L3 -> L2 (east of the pylon), 1 next to the pylon of
+# east lane -> L1 (as drawn, tilted).
+BALES = [(394.5, 254.2, 0), (405.5, 254.2, 0), (394.5, 293.2, 0), (405.5, 293.2, 0),
+         (791.3, 254.2, 0), (802.3, 254.2, 0), (791.3, 293.2, 0), (802.3, 293.2, 0),
+         (372.8, 299.2, 90), (382.9, 291.9, 0), (433.7, 359.3, 0), (815.9, 301.8, 62)]
+# v35 (user's photo): black foam tubes, segments end to end along both edges of the lane (`off` ft from the lane axis to the tube
+# axis): from `before` ft before the whoops to half of them (L7), and along both sides of the freestyle gap (lip -> landing)
+BOUDINS = dict(whoops=dict(tag='L7 small double', item='whoops', before=6.0, frac=0.5, off=17.9),
+               fmx=dict(off=5.5, start=2.0, end=2.0))
+# v35 (user): yellow stakes on the two ends of the freestyle ramp lip (on top of the steel ramp)
+FMX_STAKES = dict(inset=0.15, back=0.25, y=8.8)
 TURN_GATES = dict(half_lane=15.2, inner=2.0, outer=12.0, fr=(0.15, 0.85), fan=True, start_pad=4.0)
 
 # v24: the bank starts at the height of the ground it touches (the start platform: 10 ft) and rises in ONE smooth slope

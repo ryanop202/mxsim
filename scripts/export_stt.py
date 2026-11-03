@@ -141,9 +141,9 @@ def main():
     gx = float(np.mean([g[0] for g in G])); gz = float(np.mean([g[2] for g in G])); fa = G[0][3]
     if getattr(LT, 'START_FLOOR', None):          # v28: ONE big floor (square mesh) behind the whole row, cut at each gate
         import stt_props; stt_props.build()
-        for nm in ('start_floor', 'stake_yellow', 'start_gate_frame', 'pylon_black'):
+        for nm in ('start_floor', 'stake_yellow', 'start_gate_frame', 'pylon_black', 'bale_straw', 'boudin_black'):
             for e in ('jm', 'png'): shutil.copy(f'{ROOT}/assets/props/{nm}.{e}', f'{OUT}/statue/{nm}.{e}')
-        shutil.copy(f'{ROOT}/assets/props/pylon_black.shp', f'{OUT}/statue/pylon_black.shp')
+        for nm in ('pylon_black', 'bale_straw', 'boudin_black'): shutil.copy(f'{ROOT}/assets/props/{nm}.shp', f'{OUT}/statue/{nm}.shp')
         f = np.array([-np.sin(fa), -np.cos(fa)])
         st.append(f'[{gx:.6f} 0.000000 {gz:.6f}] {PP.statue_ang(*f):.6f} {P}/statue/start_floor.jm {P}/statue/start_floor.png null')
     else:
@@ -161,7 +161,57 @@ def main():
             x_, z_ = c_ + u_ * (g['r'] - PY_['half'] - PY_['margin']) * k_
             if PY_.get('points'): x_, z_ = PY_['points'][npy_]      # v33: the user's spots
             npy_ += 1
-            st.append(f'[{x_:.6f} 0.000000 {z_:.6f}] 0.000000 {P}/statue/pylon_black.jm {P}/statue/pylon_black.png {P}/statue/pylon_black.shp')
+            j_ = int(np.argmin(np.hypot(smp_p['x'] - x_, smp_p['z'] - z_)))   # v35: logo side (+z) faces the riding line
+            a_ = PP.statue_ang(smp_p['x'][j_] - x_, smp_p['z'][j_] - z_)
+            st.append(f'[{x_:.6f} 0.000000 {z_:.6f}] {a_:.6f} {P}/statue/pylon_black.jm {P}/statue/pylon_black.png {P}/statue/pylon_black.shp')
+    # v35: straw bales (user's white rectangles), long axis = model x; statue +x -> (cos a, -sin a)
+    for bx_, bz_, ba_ in getattr(LT, 'BALES', []):
+        t_ = np.radians(ba_); a_ = float(np.arctan2(-np.sin(t_), np.cos(t_)))
+        st.append(f'[{bx_:.6f} 0.000000 {bz_:.6f}] {a_:.6f} {P}/statue/bale_straw.jm {P}/statue/bale_straw.png {P}/statue/bale_straw.shp')
+    BD_ = getattr(LT, 'BOUDINS', None); nbd = 0
+    if BD_:
+        import stt_props as SP_
+        segL = SP_.BOUDIN['L']
+        def tube_row(p0, p1, off):
+            rows_ = []
+            d0 = np.array(p1, float) - np.array(p0, float); Ld = np.linalg.norm(d0); d0 /= Ld; nn = np.array([-d0[1], d0[0]])
+            k_ = max(1, int(round(Ld / segL))); a_ = float(np.arctan2(-d0[1], d0[0]))
+            for sgn in (1, -1):
+                for q in range(k_):
+                    c = np.array(p0, float) + d0 * (Ld / 2 - (k_ * segL) / 2 + (q + 0.5) * segL) + nn * sgn * off
+                    rows_.append(f'[{c[0]:.6f} 0.000000 {c[1]:.6f}] {a_:.6f} {P}/statue/boudin_black.jm {P}/statue/boudin_black.png {P}/statue/boudin_black.shp')
+            return rows_
+        W_ = BD_.get('whoops')
+        if W_:
+            for g in p.segs:
+                if g['kind'] != 'S' or not g.get('tag', '').startswith(W_['tag']): continue
+                c_, s_ = np.cos(g['t']), np.sin(g['t'])
+                for prof, u0, name in g['sections']:
+                    for n_, a0, b0, h_ in LS.COMBOS[name]['items']:
+                        if W_['item'] not in n_: continue
+                        u_a = u0 + a0 - W_['before']; u_b = u0 + a0 + (b0 - a0) * W_['frac']
+                        rows = tube_row((g['x0'] + u_a * c_, g['z0'] + u_a * s_), (g['x0'] + u_b * c_, g['z0'] + u_b * s_), W_['off'])
+                        st.extend(rows); nbd += len(rows)
+        F_ = BD_.get('fmx'); R2_ = getattr(LT, 'FMX_RAMP', None)
+        if F_ and R2_:
+            lip = np.array(R2_['lip']) + np.array(LT.STT_ORIGIN); d_ = np.array(R2_['aim']) - np.array(R2_['lip']); d_ = d_ / np.linalg.norm(d_)
+            # landing start: first point after the lip where the ground rises 1 ft above the gap floor
+            land = None
+            for t_ in np.arange(8.0, 120.0, 0.5):
+                q_ = lip + d_ * t_; hq = float(H[int(round(q_[1] / S)), int(round(q_[0] / S))])
+                h0 = float(H[int(round((lip + d_ * 6.0)[1] / S)), int(round((lip + d_ * 6.0)[0] / S))])
+                if hq > h0 + 1.0: land = t_; break
+            if land:
+                rows = tube_row(lip + d_ * F_['start'], lip + d_ * (land - F_['end']), F_['off']); st.extend(rows); nbd += len(rows)
+                print('fmx gap', round(land, 1), 'ft')
+        print('boudins', nbd)
+    FS_ = getattr(LT, 'FMX_STAKES', None); R3_ = getattr(LT, 'FMX_RAMP', None)
+    if FS_ and R3_:                                # v35: yellow stakes on both ends of the steel ramp lip (on top of it)
+        lip = np.array(R3_['lip']) + np.array(LT.STT_ORIGIN); d_ = np.array(R3_['aim']) - np.array(R3_['lip']); d_ = d_ / np.linalg.norm(d_)
+        nn = np.array([-d_[1], d_[0]]); hw = 2.0 - FS_['inset']
+        for sgn in (1, -1):
+            q_ = lip - d_ * FS_['back'] + nn * sgn * hw
+            st.append(f'[{q_[0]:.6f} {FS_["y"]:.6f} {q_[1]:.6f}] {PP.statue_ang(d_[0], d_[1]):.6f} {P}/statue/stake_yellow.jm {P}/statue/stake_yellow.png null')
     # v28: yellow marker stakes on the crest of every bump, both lane edges (drone photos)
     SK = getattr(LT, 'STAKES', None); nsk = 0
     if SK:

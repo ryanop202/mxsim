@@ -32,7 +32,7 @@ def prism(m, cx, cz, r, h, seg, side_uv, top_uv, top_r=0.6, cap=0.08):
     m.tri_fan(C[:-1][::-1], np.array([0, 1.0, 0]), [top_uv] * seg)
 
 
-PADDLE = dict(h=2.2, half=0.20, neck=0.107, foot=0.147, stem=0.035, stem_h=0.2, t=0.04, col=(214, 200, 34), edge=(170, 158, 22))   # v31 (user): one third smaller (was 3.3 ft high)
+PADDLE = dict(h=1.6, half=0.20, neck=0.107, foot=0.147, stem=0.035, stem_h=0.2, t=0.04, col=(214, 200, 34), edge=(170, 158, 22))   # v35 (user's green line on a screenshot): 2.2 -> 1.6 ft; v31 (user): one third smaller (was 3.3 ft high)
 
 def paddle_profile():
     """v29: (y, half width) of the flat track-marker paddle (user's picture, the Acerbis kind, no logo): stem in the ground,
@@ -72,16 +72,16 @@ def net_ribbon_texture():
     height (sink + h), thick ropes top and bottom; rows NR+32.. = solid black for the posts. Square 0.2 ft cells (denser)."""
     W_, H_, NR = NETR['TW'], NETR['TH'], NETR['NR']; img = Image.new('RGBA', (W_, H_), (0, 0, 0, 0)); d = ImageDraw.Draw(img)
     pxu = W_ / NETR['tile']; pyv = NR / (NETR['h'] + NETR['sink']); cell = 0.2
-    hem, col, knot = (8, 8, 9, 255), (24, 24, 26, 255), (5, 5, 5, 255)
+    hem, col, knot = (16, 40, 128, 255), (34, 82, 205, 255), (20, 52, 150, 255)    # v35 (user): blue mesh (v31-v34: black)
     xs = np.arange(0, W_, cell * pxu); ys = np.arange(30, NR - 30, cell * pyv)
     for x in xs: d.rectangle([x - 2, 0, x + 2, NR - 1], fill=col)                 # strands ~0.02 ft thick
     for y in ys: d.rectangle([0, y - 2, W_, y + 2], fill=col)
     for x in xs:
         for y in ys: d.ellipse([x - 5, y - 5, x + 5, y + 5], fill=knot)           # knots
-    for y in ys: d.line([(0, y - 2), (W_, y - 2)], fill=(46, 46, 50, 255), width=1)   # a lighter edge so the rope reads
-    for x in xs: d.line([(x - 2, 0), (x - 2, NR - 1)], fill=(40, 40, 44, 255), width=1)
+    for y in ys: d.line([(0, y - 2), (W_, y - 2)], fill=(90, 140, 240, 255), width=1)   # a lighter edge so the rope reads
+    for x in xs: d.line([(x - 2, 0), (x - 2, NR - 1)], fill=(80, 128, 230, 255), width=1)
     d.rectangle([0, 0, W_, 22], fill=hem); d.rectangle([0, NR - 23, W_, NR - 1], fill=hem)   # top / bottom ropes
-    d.rectangle([0, NR + 32, W_, H_ - 1], fill=(20, 20, 22, 255))
+    d.rectangle([0, NR + 32, W_, H_ - 1], fill=(128, 90, 54, 255))                 # v35 (user): wooden posts
     return img
 
 
@@ -104,7 +104,12 @@ def net_shape(line_xz, ground, origin):
 
 
 # ------------------------------------------------------------------ v31: black pylon (user's picture: the right one, all black)
-PYLON = dict(H=3.7, base_w=1.85, base_h=0.32, base_r=0.12, cyl_r=0.68, fillet=0.14, dome=0.03, seg=32)   # v33 (user): a bit lower, fatter (v32: H 4.125, r 0.555, base 1.52)
+PYLON = dict(H=3.7, base_w=1.85, base_h=0.42, base_r=0.12, cyl_r=0.68, fillet=0.36, dome=0.07, seg=32,
+             pad_w=2.6, pad_h=0.15, pad_sink=0.35, pad_r=0.3, pad_in=0.12)
+# v35 (user): rounder top (fillet 0.14 -> 0.36), Fly Racing logo on two opposite sides of the base (base 0.32 -> 0.42 ft high so
+# the logo reads), a small dirt platform under it, a bit wider than the base (pad). Total height unchanged (3.7 ft).
+# v33: a bit lower, fatter (v32: H 4.125, r 0.555, base 1.52)
+FLY = f'{ROOT}/assets/logos/fly_racing_white.png'
 
 def _smooth(m, P, N, UV):
     """quad / triangle with one normal per vertex (smooth cylinder), front face = average normal side."""
@@ -113,59 +118,96 @@ def _smooth(m, P, N, UV):
     for p, n, t in zip(P, N, UV): m.V.append((*p, *n, *t))
     for k in range(1, len(P) - 1): m.I += [a, a + k, a + k + 1]
 
-def pylon_texture():
-    """black vinyl with soft wrinkles (tileable noise). Rows 0..299 cylinder side (u = angle), 300..399 base sides,
-    400..511 tops."""
+def _vinyl(h, w, sx, sy, seed, amp=12.0, base=(17, 17, 19.0)):
+    """black vinyl with soft folds and creases (tileable noise), (h, w, 3) float."""
     from scipy.ndimage import gaussian_filter
-    rg = np.random.default_rng(11); W_ = 512
-    def ridges(h, sx, sy, seed):
-        n = gaussian_filter(np.random.default_rng(seed).normal(0, 1, (h, W_)), (sy, sx), mode='wrap')
-        n = (n - n.mean()) / (n.std() + 1e-9)
-        return np.exp(-(n / 0.35) ** 2)                             # thin bright creases along the zero lines
-    img = np.zeros((512, W_, 3)); base = np.array([17, 17, 19.0])
-    def folds(h, sx, sy, seed):                                     # broad soft folds (light / shadow), tileable
-        n = gaussian_filter(np.random.default_rng(seed).normal(0, 1, (h, W_)), (sy, sx), mode='wrap')
-        return (n - n.mean()) / (n.std() + 1e-9)
-    side = 0.55 * ridges(300, 6, 40, 1) + 0.5 * folds(300, 10, 45, 5)    # long vertical folds of an inflatable column
-    bsid = 0.45 * ridges(100, 22, 6, 3) + 0.4 * folds(100, 24, 8, 6); top = 0.35 * ridges(112, 14, 14, 4)
-    for r0, r1, R in ((0, 300, side), (300, 400, bsid), (400, 512, top)):
-        img[r0:r1] = base + R[..., None] * np.array([12, 12, 13.0])
-    img += rg.normal(0, 1.6, img.shape)                             # fine grain of the fabric
+    n = gaussian_filter(np.random.default_rng(seed).normal(0, 1, (h, w)), (sy, sx), mode='wrap'); n = (n - n.mean()) / (n.std() + 1e-9)
+    f = gaussian_filter(np.random.default_rng(seed + 50).normal(0, 1, (h, w)), (sy * 1.2, sx * 1.6), mode='wrap'); f = (f - f.mean()) / (f.std() + 1e-9)
+    R = 0.55 * np.exp(-(n / 0.35) ** 2) + 0.5 * f
+    out = np.array(base) + R[..., None] * np.array([amp, amp, amp * 1.08])
+    return out + np.random.default_rng(seed + 9).normal(0, 1.6, out.shape)
+
+def _dirt(h, w, seed):
+    """packed dirt, same family of browns as the track (grain + small stones)."""
+    from scipy.ndimage import gaussian_filter
+    rg = np.random.default_rng(seed); n = gaussian_filter(rg.normal(0, 1, (h, w)), 2.0); n2 = gaussian_filter(rg.normal(0, 1, (h, w)), 9.0)
+    out = np.array([118, 88, 62.0]) * (1 + 0.10 * n / n.std() + 0.08 * n2 / n2.std())[..., None]
+    st = rg.random((h, w)) > 0.996; out[st] = np.array([150, 128, 104.0]); return out + rg.normal(0, 4, out.shape)
+
+def _paste_logo(img, box, logo_path=None):
+    """white logo stretched exactly into box (x0, y0, x1, y1) of a float (h, w, 3) image (box already in texture pixels:
+    the caller sizes it from the face's px / ft in u and v, so the logo is not deformed on the model)."""
+    lg = Image.open(logo_path or FLY); x0, y0, x1, y1 = [int(round(v)) for v in box]
+    a = np.array(lg.resize((x1 - x0, y1 - y0), Image.LANCZOS))[..., 3:4] / 255.0
+    img[y0:y1, x0:x1] = img[y0:y1, x0:x1] * (1 - a) + np.array([236, 236, 238.0]) * a
+
+def pylon_texture():
+    """512 x 1024. Rows 0..299 column side (u = angle), 300..399 base sides, 400..511 tops, 512..639 the two base sides that
+    carry the Fly logo (u = along the straight side, left -> right seen from outside), 640..1023 dirt of the pad."""
+    P = PYLON; img = np.zeros((1024, 512, 3))
+    img[0:300] = _vinyl(300, 512, 6, 40, 1); img[300:400] = _vinyl(100, 512, 22, 6, 3, amp=10); img[400:512] = _vinyl(112, 512, 14, 14, 4, amp=6)
+    img[512:640] = _vinyl(128, 512, 22, 6, 7, amp=8)
+    sl = P['base_w'] - 2 * P['base_r']; yb = P['base_h'] - 0.05; pxu, pxv = 511 / sl, 112 / yb   # logo face: rows 520 (top) .. 632 (bottom)
+    lh = 0.62 * yb; lw = lh * 4.43                                   # logo aspect 4.43 : 1
+    _paste_logo(img, (256 - lw * pxu / 2, 576 - lh * pxv / 2, 256 + lw * pxu / 2, 576 + lh * pxv / 2))
+    img[640:1024] = _dirt(384, 512, 21)
     return Image.fromarray(np.clip(img, 0, 255).astype(np.uint8))
 
-def pylon():
-    """square cushion base with rounded corners, tall round column with a rounded top; origin at the ground, centre."""
-    P = PYLON; m = Mesh(512, 512); img = pylon_texture(); sg = P['seg']
-    hb, wb, rb = P['base_h'], P['base_w'] / 2, P['base_r']; r, H, f = P['cyl_r'], P['H'], P['fillet']
-    # base outline: rounded square, 6 points per corner
+def _rsquare(half, r, n=6):
+    """rounded square outline (x, z, normal angle), 6 points per corner; the straight sides are the edges (5 -> 6) = +z side
+    going +x -> -x, (11 -> 12) = -x, (17 -> 18) = -z side going -x -> +x, (23 -> 0) = +x. Axes: x east, z south (y up): seen
+    from outside the +z side (looking -z) right = +x, so both logo edges run right -> left (v35 check: mirrored before)."""
     out = []
-    for cx, cz, a0 in ((wb - rb, wb - rb, 0), (-(wb - rb), wb - rb, 90), (-(wb - rb), -(wb - rb), 180), (wb - rb, -(wb - rb), 270)):
-        for a in np.radians(np.linspace(a0, a0 + 90, 6)): out.append((cx + rb * np.cos(a), cz + rb * np.sin(a), a))
-    n = len(out); per = np.r_[0, np.cumsum([np.hypot(out[(i + 1) % n][0] - out[i][0], out[(i + 1) % n][1] - out[i][1]) for i in range(n)])]
-    inset, yb = 0.05, hb - 0.05                                     # cushion: the top edge rolls in a little
+    for cx, cz, a0 in ((half - r, half - r, 0), (-(half - r), half - r, 90), (-(half - r), -(half - r), 180), (half - r, -(half - r), 270)):
+        for a in np.radians(np.linspace(a0, a0 + 90, n)): out.append((cx + r * np.cos(a), cz + r * np.sin(a), a))
+    return out
+
+def pylon():
+    """dirt pad, square cushion base with rounded corners (Fly logo on the +z and -z sides), round column with a well rounded
+    top; origin at the ground, centre. The export turns each pylon so its +z logo faces the riding line."""
+    P = PYLON; m = Mesh(512, 1024); img = pylon_texture(); sg = P['seg']; y0 = P['pad_h']
+    hb, wb, rb = P['base_h'], P['base_w'] / 2, P['base_r']; r, H, f = P['cyl_r'], P['H'], P['fillet']
+    # --- dirt pad: sloped sides from the ground (sunk pad_sink for slopes) to a flat top, rounded corners
+    pw = P['pad_w'] / 2; pin = P['pad_in']; po = _rsquare(pw, P['pad_r']); pt = _rsquare(pw - pin, P['pad_r'] - pin * 0.6)
+    duv = lambda x, z: m.uv_px(256 + x / pw * 200, 832 + z / pw * 180)
+    for i in range(len(po)):
+        j = (i + 1) % len(po); (xa, za, aa), (xb, zb, ab) = po[i], po[j]; (xc, zc, _), (xd, zd, _) = pt[j], pt[i]
+        na = np.array([np.cos(aa), 0.5, np.sin(aa)]); nb = np.array([np.cos(ab), 0.5, np.sin(ab)])
+        _smooth(m, [(xa, -P['pad_sink'], za), (xb, -P['pad_sink'], zb), (xb, 0, zb), (xa, 0, za)], [na, nb, nb, na],
+                [duv(xa * 1.1, za * 1.1), duv(xb * 1.1, zb * 1.1), duv(xb, zb), duv(xa, za)])
+        _smooth(m, [(xa, 0, za), (xb, 0, zb), (xc, y0, zc), (xd, y0, zd)], [na, nb, nb, na],
+                [duv(xa, za), duv(xb, zb), duv(xc, zc), duv(xd, zd)])
+    m.tri_fan([np.array([x, y0, z]) for x, z, _ in pt][::-1], np.array([0, 1.0, 0]), [duv(x, z) for x, z, _ in pt][::-1])
+    # --- base cushion on the pad
+    out = _rsquare(wb, rb); n = len(out)
+    per = np.r_[0, np.cumsum([np.hypot(out[(i + 1) % n][0] - out[i][0], out[(i + 1) % n][1] - out[i][1]) for i in range(n)])]
+    inset, yb = 0.05, y0 + hb - 0.05
     for i in range(n):
         j = (i + 1) % n; (xa, za, aa), (xb, zb, ab) = out[i], out[j]
         na = np.array([np.cos(aa), 0, np.sin(aa)]); nb = np.array([np.cos(ab), 0, np.sin(ab)])
         ua, ub = per[i] / per[-1], per[i + 1] / per[-1]
-        _smooth(m, [(xa, 0, za), (xb, 0, zb), (xb, yb, zb), (xa, yb, za)], [na, nb, nb, na],
-                [m.uv_px(ua * 511, 399), m.uv_px(ub * 511, 399), m.uv_px(ub * 511, 302), m.uv_px(ua * 511, 302)])
+        if i in (5, 17):                                            # the two logo sides (+z, -z): logo strip, readable from outside
+            uvs = [m.uv_px(511, 632), m.uv_px(0, 632), m.uv_px(0, 520), m.uv_px(511, 520)]   # edge runs right -> left seen from outside
+        else:
+            uvs = [m.uv_px(ua * 511, 399), m.uv_px(ub * 511, 399), m.uv_px(ub * 511, 302), m.uv_px(ua * 511, 302)]
+        _smooth(m, [(xa, y0, za), (xb, y0, zb), (xb, yb, zb), (xa, yb, za)], [na, nb, nb, na], uvs)
         sa = 1 - inset / np.hypot(xa, za); sb = 1 - inset / np.hypot(xb, zb)
         ta, tb = na * 0.6 + np.array([0, 0.8, 0]), nb * 0.6 + np.array([0, 0.8, 0])
-        _smooth(m, [(xa, yb, za), (xb, yb, zb), (xb * sb, hb, zb * sb), (xa * sa, hb, za * sa)], [na, nb, tb, ta],
+        _smooth(m, [(xa, yb, za), (xb, yb, zb), (xb * sb, y0 + hb, zb * sb), (xa * sa, y0 + hb, za * sa)], [na, nb, tb, ta],
                 [m.uv_px(ua * 511, 302), m.uv_px(ub * 511, 302), m.uv_px(ub * 511, 300), m.uv_px(ua * 511, 300)])
     tuv = lambda x, z: m.uv_px(256 + x / wb * 120, 456 + z / wb * 50)
     top = [(x * (1 - inset / np.hypot(x, z)), z * (1 - inset / np.hypot(x, z))) for x, z, _ in out]
-    m.tri_fan([np.array([x, hb, z]) for x, z in top][::-1], np.array([0, 1.0, 0]), [tuv(x, z) for x, z in top][::-1])
-    # column: side, then a quarter-round fillet, then a slightly domed cap
-    ang = np.linspace(0, 2 * np.pi, sg + 1); y1 = H - f - P['dome']
-    rings = [(hb - 0.02, r, 0.0), (y1, r, 0.0)]
-    for t in np.linspace(0, np.pi / 2, 6)[1:]: rings.append((y1 + f * np.sin(t), r - f + f * np.cos(t), t))
+    m.tri_fan([np.array([x, y0 + hb, z]) for x, z in top][::-1], np.array([0, 1.0, 0]), [tuv(x, z) for x, z in top][::-1])
+    # --- column, then a big quarter-round (rounder top), then a slightly domed cap
+    ang = np.linspace(0, 2 * np.pi, sg + 1); yc = y0 + hb; y1 = H - f - P['dome']
+    rings = [(yc - 0.02, r, 0.0), (y1, r, 0.0)]
+    for t in np.linspace(0, np.pi / 2, 9)[1:]: rings.append((y1 + f * np.sin(t), r - f + f * np.cos(t), t))
     for (ya, ra, ta), (yb_, rb_, tb_) in zip(rings[:-1], rings[1:]):
         for k in range(sg):
             c0, s0, c1, s1 = np.cos(ang[k]), np.sin(ang[k]), np.cos(ang[k + 1]), np.sin(ang[k + 1])
             N = lambda c, s, t: np.array([c * np.cos(t), np.sin(t), s * np.cos(t)])
             u0, u1 = ang[k] / (2 * np.pi) * 511, ang[k + 1] / (2 * np.pi) * 511
-            v = lambda y: 298 - (y - hb) / (H - hb) * 296
+            v = lambda y: 298 - (y - yc) / (H - yc) * 296
             _smooth(m, [(ra * c0, ya, ra * s0), (ra * c1, ya, ra * s1), (rb_ * c1, yb_, rb_ * s1), (rb_ * c0, yb_, rb_ * s0)],
                     [N(c0, s0, ta), N(c1, s1, ta), N(c1, s1, tb_), N(c0, s0, tb_)],
                     [m.uv_px(u0, v(ya)), m.uv_px(u1, v(ya)), m.uv_px(u1, v(yb_)), m.uv_px(u0, v(yb_))])
@@ -173,18 +215,25 @@ def pylon():
     for k in range(sg):
         c0, s0, c1, s1 = np.cos(ang[k]), np.sin(ang[k]), np.cos(ang[k + 1]), np.sin(ang[k + 1])
         _smooth(m, [(0, H, 0), (rt * c1, yt, rt * s1), (rt * c0, yt, rt * s0)],
-                [np.array([0, 1.0, 0]), np.array([c1 * 0.15, 1, s1 * 0.15]), np.array([c0 * 0.15, 1, s0 * 0.15])],
+                [np.array([0, 1.0, 0]), np.array([c1 * 0.1, 1, s1 * 0.1]), np.array([c0 * 0.1, 1, s0 * 0.1])],
                 [m.uv_px(256, 456), m.uv_px(256 + c1 * 40, 456 + s1 * 40), m.uv_px(256 + c0 * 40, 456 + s0 * 40)])
     return m, img
 
-PY_SHP = dict(spring=60, damping=3.3)   # v33: fatter column (r 0.68) -> damping x 0.555 / 0.68 to keep the same feel (user: physics is right). v32 (user: v31 1000 / 200 = concrete block): you go through, it slows you and can knock you over
+# v35 (user: v34 "ça fait trop tomber direct" - harder to go through, it must stop you but not necessarily throw you down):
+# the stopping part is LOW (wheel / engine height) and stiffer; the column above is soft and slippery (low friction) so it
+# does not grab the legs / bars and flip the bike. Values not tested in game.
+PY_SHP = dict(low=dict(spring=140, damping=9, friction=0.3), high=dict(spring=30, damping=1.5, friction=0.2))
+# v33: 60 / 3.3 (all spheres); v32: 60 / 4; v31: 1000 / 200 (concrete block)
 
 def pylon_shape():
-    """v32: soft collision (PY_SHP): 4 spheres up the column + 4 low ones in the base corners."""
-    P = PYLON; r = P['cyl_r']; rows = []
-    for y in np.linspace(P['base_h'] + r, P['H'] - r, 4): rows.append(f"0 {y:.4f} 0 {r} 1 {PY_SHP['spring']} {PY_SHP['damping']}")
+    """v35: stiff low spheres (2 up the bottom of the column + 4 in the base corners) and 2 soft high ones."""
+    P = PYLON; r = P['cyl_r']; y0 = P['pad_h'] + P['base_h']; rows = []
+    lo, hi = PY_SHP['low'], PY_SHP['high']
+    def row(x, y, z, rr, c): rows.append(f"{x:.4f} {y:.4f} {z:.4f} {rr:.3f} {c['friction']} {c['spring']} {c['damping']}")
+    row(0, y0 + 0.75, 0, 0.8, lo); row(0, y0 + 1.45, 0, 0.75, lo)
     for sx in (1, -1):
-        for sz in (1, -1): rows.append(f"{sx * (P['base_w'] / 2 - 0.3):.4f} 0.3000 {sz * (P['base_w'] / 2 - 0.3):.4f} 0.32 1 {PY_SHP['spring']} {PY_SHP['damping']}")
+        for sz in (1, -1): row(sx * 0.55, P['pad_h'] + 0.3, sz * 0.55, 0.35, lo)
+    for y in (P['H'] - 1.25, P['H'] - 0.55): row(0, y, 0, r, hi)
     return '\n'.join([str(len(rows))] + rows) + '\n'
 
 def net_ribbon(line_xz, ground, origin):
@@ -288,29 +337,29 @@ def floor_texture():
 
 
 def floor():
-    """v31: flat rectangle (no more notch at each gate), whole row width x `back` ft, tiled sharp square grating + a raised
-    steel frame. Origin = middle of the gate row at the hinge line, local -z = backwards."""
-    T = FLOOR_TILE; F = LT.START_FLOOR; _, half = floor_outline(); L = F['back']
-    img = floor_texture(); m = Mesh(1024, 1024); t = 0.06; fr = 0.25
+    """v35 (user): one grate per gate instead of one big floor: each grate is the gate pitch minus 2 squares wide (a 2-square
+    gap between neighbours), `back` ft long, tiled sharp square grating + a raised steel frame. v31-v34: one big floor.
+    Origin = middle of the gate row at the hinge line, local -z = backwards."""
+    T = FLOOR_TILE; F = LT.START_FLOOR; L = F['back']; n = LS.N_GATES; pitch = LS.GATE_PITCH
+    gap = 2 * T['cell'] / T['px_ft']; w = pitch - gap
+    img = floor_texture(); m = Mesh(1024, 1024); t = 0.06; fr = 0.15; y2 = t + 0.015
     ed = m.uv_px(512, 990)
-    xs = list(np.arange(-half, half, T['ft_w'])) + [half]; zs = list(np.arange(0, L, T['ft_h'])) + [L]   # zs: depth behind the hinge
-    for i in range(len(xs) - 1):
+    zs = list(np.arange(0, L, T['ft_h'])) + [L]
+    for k in range(n):
+        c = (k - (n - 1) / 2) * pitch; xa, xb = c - w / 2, c + w / 2
         for j in range(len(zs) - 1):
-            xa, xb, da, db = xs[i], xs[i + 1], zs[j], zs[j + 1]
-            u = lambda x: (x - xs[i]) * T['px_ft']; v = lambda d: (d - zs[j]) * T['px_ft']
+            da, db = zs[j], zs[j + 1]
+            u = lambda x: (x - xa) * T['px_ft']; v = lambda d: (d - zs[j]) * T['px_ft']
             Q = [(xa, -da), (xb, -da), (xb, -db), (xa, -db)]
-            m.tri_fan([np.array([x, t, z]) for x, z in Q], np.array([0, 1.0, 0]),
-                      [m.uv_px(u(x), v(-z)) for x, z in Q])
-    # raised flat frame all around + outer sides
-    y2 = t + 0.015
-    for Q in ([(-half, 0), (half, 0), (half, -fr), (-half, -fr)], [(-half, -L + fr), (half, -L + fr), (half, -L), (-half, -L)],
-              [(-half, 0), (-half + fr, 0), (-half + fr, -L), (-half, -L)], [(half - fr, 0), (half, 0), (half, -L), (half - fr, -L)]):
-        m.tri_fan([np.array([x, y2, z]) for x, z in Q], np.array([0, 1.0, 0]), [ed] * 4)
-    C = [(-half, 0), (half, 0), (half, -L), (-half, -L)]
-    for q in range(4):
-        (ax_, az), (bx, bz) = C[q], C[(q + 1) % 4]; e = np.array([bx - ax_, bz - az]); N = np.array([e[1], 0, -e[0]]); N /= np.linalg.norm(N)
-        if np.dot(N[[0, 2]], np.array([(ax_ + bx) / 2, (az + bz) / 2 + L / 2])) < 0: N = -N
-        m.quad([np.array([ax_, 0, az]), np.array([bx, 0, bz]), np.array([bx, y2, bz]), np.array([ax_, y2, az])], N, lambda p: ed)
+            m.tri_fan([np.array([x, t, z]) for x, z in Q], np.array([0, 1.0, 0]), [m.uv_px(u(x), v(-z)) for x, z in Q])
+        for Q in ([(xa, 0), (xb, 0), (xb, -fr), (xa, -fr)], [(xa, -L + fr), (xb, -L + fr), (xb, -L), (xa, -L)],
+                  [(xa, 0), (xa + fr, 0), (xa + fr, -L), (xa, -L)], [(xb - fr, 0), (xb, 0), (xb, -L), (xb - fr, -L)]):
+            m.tri_fan([np.array([x, y2, z]) for x, z in Q], np.array([0, 1.0, 0]), [ed] * 4)
+        C = [(xa, 0), (xb, 0), (xb, -L), (xa, -L)]
+        for q in range(4):
+            (ax_, az), (bx, bz) = C[q], C[(q + 1) % 4]; e = np.array([bx - ax_, bz - az]); N = np.array([e[1], 0, -e[0]]); N /= np.linalg.norm(N)
+            if np.dot(N[[0, 2]], np.array([(ax_ + bx) / 2 - c, (az + bz) / 2 + L / 2])) < 0: N = -N
+            m.quad([np.array([ax_, 0, az]), np.array([bx, 0, bz]), np.array([bx, y2, bz]), np.array([ax_, y2, az])], N, lambda p: ed)
     return m, img
 
 
@@ -360,7 +409,7 @@ def gate_frame():
     """v30 (user): the USLAND start gate WITHOUT its black plate (no USLAND icon): only the red round-tube frame (inverted U,
     rounded top corners) and the hinge tube - same size, hinge at the origin, laid flat like gate01 (as props_usland.gate_model)."""
     from props_usland import pipe
-    img = Image.new('RGB', (256, 256), (205, 24, 34)); pal = palette(img, ['red'], [(205, 24, 34)])
+    img = Image.new('RGB', (256, 256), (22, 22, 24)); pal = palette(img, ['red'], [(22, 22, 24)])   # v35 (user): black tube, no more red
     m = Mesh(256, 256); w, h, r = GATE['w'], GATE['h'], GATE['r_tube']; yh = 0.0
     cr = 0.34; x0, x1, y1 = -w / 2 + r, w / 2 - r, h
     path = [(x0, yh, 0.0)]
@@ -374,14 +423,153 @@ def gate_frame():
     return m, img
 
 
+# ------------------------------------------------------------------ v35: straw bale (user: white, rounded edges, hay texture)
+BALE = dict(L=5.5, W=2.0, H=1.85, r=0.32, sink=0.25, px=128)
+BALE_SHP = dict(r=0.9, every=1.0, spring=150, damping=8, friction=0.6)    # firm: stops you, not a wall (not tested in game)
+
+def _axis_coords(h, r, k_in, k_band=5):
+    """1-D vertex coordinates from -h to h: dense in the rounded bands, sparse in the flat middle."""
+    band = np.linspace(-h, -h + r, k_band)
+    mid = np.linspace(-h + r, h - r, k_in)[1:-1]
+    return np.r_[band, mid, -band[::-1]]
+
+def _rounded_box(m, hx, hy, hz, r, cy, faces, k_in=6):
+    """rounded box centred at (0, cy, 0): every face is a grid on the outer box, each vertex pushed onto the rounded surface
+    (inner box + r along the local normal), smooth normals. faces: {(axis, sign): uvf(q) -> (u, v)} with q the point on the
+    outer box (planar mapping per face); missing faces are not built."""
+    hs = np.array([hx, hy, hz]); inner = hs - r
+    for (ax, sg), uvf in faces.items():
+        a1, a2 = [k for k in range(3) if k != ax]
+        c1 = _axis_coords(hs[a1], r, k_in); c2 = _axis_coords(hs[a2], r, k_in)
+        G = np.zeros((len(c1), len(c2), 3)); N = np.zeros_like(G); UV = np.zeros((len(c1), len(c2), 2))
+        for i, x1 in enumerate(c1):
+            for j, x2 in enumerate(c2):
+                q = np.zeros(3); q[ax] = sg * hs[ax]; q[a1] = x1; q[a2] = x2
+                p = np.clip(q, -inner, inner); d = q - p; n = d / np.linalg.norm(d)
+                G[i, j] = p + n * r + np.array([0, cy, 0]); N[i, j] = n; UV[i, j] = uvf(q)
+        for i in range(len(c1) - 1):
+            for j in range(len(c2) - 1):
+                idx = [(i, j), (i + 1, j), (i + 1, j + 1), (i, j + 1)]
+                _smooth(m, [G[a] for a in idx], [N[a] for a in idx], [tuple(UV[a]) for a in idx])
+
+def _hay(h, w, seed, along=0.0):
+    """white straw: cream base, thousands of short fibres mostly along `along` (radians, image axes), lighter and darker
+    strands, a little yellow; reads as packed hay up close and as a white bale from far."""
+    from scipy.ndimage import gaussian_filter
+    rg = np.random.default_rng(seed)
+    base = np.array([236, 232, 212.0]) * (1 + 0.05 * gaussian_filter(rg.normal(0, 1, (h, w)), 6)[..., None] / 0.1)
+    im = Image.fromarray(np.clip(base, 0, 255).astype(np.uint8)); d = ImageDraw.Draw(im)
+    cols = [(248, 244, 228), (236, 228, 196), (204, 192, 150), (188, 172, 124), (230, 214, 160), (170, 156, 116)]
+    for _ in range(int(h * w / 30)):
+        x, y = rg.random() * w, rg.random() * h; a = along + rg.normal(0, 0.45); L = rg.uniform(6, 26)
+        c = cols[rg.integers(len(cols))]
+        d.line([(x, y), (x + L * np.cos(a), y + L * np.sin(a))], fill=c, width=int(rg.integers(1, 3)))
+    out = np.array(im).astype(float)
+    out += gaussian_filter(rg.normal(0, 1, (h, w)), 1.2)[..., None] * 10
+    return out
+
+def bale_texture():
+    """1024 x 1024 atlas at `px` px / ft: top (L x W) rows 0..256, side +z rows 264..501, side -z rows 510..747, ends
+    (W x H) rows 756..993 at x 0..256 and 280..536. Two twines around the bale (top + sides) at x = +-L/6."""
+    B = BALE; px = B['px']; img = np.zeros((1024, 1024, 3)) + 200.0
+    Lp, Wp, Hp = int(B['L'] * px), int(B['W'] * px), int(B['H'] * px)
+    img[0:Wp, 0:Lp] = _hay(Wp, Lp, 31, 0.0)
+    img[264:264 + Hp, 0:Lp] = _hay(Hp, Lp, 32, 0.0); img[510:510 + Hp, 0:Lp] = _hay(Hp, Lp, 33, 0.0)
+    img[756:756 + Hp, 0:Wp] = _hay(Hp, Wp, 34, 0.7); img[756:756 + Hp, 280:280 + Wp] = _hay(Hp, Wp, 35, -0.7)
+    for xf in (-B['L'] / 6, B['L'] / 6):                           # twines (pale orange, thin)
+        xp = int((xf + B['L'] / 2) * px)
+        for r0, r1 in ((0, Wp), (264, 264 + Hp), (510, 510 + Hp)):
+            img[r0:r1, xp - 2:xp + 3] = np.array([214, 150, 84.0]); img[r0:r1, xp + 3:xp + 5] *= 0.85
+    return Image.fromarray(np.clip(img, 0, 255).astype(np.uint8))
+
+def bale():
+    """rounded straw bale, long axis = local x, bottom sunk `sink` ft; origin at the ground, centre."""
+    B = BALE; m = Mesh(1024, 1024); img = bale_texture(); px = B['px']; hx, hy, hz = B['L'] / 2, B['H'] / 2, B['W'] / 2
+    cy = hy - B['sink']
+    fx = lambda q: (q[0] + hx) * px; fz = lambda q: (q[2] + hz) * px; fy = lambda q: (hy - q[1]) * px
+    faces = {(1, 1): lambda q: m.uv_px(fx(q), fz(q)), (1, -1): lambda q: m.uv_px(fx(q), fz(q)),
+             (2, 1): lambda q: m.uv_px(B['L'] * px - fx(q), 264 + fy(q)),   # seen from +z: right = -x
+             (2, -1): lambda q: m.uv_px(fx(q), 510 + fy(q)),
+             (0, 1): lambda q: m.uv_px(fz(q), 756 + fy(q)),
+             (0, -1): lambda q: m.uv_px(280 + B['W'] * px - fz(q), 756 + fy(q))}
+    _rounded_box(m, hx, hy, hz, B['r'], cy, faces)
+    return m, img
+
+def bale_shape():
+    B, C = BALE, BALE_SHP; rows = []
+    for x in np.arange(-B['L'] / 2 + C['r'], B['L'] / 2 - C['r'] + 1e-6, C['every']):
+        rows.append(f"{x:.4f} {C['r'] - B['sink'] + 0.05:.4f} 0 {C['r']} {C['friction']} {C['spring']} {C['damping']}")
+    return '\n'.join([str(len(rows))] + rows) + '\n'
+
+
+# ------------------------------------------------------------------ v35: black foam tube ("boudin", user's photo)
+# segments lying on the ground: vertical sides then a half-round top (like the photo), flat ends with a rounded edge,
+# white Fly Racing logo on both sides. A bit lower than a whoop (whoops 3.0 ft high here).
+BOUDIN = dict(L=6.0, W=2.4, H=2.3, sink=0.1, gap=0.15, seg=20)
+BOUDIN_SHP = dict(r=1.1, every=1.0, spring=150, damping=8, friction=0.6)
+
+def boudin_texture():
+    """1024 x 1024: rows 0..255 side +z (vertical part, u = along, left -> right as read from outside), 256..511 side -z,
+    512..1023 vinyl for the round top and the ends."""
+    B = BOUDIN; img = np.zeros((1024, 1024, 3))
+    img[0:256] = _vinyl(256, 1024, 60, 14, 41, amp=4); img[256:512] = _vinyl(256, 1024, 60, 14, 42, amp=4)   # smooth vinyl (photo)
+    img[512:1024] = _vinyl(512, 1024, 60, 30, 43, amp=4)
+    ys = B['H'] - B['W'] / 2; pxu, pxv = 1024 / B['L'], 255 / (ys + B['sink'])
+    lh = 0.55 * ys; lw = lh * 4.43
+    for r0 in (0, 256):
+        cy = r0 + 255 - (B['sink'] + ys * 0.52) * pxv
+        _paste_logo(img, (512 - lw * pxu / 2, cy - lh * pxv / 2, 512 + lw * pxu / 2, cy + lh * pxv / 2))
+    return Image.fromarray(np.clip(img, 0, 255).astype(np.uint8))
+
+def boudin():
+    """one segment, long axis = local x (length L - gap), origin at the ground, centre."""
+    B = BOUDIN; m = Mesh(1024, 1024); img = boudin_texture(); hx = (B['L'] - B['gap']) / 2; R = B['W'] / 2; ys = B['H'] - R
+    y_b = -B['sink']; sg = B['seg']
+    # cross-section (z, y, normal) from the +z foot, up the side, over the top, down to the -z foot
+    sec = [(R, y_b, (0, 0, 1)), (R, ys, (0, 0, 1))]
+    for t in np.linspace(0, np.pi, sg + 1)[1:-1]: sec.append((R * np.cos(t), ys + R * np.sin(t), (0, np.sin(t), np.cos(t))))
+    sec += [(-R, ys, (0, 0, -1)), (-R, y_b, (0, 0, -1))]
+    pxu = 1024 / B['L']; pxv = 255 / (ys + B['sink'])
+    xs = np.linspace(-hx, hx, 7)
+    for k in range(len(sec) - 1):
+        (za, ya, na), (zb, yb, nb) = sec[k], sec[k + 1]
+        for i in range(len(xs) - 1):
+            xa, xb = xs[i], xs[i + 1]
+            if k == 0:                                               # +z side: seen from +z (looking -z), right = +x
+                uv = [m.uv_px((xa + B['L'] / 2) * pxu, 255 - (ya - y_b) * pxv), m.uv_px((xb + B['L'] / 2) * pxu, 255 - (ya - y_b) * pxv),
+                      m.uv_px((xb + B['L'] / 2) * pxu, 255 - (yb - y_b) * pxv), m.uv_px((xa + B['L'] / 2) * pxu, 255 - (yb - y_b) * pxv)]
+            elif k == len(sec) - 2:                                  # -z side, going down: seen from -z (looking +z), right = -x
+                uv = [m.uv_px((B['L'] / 2 - xa) * pxu, 511 - (ya - y_b) * pxv), m.uv_px((B['L'] / 2 - xb) * pxu, 511 - (ya - y_b) * pxv),
+                      m.uv_px((B['L'] / 2 - xb) * pxu, 511 - (yb - y_b) * pxv), m.uv_px((B['L'] / 2 - xa) * pxu, 511 - (yb - y_b) * pxv)]
+            else:
+                va, vb = 520 + k / len(sec) * 480, 520 + (k + 1) / len(sec) * 480
+                uv = [m.uv_px((xa + B['L'] / 2) * pxu, va), m.uv_px((xb + B['L'] / 2) * pxu, va), m.uv_px((xb + B['L'] / 2) * pxu, vb), m.uv_px((xa + B['L'] / 2) * pxu, vb)]
+            _smooth(m, [(xa, ya, za), (xb, ya, za), (xb, yb, zb), (xa, yb, zb)], [na, na, nb, nb], uv)
+    # ends: flat caps
+    for sx in (1, -1):
+        ring_o = [(sx * hx, y, z) for z, y, _ in sec]
+        cuv = lambda y, z: m.uv_px(512 + z / R * 200, 760 - (y - ys) / R * 200)
+        m.tri_fan([np.array(p) for p in ring_o], np.array([sx * 1.0, 0, 0]), [cuv(p[1], p[2]) for p in ring_o])
+    return m, img
+
+def boudin_shape():
+    B, C = BOUDIN, BOUDIN_SHP; hx = (B['L'] - B['gap']) / 2; rows = []
+    for x in np.arange(-hx + C['r'] * 0.6, hx - C['r'] * 0.6 + 1e-6, C['every']):
+        rows.append(f"{x:.4f} {C['r'] - B['sink'] + 0.05:.4f} 0 {C['r']} {C['friction']} {C['spring']} {C['damping']}")
+    return '\n'.join([str(len(rows))] + rows) + '\n'
+
+
 def build(outd=OUTD):
     os.makedirs(outd, exist_ok=True); out = {}
     for name, fn, mat in (('start_gate_frame', gate_frame, (16, 1, 0.35, 0.35, 0.35)), ('stake_yellow', stake, (8, 0.4, 1, 1, 1)), ('net_blue', net, (0, 0, 0, 0, 0)),
-                          ('start_floor', floor, (24, 0.6, 1, 1, 1)), ('pylon_black', pylon, (20, 0.5, 0.4, 0.4, 0.4))):
+                          ('start_floor', floor, (24, 0.6, 1, 1, 1)), ('pylon_black', pylon, (20, 0.5, 0.4, 0.4, 0.4)),
+                          ('bale_straw', bale, (0, 0, 0, 0, 0)), ('boudin_black', boudin, (24, 0.5, 0.4, 0.4, 0.4))):
         m, img = fn(); nv, nt = m.write(f'{outd}/{name}.jm', mat); img.save(f'{outd}/{name}.png')
         V = np.array([v[:3] for v in m.V]); out[name] = (nv, nt, V.min(0).round(2).tolist(), V.max(0).round(2).tolist())
     net_ribbon_texture().save(f'{outd}/net_ribbon.png')
     open(f'{outd}/pylon_black.shp', 'w', newline='\n').write(pylon_shape())
+    open(f'{outd}/bale_straw.shp', 'w', newline='\n').write(bale_shape())
+    open(f'{outd}/boudin_black.shp', 'w', newline='\n').write(boudin_shape())
     return out
 
 
