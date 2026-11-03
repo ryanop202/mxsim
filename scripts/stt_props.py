@@ -104,8 +104,10 @@ def net_shape(line_xz, ground, origin):
 
 
 # ------------------------------------------------------------------ v31: black pylon (user's picture: the right one, all black)
-PYLON = dict(H=3.7, base_w=1.85, base_h=0.42, base_r=0.12, cyl_r=0.68, fillet=0.36, dome=0.07, seg=32,
-             pad_w=2.6, pad_h=0.15, pad_sink=0.35, pad_r=0.3, pad_in=0.12)
+PYLON = dict(H=4.0, base_w=1.85, base_h=0.42, base_r=0.12, cyl_r=0.68, fillet=0.36, dome=0.07, seg=32,
+             pad_w=4.5, pad_h=0.45, pad_sink=0.45, pad_r=0.6, pad_in=0.55, col_logo=(0.95, 2.95))
+# v36 (user): dirt pad 3x higher (0.15 -> 0.45 ft) and much wider (2.6 -> 4.5 ft); the pylon itself unchanged, standing on it
+# (top 3.7 -> 4.0 ft); Fly logo also on the column (vertical, reading upwards, +z and -z sides) between col_logo heights.
 # v35 (user): rounder top (fillet 0.14 -> 0.36), Fly Racing logo on two opposite sides of the base (base 0.32 -> 0.42 ft high so
 # the logo reads), a small dirt platform under it, a bit wider than the base (pad). Total height unchanged (3.7 ft).
 # v33: a bit lower, fatter (v32: H 4.125, r 0.555, base 1.52)
@@ -137,7 +139,7 @@ def _dirt(h, w, seed):
 def _paste_logo(img, box, logo_path=None):
     """white logo stretched exactly into box (x0, y0, x1, y1) of a float (h, w, 3) image (box already in texture pixels:
     the caller sizes it from the face's px / ft in u and v, so the logo is not deformed on the model)."""
-    lg = Image.open(logo_path or FLY); x0, y0, x1, y1 = [int(round(v)) for v in box]
+    lg = logo_path if isinstance(logo_path, Image.Image) else Image.open(logo_path or FLY); x0, y0, x1, y1 = [int(round(v)) for v in box]
     a = np.array(lg.resize((x1 - x0, y1 - y0), Image.LANCZOS))[..., 3:4] / 255.0
     img[y0:y1, x0:x1] = img[y0:y1, x0:x1] * (1 - a) + np.array([236, 236, 238.0]) * a
 
@@ -151,6 +153,14 @@ def pylon_texture():
     lh = 0.62 * yb; lw = lh * 4.43                                   # logo aspect 4.43 : 1
     _paste_logo(img, (256 - lw * pxu / 2, 576 - lh * pxv / 2, 256 + lw * pxu / 2, 576 + lh * pxv / 2))
     img[640:1024] = _dirt(384, 512, 21)
+    # v36: vertical logo on the column. u = angle (512 px = 2 pi r), v rows 298 (y = top of base) .. 2 (y = H). On the cylinder
+    # u grows towards the viewer's LEFT on both the +z (angle 90) and the -z (angle 270) side -> the logo is mirrored in u.
+    yc = P['pad_h'] + P['base_h']; pxu = 512 / (2 * np.pi * P['cyl_r']); pxv = 296 / (P['H'] - yc)
+    y0_, y1_ = P['col_logo']; L_ = y1_ - y0_; Wd = L_ / 4.43
+    lg = Image.open(FLY).rotate(90, expand=True).transpose(Image.FLIP_LEFT_RIGHT)   # reads bottom -> top, mirrored for u
+    for uc in (128, 384):
+        r0, r1 = 298 - (y1_ - yc) * pxv, 298 - (y0_ - yc) * pxv
+        _paste_logo(img, (uc - Wd * pxu / 2, r0, uc + Wd * pxu / 2, r1), lg)
     return Image.fromarray(np.clip(img, 0, 255).astype(np.uint8))
 
 def _rsquare(half, r, n=6):
@@ -310,29 +320,34 @@ def floor_outline():
     return pts, half
 
 
-FLOOR_TILE = dict(ft_w=7.5, ft_h=6.5625, px_ft=1024 / 7.5, cell=25.6, bar=5.25)   # v34 (user): squares a quarter smaller:
+FLOOR_TILE = dict(ft_w=7.5, ft_h=6.5625, px_ft=2048 / 7.5, cell=51.2, bar=10.5, W=2048)   # v36 (user): sharper (2048 px tile) + grip   # v34 (user): squares a quarter smaller:
 # 0.25 -> 0.1875 ft (same 1024 x 896 px pattern, the tile now covers 7.5 x 6.5625 ft = 40 x 35 cells); v31: 8 x 7 ft, 32 / 7 px
 
 def floor_texture():
-    """v31 (user: v28 floor too blurry): one sharp tile of square steel grating, repeated over the floor (128 px / ft instead
-    of 22), bars with a rounded light/dark profile, dark holes (dirt below). Rows 904..1023: plain steel for the frame."""
-    T = FLOOR_TILE; W_ = 1024; th = int(round(T['ft_h'] * T['px_ft']))     # 896 rows of pattern
+    """v36: one sharp tile of square steel grating (2048 px for 7.5 x 6.5625 ft, 0.1875 ft squares), bars with a rounded
+    profile, welded crossings, GRIP: serrated top edge (small teeth every ~0.02 ft) and a fine anti-slip dot pattern on the
+    bars; dark holes. Rows 1792..2047: plain steel for the frame. v31-v35: 1024 px, smooth bars."""
+    T = FLOOR_TILE; W_ = T['W']; th = int(round(T['ft_h'] * T['px_ft']))     # 1792 rows of pattern
     X, Y = np.meshgrid(np.arange(W_) + 0.5, np.arange(th) + 0.5)
     c, b = T['cell'], T['bar'] / 2
-    dx = (X % c) - c / 2; dy = (Y % c) - c / 2                       # bars on the cell borders: |d| close to c/2
-    ex, ey = c / 2 - np.abs(dx), c / 2 - np.abs(dy)                 # distance to the nearest bar centre line
+    dx = (X % c) - c / 2; dy = (Y % c) - c / 2
+    ex, ey = c / 2 - np.abs(dx), c / 2 - np.abs(dy)
     vb, hb_ = ex <= b, ey <= b
-    steel = np.array([168, 172, 176.0]); hole = np.array([38, 32, 27.0])
+    steel = np.array([172, 176, 181.0]); hole = np.array([30, 26, 22.0])
     img = np.zeros((th, W_, 3)) + hole
-    prof_v = 0.78 + 0.32 * np.cos(ex / b * np.pi / 2) - 0.10 * np.sign(dx) * (ex / b)   # rounded bar, light from the left
-    prof_h = 0.80 + 0.30 * np.cos(ey / b * np.pi / 2) - 0.10 * np.sign(dy) * (ey / b)
-    img[hb_] = steel * prof_h[hb_, None]; img[vb] = steel * prof_v[vb, None]
-    img[vb & hb_] = steel * 1.05                                     # welded crossings
-    sh = (~vb & ~hb_) & (((dx < 0) & (ex < b + 3)) | ((dy < 0) & (ey < b + 3)))   # holes: shadow under the bars
-    img[sh] *= 0.6
-    img += np.random.default_rng(5).normal(0, 3.0, img.shape)
-    out = np.zeros((1024, W_, 3)); out[:th] = img; out[th:] = np.array([190, 193, 197.0])
-    out[th:th + 8] = steel
+    prof_v = 0.74 + 0.36 * np.cos(ex / b * np.pi / 2) - 0.12 * np.sign(dx) * (ex / b)
+    prof_h = 0.76 + 0.34 * np.cos(ey / b * np.pi / 2) - 0.12 * np.sign(dy) * (ey / b)
+    tooth = 6.0                                                      # serrations along each bar (grip)
+    sv = 0.86 + 0.14 * (np.abs(((Y / tooth) % 1.0) - 0.5) * 2)       # vertical bars: teeth along y
+    sh_ = 0.86 + 0.14 * (np.abs(((X / tooth) % 1.0) - 0.5) * 2)      # horizontal bars: teeth along x
+    img[hb_] = (steel * (prof_h * sh_)[..., None])[hb_]; img[vb] = (steel * (prof_v * sv)[..., None])[vb]
+    img[vb & hb_] = steel * 1.06
+    dots = ((X % 4) < 1.5) & ((Y % 4) < 1.5) & (vb | hb_) & ~(vb & hb_)
+    img[dots] *= 0.82                                                # anti-slip dots
+    shd = (~vb & ~hb_) & (((dx < 0) & (ex < b + 6)) | ((dy < 0) & (ey < b + 6)))
+    img[shd] *= 0.55
+    img += np.random.default_rng(5).normal(0, 2.5, img.shape)
+    out = np.zeros((W_, W_, 3)); out[:th] = img; out[th:] = np.array([190, 193, 197.0]); out[th:th + 16] = steel
     return Image.fromarray(np.clip(out, 0, 255).astype(np.uint8))
 
 
@@ -342,8 +357,8 @@ def floor():
     Origin = middle of the gate row at the hinge line, local -z = backwards."""
     T = FLOOR_TILE; F = LT.START_FLOOR; L = F['back']; n = LS.N_GATES; pitch = LS.GATE_PITCH
     gap = 2 * T['cell'] / T['px_ft']; w = pitch - gap
-    img = floor_texture(); m = Mesh(1024, 1024); t = 0.06; fr = 0.15; y2 = t + 0.015
-    ed = m.uv_px(512, 990)
+    img = floor_texture(); m = Mesh(T['W'], T['W']); t = 0.06; fr = 0.15; y2 = t + 0.015
+    ed = m.uv_px(T['W'] / 2, T['W'] - 68)
     zs = list(np.arange(0, L, T['ft_h'])) + [L]
     for k in range(n):
         c = (k - (n - 1) / 2) * pitch; xa, xb = c - w / 2, c + w / 2
@@ -405,6 +420,8 @@ def floor_v28():
     return m, img
 
 
+GATE_BAR = 0.78   # ft above the hinge (user's drawing on the in-game top view: ~1/3 of the 2.3 ft gate)
+
 def gate_frame():
     """v30 (user): the USLAND start gate WITHOUT its black plate (no USLAND icon): only the red round-tube frame (inverted U,
     rounded top corners) and the hinge tube - same size, hinge at the origin, laid flat like gate01 (as props_usland.gate_model)."""
@@ -418,13 +435,15 @@ def gate_frame():
     path.append((x1, yh, 0.0))
     pipe(m, path, r, pal['red'], closed=False, seg=12)
     pipe(m, [(-GATE['pitch'] / 2, yh, 0.0), (GATE['pitch'] / 2, yh, 0.0)], r * 1.15, pal['red'], seg=12)
+    yb_ = GATE_BAR                                                   # v36 (user's mark): cross tube a third of the way up
+    pipe(m, [(x0, yb_, 0.0), (x1, yb_, 0.0)], r, pal['red'], seg=12)
     for i, v in enumerate(m.V):                                     # laid flat towards +z (same as the USLAND gate)
         m.V[i] = (v[0], -v[2], v[1], v[3], -v[5], v[4], v[6], v[7])
     return m, img
 
 
 # ------------------------------------------------------------------ v35: straw bale (user: white, rounded edges, hay texture)
-BALE = dict(L=5.5, W=2.0, H=1.85, r=0.32, sink=0.25, px=128)
+BALE = dict(L=4.6, W=1.75, H=1.6, r=0.3, sink=0.22, px=128)   # v36 (user): a bit smaller (v35: 5.5 x 2.0 x 1.85)
 BALE_SHP = dict(r=0.9, every=1.0, spring=150, damping=8, friction=0.6)    # firm: stops you, not a wall (not tested in game)
 
 def _axis_coords(h, r, k_in, k_band=5):
@@ -468,18 +487,25 @@ def _hay(h, w, seed, along=0.0):
     out += gaussian_filter(rg.normal(0, 1, (h, w)), 1.2)[..., None] * 10
     return out
 
+def _wrap(h, w, seed):
+    """v36 (user: 'du foin empaillé, on ne doit pas voir le foin'): white wrap, white on white, soft crumpled shadows and a few
+    creases, slightly cool shadows."""
+    from scipy.ndimage import gaussian_filter
+    rg = np.random.default_rng(seed)
+    big = gaussian_filter(rg.normal(0, 1, (h, w)), 18); big /= big.std() + 1e-9
+    mid = gaussian_filter(rg.normal(0, 1, (h, w)), 6); mid /= mid.std() + 1e-9
+    cr = gaussian_filter(rg.normal(0, 1, (h, w)), (3, 9)); cr = np.exp(-(cr / (cr.std() * 0.18)) ** 2)   # thin creases
+    v = 1.0 - 0.035 * np.abs(big) - 0.025 * mid - 0.07 * cr
+    out = np.dstack([243 * v, 243 * v, 246 * v + 2])
+    return out + rg.normal(0, 1.2, out.shape)
+
 def bale_texture():
-    """1024 x 1024 atlas at `px` px / ft: top (L x W) rows 0..256, side +z rows 264..501, side -z rows 510..747, ends
-    (W x H) rows 756..993 at x 0..256 and 280..536. Two twines around the bale (top + sides) at x = +-L/6."""
-    B = BALE; px = B['px']; img = np.zeros((1024, 1024, 3)) + 200.0
+    """1024 x 1024 atlas at `px` px / ft: top (L x W) rows 0.., sides +z / -z, ends (W x H); white crumpled wrap."""
+    B = BALE; px = B['px']; img = np.zeros((1024, 1024, 3)) + 240.0
     Lp, Wp, Hp = int(B['L'] * px), int(B['W'] * px), int(B['H'] * px)
-    img[0:Wp, 0:Lp] = _hay(Wp, Lp, 31, 0.0)
-    img[264:264 + Hp, 0:Lp] = _hay(Hp, Lp, 32, 0.0); img[510:510 + Hp, 0:Lp] = _hay(Hp, Lp, 33, 0.0)
-    img[756:756 + Hp, 0:Wp] = _hay(Hp, Wp, 34, 0.7); img[756:756 + Hp, 280:280 + Wp] = _hay(Hp, Wp, 35, -0.7)
-    for xf in (-B['L'] / 6, B['L'] / 6):                           # twines (pale orange, thin)
-        xp = int((xf + B['L'] / 2) * px)
-        for r0, r1 in ((0, Wp), (264, 264 + Hp), (510, 510 + Hp)):
-            img[r0:r1, xp - 2:xp + 3] = np.array([214, 150, 84.0]); img[r0:r1, xp + 3:xp + 5] *= 0.85
+    img[0:Wp, 0:Lp] = _wrap(Wp, Lp, 31)
+    img[264:264 + Hp, 0:Lp] = _wrap(Hp, Lp, 32); img[510:510 + Hp, 0:Lp] = _wrap(Hp, Lp, 33)
+    img[756:756 + Hp, 0:Wp] = _wrap(Hp, Wp, 34); img[756:756 + Hp, 280:280 + Wp] = _wrap(Hp, Wp, 35)
     return Image.fromarray(np.clip(img, 0, 255).astype(np.uint8))
 
 def bale():
@@ -508,7 +534,7 @@ def bale_shape():
 BOUDIN = dict(L=6.0, W=2.4, H=2.3, sink=0.1, gap=0.15, seg=20)
 BOUDIN_SHP = dict(r=1.1, every=1.0, spring=150, damping=8, friction=0.6)
 
-def boudin_texture():
+def boudin_texture(logo=True):
     """1024 x 1024: rows 0..255 side +z (vertical part, u = along, left -> right as read from outside), 256..511 side -z,
     512..1023 vinyl for the round top and the ends."""
     B = BOUDIN; img = np.zeros((1024, 1024, 3))
@@ -516,14 +542,15 @@ def boudin_texture():
     img[512:1024] = _vinyl(512, 1024, 60, 30, 43, amp=4)
     ys = B['H'] - B['W'] / 2; pxu, pxv = 1024 / B['L'], 255 / (ys + B['sink'])
     lh = 0.55 * ys; lw = lh * 4.43
-    for r0 in (0, 256):
+    for r0 in ((0, 256) if logo else ()):
         cy = r0 + 255 - (B['sink'] + ys * 0.52) * pxv
         _paste_logo(img, (512 - lw * pxu / 2, cy - lh * pxv / 2, 512 + lw * pxu / 2, cy + lh * pxv / 2))
     return Image.fromarray(np.clip(img, 0, 255).astype(np.uint8))
 
-def boudin():
-    """one segment, long axis = local x (length L - gap), origin at the ground, centre."""
-    B = BOUDIN; m = Mesh(1024, 1024); img = boudin_texture(); hx = (B['L'] - B['gap']) / 2; R = B['W'] / 2; ys = B['H'] - R
+def boudin(plain=False):
+    """one segment, long axis = local x (length L - gap), origin at the ground, centre. plain (v36, freestyle gap): no logo and
+    no gap, the segments touch."""
+    B = BOUDIN; m = Mesh(1024, 1024); img = boudin_texture(not plain); hx = (B['L'] - (0.0 if plain else B['gap'])) / 2; R = B['W'] / 2; ys = B['H'] - R
     y_b = -B['sink']; sg = B['seg']
     # cross-section (z, y, normal) from the +z foot, up the side, over the top, down to the -z foot
     sec = [(R, y_b, (0, 0, 1)), (R, ys, (0, 0, 1))]
@@ -552,6 +579,9 @@ def boudin():
         m.tri_fan([np.array(p) for p in ring_o], np.array([sx * 1.0, 0, 0]), [cuv(p[1], p[2]) for p in ring_o])
     return m, img
 
+def boudin_plain():
+    return boudin(plain=True)
+
 def boudin_shape():
     B, C = BOUDIN, BOUDIN_SHP; hx = (B['L'] - B['gap']) / 2; rows = []
     for x in np.arange(-hx + C['r'] * 0.6, hx - C['r'] * 0.6 + 1e-6, C['every']):
@@ -563,13 +593,15 @@ def build(outd=OUTD):
     os.makedirs(outd, exist_ok=True); out = {}
     for name, fn, mat in (('start_gate_frame', gate_frame, (16, 1, 0.35, 0.35, 0.35)), ('stake_yellow', stake, (8, 0.4, 1, 1, 1)), ('net_blue', net, (0, 0, 0, 0, 0)),
                           ('start_floor', floor, (24, 0.6, 1, 1, 1)), ('pylon_black', pylon, (20, 0.5, 0.4, 0.4, 0.4)),
-                          ('bale_straw', bale, (0, 0, 0, 0, 0)), ('boudin_black', boudin, (24, 0.5, 0.4, 0.4, 0.4))):
+                          ('bale_straw', bale, (0, 0, 0, 0, 0)), ('boudin_black', boudin, (24, 0.5, 0.4, 0.4, 0.4)),
+                          ('boudin_plain', boudin_plain, (24, 0.5, 0.4, 0.4, 0.4))):
         m, img = fn(); nv, nt = m.write(f'{outd}/{name}.jm', mat); img.save(f'{outd}/{name}.png')
         V = np.array([v[:3] for v in m.V]); out[name] = (nv, nt, V.min(0).round(2).tolist(), V.max(0).round(2).tolist())
     net_ribbon_texture().save(f'{outd}/net_ribbon.png')
     open(f'{outd}/pylon_black.shp', 'w', newline='\n').write(pylon_shape())
     open(f'{outd}/bale_straw.shp', 'w', newline='\n').write(bale_shape())
     open(f'{outd}/boudin_black.shp', 'w', newline='\n').write(boudin_shape())
+    open(f'{outd}/boudin_plain.shp', 'w', newline='\n').write(boudin_shape())
     return out
 
 

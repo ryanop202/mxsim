@@ -77,7 +77,7 @@ def pads(H, P):
         sl = (slice(i0 - k, i0 + k + 1), slice(j0 - k, j0 + k + 1)); ii, jj = np.mgrid[sl]
         r = np.hypot(ii * S - fz, jj * S - fx); t = np.clip((r - r0) / (r1 - r0), 0, 1); w = t * t * (3 - 2 * t)
         if PO:                                   # v28: platform CUT into the slope (level = lowest point of the flat disc)
-            h0 = float(H[sl][r <= r0].min()); hs = H[sl]
+            h0 = float(H[sl][r <= (r1 if PO.get('floor') else r0)].min()); hs = H[sl]   # v36: floor -> dug down to the floor
             H[sl] = np.where(hs > h0, h0 + (hs - h0) * w, hs)
         else:
             h0 = float(H[i0, j0]); H[sl] = h0 + (H[sl] - h0) * w

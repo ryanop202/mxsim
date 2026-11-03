@@ -45,8 +45,23 @@ def plat_h(XL, ZL):
 
 def dirt_region(GX, GZ):
     x0, x1, z0, z1 = LT.ARENA; m = (GX >= x0) & (GX <= x1) & (GZ >= z0) & (GZ <= z1)
-    for a0_, a1_, b0_, b1_ in getattr(LT, 'GRASS_OUTSIDE', {}).get('keep', []): m |= (GX >= a0_) & (GX <= a1_) & (GZ >= b0_) & (GZ <= b1_)
+    for a0_, a1_, b0_, b1_ in _keep_rects(): m |= (GX >= a0_) & (GX <= a1_) & (GZ >= b0_) & (GZ <= b1_)
     return m
+
+def _keep_rects():
+    """v36: start strip(s) of GRASS_OUTSIDE; with west_wall.z the strip runs along the whole west side of the arena."""
+    GO = getattr(LT, 'GRASS_OUTSIDE', {}); K = list(GO.get('keep', []))
+    if GO.get('west_wall', {}).get('z') and K:
+        a0_, a1_, _, _ = K[0]; K[0] = (a0_, a1_, LT.ARENA[2], LT.ARENA[3])
+    return K
+
+def west_weight(d, iz, ix, step):
+    """v36: 1 on the edge of the west (start) strip, fading along the arena edge over start_blend ft, 0 elsewhere."""
+    from scipy.ndimage import distance_transform_edt, gaussian_filter
+    ox, oz = LT.STT_ORIGIN; side = (N - 1) * S; g = np.arange(0, side + step / 2, step); GX, GZ = np.meshgrid(g - ox, g - oz)
+    a0_, a1_, b0_, b1_ = _keep_rects()[0]; sb = (GX >= a0_) & (GX <= a1_ + 0.5) & (GZ >= b0_) & (GZ <= b1_)
+    w = (1 - ss_(distance_transform_edt(~sb) * step / LT.ARENA_BANK['start_blend']))[iz, ix]
+    return gaussian_filter(w, 40.0 / step)
 
 def region_dist(step=1.0, close_r=45.0):
     """v25: distance (ft) to the dirt area on a `step` ft world grid, the area's inner corners rounded (binary closing, radius
@@ -57,12 +72,15 @@ def region_dist(step=1.0, close_r=45.0):
     g = np.arange(0, side + step / 2, step); GX, GZ = np.meshgrid(g - ox, g - oz)
     from scipy.ndimage import binary_opening
     x0, x1, z0, z1 = LT.ARENA; m = (GX >= x0) & (GX <= x1) & (GZ >= z0) & (GZ <= z1)
-    for a0_, a1_, b0_, b1_ in getattr(LT, 'GRASS_OUTSIDE', {}).get('keep', []):     # v25: start area with rounded outer corners
+    for a0_, a1_, b0_, b1_ in _keep_rects():                                       # v25: start area with rounded outer corners
         sb = (GX >= a0_) & (GX <= a1_ + 40) & (GZ >= b0_) & (GZ <= b1_); ko = int(30.0 / step); yo, xo = np.mgrid[-ko:ko + 1, -ko:ko + 1]
         m |= binary_opening(sb, structure=(xo * xo + yo * yo) <= ko * ko) & (GX <= a1_)
     k = int(close_r / step); yy, xx = np.mgrid[-k:k + 1, -k:k + 1]
     m = binary_closing(m, structure=(xx * xx + yy * yy) <= k * k)
     d, (iz, ix) = distance_transform_edt(~m, return_indices=True); d = d * step
+    WW = getattr(LT, 'GRASS_OUTSIDE', {}).get('west_wall')
+    if WW:                                       # v36 (user): on the west (start) side the fence step starts right at the dirt edge
+        d = np.where(d > 0, d + WW['shift'] * west_weight(d, iz, ix, step), d)
     if step == 1.0: np.save(f'{OUT}/stt_dist.npy', d.astype(np.float32))
     return d, iz, ix, GX, GZ
 
@@ -74,19 +92,22 @@ def bank_h(step=1.0):
     B_ = LT.ARENA_BANK; ox, oz = LT.STT_ORIGIN; side = (N - 1) * S
     d, iz, ix, GX, GZ = region_dist(step)
     base = plat_h(GX, GZ)[iz, ix]                                               # ground height at the nearest dirt point
-    a0_, a1_, b0_, b1_ = LT.GRASS_OUTSIDE['keep'][0]; sb = (GX >= a0_) & (GX <= a1_) & (GZ >= b0_) & (GZ <= b1_)
+    a0_, a1_, b0_, b1_ = _keep_rects()[0]; sb = (GX >= a0_) & (GX <= a1_) & (GZ >= b0_) & (GZ <= b1_)
     w = (1 - ss_(distance_transform_edt(~sb) * step / B_['start_blend']))[iz, ix]   # 1 on the start edge, fading along the edge
     from scipy.ndimage import gaussian_filter                                  # v24: no crease where the nearest edge switches
     w = gaussian_filter(w, 40.0 / step)                                         # v25: wide blends -> no crease / cone where the
     k_ = ss_(d / 30.0); base = gaussian_filter(base, 6.0 / step) * (1 - k_) + gaussian_filter(base, 25.0 / step) * k_   # nearest edge switches
+    if getattr(LT, 'GRASS_OUTSIDE', {}).get('west_wall'):   # v36: the west wall starts AT the edge: no blur there (blur = small ditch)
+        raw = plat_h(GX, GZ)[iz, ix]; base = base * (1 - w) + raw * w
     inner = B_['inner'] + (B_['start_inner'] - B_['inner']) * w
     SG = B_.get('straight')
     if SG and B_.get('terrace'):                  # v29 (user's drawing): floor, short step to the fence terrace, ONE straight slope
         ta, tw = B_['terrace']; ta_, tb_ = ta - tw / 2, ta + tw / 2
         smax = lambda a, b, c: 0.5 * (a + b + np.sqrt((a - b) ** 2 + c * c))      # smooth max / min (rounded corners)
         smin = lambda a, b, c: 0.5 * (a + b - np.sqrt((a - b) ** 2 + c * c))
-        terr = base + SG['terrace_h'] * ss_((d - (ta_ - SG['rise'])) / SG['rise'])
-        top = np.maximum(B_['h'] - base - SG['terrace_h'], 0.1)
+        WW = getattr(LT, 'GRASS_OUTSIDE', {}).get('west_wall'); th_ = SG['terrace_h'] + (WW['extra_h'] * w if WW else 0.0)   # v36: higher wall west
+        terr = base + th_ * ss_((d - (ta_ - SG['rise'])) / SG['rise'])
+        top = np.maximum(B_['h'] - base - th_, 0.1)
         rise = smax(SG['slope'] * (d - tb_), 0.0, SG['toe'] * SG['slope'])         # straight slope from the terrace, rounded toe
         up = terr + smin(rise, top, SG['crest'] * SG['slope'])                      # ... up to h, rounded crest
         d_top = tb_ + top / SG['slope'] + SG['crest']

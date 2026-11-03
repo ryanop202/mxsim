@@ -81,7 +81,11 @@ GRASS_DECALS = dict(size=45.0, step=26.0, clear=51.0)   # v27: DVDB grass patche
 # v25: 3D grass tufts (JGSX2026Scuttle grass_5 / grass_15 models sent by the user, green tuft texture) on the grass, from just
 # outside the fence to the top of the bank; jittered grid `step` ft, kept with probability p; 3rd-party files, local use only
 GRASS_TUFTS = None   # v27: removed (the game lagged with them)
-GRASS_OUTSIDE = dict(arena=True, keep=[(-140.0, -110.0, 97.0, 253.0)], dirt_to_fence=True)   # v24: start area = platform + ramps; dirt up to the fence
+GRASS_OUTSIDE = dict(arena=True, keep=[(-140.0, -110.0, 97.0, 253.0)], dirt_to_fence=True,
+                     west_wall=dict(z=True, shift=19.0, extra_h=2.0))
+# v36 (user): behind the start grate the border is ONE straight wall (no shelf, no detour around the start area): the start
+# strip (x -140..-110) runs along the whole west side, and on that side the fence step starts right at the dirt edge
+# (distance shifted by `shift` ft) and is `extra_h` ft higher   # v24: start area = platform + ramps; dirt up to the fence
 # v19: the track sits in a pit: a giant grassed earth bank all around the dirt arena (and around the start area), as on the
 # drone photos. Height h ft, inner slope over `inner` ft (rounded toe and top), flat top `top` ft, outer slope `outer` ft.
 ARENA_BANK = dict(h=42.0, inner=160.0, top=14.0, outer=70.0, terrace=(28.0, 6.0), start_inner=75.0, start_blend=90.0,
@@ -92,7 +96,8 @@ ARENA_BANK = dict(h=42.0, inner=160.0, top=14.0, outer=70.0, terrace=(28.0, 6.0)
 # gentle slope + steep wall (v28 'steep', removed)
 # v29 (user's drawing): 3 light poles on each long side facing each other (whoops side = south, L1 side = north), at the
 # bottom, just inside the fence, on the flat dirt (no platform): d = ft from the dirt area (fence at 28)
-POLES = dict(n=3, d=31.0, pad=(2.0, 4.0))   # v35 (user): poles moved back, onto the fence terrace behind the fence (was 20)
+POLES = dict(n=3, d=22.5, pad=(2.5, 5.0), floor=True)   # v36 (user): at the foot of the fence border, IN the step, the step dug
+# around each pole down to the floor (pad level = lowest ground within pad[1]); v35: 31 (terrace), v29: 20
 # v28: yellow marker stakes on the crest of every bump, at both ends (lane edges), like the drone photos; v ft from the lane axis
 STAKES = dict(v=14.2, prom=0.6, table=6.0)
 # v28: blue nets on the outside of 5 turns (user), on the berm crest (drone photos: blue posts + net)
@@ -100,7 +105,7 @@ NETS = dict(turns='all', skip=('curve west column -> L4',), step=8.0, flat_off=8
 #   # v32 (user): a net in every turn (v28: 5 turns); turns without a
 # berm: net `flat_gap` ft outside the lane edge
 # v28: one big start floor (square mesh) behind the whole gate row instead of one grate per gate
-START_FLOOR = dict(back=22.0, side=2.5)
+START_FLOOR = dict(back=18.0, side=2.5)   # v36 (user): grates cut shorter (22 -> 18 ft, user's line)
 # v31 (user, 2026-11-03): black pylons (ATVMC shape, all black) inside the 9 turns. v32 (user): placed by one rule, always the
 # same spot: on the turn bisector, `margin` ft inside the inner lane edge (lane half width `half`); soft collision.
 PYLONS = dict(half=15.2, margin=1.5,
@@ -118,15 +123,21 @@ PYLONS = dict(half=15.2, margin=1.5,
 # Top lane (L1, z = 273.7): 2 facing pairs at each end, 19.5 ft each side of the lane axis; 2 at the inside corner of the turn
 # L1 -> west column (along both lane edges), 1 in the middle of the U L3 -> L2 (east of the pylon), 1 next to the pylon of
 # east lane -> L1 (as drawn, tilted).
-BALES = [(394.5, 254.2, 0), (405.5, 254.2, 0), (394.5, 293.2, 0), (405.5, 293.2, 0),
-         (791.3, 254.2, 0), (802.3, 254.2, 0), (791.3, 293.2, 0), (802.3, 293.2, 0),
-         (372.8, 299.2, 90), (382.9, 291.9, 0), (433.7, 359.3, 0), (815.9, 301.8, 62)]
+BALES = [  # v36 (user's 3 top views, red = remove, white = new, cleaned up to facing pairs / just outside the lane edges)
+         (788.3, 256.2, 0), (799.0, 256.2, 0), (788.3, 291.2, 0), (799.0, 291.2, 0),   # top lane, east end (view 72)
+         (815.8, 302.5, 62),                                                         # next to the pylon of east lane -> L1 (view 72)
+         (816.5, 308.1, 90), (816.5, 322.4, 90), (853.5, 308.1, 90), (853.5, 322.4, 90),   # east lane before the turn (view 73)
+         (372.8, 299.2, 90), (382.9, 291.9, 0),                                      # inside corner of L1 -> west column (kept)
+         (338.6, 298.4, 90), (381.2, 257.5, 0),                                      # outside of that turn, exit / entry (view 74)
+         (433.7, 359.3, 0)]                                                          # U L3 -> L2 (kept)
+# v35: first layout (2 facing pairs at each end of the top lane, the west ones removed in v36)
 # v35 (user's photo): black foam tubes, segments end to end along both edges of the lane (`off` ft from the lane axis to the tube
 # axis): from `before` ft before the whoops to half of them (L7), and along both sides of the freestyle gap (lip -> landing)
-BOUDINS = dict(whoops=dict(tag='L7 small double', item='whoops', before=6.0, frac=0.5, off=17.9),
-               fmx=dict(off=5.5, start=2.0, end=2.0))
-# v35 (user): yellow stakes on the two ends of the freestyle ramp lip (on top of the steel ramp)
-FMX_STAKES = dict(inset=0.15, back=0.25, y=8.8)
+BOUDINS = dict(whoops=dict(tag='L7 small double', x=(393.0, 513.0), side=-1, off=17.9),
+               fmx=dict(off=0.0, start=3.0, end=2.0, model='boudin_plain'))
+# v36 (user's marks): whoops: ONE side only (north, the infield side), along the small double and the first whoops, from x 393
+# to 513 (where the user's line stops); freestyle gap: one single line in the middle, plain black (no logo), segments touching
+# v36 (user): no stakes on the steel freestyle ramp (v35); they go on the dirt take-off of the freestyle jump (L4) instead
 TURN_GATES = dict(half_lane=15.2, inner=2.0, outer=12.0, fr=(0.15, 0.85), fan=True, start_pad=4.0)
 
 # v24: the bank starts at the height of the ground it touches (the start platform: 10 ft) and rises in ONE smooth slope

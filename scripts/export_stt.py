@@ -141,9 +141,9 @@ def main():
     gx = float(np.mean([g[0] for g in G])); gz = float(np.mean([g[2] for g in G])); fa = G[0][3]
     if getattr(LT, 'START_FLOOR', None):          # v28: ONE big floor (square mesh) behind the whole row, cut at each gate
         import stt_props; stt_props.build()
-        for nm in ('start_floor', 'stake_yellow', 'start_gate_frame', 'pylon_black', 'bale_straw', 'boudin_black'):
+        for nm in ('start_floor', 'stake_yellow', 'start_gate_frame', 'pylon_black', 'bale_straw', 'boudin_black', 'boudin_plain'):
             for e in ('jm', 'png'): shutil.copy(f'{ROOT}/assets/props/{nm}.{e}', f'{OUT}/statue/{nm}.{e}')
-        for nm in ('pylon_black', 'bale_straw', 'boudin_black'): shutil.copy(f'{ROOT}/assets/props/{nm}.shp', f'{OUT}/statue/{nm}.shp')
+        for nm in ('pylon_black', 'bale_straw', 'boudin_black', 'boudin_plain'): shutil.copy(f'{ROOT}/assets/props/{nm}.shp', f'{OUT}/statue/{nm}.shp')
         f = np.array([-np.sin(fa), -np.cos(fa)])
         st.append(f'[{gx:.6f} 0.000000 {gz:.6f}] {PP.statue_ang(*f):.6f} {P}/statue/start_floor.jm {P}/statue/start_floor.png null')
     else:
@@ -172,26 +172,23 @@ def main():
     if BD_:
         import stt_props as SP_
         segL = SP_.BOUDIN['L']
-        def tube_row(p0, p1, off):
+        def tube_row(p0, p1, off, sides=(1, -1), model='boudin_black', segL=segL):
             rows_ = []
             d0 = np.array(p1, float) - np.array(p0, float); Ld = np.linalg.norm(d0); d0 /= Ld; nn = np.array([-d0[1], d0[0]])
             k_ = max(1, int(round(Ld / segL))); a_ = float(np.arctan2(-d0[1], d0[0]))
-            for sgn in (1, -1):
+            for sgn in sides:
                 for q in range(k_):
                     c = np.array(p0, float) + d0 * (Ld / 2 - (k_ * segL) / 2 + (q + 0.5) * segL) + nn * sgn * off
-                    rows_.append(f'[{c[0]:.6f} 0.000000 {c[1]:.6f}] {a_:.6f} {P}/statue/boudin_black.jm {P}/statue/boudin_black.png {P}/statue/boudin_black.shp')
+                    rows_.append(f'[{c[0]:.6f} 0.000000 {c[1]:.6f}] {a_:.6f} {P}/statue/{model}.jm {P}/statue/{model}.png {P}/statue/{model}.shp')
             return rows_
         W_ = BD_.get('whoops')
-        if W_:
+        if W_:                                     # v36: one side only, explicit x range along the lane (user's line)
             for g in p.segs:
                 if g['kind'] != 'S' or not g.get('tag', '').startswith(W_['tag']): continue
-                c_, s_ = np.cos(g['t']), np.sin(g['t'])
-                for prof, u0, name in g['sections']:
-                    for n_, a0, b0, h_ in LS.COMBOS[name]['items']:
-                        if W_['item'] not in n_: continue
-                        u_a = u0 + a0 - W_['before']; u_b = u0 + a0 + (b0 - a0) * W_['frac']
-                        rows = tube_row((g['x0'] + u_a * c_, g['z0'] + u_a * s_), (g['x0'] + u_b * c_, g['z0'] + u_b * s_), W_['off'])
-                        st.extend(rows); nbd += len(rows)
+                c_, s_ = np.cos(g['t']), np.sin(g['t']); xa_, xb_ = W_['x']
+                ua_, ub_ = (xa_ - g['x0']) / c_, (xb_ - g['x0']) / c_                 # this lane runs along x
+                rows = tube_row((g['x0'] + ua_ * c_, g['z0'] + ua_ * s_), (g['x0'] + ub_ * c_, g['z0'] + ub_ * s_), W_['off'], sides=(W_['side'],))
+                st.extend(rows); nbd += len(rows)
         F_ = BD_.get('fmx'); R2_ = getattr(LT, 'FMX_RAMP', None)
         if F_ and R2_:
             lip = np.array(R2_['lip']) + np.array(LT.STT_ORIGIN); d_ = np.array(R2_['aim']) - np.array(R2_['lip']); d_ = d_ / np.linalg.norm(d_)
@@ -202,7 +199,9 @@ def main():
                 h0 = float(H[int(round((lip + d_ * 6.0)[1] / S)), int(round((lip + d_ * 6.0)[0] / S))])
                 if hq > h0 + 1.0: land = t_; break
             if land:
-                rows = tube_row(lip + d_ * F_['start'], lip + d_ * (land - F_['end']), F_['off']); st.extend(rows); nbd += len(rows)
+                rows = tube_row(lip + d_ * F_['start'], lip + d_ * (land - F_['end']), F_['off'], sides=(1,), model=F_.get('model', 'boudin_black'),
+                                segL=SP_.BOUDIN['L'])   # v36: plain model has no gap: segments touching
+                st.extend(rows); nbd += len(rows)
                 print('fmx gap', round(land, 1), 'ft')
         print('boudins', nbd)
     FS_ = getattr(LT, 'FMX_STAKES', None); R3_ = getattr(LT, 'FMX_RAMP', None)
@@ -221,7 +220,7 @@ def main():
             c_, s_ = np.cos(g['t']), np.sin(g['t'])
             for prof, u0, name in g['sections']:
                 pk, _ = find_peaks(np.r_[0, prof, 0], prominence=SK['prom']); pk = pk - 1
-                skip = [(a_, b_) for n_, a_, b_, h_ in LS.COMBOS[name]['items'] if n_.startswith(('Detroit_g31_1 (cut', 'trapeze'))]   # v29: none on the freestyle kicker / landing
+                skip = [(a_, b_) for n_, a_, b_, h_ in LS.COMBOS[name]['items'] if n_.startswith(('trapeze',))]   # v36 (user): stakes ON the dirt freestyle take-off again; v29: none on kicker / landing
                 for k in pk:
                     if any(a_ <= k * 0.1 <= b_ for a_, b_ in skip): continue
                     top = prof >= prof[k] - 0.15; a_ = k; b_ = k
