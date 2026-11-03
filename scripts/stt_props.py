@@ -85,7 +85,7 @@ def net_ribbon_texture():
     return img
 
 
-NET_SHP = dict(r=0.9, every=1.2, rows=(0.9, 2.5, 3.8), friction=1.0, spring=100, damping=5)   # v32: v31 (150 / 250) felt like a wall:
+NET_SHP = dict(r=0.9, every=1.2, rows=(0.9, 2.5, 3.8), friction=1.0, spring=85, damping=4)   # v33 (user: v32 a bit too hard): 100 / 5 -> 85 / 4. v32: v31 (150 / 250) felt like a wall:
 # the damping term (force ~ damping x speed) is what stops the bike; 5 per sphere ~ loses ~25 ft/s going through (estimate)
 
 def net_shape(line_xz, ground, origin):
@@ -104,7 +104,7 @@ def net_shape(line_xz, ground, origin):
 
 
 # ------------------------------------------------------------------ v31: black pylon (user's picture: the right one, all black)
-PYLON = dict(H=4.125, base_w=1.52, base_h=0.32, base_r=0.10, cyl_r=0.555, fillet=0.12, dome=0.03, seg=32)   # a bit lower than a bike
+PYLON = dict(H=3.7, base_w=1.85, base_h=0.32, base_r=0.12, cyl_r=0.68, fillet=0.14, dome=0.03, seg=32)   # v33 (user): a bit lower, fatter (v32: H 4.125, r 0.555, base 1.52)
 
 def _smooth(m, P, N, UV):
     """quad / triangle with one normal per vertex (smooth cylinder), front face = average normal side."""
@@ -177,14 +177,14 @@ def pylon():
                 [m.uv_px(256, 456), m.uv_px(256 + c1 * 40, 456 + s1 * 40), m.uv_px(256 + c0 * 40, 456 + s0 * 40)])
     return m, img
 
-PY_SHP = dict(spring=60, damping=4)   # v32 (user: v31 1000 / 200 = concrete block): you go through, it slows you and can knock you over
+PY_SHP = dict(spring=60, damping=3.3)   # v33: fatter column (r 0.68) -> damping x 0.555 / 0.68 to keep the same feel (user: physics is right). v32 (user: v31 1000 / 200 = concrete block): you go through, it slows you and can knock you over
 
 def pylon_shape():
     """v32: soft collision (PY_SHP): 4 spheres up the column + 4 low ones in the base corners."""
     P = PYLON; r = P['cyl_r']; rows = []
     for y in np.linspace(P['base_h'] + r, P['H'] - r, 4): rows.append(f"0 {y:.4f} 0 {r} 1 {PY_SHP['spring']} {PY_SHP['damping']}")
     for sx in (1, -1):
-        for sz in (1, -1): rows.append(f"{sx * 0.45:.4f} 0.3000 {sz * 0.45:.4f} 0.32 1 {PY_SHP['spring']} {PY_SHP['damping']}")
+        for sz in (1, -1): rows.append(f"{sx * (P['base_w'] / 2 - 0.3):.4f} 0.3000 {sz * (P['base_w'] / 2 - 0.3):.4f} 0.32 1 {PY_SHP['spring']} {PY_SHP['damping']}")
     return '\n'.join([str(len(rows))] + rows) + '\n'
 
 def net_ribbon(line_xz, ground, origin):

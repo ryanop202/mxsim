@@ -101,7 +101,15 @@ NETS = dict(turns='all', step=8.0, flat_off=8.0, flat_gap=3.0)   # v32 (user): a
 START_FLOOR = dict(back=22.0, side=2.5)
 # v31 (user, 2026-11-03): black pylons (ATVMC shape, all black) inside the 9 turns. v32 (user): placed by one rule, always the
 # same spot: on the turn bisector, `margin` ft inside the inner lane edge (lane half width `half`); soft collision.
-PYLONS = dict(half=15.2, margin=1.5)
+PYLONS = dict(half=15.2, margin=1.5,
+              # v33 (user, 2026-11-03): spots drawn by the user on 9 in-game screenshots, projected on the ground (one per turn,
+              # in turn order; estimate +-2 ft). Replaces the v32 rule.
+              points=[(663.5, 401.9), (430.7, 360.3), (738.1, 358.7), (736.5, 478.2), (388.7, 521.8),
+                      (804.5, 521.7), (819.0, 305.0), (371.2, 296.7), (376.6, 403.3)])
+              # turn 7: the drawn spot (364.6, 296.7) fell 5.6 ft inside the lane -> pushed out to 1 ft past the lane edge
+# v33 (user: "ça coupe les intérieurs de virage"): 3 timing gates per turn (entry, pylon, exit) that stop at the inside -
+# inner end `inner` ft past the inner lane edge (at the pylon for the middle one), outer end `outer` ft past the outer edge
+TURN_GATES = dict(half_lane=15.2, inner=2.0, outer=12.0, fr=(0.15, 0.85))
 
 # v24: the bank starts at the height of the ground it touches (the start platform: 10 ft) and rises in ONE smooth slope
 # (75 ft behind the start, blended into the 160 ft of the rest over ~90 ft along the edge, corners included).

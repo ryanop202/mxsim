@@ -123,7 +123,9 @@ def main():
         open(f'{OUT}/tileinfo', 'w', newline='\n').write(ti.rstrip('\n') + '\n\n' + blk.strip('\n') + '\naddtile\n\n')
     open(f'{OUT}/desc', 'w', newline='\n').write(DESC + '\n'); open(f'{OUT}/billboards', 'w').close()
     # timing gates (JGSX method, timing.py) + our gate model on the starting gates
-    txt, cps, first, normal, sM, sF = gates(p, LS.STARTS['STT'])
+    TG_ = getattr(LT, 'TURN_GATES', None)
+    if TG_ and getattr(LT, 'PYLONS', None) and LT.PYLONS.get('points'): TG_ = dict(TG_, pylons=LT.PYLONS['points'])
+    txt, cps, first, normal, sM, sF = gates(p, LS.STARTS['STT'], turn_gates=TG_)
     tl, sec = [], None
     for l in txt.split('\n'):
         if l.endswith(':'): sec = l
@@ -150,13 +152,15 @@ def main():
             st.append(statue(x, 0.0, z, PP.statue_ang(*f), 'start_grate', 'start_grate'))      # v14: y 0, the game puts it on the platform
     PY_ = getattr(LT, 'PYLONS', None)
     if PY_:                                       # v32: black pylon inside every turn, same spot each time (turn bisector)
-        smp_p = p.samples(1.0)
+        smp_p = p.samples(1.0); npy_ = 0
         for g in p.segs:
             if g['kind'] != 'T': continue
             sel = (smp_p['s'] >= g['s0']) & (smp_p['s'] <= g['s0'] + g['L']); X_, Z_ = smp_p['x'][sel], smp_p['z'][sel]
             c_ = np.array([g['cx'], g['cz']]); m_ = np.array([X_[len(X_) // 2], Z_[len(Z_) // 2]]); u_ = (m_ - c_) / np.linalg.norm(m_ - c_)
             k_ = 1.0 if abs(g['ang']) > 135 else np.sqrt(2)          # U turn: apex of the inner half circle; 90 deg: corner of the inner edges
             x_, z_ = c_ + u_ * (g['r'] - PY_['half'] - PY_['margin']) * k_
+            if PY_.get('points'): x_, z_ = PY_['points'][npy_]      # v33: the user's spots
+            npy_ += 1
             st.append(f'[{x_:.6f} 0.000000 {z_:.6f}] 0.000000 {P}/statue/pylon_black.jm {P}/statue/pylon_black.png {P}/statue/pylon_black.shp')
     # v28: yellow marker stakes on the crest of every bump, both lane edges (drone photos)
     SK = getattr(LT, 'STAKES', None); nsk = 0
