@@ -261,12 +261,13 @@ def floor_outline():
     return pts, half
 
 
-FLOOR_TILE = dict(ft_w=8.0, ft_h=7.0, px_ft=128, cell=32, bar=7)   # v31: 8 x 7 ft tile repeated, 0.25 ft square holes
+FLOOR_TILE = dict(ft_w=7.5, ft_h=6.5625, px_ft=1024 / 7.5, cell=25.6, bar=5.25)   # v34 (user): squares a quarter smaller:
+# 0.25 -> 0.1875 ft (same 1024 x 896 px pattern, the tile now covers 7.5 x 6.5625 ft = 40 x 35 cells); v31: 8 x 7 ft, 32 / 7 px
 
 def floor_texture():
     """v31 (user: v28 floor too blurry): one sharp tile of square steel grating, repeated over the floor (128 px / ft instead
     of 22), bars with a rounded light/dark profile, dark holes (dirt below). Rows 904..1023: plain steel for the frame."""
-    T = FLOOR_TILE; W_ = 1024; th = int(T['ft_h'] * T['px_ft'])     # 896 rows of pattern
+    T = FLOOR_TILE; W_ = 1024; th = int(round(T['ft_h'] * T['px_ft']))     # 896 rows of pattern
     X, Y = np.meshgrid(np.arange(W_) + 0.5, np.arange(th) + 0.5)
     c, b = T['cell'], T['bar'] / 2
     dx = (X % c) - c / 2; dy = (Y % c) - c / 2                       # bars on the cell borders: |d| close to c/2

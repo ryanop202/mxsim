@@ -50,9 +50,12 @@ def gates(path, start, half=18.0, turn_gates=None):
         i = int(np.argmin(np.abs(smp['s'] - sv % L)))
         g = path.segs[int(smp['seg'][i])]
         if TG and g['kind'] == 'T' and abs(g['ang']) >= 45:
+            if TG.get('fan') and int(smp['seg'][i]) in pyl_of: return fan_gate(i, g)
             return turn_gate(i, g, TG['half_lane'] + TG['inner'])
         hl = hl0 + (6.0 if path.segs[int(smp['seg'][i])]['kind'] == 'P' else 0.0)     # wider in the Glendale sand channel
+        if TG and TG.get('start_pad') and int(smp['seg'][i]) == seg_merge: hl += TG['start_pad']   # v34: start straight, wider
         return gate_at(smp['x'][i], smp['z'][i], smp['th'][i], hl)
+    seg_merge = int(smp['seg'][int(np.argmin(np.abs(smp['s'] - sM % L)))])
     marks = gate_marks(path, TG['fr'] if TG else None)
     pyl_gate = {}
     if TG and TG.get('pylons'):          # v33: one gate per turn through the pylon (sample of the turn closest to it)
@@ -63,11 +66,26 @@ def gates(path, start, half=18.0, turn_gates=None):
             n_in = (c - pnt) / np.linalg.norm(c - pnt)
             pyl_gate[round(float(smp['s'][j]), 1)] = (j, k, float(np.dot(np.array([px, pz]) - pnt, n_in)))
             marks.append(float(smp['s'][j]))
+    pyl_of = {}
+    if TG and TG.get('pylons'):
+        for k, pq in zip([k for k, g in enumerate(path.segs) if g['kind'] == 'T'], TG['pylons']): pyl_of[k] = np.array(pq, float)
+    def fan_gate(i, g):
+        # v34 (user): gate from the pylon through the riding line point i, out to TG['outer'] ft past the outer lane edge.
+        # The line is perpendicular to the travel vector of the gate, so the vector is the normal of (pylon -> point), forward
+        q = np.array([smp['x'][i], smp['z'][i]]); a = pyl_of[int(smp['seg'][i])] if int(smp['seg'][i]) in pyl_of else None
+        if a is None: return None
+        d = (q - a) / np.linalg.norm(q - a); b = q + d * (TG['half_lane'] + TG['outer']); m = (a + b) / 2; hl = float(np.linalg.norm(b - a) / 2)
+        t = np.array([np.cos(smp['th'][i]), np.sin(smp['th'][i])]); v = np.array([-d[1], d[0]])
+        if np.dot(v, t) < 0: v = -v
+        return (hl, m[0], m[1], v[0] * hl, v[1] * hl)
+    if pyl_gate:                         # v34: an entry / exit gate closer than 8 ft to the pylon gate is a double: drop it
+        ps = list(pyl_gate.keys())
+        marks = [m for m in marks if any(abs(m - q) < 0.05 for q in ps) or all(min(abs(m - q) % L, L - abs(m - q) % L) >= 8.0 for q in ps)]
     rel = sorted({round((m - sF) % L, 1) for m in marks})
     rel = [r for r in rel if 15.0 < r < L - 15.0 and abs(r - (sM - sF) % L) > 10.0]
     for r in rel:
         hit = [v for q, v in pyl_gate.items() if abs((q - (sF + r)) % L) < 0.3 or abs((q - (sF + r)) % L - L) < 0.3]
-        if hit: j, k, d = hit[0]; cps.append(turn_gate(j, path.segs[k], d))
+        if hit: j, k, d = hit[0]; cps.append(fan_gate(j, path.segs[k]) if TG.get('fan') else turn_gate(j, path.segs[k], d))
         else: cps.append(lap_gate(sF + r))
     cps.append(lap_gate(sF)); fin = len(cps) - 1
     loop_idx = list(range(len(cps)))
@@ -76,7 +94,7 @@ def gates(path, start, half=18.0, turn_gates=None):
     rs = R.samples(1.0); start_only = []
     marks = [R.s_straight / 2 if R.s_straight > 60 else 30.0] + [float(g['s0'] + g['L'] / 2) for g in R.path.segs[1:] if g['kind'] == 'S' and g['L'] > 60][-1:]
     for sv in sorted(set(round(m) for m in marks if 20 < m < R.L - 25)):
-        i = int(np.argmin(np.abs(rs['s'] - sv))); hl = rs['w'][i] / 2 + 4.0
+        i = int(np.argmin(np.abs(rs['s'] - sv))); hl = rs['w'][i] / 2 + 4.0 + (TG.get('start_pad', 0.0) if TG else 0.0)
         cps.append(gate_at(rs['x'][i], rs['z'][i], rs['th'][i], hl)); start_only.append(len(cps) - 1)
     delta = (sF - sM) % L
     if delta < L / 2:      # finish just after the merge: lap 1 goes round once more

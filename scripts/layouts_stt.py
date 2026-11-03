@@ -95,21 +95,24 @@ POLES = dict(n=3, d=20.0, pad=(2.0, 4.0))
 # v28: yellow marker stakes on the crest of every bump, at both ends (lane edges), like the drone photos; v ft from the lane axis
 STAKES = dict(v=14.2, prom=0.6, table=6.0)
 # v28: blue nets on the outside of 5 turns (user), on the berm crest (drone photos: blue posts + net)
-NETS = dict(turns='all', step=8.0, flat_off=8.0, flat_gap=3.0)   # v32 (user): a net in every turn (v28: 5 turns); turns without a
+NETS = dict(turns='all', skip=('curve west column -> L4',), step=8.0, flat_off=8.0, flat_gap=3.0)   # v34 (user): no net in the turn after the finish jump
+#   # v32 (user): a net in every turn (v28: 5 turns); turns without a
 # berm: net `flat_gap` ft outside the lane edge
 # v28: one big start floor (square mesh) behind the whole gate row instead of one grate per gate
 START_FLOOR = dict(back=22.0, side=2.5)
 # v31 (user, 2026-11-03): black pylons (ATVMC shape, all black) inside the 9 turns. v32 (user): placed by one rule, always the
 # same spot: on the turn bisector, `margin` ft inside the inner lane edge (lane half width `half`); soft collision.
 PYLONS = dict(half=15.2, margin=1.5,
-              # v33 (user, 2026-11-03): spots drawn by the user on 9 in-game screenshots, projected on the ground (one per turn,
-              # in turn order; estimate +-2 ft). Replaces the v32 rule.
-              points=[(663.5, 401.9), (430.7, 360.3), (738.1, 358.7), (736.5, 478.2), (388.7, 521.8),
-                      (804.5, 521.7), (819.0, 305.0), (371.2, 296.7), (376.6, 403.3)])
-              # turn 7: the drawn spot (364.6, 296.7) fell 5.6 ft inside the lane -> pushed out to 1 ft past the lane edge
-# v33 (user: "ça coupe les intérieurs de virage"): 3 timing gates per turn (entry, pylon, exit) that stop at the inside -
-# inner end `inner` ft past the inner lane edge (at the pylon for the middle one), outer end `outer` ft past the outer edge
-TURN_GATES = dict(half_lane=15.2, inner=2.0, outer=12.0, fr=(0.15, 0.85))
+              # v34 (user, 2026-11-03): red squares on 8 in-game top views (scale from the 1.85 ft base, rotation from the base
+              # edges + the net); turn 8 (after the finish) has no square -> v33 spot kept. Estimate +-1 ft.
+              # v33: spots drawn on 9 in-game screenshots (turn 7 pushed out of the lane).
+              points=[(665.3, 400.2), (427.8, 359.6), (733.9, 356.9), (733.4, 481.3), (387.9, 523.9),
+                      (809.5, 520.5), (812.2, 295.8), (375.7, 295.8), (376.6, 403.3)])
+# v33 (user: "ça coupe les intérieurs de virage"): 3 timing gates per turn (entry, pylon, exit).
+# v34 (user): every turn gate starts AT the pylon (fan from the pylon through the riding line at entry / apex / exit, out to
+# `outer` ft past the outer lane edge): a tight inside line next to the pylon counts, going inside the pylon misses the gate.
+# start_pad: start straight gates (start-only + loop straight gates on the start merge straight) wider by this much per side
+TURN_GATES = dict(half_lane=15.2, inner=2.0, outer=12.0, fr=(0.15, 0.85), fan=True, start_pad=4.0)
 
 # v24: the bank starts at the height of the ground it touches (the start platform: 10 ft) and rises in ONE smooth slope
 # (75 ft behind the start, blended into the 160 ft of the rest over ~90 ft along the edge, corners included).

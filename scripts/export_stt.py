@@ -185,10 +185,12 @@ def main():
         print('stakes', nsk)
     # v28: blue nets on the outside of the turns asked by the user, on the berm crest (flat part: r + half lane + flat_off)
     NT = getattr(LT, 'NETS', None); nnet = 0
+    for f_ in os.listdir(f'{OUT}/statue'):          # v34: no stale net from an earlier export (a turn may lose its net)
+        if f_.startswith('net_') and f_.endswith(('.jm', '.shp')): os.remove(f'{OUT}/statue/{f_}')
     if NT:
         smp_ = p.samples(1.0); TW_ = 30.4
         for g in p.segs:
-            if g['kind'] != 'T' or (NT['turns'] != 'all' and g['tag'] not in NT['turns']): continue
+            if g['kind'] != 'T' or (NT['turns'] != 'all' and g['tag'] not in NT['turns']) or g['tag'] in NT.get('skip', ()): continue
             sel = (smp_['s'] >= g['s0']) & (smp_['s'] <= g['s0'] + g['L'])
             cc = np.array([g['cx'], g['cz']]); U_, crs = [], []
             for x_, z_ in zip(smp_['x'][sel], smp_['z'][sel]):
