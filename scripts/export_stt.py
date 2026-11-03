@@ -184,7 +184,7 @@ def main():
     if NT:
         smp_ = p.samples(1.0); TW_ = 30.4
         for g in p.segs:
-            if g['kind'] != 'T' or g['tag'] not in NT['turns']: continue
+            if g['kind'] != 'T' or (NT['turns'] != 'all' and g['tag'] not in NT['turns']): continue
             sel = (smp_['s'] >= g['s0']) & (smp_['s'] <= g['s0'] + g['L'])
             cc = np.array([g['cx'], g['cz']]); U_, crs = [], []
             for x_, z_ in zip(smp_['x'][sel], smp_['z'][sel]):
@@ -192,9 +192,12 @@ def main():
                 rr = np.arange(g['r'], g['r'] + 30, 0.5); hh = np.array([float(h_at(H, *(cc + u * r_))) for r_ in rr])
                 k = int(np.argmax(hh))
                 if hh[k] - hh[0] > 1.2 and 0 < k < len(hh) - 6 and hh[k] - hh[k + 6] > 0.2: crs.append(rr[k])   # a berm drops behind its crest
-            if len(crs) < 5: continue
-            rc = float(np.median(crs)) + 1.0                     # one radius per turn: just behind the berm crest
-            keep = [i for i, u in enumerate(U_) if float(h_at(H, *(cc + u * (rc - 1.0)))) > 1.5]   # the bermed part (half berms: 2nd half)
+            if len(crs) >= 5:
+                rc = float(np.median(crs)) + 1.0                 # one radius per turn: just behind the berm crest
+                keep = [i for i, u in enumerate(U_) if float(h_at(H, *(cc + u * (rc - 1.0)))) > 1.5]   # the bermed part (half berms: 2nd half)
+            else:                                                # v32 (user: a net in EVERY turn): no berm -> just outside the lane
+                rc = g['r'] + TW_ / 2 + NT['flat_gap']; keep = []
+            if len(keep) < 5: keep = list(range(len(U_)))
             pts = U_[keep[0]:keep[-1] + 1]
             line = np.array([cc + u * rc for u in pts])
             # v29: ONE continuous net per turn whose bottom follows the ground (user: no more square panels in steps)

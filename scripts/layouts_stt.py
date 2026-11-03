@@ -95,8 +95,8 @@ POLES = dict(n=3, d=20.0, pad=(2.0, 4.0))
 # v28: yellow marker stakes on the crest of every bump, at both ends (lane edges), like the drone photos; v ft from the lane axis
 STAKES = dict(v=14.2, prom=0.6, table=6.0)
 # v28: blue nets on the outside of 5 turns (user), on the berm crest (drone photos: blue posts + net)
-NETS = dict(turns=['U L6 -> L7', 'L1 -> west column', 'U L3 -> L2 (rays)', 'L7 -> east lane (real high berm)',
-                   'east lane -> L1 (high berm, as after the whoops)'], step=8.0, flat_off=8.0)
+NETS = dict(turns='all', step=8.0, flat_off=8.0, flat_gap=3.0)   # v32 (user): a net in every turn (v28: 5 turns); turns without a
+# berm: net `flat_gap` ft outside the lane edge
 # v28: one big start floor (square mesh) behind the whole gate row instead of one grate per gate
 START_FLOOR = dict(back=22.0, side=2.5)
 # v31 (user, 2026-11-03): black pylons (ATVMC shape, all black) inside the 9 turns. v32 (user): placed by one rule, always the
