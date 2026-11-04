@@ -124,7 +124,7 @@ def boudin_logo():
     return m
 
 # ------------------------------------------------------------------ advertising tarps on the fence
-TARP = dict(w=7.2, y0=0.85, y1=3.25, z=0.43, every=4, gap=0,   # v44 (user): on almost every section: 3 out of 4 (v39: 1 in 6)
+TARP = dict(w=7.2, y0=0.85, y1=3.25, z=0.43, every=1, gap=-1,   # v45 (user): on every section (v44: 3 out of 4)
            order=('usland', 'santamaria', 'mcst', 'tme', 'rbt', 'sudtracto', 'motopark', 'occigardin', 'sxtour'))   # v44: + 4 sponsors
 TARP_BG = dict(usland=(246, 246, 246), mcst=(14, 14, 16), rbt=(246, 246, 246), motopark=(14, 14, 16), sxtour=(246, 246, 246),
                santamaria=(246, 246, 246), tme=(246, 246, 246), sudtracto=(246, 246, 246), occigardin=(246, 246, 246))

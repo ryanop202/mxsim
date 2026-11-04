@@ -155,6 +155,9 @@ PYLON_GROUND = dict(mound=dict(h=0.75, r_flat=1.6, r=3.6), curb=dict(turns=(2, 3
 # v38 (user): mound higher (0.45 -> 0.75 ft), same width. Curb: a 90 deg arc around the pylon only (v37: 220 deg, a half turn),
 # from the entry lane side to the exit lane side, + a short straight tail back along the entry lane and a short one at the exit
 # (the user's 'P' drawing: it marks the inside of the turn)
+VIPS = [dict(img='vip_mrbeast', h=6.4, sink=0.1, at=(452.0, 596.0)),          # v45 (user): cut-outs (rembg), all in ONE place: front row right behind the south
+        dict(img='vip_netanyahu', h=5.5, sink=0.5, at=(468.0, 596.0)),        # fence facing the start of the whoops, one fence
+        dict(img='vip_branson_epstein', h=6.0, sink=0.1, at=(484.0, 596.0))]  # section each, no tarp on those sections
 START_BANNER = dict(board=True, foot_h=0.4, back=1.4, model='start_sign')   # v41: sign on posts   # v40 (user): a BIG board on the platform at the foot of the start wall
 # (v39: a 31.5 ft banner on top of the wall, in front of the fence: too small). Origin `back` ft in front of the wall foot
 # (first point east of the wall within foot_h of the platform level).
