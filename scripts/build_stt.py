@@ -175,6 +175,69 @@ def pylon_ground(p):
             M = PG['mound']; out[sl] = np.maximum(out[sl], M['h'] * (1 - ss_((r - M['r_flat']) / (M['r'] - M['r_flat']))))
     return out
 
+def flag_stand_geom(p):
+    """v40: (crest world xz, lane unit vectors d / n, crest height, stand centre xz) of the finish take-off, LT.FLAG_STAND."""
+    FS = LT.FLAG_STAND
+    for g in p.segs:
+        if g['kind'] != 'S': continue
+        for prof, u0, name in g['sections']:
+            if name != LT.FINISH_SEC: continue
+            it = LS.COMBOS[name]['items'][0]; k = int(np.argmax(prof[:int(it[2] / 0.1)])); uc = u0 + k * 0.1
+            d = np.array([np.cos(g['t']), np.sin(g['t'])]); n = np.array([-np.sin(g['t']), np.cos(g['t'])]) * FS['side']
+            c = np.array([g['x0'], g['z0']]) + d * uc
+            hp = lambda ur: np.interp((k * 0.1 + ur) / 0.1, np.arange(len(prof)), prof, left=0, right=0)   # bump profile, ur from the crest
+            us = np.arange(-FS['back'], FS['fwd'], 0.1); fl_ = us[hp(us) >= prof[k] - FS['drop'] - 1e-6]          # flat top (cut)
+            ctr = c + d * float(fl_.mean()) + n * (FS['v0'] + FS['w'] / 2)
+            return c, d, n, float(prof[k]), ctr, hp
+    raise KeyError(LT.FINISH_SEC)
+
+def flag_stand(p):
+    """v40 (user): dirt platform joined to the side of the finish take-off, flat top, 1:1 sides."""
+    out = np.zeros((N, N)); FS = getattr(LT, 'FLAG_STAND', None)
+    if not FS: return out
+    c, d, n, hc, ctr, hp = flag_stand_geom(p); top = hc - FS['drop']; R = FS['back'] + FS['w'] + top / FS['slope'] + FS['v0'] + 2
+    sl, X, Z = G.window(ctr[0] - R, ctr[0] + R, ctr[1] - R, ctr[1] + R)
+    u = (X - c[0]) * d[0] + (Z - c[1]) * d[1]; v = (X - c[0]) * n[0] + (Z - c[1]) * n[1]
+    du = np.maximum(np.maximum(-FS['back'] - u, u - FS['fwd']), 0); dv = np.maximum(v - FS['v0'] - FS['w'], 0)
+    # v40b: the bump widened sideways (same take-off face and back as the bump itself), cut flat at `top`, sides 1:1 outside
+    hb = np.minimum(hp(np.clip(u, -FS['back'], FS['fwd'])), top)
+    out[sl] = np.clip(hb - np.hypot(du, dv) * FS['slope'], 0, None) * (v >= FS['v0'])   # joined to the bump at the lane edge, nothing in the lane
+    print('flag stand: crest %.1f ft, top %.1f ft, centre (%.1f, %.1f)' % (hc, top, ctr[0], ctr[1]))
+    return out
+
+def stake_pads(H, p):
+    """v40 (user): flat pads under the yellow stakes of the dirt freestyle kicker (same stake positions as export_stt)."""
+    SP_ = getattr(LT, 'STAKE_PADS', None); SK = getattr(LT, 'STAKES', None)
+    if not SP_ or not SK: return H
+    from scipy.signal import find_peaks
+    H = H.copy(); npad = 0
+    for g in p.segs:
+        if g['kind'] != 'S': continue
+        c_, s_ = np.cos(g['t']), np.sin(g['t'])
+        for prof, u0, name in g['sections']:
+            its = [(a_, b_) for n_, a_, b_, h_ in LS.COMBOS[name]['items'] if any(k_ in n_ for k_ in SP_['items'])]
+            if not its: continue
+            pk, _ = find_peaks(np.r_[0, prof, 0], prominence=SK['prom']); pk = pk - 1
+            for k in pk:
+                if not any(a_ <= k * 0.1 <= b_ for a_, b_ in its): continue
+                top = prof >= prof[k] - 0.15; a_ = k; b_ = k
+                while a_ > 0 and top[a_ - 1]: a_ -= 1
+                while b_ < len(prof) - 1 and top[b_ + 1]: b_ += 1
+                us = [a_ * 0.1 + 0.5, b_ * 0.1 - 0.5] if (b_ - a_) * 0.1 > SK['table'] else [k * 0.1]
+                for uu in us:
+                    for sg in (-1, 1):
+                        x_ = g['x0'] + (u0 + uu) * c_ - sg * SK['v'] * s_; z_ = g['z0'] + (u0 + uu) * s_ + sg * SK['v'] * c_
+                        R = SP_['half_u'] + SP_['half_v'] + SP_['skirt'] + 1
+                        sl, X, Z = G.window(x_ - R, x_ + R, z_ - R, z_ + R)
+                        u = (X - x_) * c_ + (Z - z_) * s_; v = -(X - x_) * s_ + (Z - z_) * c_
+                        inside = (np.abs(u) <= SP_['half_u']) & (np.abs(v) <= SP_['half_v'])
+                        h0 = float(H[sl][inside].max())
+                        dd = np.hypot(np.maximum(np.abs(u) - SP_['half_u'], 0), np.maximum(np.abs(v) - SP_['half_v'], 0))
+                        w = np.clip(1 - dd / SP_['skirt'], 0, 1); w = w * w * (3 - 2 * w)
+                        H[sl] = np.where(inside, h0, np.maximum(H[sl], H[sl] * (1 - w) + h0 * w)); npad += 1
+    print('stake pads', npad)
+    return H
+
 def extras():
     """v13: start platform (gates + grates on it, descent right after the gate line) and the freestyle ramp beside the
     wheel tap (steel-like: near-vertical sides). Shapes asked by the user in game tests, not measured units."""
@@ -238,6 +301,8 @@ def build():
     H = np.maximum.reduce([jumps, whoops, berms])
     H = np.maximum(H, extras())                                  # v13: start platform + freestyle ramp
     H = H + pylon_ground(p)                                      # v37: dirt bump under each pylon / small curb (user)
+    H = np.maximum(H, flag_stand(p))                             # v40: flagger platform at the finish take-off (user)
+    H = stake_pads(H, p)                                         # v40: flat pads under the freestyle kicker stakes (user)
     TN = 2 ** 11; t = lambda a: a[:-1:2, :-1:2][:TN, :TN]
     tiles = np.full((TN, TN), T_MAIN, np.uint8)
     tiles[t(jumps) > 0.05] = T_JUMP; tiles[t(whoops) > 0.05] = T_WHOOP; tiles[t(berms) > 0.05] = T_BERM

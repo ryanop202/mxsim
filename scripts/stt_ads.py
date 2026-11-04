@@ -225,6 +225,80 @@ def start_banner():
         pipe(m, [(a, y0 - 0.12, zl), (b, 0.35, zl)], r * 0.6, stl, seg=6)
     return m, tex
 
+BOARD = dict(w=60.0, y0=0.8, top=12.6, z=1.1, px=68, n_legs=7)
+# v40 (user's black rectangle on the in-game shot): a BIG start board standing on the start platform at the foot of the wall,
+# its top level with the fence top (wall 19 ft + fence 3.6 ft, platform 10 ft -> 12.6 ft), 60 ft wide (the user's box), steel
+# frame behind it. Same logos and order as the approved zoom, laid out for a tall board: Suttel over Moto Club on the left,
+# a huge START in the middle, Moto Club over Moto Park on the right.
+
+def start_board_texture():
+    B = BOARD; px = B['px']; W, H = int(B['w'] * px), int((B['top'] - B['y0']) * px)
+    from scipy.ndimage import gaussian_filter
+    n = gaussian_filter(np.random.default_rng(8).normal(0, 1, (H, W)), (14, 50)); n /= n.std() + 1e-9
+    img = np.zeros((H, W, 3)) + 13.0 + n[..., None] * 2.5
+    side = W * 0.315; cxl, cxr = side / 2, W - side / 2
+    for cx, (a, b) in ((cxl, ('suttel', 'mcst')), (cxr, ('mcst', 'motopark'))):
+        for cy, nm in ((H * 0.28, a), (H * 0.72, b)):
+            lg = logo(nm, dark=True); paste(img, fit(lg, cx, cy, side * 0.80, H * (0.36 if nm != 'mcst' else 0.34)), lg)
+    fs = int(H * 0.66); font = ImageFont.truetype('C:/Windows/Fonts/impact.ttf', fs)
+    while ImageDraw.Draw(Image.new('L', (1, 1))).textlength('START', font=font) > (W - 2 * side) * 0.92: fs -= 8; font = ImageFont.truetype('C:/Windows/Fonts/impact.ttf', fs)
+    t = Image.new('L', (int(W - 2 * side), H), 0); d = ImageDraw.Draw(t); tw = d.textlength('START', font=font)
+    bb = d.textbbox((0, 0), 'START', font=font); th = bb[3] - bb[1]
+    d.text(((t.width - tw) / 2, (H - th) / 2 - bb[1]), 'START', fill=255, font=font)
+    t = t.transform(t.size, Image.AFFINE, (1, 0.20, -0.10 * H, 0, 1, 0), Image.BICUBIC)        # italic
+    al = np.asarray(t).astype(float)[..., None] / 255.0; x0 = int(side)
+    img[:, x0:x0 + t.width] = img[:, x0:x0 + t.width] * (1 - al) + 244 * al
+    pp = max(6, int(H * 0.015)); img[:pp] = 205; img[-pp:] = 205; img[:, :pp] = 205; img[:, -pp:] = 205   # white piping (photo)
+    return Image.fromarray(np.clip(img, 0, 255).astype(np.uint8))
+
+def start_board():
+    """mesh + 2048 x 2048 texture: left half rows 0.., right half rows 1024.., black at (1700, 1990), steel at (1900, 1990).
+    Origin: centre, on the platform; front = +z (towards the gates)."""
+    from props_usland import pipe
+    B = BOARD; ban = start_board_texture(); hx = B['w'] / 2; y0, y1 = B['y0'], B['top']; z = B['z']; t = 0.08; T = 2048
+    hh = int(round(ban.height * T / (ban.width / 2))); assert hh <= 1000, hh
+    tex = Image.new('RGB', (T, T), (16, 16, 18))
+    tex.paste(ban.crop((0, 0, ban.width // 2, ban.height)).resize((T, hh), Image.LANCZOS), (0, 0))
+    tex.paste(ban.crop((ban.width // 2, 0, ban.width, ban.height)).resize((T, hh), Image.LANCZOS), (0, 1024))
+    d = ImageDraw.Draw(tex); d.rectangle((1600, 2000, 1799, 2047), fill=(14, 14, 16)); d.rectangle((1800, 2000, 2047, 2047), fill=(150, 154, 160))
+    m = Mesh(T, T); blk = m.uv_px(1700, 2024); stl = ('steel', (1920, 2024))
+    for k, (xa, xb) in enumerate(((-hx, 0.0), (0.0, hx))):                    # front, seen from +z: right = +x
+        r0 = 1024 * k
+        m.tri_fan([np.array(p) for p in [(xa, y0, z + t), (xb, y0, z + t), (xb, y1, z + t), (xa, y1, z + t)]], np.array([0, 0, 1.0]),
+                  [m.uv_px(0, r0 + hh), m.uv_px(T, r0 + hh), m.uv_px(T, r0), m.uv_px(0, r0)])
+    for P_, N_ in (([(hx, y0, z - t), (-hx, y0, z - t), (-hx, y1, z - t), (hx, y1, z - t)], (0, 0, -1)),
+                   ([(-hx, y1, z - t), (hx, y1, z - t), (hx, y1, z + t), (-hx, y1, z + t)], (0, 1, 0)),
+                   ([(-hx, y0, z + t), (hx, y0, z + t), (hx, y0, z - t), (-hx, y0, z - t)], (0, -1, 0)),
+                   ([(hx, y0, z - t), (hx, y1, z - t), (hx, y1, z + t), (hx, y0, z + t)], (1, 0, 0)),
+                   ([(-hx, y0, z + t), (-hx, y1, z + t), (-hx, y1, z - t), (-hx, y0, z - t)], (-1, 0, 0))):
+        m.tri_fan([np.array(p, float) for p in P_], np.array(N_, float), [blk] * 4)
+    r = 0.13; zl = z - t - r - 0.02; xs = np.linspace(-hx + 0.6, hx - 0.6, B['n_legs'])
+    for x in xs:                                                                  # steel frame: legs, back struts, feet
+        pipe(m, [(x, -0.3, zl), (x, y1 - 0.2, zl)], r, stl, seg=10)
+        pipe(m, [(x, 0.0, zl - 3.0), (x, y1 * 0.6, zl)], r * 0.8, stl, seg=8)
+        m.tri_fan([np.array(p) for p in [(x - 0.4, 0.02, zl - 3.2), (x + 0.4, 0.02, zl - 3.2), (x + 0.4, 0.02, zl + 0.4), (x - 0.4, 0.02, zl + 0.4)]],
+                  np.array([0, 1.0, 0]), [m.uv_px(1920, 2024)] * 4)
+    for yy in (0.4, y0 - 0.15, (y0 + y1) / 2, y1 - 0.4):                       # rails
+        pipe(m, [(-hx + 0.3, yy, zl), (hx - 0.3, yy, zl)], r * 0.75, stl, seg=8)
+    for a, b in zip(xs[:-1], xs[1:]):                                             # X braces (lower half)
+        pipe(m, [(a, 0.4, zl), (b, (y0 + y1) / 2, zl)], r * 0.55, stl, seg=6); pipe(m, [(a, (y0 + y1) / 2, zl), (b, 0.4, zl)], r * 0.55, stl, seg=6)
+    return m, tex
+
+CAGE = dict(w=5.0, h=3.4, rails=(0.45, 1.8, 3.3), r=0.07, bars=1.0)
+# v40 (user): the flagger on his platform at the finish take-off, inside a small steel cage, open at the top.
+
+def flag_cage():
+    from props_usland import pipe
+    C = CAGE; m = Mesh(256, 256); hw = C['w'] / 2; stl = ('steel', (128, 128)); r = C['r']
+    tex = Image.new('RGB', (256, 256), (152, 156, 162))
+    corners = [(-hw, -hw), (hw, -hw), (hw, hw), (-hw, hw)]
+    for x, z in corners: pipe(m, [(x, -0.2, z), (x, C['h'], z)], r * 1.4, stl, seg=8)
+    for yy in C['rails']: pipe(m, [(x, yy, z) for x, z in corners], r, stl, closed=True, seg=8)
+    for k in range(4):                                                            # vertical bars between the lower rails
+        (xa, za), (xb, zb) = corners[k], corners[(k + 1) % 4]; n = int(round(C['w'] / C['bars']))
+        for i in range(1, n): f = i / n; pipe(m, [(xa + (xb - xa) * f, C['rails'][0], za + (zb - za) * f), (xa + (xb - xa) * f, C['rails'][1], za + (zb - za) * f)], r * 0.7, stl, seg=6)
+    return m, tex
+
 def build(outd=OUTD):
     os.makedirs(outd, exist_ok=True); out = {}
     for n in BOUDIN_LOGOS: boudin_logo_texture(n).save(f'{outd}/boudin_{n}.png'); out[f'boudin_{n}'] = 'png'
@@ -232,7 +306,8 @@ def build(outd=OUTD):
     for n in TARP['order']: tarp_texture(n).save(f'{outd}/ad_{n}.png')
     m = boudin_logo(); out['boudin_logo'] = m.write(f'{outd}/boudin_logo.jm', (24, 0.5, 0.4, 0.4, 0.4))   # v39
     import stt_props as SP; open(f'{outd}/boudin_logo.shp', 'w', newline='\n').write(SP.boudin_shape())
-    m, tex = start_banner(); out['start_banner'] = m.write(f'{outd}/start_banner.jm', (0, 0, 0, 0, 0)); tex.save(f'{outd}/start_banner.png')
+    m, tex = start_board(); out['start_board'] = m.write(f'{outd}/start_board.jm', (0, 0, 0, 0, 0)); tex.save(f'{outd}/start_board.png')   # v40
+    m, tex = flag_cage(); out['flag_cage'] = m.write(f'{outd}/flag_cage.jm', (16, 0.6, 0.6, 0.6, 0.6)); tex.save(f'{outd}/flag_cage.png')
     return out
 
 if __name__ == '__main__':

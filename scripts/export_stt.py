@@ -122,6 +122,19 @@ def main():
         blk = blk.replace('r=123 g=73 b=52', 'r=72 g=104 b=46')
         open(f'{OUT}/tileinfo', 'w', newline='\n').write(ti.rstrip('\n') + '\n\n' + blk.strip('\n') + '\naddtile\n\n')
     open(f'{OUT}/desc', 'w', newline='\n').write(DESC + '\n'); open(f'{OUT}/billboards', 'w').close()
+    CR = getattr(LT, 'CROWD', None); FE0 = getattr(LT, 'FENCE', None)
+    if CR and FE0:                                 # v40 (user): public on the grass bank (people cut-outs, 2 rows behind the fence)
+        from skimage.measure import find_contours
+        DF0 = np.load(f'{ROOT}/build/stt_dist.npy'); rg = np.random.default_rng(40); bb = []
+        for dr in CR['rows']:
+            cs = max(find_contours(DF0, FE0['off'] + dr), key=len); pts = np.c_[cs[:, 1], cs[:, 0]]
+            sv = np.r_[0, np.cumsum(np.linalg.norm(np.diff(pts, axis=0), axis=1))]
+            for s0 in np.arange(rg.uniform(0, CR['step']), sv[-1], CR['step']):
+                if rg.random() < CR['skip']: continue
+                s1 = float(np.clip(s0 + rg.uniform(-CR['jitter'], CR['jitter']), 0, sv[-1]))
+                q = np.array([np.interp(s1, sv, pts[:, 0]), np.interp(s1, sv, pts[:, 1])])
+                bb.append(f"[{q[0]:.6f} 0.000000 {q[1]:.6f}] {CR['size'] * rg.uniform(0.95, 1.05):.6f} 1.000000 {CR['src']}/{CR['imgs'][rg.integers(len(CR['imgs']))]}.png")
+        open(f'{OUT}/billboards', 'w', newline='\n').write('\n'.join(bb) + '\n'); print('crowd billboards', len(bb))
     # timing gates (JGSX method, timing.py) + our gate model on the starting gates
     TG_ = getattr(LT, 'TURN_GATES', None)
     if TG_ and getattr(LT, 'PYLONS', None) and LT.PYLONS.get('points'): TG_ = dict(TG_, pylons=LT.PYLONS['points'])
@@ -147,7 +160,7 @@ def main():
         import stt_ads as AD_                      # v38: logo boudins (textures only), advertising tarps on the fence
         for nm in [f'boudin_{n}' for n in AD_.BOUDIN_LOGOS] + [f'ad_{n}' for n in AD_.TARP['order']]:
             shutil.copy(f'{ROOT}/assets/props/{nm}.png', f'{OUT}/statue/{nm}.png')
-        for nm in ('ad_tarp.jm', 'boudin_logo.jm', 'boudin_logo.shp', 'start_banner.jm', 'start_banner.png'):   # v39
+        for nm in ('ad_tarp.jm', 'boudin_logo.jm', 'boudin_logo.shp', 'start_board.jm', 'start_board.png', 'flag_cage.jm', 'flag_cage.png'):   # v39 / v40
             shutil.copy(f'{ROOT}/assets/props/{nm}', f'{OUT}/statue/{nm}')
         f = np.array([-np.sin(fa), -np.cos(fa)])
         st.append(f'[{gx:.6f} 0.000000 {gz:.6f}] {PP.statue_ang(*f):.6f} {P}/statue/start_floor.jm {P}/statue/start_floor.png null')
@@ -333,12 +346,10 @@ def main():
         SB_ = getattr(LT, 'START_BANNER', None)
         if SB_:                                    # v39: START banner in front of the fence section right behind the gate centre
             gx_, gz_ = LT.START_GATE[0] + LT.STT_ORIGIN[0], LT.START_GATE[1] + LT.STT_ORIGIN[1]
-            best = None
-            for q in range(m_):
-                pa, pb = at(q * stp), at((q + 1) * stp); c_ = (pa + pb) / 2 + np.array(LT.STT_ORIGIN)
-                if c_[0] < gx_ and (best is None or abs(c_[1] - gz_) < abs(best[1] - gz_)): best = c_
-            bx_, bz_ = best[0] + SB_['x_off'], gz_
-            st.append(f"[{bx_:.6f} 0.000000 {bz_:.6f}] {PP.statue_ang(1.0, 0.0):.6f} {P}/statue/start_banner.jm {P}/statue/start_banner.png null")
+            hp_ = float(h_at(H, gx_ - 5.0, gz_)); xf_ = gx_ - 5.0                 # v40: big board at the foot of the wall
+            while xf_ > gx_ - 80 and float(h_at(H, xf_ - 0.25, gz_)) <= hp_ + SB_['foot_h']: xf_ -= 0.25
+            bx_, bz_ = xf_ + SB_['back'], gz_
+            st.append(f"[{bx_:.6f} 0.000000 {bz_:.6f}] {PP.statue_ang(1.0, 0.0):.6f} {P}/statue/start_board.jm {P}/statue/start_board.png null")
             print('start banner at', round(bx_, 1), round(bz_, 1))
     # v25: 3D grass tufts on the grass (outside the fence), random size mix and rotation
     GT = getattr(LT, 'GRASS_TUFTS', None)
@@ -400,6 +411,10 @@ def main():
     b1 = np.array([gx, gz]) - fr * 25 + nr * (half - 15); b2 = np.array([gx, gz]) - fr * 25 - nr * (half - 15)
     cands = [c + n * sg * o_ + f * a_ for sg in (1, -1) for o_ in (24.0, 28.0, 32.0) for a_ in (6.0, -6.0)]
     fl = max(cands, key=lambda q: tr.query(q)[0] - 50 * float(h_at(H, *q) > 0.1))
+    if getattr(LT, 'FLAG_STAND', None):            # v40 (user): the finish flagger on his platform, in a steel cage
+        fl = B.flag_stand_geom(p)[4]
+        st_ = open(f'{OUT}/statues').read().rstrip('\n') + '\n' + f'[{fl[0]:.6f} 0.000000 {fl[1]:.6f}] 0.000000 {P}/statue/flag_cage.jm {P}/statue/flag_cage.png null' + '\n'
+        open(f'{OUT}/statues', 'w', newline='\n').write(st_)
     open(f'{OUT}/flaggers', 'w', newline='\n').write('\n'.join([f'[{b1[0]:.6f} 0.000 {b1[1]:.6f}]', f'[{b2[0]:.6f} 0.000 {b2[1]:.6f}]', '8.4 1', '9',
         '@30sec_30.png', '@30sec_turn.seq', '@30sec_5.png', '@30sec_run.seq', '@30sec_done.png', '',
         f'[{fl[0]:.6f} 0.000 {fl[1]:.6f}]', '8 -1', '@finish_green.png', '@finish_crossed.png', '@finish_white.png',

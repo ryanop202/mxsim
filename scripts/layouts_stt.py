@@ -152,7 +152,21 @@ PYLON_GROUND = dict(mound=dict(h=0.75, r_flat=1.6, r=3.6), curb=dict(turns=(2, 3
 # v38 (user): mound higher (0.45 -> 0.75 ft), same width. Curb: a 90 deg arc around the pylon only (v37: 220 deg, a half turn),
 # from the entry lane side to the exit lane side, + a short straight tail back along the entry lane and a short one at the exit
 # (the user's 'P' drawing: it marks the inside of the turn)
-START_BANNER = dict(x_off=0.8)   # v39 (user): START banner just in front of the fence behind the gates (on the start wall)
+START_BANNER = dict(board=True, foot_h=0.4, back=1.4)   # v40 (user): a BIG board on the platform at the foot of the start wall
+# (v39: a 31.5 ft banner on top of the wall, in front of the fence: too small). Origin `back` ft in front of the wall foot
+# (first point east of the wall within foot_h of the platform level).
+FLAG_STAND = dict(side=1, v0=15.2, w=8.0, back=12.0, fwd=12.0, drop=1.0, slope=1.0)   # v40b: the bump's own profile widened 8 ft, cut flat 1 ft under the crest (flat top ~6 ft long)
+# v40 (user): at the finish take-off, a dirt platform joined to the side of the bump (west side, outside the lane), its flat
+# top `drop` ft under the crest, from `back` ft before the crest to `fwd` ft after it, `w` ft wide, sides 1:1; the finish
+# flagger stands on it inside a small steel cage (stt_ads.flag_cage).
+STAKE_PADS = dict(items=('(cut',), half_u=0.7, half_v=0.8, skirt=0.6)
+# v40 (user: the yellow stakes on the freestyle kicker lean): a small flat pad under each stake of the dirt kicker, at the
+# highest ground under the stake, so they stand straight.
+CROWD = dict(rows=(6.0, 13.0), step=10.0, jitter=3.5, skip=0.18, size=48.0,
+             imgs=('Crowd1', 'Crowd2', 'Crowd3', 'Crowd4', 'Crowd5', 'Crowd6', 'Crowd8', 'Crowd9'), src='@2022Miamibeachrace/billboard')
+# v40 (user): public on the grass bank: billboards (people cut-outs) from the 2022 Miami Beach Race track (installed in the
+# user's game, referenced, not copied), 2 rows behind the fence (`rows` ft beyond it), about every `step` ft, some gaps.
+# Size 48 -> people about 6 ft (Miami uses 61: 7.6 ft).
 TURN_GATES = dict(half_lane=15.2, inner=2.0, outer=12.0, fr=(0.15, 0.85), fan=True, start_pad=4.0)
 
 # v24: the bank starts at the height of the ground it touches (the start platform: 10 ft) and rises in ONE smooth slope
