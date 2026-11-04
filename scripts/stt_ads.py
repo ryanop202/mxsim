@@ -51,7 +51,9 @@ def logo(name, dark=False):
     if name == 'sxtour': return _crop(Image.open(LG + 'sxtour_long.png').convert('RGBA'))
     if name == 'suttel': return _from_dark_bg(LG + 'suttel.jpg')
     if name in ('santamaria', 'tme', 'sudtracto', 'occigardin'): return _from_light_bg(LG + name + '.jpg')   # v44 (user)
-    if name == 'fosure': return _crop(Image.open(LG + 'fosure.png').convert('RGBA'))   # v47 (user's PSD, cut out of its dark background)
+    if name == 'fosure': return _crop(Image.open(LG + 'fosure.png').convert('RGBA'))
+    if name == '50factory': return Image.open(LG + '50factory.png').convert('RGBA')        # v50 (user)
+    if name == 'motul': return Image.open(LG + 'motul.png').convert('RGBA')                # v50 (user): the red box itself   # v47 (user's PSD, cut out of its dark background)
     raise KeyError(name)
 
 def paste(img, box, lg):
@@ -86,18 +88,25 @@ def _boudin_arc():
         out.append((z, y, n, acc))
     return out
 
-def boudin_logo_texture(name):
+START_BOUDINS_TEX = dict(black=('usland', 'santamaria', 'mcst', 'tme', 'rbt', 'sudtracto', 'motopark', 'occigardin', 'fosure',
+                                  'sxtour', 'motul'), yellow='50factory', yellow_rgb=(249, 229, 42))
+LIGHT_LOGOS = ('santamaria', 'tme', 'sudtracto', 'occigardin', 'rbt')   # need a white plate on a black boudin
+
+def boudin_logo_texture(name, base=None, plate=False):
     """1024 x 1024: rows 0..479 = +z half (row 479 = foot, row 0 = top of the round), rows 480..959 = -z half (same), rows
     960.. plain (ends). u = along the boudin, read left -> right from outside on both halves. Logo centred `logo_s` ft of arc
     above the foot (over the shoulder), `logo_h` ft high."""
     import stt_props as SP
     B = SP.BOUDIN; sec = _boudin_arc(); half = sec[-1][3] / 2; RW = BL['rows']
-    img = np.zeros((1024, 1024, 3)); img[:] = SP._vinyl(1024, 1024, 60, 30, 44, amp=4)
+    img = np.zeros((1024, 1024, 3)); img[:] = SP._vinyl(1024, 1024, 60, 30, 44, amp=4, base=base or (17, 17, 19.0))
     pxu, pxv = 1024 / B['L'], RW / half
-    lg = logo(name, dark=True)
+    lg = logo(name, dark=base is None)
     for r0 in (0, RW):
         cy = r0 + RW - BL['logo_s'] * pxv
-        paste(img, fit(lg, 512, cy, BL['logo_w'] * pxu, BL['logo_h'] * pxv), lg)
+        bx = fit(lg, 512, cy, BL['logo_w'] * pxu, BL['logo_h'] * pxv)
+        if plate:                                                    # v50: white plate behind a logo made for white
+            x0, y0, x1, y1 = bx; px_ = 0.08 * pxu; img[int(y0 - px_):int(y1 + px_), int(x0 - px_):int(x1 + px_)] = 244.0
+        paste(img, bx, lg)
     return Image.fromarray(np.clip(img, 0, 255).astype(np.uint8))
 
 def boudin_logo():
@@ -377,6 +386,11 @@ def build(outd=OUTD):
     for n in TARP['order']: tarp_texture(n).save(f'{outd}/ad_{n}.png')
     m = boudin_logo(); out['boudin_logo'] = m.write(f'{outd}/boudin_logo.jm', (24, 0.5, 0.4, 0.4, 0.4))   # v39
     import stt_props as SP; open(f'{outd}/boudin_logo.shp', 'w', newline='\n').write(SP.boudin_shape())
+    for n in START_BOUDINS_TEX['black']:                                 # v50: start-only boudins (hidden 15 s after the drop)
+        boudin_logo_texture(n, plate=n in LIGHT_LOGOS).save(f'{outd}/startb_{n}.png')
+    boudin_logo_texture(START_BOUDINS_TEX['yellow'], base=START_BOUDINS_TEX['yellow_rgb']).save(f"{outd}/startb_{START_BOUDINS_TEX['yellow']}.png")
+    import stt_props as SP2
+    for k in ('f50', 'motul'): SP2.pylon_texture(k).save(f'{outd}/pylon_{k}.png')   # v50: pylon skins
     m, tex = start_sign(); out['start_sign'] = m.write(f'{outd}/start_sign.jm', (0, 0, 0, 0, 0)); tex.save(f'{outd}/start_sign.png')   # v41
     stake_sprite().save(f'{outd}/stake_sprite.png')
     m, tex = flag_cage(); out['flag_cage'] = m.write(f'{outd}/flag_cage.jm', (16, 0.6, 0.6, 0.6, 0.6)); tex.save(f'{outd}/flag_cage.png')

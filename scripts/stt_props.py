@@ -144,18 +144,34 @@ def _paste_logo(img, box, logo_path=None):
     a = np.array(lg.resize((x1 - x0, y1 - y0), Image.LANCZOS))[..., 3:4] / 255.0
     img[y0:y1, x0:x1] = img[y0:y1, x0:x1] * (1 - a) + np.array([236, 236, 238.0]) * a
 
-def pylon_texture():
-    """512 x 1024. Rows 0..299 column side (u = angle), 300..399 base sides, 400..511 tops, 512..639 the two base sides that
-    carry the Fly logo (u = along the straight side, left -> right seen from outside), 640..1023 dirt of the pad."""
-    P = PYLON; img = np.zeros((1024, 512, 3))
-    img[0:300] = _vinyl(300, 512, 6, 40, 1); img[300:400] = _vinyl(100, 512, 22, 6, 3, amp=10); img[400:512] = _vinyl(112, 512, 14, 14, 4, amp=6)
-    img[512:640] = _vinyl(128, 512, 22, 6, 7, amp=8)
+PYLON_SKINS = dict(black=dict(col=None, base=None, logo=None),
+                   f50=dict(col=(249, 229, 42), base=(249, 229, 42), logo='50factory'),     # v50 (user): all 50 Factory yellow
+                   motul=dict(col=(237, 37, 47), base=None, logo='motul'))                  # v50 (user): red column, black base
+
+def pylon_texture(skin='black'):
+    """512 x 1024. Rows 0..299 column side (u = angle), 300..399 base sides, 400..511 tops (base), 512..639 the two base
+    sides that carry the logo (u = along the straight side, left -> right seen from outside), 640..1023 dome cap (v50, column
+    colour; v35-v36b: dirt of the pad). skin: PYLON_SKINS key (v50: black Fly, 50 Factory yellow, Motul red)."""
+    P = PYLON; img = np.zeros((1024, 512, 3)); K = PYLON_SKINS[skin]
+    cb = K['col'] or (17, 17, 19.0); bb = K['base'] or (17, 17, 19.0); ac = 4 if K['col'] else 12; ab = 4 if K['base'] else 10
+    img[0:300] = _vinyl(300, 512, 6, 40, 1, amp=ac, base=cb); img[300:400] = _vinyl(100, 512, 22, 6, 3, amp=ab, base=bb)
+    img[400:512] = _vinyl(112, 512, 14, 14, 4, amp=min(ab, 6), base=bb)
+    img[512:640] = _vinyl(128, 512, 22, 6, 7, amp=min(ab, 8), base=bb)
+    img[296:300] = img[300:304]                                      # v50: no column colour bleeding onto the base top edge
+    if K['logo']:                                                    # v50: sponsor logo in its own colours, base + column
+        import stt_ads as AD
+        img[640:1024] = _vinyl(384, 512, 14, 14, 8, amp=ac, base=cb)
+        lg = AD.logo(K['logo']); AD.paste(img, AD.fit(lg, 256, 576, 0.92 * 511, 0.80 * 112), lg)
+        yc = P['pad_h'] + P['base_h']; pxu = 512 / (2 * np.pi * P['cyl_r']); pxv = 296 / (P['H'] - yc)
+        lv = lg.rotate(90, expand=True).transpose(Image.FLIP_LEFT_RIGHT)   # reads bottom -> top, mirrored for u (see below)
+        y0_, y1_ = P['col_logo']; cyv = 298 - ((y0_ + y1_) / 2 - yc) * pxv
+        for uc in (128, 384):
+            AD.paste(img, AD.fit(lv, uc, cyv, 0.95 * pxu, (y1_ - y0_ + 0.3) * pxv), lv)
+        return Image.fromarray(np.clip(img, 0, 255).astype(np.uint8))
+    img[640:1024] = _vinyl(384, 512, 14, 14, 8)
     sl = P['base_w'] - 2 * P['base_r']; yb = P['base_h'] - 0.05; pxu, pxv = 511 / sl, 112 / yb   # logo face: rows 520 (top) .. 632 (bottom)
     lh = 0.62 * yb; lw = lh * 4.43                                   # logo aspect 4.43 : 1
     _paste_logo(img, (256 - lw * pxu / 2, 576 - lh * pxv / 2, 256 + lw * pxu / 2, 576 + lh * pxv / 2))
-    # v36b (user): the pad must look like the track: the track's own dirt tile (SX1 tiles/dirt.ppm, 128 px) repeated
-    tile = np.asarray(Image.open(f'{ROOT}/tracks/USLAND2026SX1/tiles/dirt.ppm').convert('RGB')).astype(float)
-    img[640:1024] = np.tile(tile, (3, 4, 1))
     # v36: vertical logo on the column. u = angle (512 px = 2 pi r), v rows 298 (y = top of base) .. 2 (y = H). On the cylinder
     # u grows towards the viewer's LEFT on both the +z (angle 90) and the -z (angle 270) side -> the logo is mirrored in u.
     yc = P['pad_h'] + P['base_h']; pxu = 512 / (2 * np.pi * P['cyl_r']); pxv = 296 / (P['H'] - yc)
@@ -229,7 +245,7 @@ def pylon():
         c0, s0, c1, s1 = np.cos(ang[k]), np.sin(ang[k]), np.cos(ang[k + 1]), np.sin(ang[k + 1])
         _smooth(m, [(0, H, 0), (rt * c1, yt, rt * s1), (rt * c0, yt, rt * s0)],
                 [np.array([0, 1.0, 0]), np.array([c1 * 0.1, 1, s1 * 0.1]), np.array([c0 * 0.1, 1, s0 * 0.1])],
-                [m.uv_px(256, 456), m.uv_px(256 + c1 * 40, 456 + s1 * 40), m.uv_px(256 + c0 * 40, 456 + s0 * 40)])
+                [m.uv_px(256, 832), m.uv_px(256 + c1 * 40, 832 + s1 * 40), m.uv_px(256 + c0 * 40, 832 + s0 * 40)])   # v50: own patch (column colour)
     return m, img
 
 # v35 (user: v34 "ça fait trop tomber direct" - harder to go through, it must stop you but not necessarily throw you down):

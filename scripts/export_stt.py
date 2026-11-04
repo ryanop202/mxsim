@@ -222,6 +222,9 @@ def main():
         import stt_ads as AD_                      # v38: logo boudins (textures only), advertising tarps on the fence
         for nm in [f'boudin_{n}' for n in AD_.BOUDIN_LOGOS] + [f'ad_{n}' for n in AD_.TARP['order']]:
             shutil.copy(f'{ROOT}/assets/props/{nm}.png', f'{OUT}/statue/{nm}.png')
+        import stt_ads as AD2
+        for nm in [f'startb_{n}.png' for n in AD2.START_BOUDINS_TEX['black'] + (AD2.START_BOUDINS_TEX['yellow'],)] + ['pylon_f50.png', 'pylon_motul.png']:
+            shutil.copy(f'{ROOT}/assets/props/{nm}', f'{OUT}/statue/{nm}')       # v50
         for nm in ('ad_tarp.jm', 'boudin_logo.jm', 'boudin_logo.shp', 'start_sign.jm', 'start_sign.png', 'flag_cage.jm', 'flag_cage.png'):   # v39 / v40 / v41
             shutil.copy(f'{ROOT}/assets/props/{nm}', f'{OUT}/statue/{nm}')
         f = np.array([-np.sin(fa), -np.cos(fa)])
@@ -243,7 +246,8 @@ def main():
             npy_ += 1
             j_ = int(np.argmin(np.hypot(smp_p['x'] - x_, smp_p['z'] - z_)))   # v35: logo side (+z) faces the riding line
             a_ = PP.statue_ang(smp_p['x'][j_] - x_, smp_p['z'][j_] - z_)
-            st.append(f'[{x_:.6f} 0.000000 {z_:.6f}] {a_:.6f} {P}/statue/pylon_black.jm {P}/statue/pylon_black.png {P}/statue/pylon_black.shp')
+            tx_ = getattr(LT, 'PYLON_SKINS', {}).get(npy_ - 1, 'pylon_black')     # v50: sponsor skins
+            st.append(f'[{x_:.6f} 0.000000 {z_:.6f}] {a_:.6f} {P}/statue/pylon_black.jm {P}/statue/{tx_}.png {P}/statue/pylon_black.shp')
     # v35: straw bales (user's white rectangles), long axis = model x; statue +x -> (cos a, -sin a)
     for bx_, bz_, ba_ in getattr(LT, 'BALES', []):
         t_ = np.radians(ba_); a_ = float(np.arctan2(-np.sin(t_), np.cos(t_)))
@@ -289,6 +293,20 @@ def main():
                 st.extend(rows); nbd += len(rows)
                 print('fmx gap', round(land, 1), 'ft')
         print('boudins', nbd)
+    SBD = getattr(LT, 'START_BOUDINS', None)
+    if SBD:                                        # v50: start-only boudins along the user's lines (no collision, see nofrills.js)
+        import stt_ads as AD3, stt_props as SP3
+        segL_ = SP3.BOUDIN['L']; nsb = 0; blk_ = AD3.START_BOUDINS_TEX['black']
+        for line in SBD['lines']:
+            pts_ = np.array(line, float); sv_ = np.r_[0, np.cumsum(np.linalg.norm(np.diff(pts_, axis=0), axis=1))]
+            k_ = max(1, int(round(sv_[-1] / segL_)))
+            for q in range(k_):
+                s_ = (q + 0.5) * sv_[-1] / k_; i_ = min(int(np.searchsorted(sv_, s_, 'right')) - 1, len(pts_) - 2)
+                d_ = pts_[i_ + 1] - pts_[i_]; d_ /= np.linalg.norm(d_); c = pts_[i_] + d_ * (s_ - sv_[i_])
+                tx_ = AD3.START_BOUDINS_TEX['yellow'] if nsb % 2 == 0 else blk_[(nsb // 2) % len(blk_)]
+                st.append(f'[{c[0]:.6f} 0.000000 {c[1]:.6f}] {float(np.arctan2(-d_[1], d_[0])):.6f} {P}/statue/boudin_logo.jm {P}/statue/startb_{tx_}.png null')
+                nsb += 1
+        print('start boudins', nsb)
     FS_ = getattr(LT, 'FMX_STAKES', None); R3_ = getattr(LT, 'FMX_RAMP', None)
     if FS_ and R3_:                                # v35: yellow stakes on both ends of the steel ramp lip (on top of it)
         lip = np.array(R3_['lip']) + np.array(LT.STT_ORIGIN); d_ = np.array(R3_['aim']) - np.array(R3_['lip']); d_ = d_ / np.linalg.norm(d_)

@@ -138,6 +138,23 @@ def main():
         st.append(f'[{px + ox:.6f} 0.000000 {pz + oz:.6f}] {a:.6f} @{NIGHT}/statue/lightpole.jm @{NIGHT}/statue/lightpole.png null')
         st.append(f'[{px + ox:.6f} 0.000000 {pz + oz:.6f}] {a:.6f} @{NIGHT}/statue/lamp_glow.jm @{NIGHT}/statue/lamp_glow.png null')
     open(f'{OUT}/statues', 'w', newline='\n').write('\n'.join(st) + '\n')
+    SBD = getattr(LT, 'START_BOUDINS', None)
+    if SBD:                                        # v50: nofrills.js (part of the track checksum, always run): start boudins
+        rows_ = []                                 # shown until hide_after s after the gate drop, then sunk under the ground
+        for i_, l_ in enumerate(st):
+            if '/statue/startb_' in l_:
+                v_ = l_.split(']')[0][1:].split(); rows_.append(f"[{i_}, {float(v_[0]):.3f}, {float(v_[2]):.3f}, {float(l_.split(']')[1].split()[0]):.6f}]")
+        js_ = ['/*', 'USLAND 2026 Saint-Thibery (night): start-only boudins.',
+               'Statues using the startb_*.png textures (no collision) stay until ' + str(SBD['hide_after']) + ' s after the gate drop,',
+               'then they are moved under the ground. Before a gate drop (practice) they stay. Plain ASCII on purpose.', '*/', '',
+               'var g_sb = [' + ', '.join(rows_) + '];', 'var g_sb_after = ' + str(SBD['hide_after']) + ';', 'var g_sb_hidden = false;', '',
+               'function sbSet(hide) {', '    var i, s;', '    for (i = 0; i < g_sb.length; i++) {', '        s = g_sb[i];',
+               '        mx.move_statue(s[0], s[1], hide ? -200.0 : 0.0, s[2], s[3]);', '    }', '    g_sb_hidden = hide;', '}', '',
+               'function startBoudins(seconds) {', '    var d = mx.get_gate_drop_time();', '    var hide = (d >= 0 && mx.seconds >= d + g_sb_after);',
+               '    if (hide != g_sb_hidden)', '        sbSet(hide);', '    if (startBoudinsPrev)', '        startBoudinsPrev(seconds);', '}', '',
+               'var startBoudinsPrev = mx.frame_handler;', 'mx.frame_handler = startBoudins;', '']
+        open(f'{OUT}/nofrills.js', 'w', newline='\n', encoding='ascii').write('\n'.join(js_))
+        print('nofrills.js: start boudins', len(rows_))
     # lightmap
     sh = bake(H, P); N = H.shape[0]
     # v25: inside the fence the ground keeps the DAY lightmap (bumps exactly as by day), night outside, blended over 25 ft

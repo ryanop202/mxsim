@@ -160,6 +160,14 @@ VIPS = [dict(img='vip_mrbeast', h=6.4, sink=0.1, at=(452.0, 596.0)),          # 
         dict(img='vip_branson_epstein', h=6.0, sink=0.1, at=(484.0, 596.0)),  # section each, no tarp on those sections
         dict(img='vip_xddl', h=2.3, sink=-3.0, at=(500.0, 596.0), keep_tarp=True)]   # v49 (user): a head-and-shoulders portrait:
 # standing behind the tarp of the next section (bust from 3.0 to 5.3 ft). v49: VIPs are billboards too (turn to the view)
+PYLON_SKINS = {0: 'pylon_f50', 2: 'pylon_f50', 4: 'pylon_f50', 5: 'pylon_motul', 8: 'pylon_motul'}
+# v50 (user's circles on the in-game top view): yellow = all 50 Factory yellow with its logo, red = red Motul column, black base
+START_BOUDINS = dict(lines=[[(706.3, 395.9), (654.3, 522.0)],                       # v50 (user's red lines): end of the bowl ->
+                            [(533.0, 443.6), (381.7, 440.9), (344.3, 423.8)]],      # whoops side; landing corner -> along L4 -> grid
+                     hide_after=15.0)
+# start-only boudins: no collision (a statue moved by the track script keeps its collision where it was), shown until 15 s
+# after the gate drop, then sunk under the ground by nofrills.js; black ones with the sponsors and 50 Factory yellow ones,
+# one in two
 START_BANNER = dict(board=True, foot_h=0.4, back=1.4, model='start_sign')   # v41: sign on posts   # v40 (user): a BIG board on the platform at the foot of the start wall
 # (v39: a 31.5 ft banner on top of the wall, in front of the fence: too small). Origin `back` ft in front of the wall foot
 # (first point east of the wall within foot_h of the platform level).
