@@ -610,3 +610,5 @@ def build(outd=OUTD):
 
 if __name__ == '__main__':
     for k, v in build().items(): print(k, v)
+    import stt_ads                                   # v38: logo boudin textures, advertising tarps
+    for k, v in stt_ads.build().items(): print(k, v)

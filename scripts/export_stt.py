@@ -144,6 +144,10 @@ def main():
         for nm in ('start_floor', 'stake_yellow', 'start_gate_frame', 'pylon_black', 'bale_straw', 'boudin_black', 'boudin_plain'):
             for e in ('jm', 'png'): shutil.copy(f'{ROOT}/assets/props/{nm}.{e}', f'{OUT}/statue/{nm}.{e}')
         for nm in ('pylon_black', 'bale_straw', 'boudin_black', 'boudin_plain'): shutil.copy(f'{ROOT}/assets/props/{nm}.shp', f'{OUT}/statue/{nm}.shp')
+        import stt_ads as AD_                      # v38: logo boudins (textures only), advertising tarps on the fence
+        for nm in [f'boudin_{n}' for n in AD_.BOUDIN_LOGOS] + [f'ad_{n}' for n in AD_.TARP['order']]:
+            shutil.copy(f'{ROOT}/assets/props/{nm}.png', f'{OUT}/statue/{nm}.png')
+        shutil.copy(f'{ROOT}/assets/props/ad_tarp.jm', f'{OUT}/statue/ad_tarp.jm')
         f = np.array([-np.sin(fa), -np.cos(fa)])
         st.append(f'[{gx:.6f} 0.000000 {gz:.6f}] {PP.statue_ang(*f):.6f} {P}/statue/start_floor.jm {P}/statue/start_floor.png null')
     else:
@@ -172,14 +176,15 @@ def main():
     if BD_:
         import stt_props as SP_
         segL = SP_.BOUDIN['L']
-        def tube_row(p0, p1, off, sides=(1, -1), model='boudin_black', segL=segL):
+        def tube_row(p0, p1, off, sides=(1, -1), model='boudin_black', segL=segL, tex=None):
             rows_ = []
             d0 = np.array(p1, float) - np.array(p0, float); Ld = np.linalg.norm(d0); d0 /= Ld; nn = np.array([-d0[1], d0[0]])
             k_ = max(1, int(round(Ld / segL))); a_ = float(np.arctan2(-d0[1], d0[0]))
             for sgn in sides:
                 for q in range(k_):
                     c = np.array(p0, float) + d0 * (Ld / 2 - (k_ * segL) / 2 + (q + 0.5) * segL) + nn * sgn * off
-                    rows_.append(f'[{c[0]:.6f} 0.000000 {c[1]:.6f}] {a_:.6f} {P}/statue/{model}.jm {P}/statue/{model}.png {P}/statue/{model}.shp')
+                    tx_ = tex[q % len(tex)] if tex else model                       # v38: logo textures alternated
+                    rows_.append(f'[{c[0]:.6f} 0.000000 {c[1]:.6f}] {a_:.6f} {P}/statue/{model}.jm {P}/statue/{tx_}.png {P}/statue/{model}.shp')
             return rows_
         W_ = BD_.get('whoops')
         if W_:                                     # v36: one side only, explicit x range along the lane (user's line)
@@ -188,7 +193,7 @@ def main():
                 c_, s_ = np.cos(g['t']), np.sin(g['t']); xa_, xb_ = W_['x']
                 ua_, ub_ = (xa_ - g['x0']) / c_, (xb_ - g['x0']) / c_                 # this lane runs along x
                 rows = tube_row((g['x0'] + ua_ * c_, g['z0'] + ua_ * s_), (g['x0'] + ub_ * c_, g['z0'] + ub_ * s_), W_['off'], sides=(W_['side'],),
-                                model=W_.get('model', 'boudin_black'), segL=SP_.BOUDIN['L'])
+                                model=W_.get('model', 'boudin_black'), segL=SP_.BOUDIN['L'], tex=W_.get('tex'))
                 st.extend(rows); nbd += len(rows)
         F_ = BD_.get('fmx'); R2_ = getattr(LT, 'FMX_RAMP', None)
         if F_ and F_.get('p0'):                    # v37: the user's line, explicit ends
@@ -310,13 +315,20 @@ def main():
             i = min(int(np.searchsorted(L_, sv, 'right')) - 1, len(seg) - 1); a, b = seg[i]
             return a + (b - a) * (sv - L_[i]) / max(np.linalg.norm(b - a), 1e-9)
         dfl = lambda q: float(DF[int(q[1] + LT.STT_ORIGIN[1]), int(q[0] + LT.STT_ORIGIN[0])])
-        nf = 0
+        nf = 0; nad = 0; import stt_ads as AD_
         for q in range(m_):
             pa, pb = at(q * stp), at((q + 1) * stp); c_ = (pa + pb) / 2 + np.array(LT.STT_ORIGIN); t_ = (pb - pa) / np.linalg.norm(pb - pa)
             inw = np.array([-t_[1], t_[0]])
             if dfl((pa + pb) / 2 + inw * 3) > dfl((pa + pb) / 2 - inw * 3): inw = -inw   # v25: inward = towards the track
             st.append(f"[{c_[0]:.6f} 0.000000 {c_[1]:.6f}] {PP.statue_ang(inw[0], inw[1]):.6f} {P}/statue/{FE['model']}.jm {P}/statue/{FE['model']}.png null"); nf += 1
-        print('fence sections', nf)
+            # v38 (user): an advertising tarp on the track side every `every` sections, logos in turn; none behind the start
+            # gates (the START banner goes there)
+            gx_, gz_ = LT.START_GATE[0] + LT.STT_ORIGIN[0], LT.START_GATE[1] + LT.STT_ORIGIN[1]
+            behind_start = c_[0] < gx_ and abs(c_[1] - gz_) < 52.0
+            if q % AD_.TARP['every'] == AD_.TARP['every'] // 2 and not behind_start:
+                n_ = AD_.TARP['order'][nad % len(AD_.TARP['order'])]; nad += 1
+                st.append(f"[{c_[0]:.6f} 0.000000 {c_[1]:.6f}] {PP.statue_ang(inw[0], inw[1]):.6f} {P}/statue/ad_tarp.jm {P}/statue/ad_{n_}.png null")
+        print('fence sections', nf, 'tarps', nad)
     # v25: 3D grass tufts on the grass (outside the fence), random size mix and rotation
     GT = getattr(LT, 'GRASS_TUFTS', None)
     if GT and getattr(LT, 'FENCE', None):

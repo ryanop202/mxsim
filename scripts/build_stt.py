@@ -148,13 +148,29 @@ def pylon_ground(p):
     if not PG or not getattr(LT, 'PYLONS', {}).get('points'): return out
     smp = p.samples(1.0)
     for k, (px, pz) in enumerate(LT.PYLONS['points']):
-        R = max(PG['mound']['r'], PG['curb']['r'] + 2 * PG['curb']['w']) + 1
+        R = max(PG['mound']['r'], PG['curb']['r'] + PG['curb'].get('ext_in', 0) + 2 * PG['curb']['w']) + 1
         sl, X, Z = G.window(px - R, px + R, pz - R, pz + R); r = np.hypot(X - px, Z - pz)
         if k in PG['curb']['turns']:
-            C = PG['curb']; j = int(np.argmin(np.hypot(smp['x'] - px, smp['z'] - pz)))
-            a0 = np.arctan2(smp['z'][j] - pz, smp['x'][j] - px); da = np.angle(np.exp(1j * (np.arctan2(Z - pz, X - px) - a0)))
-            fa = 1 - ss_((np.abs(np.degrees(da)) - (C['arc'] / 2 - 30)) / 30)                 # arc facing the track, soft ends
-            out[sl] = np.maximum(out[sl], C['h'] * np.clip(1 - ((r - C['r']) / C['w']) ** 2, 0, 1) ** 1.5 * fa)
+            C = PG['curb']; j = int(np.argmin(np.hypot(smp['x'] - px, smp['z'] - pz))); kk = 14
+            Pc = np.array([px, pz]); pt = lambda i: np.array([smp['x'][i], smp['z'][i]])
+            def side(i):                                   # unit tangent and the normal pointing from the pylon to the line
+                t = pt(i + 1) - pt(i - 1); t /= np.linalg.norm(t); n = np.array([-t[1], t[0]])
+                return t, (n if np.dot(n, pt(i) - Pc) > 0 else -n)
+            # v38: entry / exit directions = those of the turn itself (the pylon can sit ~19 ft off the lane centre, before the
+            # turn: the nearest centre-line point is then still on the straight)
+            gT = min((g for g in p.segs if g['kind'] == 'T'), key=lambda g: abs(g['s0'] + abs(np.radians(g['ang'])) * g['r'] / 2 - smp['s'][j]))
+            s_in, s_out = gT['s0'] - 5.0, gT['s0'] + abs(np.radians(gT['ang'])) * gT['r'] + 5.0
+            t_in, n_in = side(int(np.argmin(np.abs(smp['s'] - s_in)))); t_out, n_out = side(int(np.argmin(np.abs(smp['s'] - s_out))))
+            a_in, a_out = np.arctan2(n_in[1], n_in[0]), np.arctan2(n_out[1], n_out[0]); da_ = np.angle(np.exp(1j * (a_out - a_in)))
+            arc = [Pc + C['r'] * np.array([np.cos(a_in + da_ * u), np.sin(a_in + da_ * u)]) for u in np.linspace(0, 1, 40)]
+            tail_in = [arc[0] - t_in * C['ext_in'] * u for u in np.linspace(1, 0, 20, endpoint=False)]
+            tail_out = [arc[-1] + t_out * C['ext_out'] * u for u in np.linspace(0, 1, 10)[1:]]
+            poly = np.array(tail_in + arc + tail_out); sv = np.r_[0, np.cumsum(np.linalg.norm(np.diff(poly, axis=0), axis=1))]
+            Q = np.stack([X.ravel(), Z.ravel()], 1); dd = np.linalg.norm(Q[:, None, :] - poly[None], axis=2); ii = dd.argmin(1)
+            dmin = dd[np.arange(len(Q)), ii].reshape(X.shape); s_ = sv[ii].reshape(X.shape)
+            fa = ss_(np.minimum(s_, sv[-1] - s_) / 0.6)                                       # soft ends
+            out[sl] = np.maximum(out[sl], C['h'] * np.clip(1 - (dmin / C['w']) ** 2, 0, 1) ** 1.5 * fa)
+            print('curb pylon', k, 'arc %.0f deg' % abs(np.degrees(da_)))
         else:
             M = PG['mound']; out[sl] = np.maximum(out[sl], M['h'] * (1 - ss_((r - M['r_flat']) / (M['r'] - M['r_flat']))))
     return out

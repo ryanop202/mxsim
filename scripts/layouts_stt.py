@@ -126,10 +126,12 @@ PYLONS = dict(half=15.2, margin=1.5,
 # L1 -> west column (along both lane edges), 1 in the middle of the U L3 -> L2 (east of the pylon), 1 next to the pylon of
 # east lane -> L1 (as drawn, tilted).
 BALES = [  # v37 (user's 4 top views: red dot = remove, white = add, 2 redrawn = moved closer to the track)
-         (816.5, 308.1, 90), (816.5, 315.25, 90), (816.5, 322.4, 90),        # east lane, landing of the SX triple: 3 each side
-         (853.5, 308.1, 90), (853.5, 315.25, 90), (853.5, 322.4, 90),
+         (818.0, 317.1, 90), (818.0, 323.0, 90), (818.0, 328.9, 90),         # east lane, landing of the SX triple: 3 each side
+         (853.5, 317.1, 90), (853.5, 323.0, 90), (853.5, 328.9, 90),         # v38 (user): closer together (pitch 7.15 -> 5.9), centred
+                                                                             # between the turn (berm from z 303) and the landing foot
+                                                                             # (z 341); west row 1.5 ft east
          (816.5, 500.0, 90), (816.5, 507.15, 90), (816.5, 514.3, 90),        # east lane, flat before the take-off (turn exit)
-         (853.5, 500.0, 90), (853.5, 507.15, 90), (853.5, 514.3, 90),
+         (850.0, 500.0, 90), (850.0, 507.15, 90), (850.0, 514.3, 90),        # v38 (user's white lines): east row 3.5 ft closer to the track
          (804.4, 525.4, 152),                                                # inside of the turn entry before the triple
          (372.8, 299.2, 90), (382.9, 291.9, 0),                              # inside corner of L1 -> west column
          (340.6, 298.7, 90), (380.9, 259.2, 0),                              # outside of that turn (moved ~2 ft towards the track)
@@ -138,7 +140,7 @@ BALES = [  # v37 (user's 4 top views: red dot = remove, white = add, 2 redrawn =
 # v35: first layout (2 facing pairs at each end of the top lane, the west ones removed in v36)
 # v35 (user's photo): black foam tubes, segments end to end along both edges of the lane (`off` ft from the lane axis to the tube
 # axis): from `before` ft before the whoops to half of them (L7), and along both sides of the freestyle gap (lip -> landing)
-BOUDINS = dict(whoops=dict(tag='L7 small double', x=(393.0, 513.0), side=-1, off=23.0, model='boudin_plain'),   # v37: off 17.9 -> 23 (it sat half on the whoops' side slopes, which reach z 523)   # v36b (user): same plain tube as the freestyle one
+BOUDINS = dict(whoops=dict(tag='L7 small double', x=(393.0, 513.0), side=-1, off=22.0, model='boudin_plain', tex=('boudin_sxtour', 'boudin_mcst')),   # v38 (user): 1 ft closer, still straight (whoops foot < 0.1 ft under its edge = the sink); SX Tour / Moto Club logos alternated   # v37: off 17.9 -> 23 (it sat half on the whoops' side slopes, which reach z 523)   # v36b (user): same plain tube as the freestyle one
                fmx=dict(p0=(497.1, 445.7), p1=(535.4, 448.7), model='boudin_plain'))   # v37: user's line (top view), lip -> landing corner
 # v36 (user's marks): whoops: ONE side only (north, the infield side), along the small double and the first whoops, from x 393
 # to 513 (where the user's line stops); freestyle gap: one single line in the middle, plain black (no logo), segments touching
@@ -146,7 +148,10 @@ BOUDINS = dict(whoops=dict(tag='L7 small double', x=(393.0, 513.0), side=-1, off
 # v37 (user): the pylon stands on a small dirt bump made IN the terrain (same look as the bumps): flat top r_flat, down to 0 at r
 # (v35-v36: a dirt pad in the model: shiny). Turns in `curb` (L2 -> middle lane, middle lane -> L6): no bump, a very small
 # berm arc around the pylon on the track side instead.
-PYLON_GROUND = dict(mound=dict(h=0.45, r_flat=1.6, r=3.6), curb=dict(turns=(2, 3), h=0.35, r=2.6, w=0.9, arc=220.0))
+PYLON_GROUND = dict(mound=dict(h=0.75, r_flat=1.6, r=3.6), curb=dict(turns=(2, 3), h=0.35, r=2.6, w=0.9, ext_in=2.8, ext_out=1.0))
+# v38 (user): mound higher (0.45 -> 0.75 ft), same width. Curb: a 90 deg arc around the pylon only (v37: 220 deg, a half turn),
+# from the entry lane side to the exit lane side, + a short straight tail back along the entry lane and a short one at the exit
+# (the user's 'P' drawing: it marks the inside of the turn)
 TURN_GATES = dict(half_lane=15.2, inner=2.0, outer=12.0, fr=(0.15, 0.85), fan=True, start_pad=4.0)
 
 # v24: the bank starts at the height of the ground it touches (the start platform: 10 ft) and rises in ONE smooth slope
