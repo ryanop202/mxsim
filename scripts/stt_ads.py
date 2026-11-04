@@ -328,7 +328,7 @@ def start_sign_texture():
 def start_sign():
     """mesh + 2048 x 2048 texture (left half rows 0.., right half rows 1024..). Origin: centre, on the ground; front = +z."""
     from props_usland import pipe
-    S_ = SIGN; ban = start_sign_texture(); hx = S_['w'] / 2; y1 = S_['top']; y0 = y1 - S_['h']; z = S_['z']; t = 0.1; T = 2048
+    S_ = SIGN; ban = start_sign_texture(); hx = S_['w'] / 2; y1 = S_['top']; y0 = y1 - S_['h']; z = S_['z']; t = 0.22; T = 2048   # v42: a thicker board, the posts (r 0.2) fit under it
     hh = int(round(ban.height * T / (ban.width / 2))); assert hh <= 1000, hh
     tex = Image.new('RGB', (T, T), (16, 16, 18))
     tex.paste(ban.crop((0, 0, ban.width // 2, ban.height)).resize((T, hh), Image.LANCZOS), (0, 0))
@@ -345,9 +345,9 @@ def start_sign():
                    ([(hx, y0, z - t), (hx, y1, z - t), (hx, y1, z + t), (hx, y0, z + t)], (1, 0, 0)),
                    ([(-hx, y0, z + t), (-hx, y1, z + t), (-hx, y1, z - t), (-hx, y0, z - t)], (-1, 0, 0))):
         m.tri_fan([np.array(p, float) for p in P_], np.array(N_, float), [blk] * 4)
-    r = S_['post_r']; zl = z - t - r - 0.01
-    for x in np.linspace(-hx + 2.0, hx - 2.0, S_['posts']):                    # steel posts only, from the ground to the top
-        pipe(m, [(x, -0.4, zl), (x, y1 - 0.15, zl)], r, stl, seg=12)
+    r = S_['post_r']; zl = z                                                    # v42 (user): posts stop at the sign's bottom edge,
+    for x in np.linspace(-hx + 2.0, hx - 2.0, S_['posts']):                    # centred under it (v41: up behind it, they showed through)
+        pipe(m, [(x, -0.4, zl), (x, y0, zl)], min(r, t * 0.95), stl, seg=12)
         m.tri_fan([np.array(p) for p in [(x - 0.45, 0.03, zl - 0.45), (x + 0.45, 0.03, zl - 0.45), (x + 0.45, 0.03, zl + 0.45), (x - 0.45, 0.03, zl + 0.45)]],
                   np.array([0, 1.0, 0]), [m.uv_px(1920, 2024)] * 4)                # base plate
     return m, tex

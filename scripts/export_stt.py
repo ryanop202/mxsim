@@ -122,10 +122,10 @@ def main():
         blk = blk.replace('r=123 g=73 b=52', 'r=72 g=104 b=46')
         open(f'{OUT}/tileinfo', 'w', newline='\n').write(ti.rstrip('\n') + '\n\n' + blk.strip('\n') + '\naddtile\n\n')
     open(f'{OUT}/desc', 'w', newline='\n').write(DESC + '\n'); open(f'{OUT}/billboards', 'w').close()
-    CR = getattr(LT, 'CROWD', None); FE0 = getattr(LT, 'FENCE', None)
+    CR = getattr(LT, 'CROWD', None); FE0 = getattr(LT, 'FENCE', None); crowd_st = []
     if CR and FE0:                                 # v40 (user): public on the grass bank (people cut-outs, 2 rows behind the fence)
         from skimage.measure import find_contours
-        DF0 = np.load(f'{ROOT}/build/stt_dist.npy'); rg = np.random.default_rng(40); bb = []
+        DF0 = np.load(f'{ROOT}/build/stt_dist.npy'); rg = np.random.default_rng(40); bb = []; crowd_pos = []
         for dr in CR['rows']:
             cs = max(find_contours(DF0, FE0['off'] + dr), key=len); pts = np.c_[cs[:, 1], cs[:, 0]]
             sv = np.r_[0, np.cumsum(np.linalg.norm(np.diff(pts, axis=0), axis=1))]
@@ -135,8 +135,51 @@ def main():
                 q = np.array([np.interp(s1, sv, pts[:, 0]), np.interp(s1, sv, pts[:, 1])])
                 k_ = min(int(np.searchsorted(sv, s1)), len(pts) - 1); tg_ = pts[min(k_ + 1, len(pts) - 1)] - pts[max(k_ - 1, 0)]
                 if np.linalg.norm(tg_) > 0: q = q + np.array([-tg_[1], tg_[0]]) / np.linalg.norm(tg_) * rg.uniform(-CR.get('side_jit', 0), CR.get('side_jit', 0))
-                bb.append(f"[{q[0]:.6f} 0.000000 {q[1]:.6f}] {CR['size'] * rg.uniform(0.95, 1.05):.6f} 1.000000 {CR['src']}/{CR['imgs'][rg.integers(len(CR['imgs']))]}.png")
-        open(f'{OUT}/billboards', 'w', newline='\n').write('\n'.join(bb) + '\n'); print('crowd billboards', len(bb))
+                sz_ = CR['size'] * rg.uniform(0.95, 1.05); im_ = CR['imgs'][rg.integers(len(CR['imgs']))]
+                if CR.get('mesh'): crowd_pos.append((q, sz_, im_))
+                else: bb.append(f"[{q[0]:.6f} 0.000000 {q[1]:.6f}] {sz_:.6f} 1.000000 {CR['src']}/{im_}.png")
+        open(f'{OUT}/billboards', 'w', newline='\n').write(('\n'.join(bb) + '\n') if bb else ''); print('crowd billboards', len(bb))
+        if crowd_pos:                              # v42 (user: same crowd, less lag): one mesh per picture, each person a quad
+            # cropped to the people (the Miami pictures are 1024 px squares, people ~2 % of them: 2221 big transparent
+            # billboards = huge overdraw). Quads face the arena centre. Textures referenced from the Miami track (not copied).
+            # One origin on flat ground inside the arena for all meshes (the game tilts a statue with the slope at its origin).
+            from PIL import Image as Im_
+            ctr_ = np.mean(np.array([q for q, _, _ in crowd_pos]), axis=0); NSEC = CR.get('sectors', 8)
+            sec_ = lambda q: int(((np.arctan2(q[1] - ctr_[1], q[0] - ctr_[0]) + np.pi) / (2 * np.pi) * NSEC)) % NSEC
+            # flat candidates (+-4 ft within 0.03 ft), 4 ft grid over the dirt area and the terrace
+            fl_ = []
+            for ox_ in np.arange(ctr_[0] - 330, ctr_[0] + 330, 4.0):
+                for oz_ in np.arange(ctr_[1] - 220, ctr_[1] + 220, 4.0):
+                    if not (0 < ox_ < 1180 and 0 < oz_ < 1180): continue
+                    hs_ = [float(h_at(H, ox_ + dx, oz_ + dz)) for dx in (-4, 0, 4) for dz in (-4, 0, 4)]
+                    if max(hs_) - min(hs_) < 0.03: fl_.append((ox_, oz_))
+            fl_ = np.array(fl_); worst_ = 0.0
+            for k_s in range(NSEC):
+              grp_ = [c_ for c_ in crowd_pos if sec_(c_[0]) == k_s]
+              if not grp_: continue
+              cg_ = np.mean(np.array([q for q, _, _ in grp_]), axis=0)
+              org_ = fl_[int(np.argmin(np.hypot(fl_[:, 0] - cg_[0], fl_[:, 1] - cg_[1])))]; h0_ = float(h_at(H, *org_))
+              worst_ = max(worst_, float(np.hypot(*(org_ - cg_))))
+              for im_ in CR['imgs']:
+                  al_ = np.asarray(Im_.open(f"{CR['game']}/{CR['src'][1:]}/{im_}.png").convert('RGBA'))[..., 3]
+                  ys_, xs_ = np.where(al_ > 8); x0_, x1_, y0_, y1_ = xs_.min() - 2, xs_.max() + 3, ys_.min() - 2, min(ys_.max() + 1, 1024)
+                  m_ = PU.Mesh(1024, 1024); n_ = 0
+                  for q, sz_, nm_ in grp_:
+                      if nm_ != im_: continue
+                      k_ = sz_ / 1024.0; hw_ = (x1_ - x0_) * k_ / 2; cxo_ = ((x0_ + x1_) / 2 - 512) * k_; ht_ = (y1_ - y0_) * k_
+                      f_ = ctr_ - q; f_ = f_ / np.linalg.norm(f_); r_ = np.array([-f_[1], f_[0]])        # faces the centre
+                      hb_ = float(h_at(H, *q)) - h0_ - 0.15
+                      c0_ = q + r_ * cxo_ - org_
+                      pa_ = np.array([c0_[0] - r_[0] * hw_, hb_, c0_[1] - r_[1] * hw_]); pb_ = np.array([c0_[0] + r_[0] * hw_, hb_, c0_[1] + r_[1] * hw_])
+                      up_ = np.array([0, ht_, 0]); nrm_ = np.array([f_[0], 0.0, f_[1]])
+                      # seen from the centre (looking along -f), its right is -r -> the picture's left edge at +r
+                      m_.tri_fan([pb_, pa_, pa_ + up_, pb_ + up_], nrm_, [m_.uv_px(x0_, y1_), m_.uv_px(x1_, y1_), m_.uv_px(x1_, y0_), m_.uv_px(x0_, y0_)]); n_ += 1
+                  if n_:
+                      m_.write(f'{OUT}/statue/crowd_{k_s}_{im_}.jm', (0, 0, 0, 0, 0))
+                      crowd_st.append(f"[{org_[0]:.6f} 0.000000 {org_[1]:.6f}] 0.000000 {P}/statue/crowd_{k_s}_{im_}.jm {CR['src']}/{im_}.png null")
+            print('crowd meshes', len(crowd_st), 'people quads', len(crowd_pos), 'sectors', NSEC, 'origin max %.0f ft from its people' % worst_)
+        for f_ in os.listdir(f'{OUT}/statue'):     # no stale crowd mesh from an earlier export
+            if f_.startswith('crowd_') and f'statue/{f_}' not in chr(10).join(crowd_st): os.remove(f'{OUT}/statue/{f_}')
     # timing gates (JGSX method, timing.py) + our gate model on the starting gates
     TG_ = getattr(LT, 'TURN_GATES', None)
     if TG_ and getattr(LT, 'PYLONS', None) and LT.PYLONS.get('points'): TG_ = dict(TG_, pylons=LT.PYLONS['points'])
@@ -265,6 +308,15 @@ def main():
                                 bb_sk.append(f'[{x_:.6f} 0.000000 {z_:.6f}] {SK["sprite"]:.6f} 1.000000 {P}/billboard/stake_sprite.png'); nsk += 1
                             else:
                                 st.append(f'[{x_:.6f} 0.000000 {z_:.6f}] {PP.statue_ang(c_, s_):.6f} {P}/statue/stake_yellow.jm {P}/statue/stake_yellow.png null'); nsk += 1   # v29: flat paddle facing the riders
+        for g in p.segs:                           # v42 (user): split bumps (L2 1st take-off) are drawn apart, the centre
+            if g['kind'] != 'S': continue          # profile is flat there: a stake on the crest of each half
+            c_, s_ = np.cos(g['t']), np.sin(g['t'])
+            for prof, u0, name in g['sections']:
+                for st0, pl_, pr_ in LS.SPLITS.get(name, []):
+                    for sg, ph_ in ((-1, pl_), (1, pr_)):
+                        uu = u0 + st0 + int(np.argmax(ph_)) * 0.1
+                        x_ = g['x0'] + uu * c_ - sg * SK['v'] * s_; z_ = g['z0'] + uu * s_ + sg * SK['v'] * c_
+                        bb_sk.append(f'[{x_:.6f} 0.000000 {z_:.6f}] {SK["sprite"]:.6f} 1.000000 {P}/billboard/stake_sprite.png'); nsk += 1
         print('stakes', nsk)
         if bb_sk:
             os.makedirs(f'{OUT}/billboard', exist_ok=True); shutil.copy(f'{ROOT}/assets/props/stake_sprite.png', f'{OUT}/billboard/stake_sprite.png')
@@ -381,7 +433,7 @@ def main():
                 m_ = names[rt.choice(len(names), p=prob)]
                 st.append(f"[{x_:.6f} 0.000000 {z_:.6f}] {rt.uniform(-np.pi, np.pi):.6f} {P}/statue/{m_}.jm {P}/statue/{GT['tex']}.png null"); nt_ += 1
         print('grass tufts', nt_)
-    open(f'{OUT}/statues', 'w', newline='\n').write('\n'.join(st) + '\n')
+    open(f'{OUT}/statues', 'w', newline='\n').write('\n'.join(st + crowd_st) + '\n')
     # decals (ground texture over the riding surface, obstacle and turn decals)
     R = StartRoute(LS.STARTS['STT'], LS.N_GATES, LS.GATE_PITCH)
     dec = surface_decals(p, R) + obstacle_and_turn_decals(p)

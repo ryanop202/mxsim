@@ -166,7 +166,8 @@ STAKE_PADS = None   # v41 (user): no pad any more (it bent the side of the kicke
 # v40 (user: the yellow stakes on the freestyle kicker lean): a small flat pad under each stake of the dirt kicker, at the
 # highest ground under the stake, so they stand straight.
 CROWD = dict(rows=tuple(np.arange(6.0, 112.0, 9.0)), step=11.0, jitter=4.0, skip=0.12, size=48.0, side_jit=3.0,   # v41 (user): the whole bank, up to the top
-             imgs=('Crowd1', 'Crowd2', 'Crowd3', 'Crowd4', 'Crowd5', 'Crowd6', 'Crowd8', 'Crowd9'), src='@2022Miamibeachrace/billboard')
+             imgs=('Crowd1', 'Crowd2', 'Crowd3', 'Crowd4', 'Crowd5', 'Crowd6', 'Crowd8', 'Crowd9'), src='@2022Miamibeachrace/billboard',
+             mesh=True, game='C:/Program Files (x86)/MX Simulator')   # v42 (user: less lag): 8 meshes of cropped quads, not billboards
 # v40 (user): public on the grass bank: billboards (people cut-outs) from the 2022 Miami Beach Race track (installed in the
 # user's game, referenced, not copied), 2 rows behind the fence (`rows` ft beyond it), about every `step` ft, some gaps.
 # Size 48 -> people about 6 ft (Miami uses 61: 7.6 ft).
