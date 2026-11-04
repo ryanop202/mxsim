@@ -496,7 +496,7 @@ def main():
     open(f'{OUT}/decals', 'w', newline='\n').write('\n'.join(dec) + '\n')
     # v46 (user): the finish flagger = the 'RF' animated photo flagger of the 2024 Boot's House tracks (22 frames waving the
     # checkered flag + green / halfway / last lap), referenced from @2024Bh1Conway (not copied). Still a sprite: MX flaggers are.
-    FLAG_FILES_ = lambda: [f"{LT.FLAG_STAND['rf']['size']} {LT.FLAG_STAND.get('flip', 1)}"] + [f"{LT.FLAG_STAND['rf']['src']}/{n_}" for n_ in
+    FLAG_FILES_ = lambda: [f"{LT.FLAG_STAND['rf']['size']} {LT.FLAG_STAND['rf'].get('flip', LT.FLAG_STAND.get('flip', 1))}"] + [f"{LT.FLAG_STAND['rf']['src']}/{n_}" for n_ in
                           ('defaultflag.png', 'halfway.png', 'lastlap.png', 'rf.flagger_waving.seq')]
     # flaggers: 30 s board behind the gate row, finish flagger beside the finish line on flat ground away from the lanes
     smp = p.samples(1.0); tr = cKDTree(np.c_[smp['x'], smp['z']])

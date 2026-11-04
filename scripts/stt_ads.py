@@ -51,6 +51,7 @@ def logo(name, dark=False):
     if name == 'sxtour': return _crop(Image.open(LG + 'sxtour_long.png').convert('RGBA'))
     if name == 'suttel': return _from_dark_bg(LG + 'suttel.jpg')
     if name in ('santamaria', 'tme', 'sudtracto', 'occigardin'): return _from_light_bg(LG + name + '.jpg')   # v44 (user)
+    if name == 'fosure': return _crop(Image.open(LG + 'fosure.png').convert('RGBA'))   # v47 (user's PSD, cut out of its dark background)
     raise KeyError(name)
 
 def paste(img, box, lg):
@@ -125,9 +126,9 @@ def boudin_logo():
 
 # ------------------------------------------------------------------ advertising tarps on the fence
 TARP = dict(w=7.2, y0=0.85, y1=3.25, z=0.43, every=1, gap=-1,   # v45 (user): on every section (v44: 3 out of 4)
-           order=('usland', 'santamaria', 'mcst', 'tme', 'rbt', 'sudtracto', 'motopark', 'occigardin', 'sxtour'))   # v44: + 4 sponsors
+           order=('usland', 'santamaria', 'mcst', 'tme', 'rbt', 'sudtracto', 'motopark', 'occigardin', 'fosure', 'sxtour'))   # v47: + Fosure   # v44: + 4 sponsors
 TARP_BG = dict(usland=(246, 246, 246), mcst=(14, 14, 16), rbt=(246, 246, 246), motopark=(14, 14, 16), sxtour=(246, 246, 246),
-               santamaria=(246, 246, 246), tme=(246, 246, 246), sudtracto=(246, 246, 246), occigardin=(246, 246, 246))
+               santamaria=(246, 246, 246), tme=(246, 246, 246), sudtracto=(246, 246, 246), occigardin=(246, 246, 246), fosure=(246, 246, 246))
 
 def tarp_texture(name):
     """1024 x 512: rows 0..341 the front (7.2 x 2.4 ft, 142 px / ft), rows 352..511 the back (plain, a bit darker).
