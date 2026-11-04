@@ -148,38 +148,38 @@ PYLON_SKINS = dict(black=dict(col=None, base=None, logo=None),
                    f50=dict(col=(249, 229, 42), base=(249, 229, 42), logo='50factory'),     # v50 (user): all 50 Factory yellow
                    motul=dict(col=(237, 37, 47), base=None, logo='motul'))                  # v50 (user): red column, black base
 
+COL_V = (2.0, 268.0)    # v51: column texture rows (y = H at row 2, y = top of the base at row 268)
+FACE_V = (608.0, 720.0) # v51: base logo face rows (top, bottom)
+
 def pylon_texture(skin='black'):
-    """512 x 1024. Rows 0..299 column side (u = angle), 300..399 base sides, 400..511 tops (base), 512..639 the two base
-    sides that carry the logo (u = along the straight side, left -> right seen from outside), 640..1023 dome cap (v50, column
-    colour; v35-v36b: dirt of the pad). skin: PYLON_SKINS key (v50: black Fly, 50 Factory yellow, Motul red)."""
+    """512 x 1024 (v51 layout, far apart so nothing bleeds when the game shrinks the texture): rows 0..269 column side
+    (u = angle) + dome cap patch (centre 256, 136); rows 270..1023 base colour: base sides 300..399, base tops 400..511, the
+    logo faces 608..720 (u = along the straight side, left -> right seen from outside). skin: PYLON_SKINS key."""
     P = PYLON; img = np.zeros((1024, 512, 3)); K = PYLON_SKINS[skin]
     cb = K['col'] or (17, 17, 19.0); bb = K['base'] or (17, 17, 19.0); ac = 4 if K['col'] else 12; ab = 4 if K['base'] else 10
-    img[0:300] = _vinyl(300, 512, 6, 40, 1, amp=ac, base=cb); img[300:400] = _vinyl(100, 512, 22, 6, 3, amp=ab, base=bb)
-    img[400:512] = _vinyl(112, 512, 14, 14, 4, amp=min(ab, 6), base=bb)
-    img[512:640] = _vinyl(128, 512, 22, 6, 7, amp=min(ab, 8), base=bb)
-    img[296:300] = img[300:304]                                      # v50: no column colour bleeding onto the base top edge
+    img[0:270] = _vinyl(270, 512, 6, 40, 1, amp=ac, base=cb)
+    img[270:1024] = _vinyl(754, 512, 22, 10, 3, amp=min(ab, 8), base=bb)
+    yc = P['pad_h'] + P['base_h']; yt = P['H'] - P['fillet'] - P['dome']          # visible straight column: yc .. yt
+    pxu = 512 / (2 * np.pi * P['cyl_r']); pxv = (COL_V[1] - COL_V[0]) / (P['H'] - yc)
+    row = lambda y: COL_V[1] - (y - yc) * pxv
+    fc = (FACE_V[0] + FACE_V[1]) / 2; fh = FACE_V[1] - FACE_V[0]
     if K['logo']:                                                    # v50: sponsor logo in its own colours, base + column
         import stt_ads as AD
-        img[640:1024] = _vinyl(384, 512, 14, 14, 8, amp=ac, base=cb)
-        lg = AD.logo(K['logo']); AD.paste(img, AD.fit(lg, 256, 576, 0.92 * 511, 0.80 * 112), lg)
-        yc = P['pad_h'] + P['base_h']; pxu = 512 / (2 * np.pi * P['cyl_r']); pxv = 296 / (P['H'] - yc)
+        lg = AD.logo(K['logo']); AD.paste(img, AD.fit(lg, 256, fc, 0.84 * 511, 0.72 * fh), lg)
         lv = lg.rotate(90, expand=True).transpose(Image.FLIP_LEFT_RIGHT)   # reads bottom -> top, mirrored for u (see below)
-        y0_, y1_ = P['col_logo']; cyv = 298 - ((y0_ + y1_) / 2 - yc) * pxv
+        cy = row((yc + yt) / 2)                                      # v51: centred on the visible column, never into the base
         for uc in (128, 384):
-            AD.paste(img, AD.fit(lv, uc, cyv, 0.95 * pxu, (y1_ - y0_ + 0.3) * pxv), lv)
+            AD.paste(img, AD.fit(lv, uc, cy, 0.95 * pxu, 0.84 * (yt - yc) * pxv), lv)
         return Image.fromarray(np.clip(img, 0, 255).astype(np.uint8))
-    img[640:1024] = _vinyl(384, 512, 14, 14, 8)
-    sl = P['base_w'] - 2 * P['base_r']; yb = P['base_h'] - 0.05; pxu, pxv = 511 / sl, 112 / yb   # logo face: rows 520 (top) .. 632 (bottom)
-    lh = 0.62 * yb; lw = lh * 4.43                                   # logo aspect 4.43 : 1
-    _paste_logo(img, (256 - lw * pxu / 2, 576 - lh * pxv / 2, 256 + lw * pxu / 2, 576 + lh * pxv / 2))
-    # v36: vertical logo on the column. u = angle (512 px = 2 pi r), v rows 298 (y = top of base) .. 2 (y = H). On the cylinder
-    # u grows towards the viewer's LEFT on both the +z (angle 90) and the -z (angle 270) side -> the logo is mirrored in u.
-    yc = P['pad_h'] + P['base_h']; pxu = 512 / (2 * np.pi * P['cyl_r']); pxv = 296 / (P['H'] - yc)
+    sl = P['base_w'] - 2 * P['base_r']; yb = P['base_h'] - 0.05; pxu2, pxv2 = 511 / sl, fh / yb
+    lh = 0.62 * yb; lw = lh * 4.43                                   # Fly logo aspect 4.43 : 1
+    _paste_logo(img, (256 - lw * pxu2 / 2, fc - lh * pxv2 / 2, 256 + lw * pxu2 / 2, fc + lh * pxv2 / 2))
+    # v36: vertical logo on the column; on the cylinder u grows towards the viewer's LEFT on both the +z (angle 90) and the -z
+    # (angle 270) side -> the logo is mirrored in u.
     y0_, y1_ = P['col_logo']; L_ = y1_ - y0_; Wd = L_ / 4.43
-    lg = Image.open(FLY).rotate(90, expand=True).transpose(Image.FLIP_LEFT_RIGHT)   # reads bottom -> top, mirrored for u
+    lg = Image.open(FLY).rotate(90, expand=True).transpose(Image.FLIP_LEFT_RIGHT)
     for uc in (128, 384):
-        r0, r1 = 298 - (y1_ - yc) * pxv, 298 - (y0_ - yc) * pxv
-        _paste_logo(img, (uc - Wd * pxu / 2, r0, uc + Wd * pxu / 2, r1), lg)
+        _paste_logo(img, (uc - Wd * pxu / 2, row(y1_), uc + Wd * pxu / 2, row(y0_)), lg)
     return Image.fromarray(np.clip(img, 0, 255).astype(np.uint8))
 
 def _rsquare(half, r, n=6):
@@ -216,7 +216,7 @@ def pylon():
         na = np.array([np.cos(aa), 0, np.sin(aa)]); nb = np.array([np.cos(ab), 0, np.sin(ab)])
         ua, ub = per[i] / per[-1], per[i + 1] / per[-1]
         if i in (5, 17):                                            # the two logo sides (+z, -z): logo strip, readable from outside
-            uvs = [m.uv_px(511, 632), m.uv_px(0, 632), m.uv_px(0, 520), m.uv_px(511, 520)]   # edge runs right -> left seen from outside
+            uvs = [m.uv_px(511, FACE_V[1]), m.uv_px(0, FACE_V[1]), m.uv_px(0, FACE_V[0]), m.uv_px(511, FACE_V[0])]   # edge runs right -> left seen from outside
         else:
             uvs = [m.uv_px(ua * 511, 399), m.uv_px(ub * 511, 399), m.uv_px(ub * 511, 302), m.uv_px(ua * 511, 302)]
         _smooth(m, [(xa, y0, za), (xb, y0, zb), (xb, yb, zb), (xa, yb, za)], [na, nb, nb, na], uvs)
@@ -236,7 +236,7 @@ def pylon():
             c0, s0, c1, s1 = np.cos(ang[k]), np.sin(ang[k]), np.cos(ang[k + 1]), np.sin(ang[k + 1])
             N = lambda c, s, t: np.array([c * np.cos(t), np.sin(t), s * np.cos(t)])
             u0, u1 = ang[k] / (2 * np.pi) * 511, ang[k + 1] / (2 * np.pi) * 511
-            v = lambda y: 298 - (y - yc) / (H - yc) * 296
+            v = lambda y: COL_V[1] - (y - yc) / (H - yc) * (COL_V[1] - COL_V[0])
             _smooth(m, [(ra * c0, ya, ra * s0), (ra * c1, ya, ra * s1), (rb_ * c1, yb_, rb_ * s1), (rb_ * c0, yb_, rb_ * s0)],
                     [N(c0, s0, ta), N(c1, s1, ta), N(c1, s1, tb_), N(c0, s0, tb_)],
                     [m.uv_px(u0, v(ya)), m.uv_px(u1, v(ya)), m.uv_px(u1, v(yb_)), m.uv_px(u0, v(yb_))])
@@ -245,7 +245,7 @@ def pylon():
         c0, s0, c1, s1 = np.cos(ang[k]), np.sin(ang[k]), np.cos(ang[k + 1]), np.sin(ang[k + 1])
         _smooth(m, [(0, H, 0), (rt * c1, yt, rt * s1), (rt * c0, yt, rt * s0)],
                 [np.array([0, 1.0, 0]), np.array([c1 * 0.1, 1, s1 * 0.1]), np.array([c0 * 0.1, 1, s0 * 0.1])],
-                [m.uv_px(256, 832), m.uv_px(256 + c1 * 40, 832 + s1 * 40), m.uv_px(256 + c0 * 40, 832 + s0 * 40)])   # v50: own patch (column colour)
+                [m.uv_px(256, 136), m.uv_px(256 + c1 * 40, 136 + s1 * 40), m.uv_px(256 + c0 * 40, 136 + s0 * 40)])   # v51: patch in the column area
     return m, img
 
 # v35 (user: v34 "ça fait trop tomber direct" - harder to go through, it must stop you but not necessarily throw you down):
@@ -601,8 +601,10 @@ def boudin(plain=False):
 def boudin_plain():
     return boudin(plain=True)
 
-def boudin_shape():
-    B, C = BOUDIN, BOUDIN_SHP; hx = (B['L'] - B['gap']) / 2; rows = []
+START_BOUDIN_SHP = dict(r=1.1, every=1.0, spring=25, damping=1.2, friction=0.15)   # v51b: soft (base boudins 150 / 8 / 0.6)
+
+def boudin_shape(C=None):
+    B, C = BOUDIN, (C or BOUDIN_SHP); hx = (B['L'] - B['gap']) / 2; rows = []
     for x in np.arange(-hx + C['r'] * 0.6, hx - C['r'] * 0.6 + 1e-6, C['every']):
         rows.append(f"{x:.4f} {C['r'] - B['sink'] + 0.05:.4f} 0 {C['r']} {C['friction']} {C['spring']} {C['damping']}")
     return '\n'.join([str(len(rows))] + rows) + '\n'

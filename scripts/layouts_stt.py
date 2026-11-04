@@ -162,10 +162,15 @@ VIPS = [dict(img='vip_mrbeast', h=6.4, sink=0.1, at=(452.0, 596.0)),          # 
 # standing behind the tarp of the next section (bust from 3.0 to 5.3 ft). v49: VIPs are billboards too (turn to the view)
 PYLON_SKINS = {0: 'pylon_f50', 2: 'pylon_f50', 4: 'pylon_f50', 5: 'pylon_motul', 8: 'pylon_motul'}
 # v50 (user's circles on the in-game top view): yellow = all 50 Factory yellow with its logo, red = red Motul column, black base
-START_BOUDINS = dict(lines=[[(706.3, 395.9), (654.3, 522.0)],                       # v50 (user's red lines): end of the bowl ->
-                            [(533.0, 443.6), (381.7, 440.9), (344.3, 423.8)]],      # whoops side; landing corner -> along L4 -> grid
-                     hide_after=15.0)
-# start-only boudins: no collision (a statue moved by the track script keeps its collision where it was), shown until 15 s
+START_BOUDINS = dict(lines=[[(702.0, 407.0), (654.3, 522.0)],                       # v51: starts where the ground is flat (not up the bowl berm)
+                            [(350.0, 426.0), (384.0, 449.0), (462.0, 449.0), (468.0, 453.0), (532.0, 453.0), (538.0, 457.0),
+                             (598.0, 457.0), (603.0, 441.0)]],
+                     hide_after=15.0, pattern=(('50factory', 10), ('mcst', 10), ('sxtour', 10)))
+# v51 (user): flat ground only (not up the L4 bump shoulders, z up to 447, nor the landing, z up to 456), on the start side of
+# the steel FMX ramp (z 447-451) so the start cannot use it, along the landing and back to L4 right behind it; pattern: 10 x
+# 50 Factory (yellow), 10 x Moto Club Saint Thibery, 10 x SX Tour, again and again (no other sponsor)
+# start-only boudins: v51b soft collision (startb.shp; v50: none - unknown whether a statue moved by the script takes its
+# collision along: to check in game), shown until 15 s
 # after the gate drop, then sunk under the ground by nofrills.js; black ones with the sponsors and 50 Factory yellow ones,
 # one in two
 START_BANNER = dict(board=True, foot_h=0.4, back=1.4, model='start_sign')   # v41: sign on posts   # v40 (user): a BIG board on the platform at the foot of the start wall

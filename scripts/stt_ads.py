@@ -88,8 +88,7 @@ def _boudin_arc():
         out.append((z, y, n, acc))
     return out
 
-START_BOUDINS_TEX = dict(black=('usland', 'santamaria', 'mcst', 'tme', 'rbt', 'sudtracto', 'motopark', 'occigardin', 'fosure',
-                                  'sxtour', 'motul'), yellow='50factory', yellow_rgb=(249, 229, 42))
+START_BOUDINS_TEX = dict(black=('mcst', 'sxtour'), yellow='50factory', yellow_rgb=(249, 229, 42))   # v51 (user): only these
 LIGHT_LOGOS = ('santamaria', 'tme', 'sudtracto', 'occigardin', 'rbt')   # need a white plate on a black boudin
 
 def boudin_logo_texture(name, base=None, plate=False):
@@ -390,6 +389,7 @@ def build(outd=OUTD):
         boudin_logo_texture(n, plate=n in LIGHT_LOGOS).save(f'{outd}/startb_{n}.png')
     boudin_logo_texture(START_BOUDINS_TEX['yellow'], base=START_BOUDINS_TEX['yellow_rgb']).save(f"{outd}/startb_{START_BOUDINS_TEX['yellow']}.png")
     import stt_props as SP2
+    open(f'{outd}/startb.shp', 'w', newline=chr(10)).write(SP2.boudin_shape(SP2.START_BOUDIN_SHP))   # v51b: soft collision
     for k in ('f50', 'motul'): SP2.pylon_texture(k).save(f'{outd}/pylon_{k}.png')   # v50: pylon skins
     m, tex = start_sign(); out['start_sign'] = m.write(f'{outd}/start_sign.jm', (0, 0, 0, 0, 0)); tex.save(f'{outd}/start_sign.png')   # v41
     stake_sprite().save(f'{outd}/stake_sprite.png')

@@ -223,7 +223,7 @@ def main():
         for nm in [f'boudin_{n}' for n in AD_.BOUDIN_LOGOS] + [f'ad_{n}' for n in AD_.TARP['order']]:
             shutil.copy(f'{ROOT}/assets/props/{nm}.png', f'{OUT}/statue/{nm}.png')
         import stt_ads as AD2
-        for nm in [f'startb_{n}.png' for n in AD2.START_BOUDINS_TEX['black'] + (AD2.START_BOUDINS_TEX['yellow'],)] + ['pylon_f50.png', 'pylon_motul.png']:
+        for nm in [f'startb_{n}.png' for n in AD2.START_BOUDINS_TEX['black'] + (AD2.START_BOUDINS_TEX['yellow'],)] + ['pylon_f50.png', 'pylon_motul.png', 'startb.shp']:
             shutil.copy(f'{ROOT}/assets/props/{nm}', f'{OUT}/statue/{nm}')       # v50
         for nm in ('ad_tarp.jm', 'boudin_logo.jm', 'boudin_logo.shp', 'start_sign.jm', 'start_sign.png', 'flag_cage.jm', 'flag_cage.png'):   # v39 / v40 / v41
             shutil.copy(f'{ROOT}/assets/props/{nm}', f'{OUT}/statue/{nm}')
@@ -303,8 +303,11 @@ def main():
             for q in range(k_):
                 s_ = (q + 0.5) * sv_[-1] / k_; i_ = min(int(np.searchsorted(sv_, s_, 'right')) - 1, len(pts_) - 2)
                 d_ = pts_[i_ + 1] - pts_[i_]; d_ /= np.linalg.norm(d_); c = pts_[i_] + d_ * (s_ - sv_[i_])
-                tx_ = AD3.START_BOUDINS_TEX['yellow'] if nsb % 2 == 0 else blk_[(nsb // 2) % len(blk_)]
-                st.append(f'[{c[0]:.6f} 0.000000 {c[1]:.6f}] {float(np.arctan2(-d_[1], d_[0])):.6f} {P}/statue/boudin_logo.jm {P}/statue/startb_{tx_}.png null')
+                pat_ = [n_ for n_, k2 in SBD['pattern'] for _ in range(k2)]          # v51: 10 / 10 / 10
+                tx_ = pat_[nsb % len(pat_)]
+                hs_ = [float(h_at(H, *(c + d_ * a2 + np.array([-d_[1], d_[0]]) * b2))) for a2 in (-2.9, 0, 2.9) for b2 in (-1.2, 0, 1.2)]
+                if max(hs_) - min(hs_) > 0.15: print('  start boudin not flat at', c.round(1), round(max(hs_) - min(hs_), 2))
+                st.append(f'[{c[0]:.6f} 0.000000 {c[1]:.6f}] {float(np.arctan2(-d_[1], d_[0])):.6f} {P}/statue/boudin_logo.jm {P}/statue/startb_{tx_}.png {P}/statue/startb.shp')   # v51b: soft collision
                 nsb += 1
         print('start boudins', nsb)
     FS_ = getattr(LT, 'FMX_STAKES', None); R3_ = getattr(LT, 'FMX_RAMP', None)
