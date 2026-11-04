@@ -50,6 +50,7 @@ def logo(name, dark=False):
     if name == 'motopark': return _from_dark_bg(LG + 'motopark.jpg')
     if name == 'sxtour': return _crop(Image.open(LG + 'sxtour_long.png').convert('RGBA'))
     if name == 'suttel': return _from_dark_bg(LG + 'suttel.jpg')
+    if name in ('santamaria', 'tme', 'sudtracto', 'occigardin'): return _from_light_bg(LG + name + '.jpg')   # v44 (user)
     raise KeyError(name)
 
 def paste(img, box, lg):
@@ -123,9 +124,10 @@ def boudin_logo():
     return m
 
 # ------------------------------------------------------------------ advertising tarps on the fence
-TARP = dict(w=7.2, y0=0.85, y1=3.25, z=0.43, every=6,   # v39 (user): twice as many (12 -> 6)
-            order=('usland', 'mcst', 'rbt', 'motopark', 'sxtour'))
-TARP_BG = dict(usland=(246, 246, 246), mcst=(14, 14, 16), rbt=(246, 246, 246), motopark=(14, 14, 16), sxtour=(246, 246, 246))
+TARP = dict(w=7.2, y0=0.85, y1=3.25, z=0.43, every=4, gap=0,   # v44 (user): on almost every section: 3 out of 4 (v39: 1 in 6)
+           order=('usland', 'santamaria', 'mcst', 'tme', 'rbt', 'sudtracto', 'motopark', 'occigardin', 'sxtour'))   # v44: + 4 sponsors
+TARP_BG = dict(usland=(246, 246, 246), mcst=(14, 14, 16), rbt=(246, 246, 246), motopark=(14, 14, 16), sxtour=(246, 246, 246),
+               santamaria=(246, 246, 246), tme=(246, 246, 246), sudtracto=(246, 246, 246), occigardin=(246, 246, 246))
 
 def tarp_texture(name):
     """1024 x 512: rows 0..341 the front (7.2 x 2.4 ft, 142 px / ft), rows 352..511 the back (plain, a bit darker).
@@ -138,7 +140,7 @@ def tarp_texture(name):
     face = bg + (fold[..., None] * (6 if bg.mean() > 128 else 4))
     img[:Hf] = face
     lg = logo(name, dark=bg.mean() < 128)
-    paste(img, fit(lg, W / 2, Hf / 2, W * 0.80, Hf * 0.62), lg)
+    paste(img, fit(lg, W / 2, Hf / 2, W * 0.80, Hf * (0.80 if lg.width < 2 * lg.height else 0.62)), lg)   # v44: squarish logos taller
     hem = 12; dk = 0.80 if bg.mean() > 128 else 1.9
     img[:hem] *= dk; img[Hf - hem:Hf] *= dk; img[:Hf, :hem] *= dk; img[:Hf, W - hem:] *= dk
     im = Image.fromarray(np.clip(img, 0, 255).astype(np.uint8)); d = ImageDraw.Draw(im)
@@ -299,7 +301,7 @@ def flag_cage():
         for i in range(1, n): f = i / n; pipe(m, [(xa + (xb - xa) * f, C['rails'][0], za + (zb - za) * f), (xa + (xb - xa) * f, C['rails'][1], za + (zb - za) * f)], r * 0.7, stl, seg=6)
     return m, tex
 
-SIGN = dict(w=60.0, h=7.5, top=12.6, z=1.1, px=68, posts=6, post_r=0.22)
+SIGN = dict(w=84.0, h=7.5, top=12.6, z=1.1, px=68, posts=8, post_r=0.22, strips=3)   # v44 (user): wider (60 -> 84 ft), SX Tour at both ends
 # v41 (user's drawing): a big black SIGN on steel posts (6), START in the middle and the sponsors on ONE row (v40: two rows,
 # and a braced frame behind that showed as a weird lattice from far away). Top level with the fence top.
 
@@ -308,7 +310,7 @@ def start_sign_texture():
     from scipy.ndimage import gaussian_filter
     n = gaussian_filter(np.random.default_rng(9).normal(0, 1, (H, W)), (12, 50)); n /= n.std() + 1e-9
     img = np.zeros((H, W, 3)) + 13.0 + n[..., None] * 2.5
-    blocks = [('suttel', 1.0), ('mcst', 1.0), ('START', 1.55), ('mcst', 1.0), ('motopark', 1.0)]
+    blocks = [('sxtour', 1.3), ('suttel', 1.0), ('mcst', 1.0), ('START', 1.55), ('mcst', 1.0), ('motopark', 1.0), ('sxtour', 1.3)]
     tot = sum(w for _, w in blocks); x = 0.0
     for b, wgt in blocks:
         bw = W * wgt / tot; cx = x + bw / 2; x += bw
@@ -321,7 +323,7 @@ def start_sign_texture():
             al = np.asarray(t).astype(float)[..., None] / 255.0; x0 = int(cx - t.width / 2)
             img[:, x0:x0 + t.width] = img[:, x0:x0 + t.width] * (1 - al) + 244 * al
         else:
-            lg = logo(b, dark=True); paste(img, fit(lg, cx, H / 2, bw * 0.82, H * (0.62 if b != 'mcst' else 0.58)), lg)
+            lg = logo(b, dark=True); paste(img, fit(lg, cx, H / 2, bw * (0.86 if b == 'sxtour' else 0.82), H * (0.62 if b != 'mcst' else 0.58)), lg)
     pp = max(6, int(H * 0.02)); img[:pp] = 205; img[-pp:] = 205; img[:, :pp] = 205; img[:, -pp:] = 205
     return Image.fromarray(np.clip(img, 0, 255).astype(np.uint8))
 
@@ -329,14 +331,16 @@ def start_sign():
     """mesh + 2048 x 2048 texture (left half rows 0.., right half rows 1024..). Origin: centre, on the ground; front = +z."""
     from props_usland import pipe
     S_ = SIGN; ban = start_sign_texture(); hx = S_['w'] / 2; y1 = S_['top']; y0 = y1 - S_['h']; z = S_['z']; t = 0.22; T = 2048   # v42: a thicker board, the posts (r 0.2) fit under it
-    hh = int(round(ban.height * T / (ban.width / 2))); assert hh <= 1000, hh
+    NS = S_.get('strips', 2); pitch = 1990 // NS
+    hh = int(round(ban.height * T / (ban.width / NS))); assert hh <= pitch, hh
     tex = Image.new('RGB', (T, T), (16, 16, 18))
-    tex.paste(ban.crop((0, 0, ban.width // 2, ban.height)).resize((T, hh), Image.LANCZOS), (0, 0))
-    tex.paste(ban.crop((ban.width // 2, 0, ban.width, ban.height)).resize((T, hh), Image.LANCZOS), (0, 1024))
+    for k in range(NS):                                                         # v44: the sign in NS strips stacked in the texture
+        tex.paste(ban.crop((ban.width * k // NS, 0, ban.width * (k + 1) // NS, ban.height)).resize((T, hh), Image.LANCZOS), (0, pitch * k))
     d = ImageDraw.Draw(tex); d.rectangle((1600, 2000, 1799, 2047), fill=(14, 14, 16)); d.rectangle((1800, 2000, 2047, 2047), fill=(150, 154, 160))
     m = Mesh(T, T); blk = m.uv_px(1700, 2024); stl = ('steel', (1920, 2024))
-    for k, (xa, xb) in enumerate(((-hx, 0.0), (0.0, hx))):
-        r0 = 1024 * k
+    for k in range(NS):
+        xa, xb = -hx + 2 * hx * k / NS, -hx + 2 * hx * (k + 1) / NS
+        r0 = pitch * k
         m.tri_fan([np.array(p) for p in [(xa, y0, z + t), (xb, y0, z + t), (xb, y1, z + t), (xa, y1, z + t)]], np.array([0, 0, 1.0]),
                   [m.uv_px(0, r0 + hh), m.uv_px(T, r0 + hh), m.uv_px(T, r0), m.uv_px(0, r0)])
     for P_, N_ in (([(hx, y0, z - t), (-hx, y0, z - t), (-hx, y1, z - t), (hx, y1, z - t)], (0, 0, -1)),

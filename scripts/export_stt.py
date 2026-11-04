@@ -409,7 +409,7 @@ def main():
             # gates (the START banner goes there)
             gx_, gz_ = LT.START_GATE[0] + LT.STT_ORIGIN[0], LT.START_GATE[1] + LT.STT_ORIGIN[1]
             behind_start = c_[0] < gx_ and abs(c_[1] - gz_) < 52.0
-            if q % AD_.TARP['every'] == AD_.TARP['every'] // 2 and not behind_start:
+            if q % AD_.TARP['every'] != AD_.TARP['gap'] and not behind_start:         # v44: 3 sections out of 4
                 n_ = AD_.TARP['order'][nad % len(AD_.TARP['order'])]; nad += 1
                 st.append(f"[{c_[0]:.6f} 0.000000 {c_[1]:.6f}] {PP.statue_ang(inw[0], inw[1]):.6f} {P}/statue/ad_tarp.jm {P}/statue/ad_{n_}.png null")
         print('fence sections', nf, 'tarps', nad)
