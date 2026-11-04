@@ -161,7 +161,11 @@ def main():
               org_ = fl_[int(np.argmin(np.hypot(fl_[:, 0] - cg_[0], fl_[:, 1] - cg_[1])))]; h0_ = float(h_at(H, *org_))
               worst_ = max(worst_, float(np.hypot(*(org_ - cg_))))
               for im_ in CR['imgs']:
-                  al_ = np.asarray(Im_.open(f"{CR['game']}/{CR['src'][1:]}/{im_}.png").convert('RGBA'))[..., 3]
+                  own_ = CR.get('own', {}).get(im_)                 # v43: our own recoloured copy of that picture
+                  tex_ = f"{P}/billboard/{own_}.png" if own_ else f"{CR['src']}/{im_}.png"
+                  if own_:
+                      os.makedirs(f'{OUT}/billboard', exist_ok=True); shutil.copy(f'{ROOT}/assets/crowd/{own_}.png', f'{OUT}/billboard/{own_}.png')
+                  al_ = np.asarray(Im_.open(f'{ROOT}/assets/crowd/{own_}.png' if own_ else f"{CR['game']}/{CR['src'][1:]}/{im_}.png").convert('RGBA'))[..., 3]
                   ys_, xs_ = np.where(al_ > 8); x0_, x1_, y0_, y1_ = xs_.min() - 2, xs_.max() + 3, ys_.min() - 2, min(ys_.max() + 1, 1024)
                   m_ = PU.Mesh(1024, 1024); n_ = 0
                   for q, sz_, nm_ in grp_:
@@ -176,7 +180,7 @@ def main():
                       m_.tri_fan([pb_, pa_, pa_ + up_, pb_ + up_], nrm_, [m_.uv_px(x0_, y1_), m_.uv_px(x1_, y1_), m_.uv_px(x1_, y0_), m_.uv_px(x0_, y0_)]); n_ += 1
                   if n_:
                       m_.write(f'{OUT}/statue/crowd_{k_s}_{im_}.jm', (0, 0, 0, 0, 0))
-                      crowd_st.append(f"[{org_[0]:.6f} 0.000000 {org_[1]:.6f}] 0.000000 {P}/statue/crowd_{k_s}_{im_}.jm {CR['src']}/{im_}.png null")
+                      crowd_st.append(f"[{org_[0]:.6f} 0.000000 {org_[1]:.6f}] 0.000000 {P}/statue/crowd_{k_s}_{im_}.jm {tex_} null")
             print('crowd meshes', len(crowd_st), 'people quads', len(crowd_pos), 'sectors', NSEC, 'origin max %.0f ft from its people' % worst_)
         for f_ in os.listdir(f'{OUT}/statue'):     # no stale crowd mesh from an earlier export
             if f_.startswith('crowd_') and f'statue/{f_}' not in chr(10).join(crowd_st): os.remove(f'{OUT}/statue/{f_}')

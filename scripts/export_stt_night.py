@@ -119,6 +119,14 @@ def main():
     for e in ('jm', 'png', '_norm.png', '_spec.png'):
         f = f"lightpole{'.' + e if e in ('jm', 'png') else e}"
         if os.path.exists(f"{POLE['src']}/{f}"): shutil.copy(f"{POLE['src']}/{f}", f'{OUT}/statue/{f}')
+    # v43 (user): white poles. Every dark part of the texture turned white (relief kept from its brightness), the LED panel
+    # (texture px 496..784 x 250..536) unchanged
+    tx_ = np.asarray(Image.open(f'{OUT}/statue/lightpole.png').convert('RGB')).astype(float); lum_ = tx_.mean(2)
+    Yt_, Xt_ = np.mgrid[0:tx_.shape[0], 0:tx_.shape[1]]
+    led_ = (Xt_ >= 496) & (Xt_ <= 784) & (Yt_ >= 250) & (Yt_ <= 536) & (lum_ > 90)
+    wh_ = np.clip(150 + lum_ * 1.3, 0, 250)[..., None] * np.array([1.0, 1.0, 1.01])
+    tx_ = np.where(led_[..., None], tx_, wh_)
+    Image.fromarray(np.clip(tx_, 0, 255).astype(np.uint8)).save(f'{OUT}/statue/lightpole.png')
     P = poles(); st = open(f'{OUT}/statues').read().rstrip('\n').split('\n')
     H = pads(H, P)                                                              # v22: flat pads under the poles (night terrain)
     hmin, hmax = float(H.min()) - 0.5, float(H.max()) + 0.5
