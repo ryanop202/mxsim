@@ -101,7 +101,10 @@ ARENA_BANK = dict(h=42.0, inner=160.0, top=14.0, outer=70.0, terrace=(28.0, 6.0)
 POLES = dict(n=3, d=20.5, pad=(2.0, 4.0), floor=True)   # v37 (user): a bit forward, smaller dig (some fences fell in the hole)   # v36 (user): at the foot of the fence border, IN the step, the step dug
 # around each pole down to the floor (pad level = lowest ground within pad[1]); v35: 31 (terrace), v29: 20
 # v28: yellow marker stakes on the crest of every bump, at both ends (lane edges), like the drone photos; v ft from the lane axis
-STAKES = dict(v=14.2, prom=0.6, table=6.0)
+STAKES = dict(v=14.2, prom=0.6, table=6.0, tables=('Arlington_g49_2', 'Custom1_g71_1'), table_drop=1.2, sprite=1.8)
+# v41 (user): stakes are billboards (sprite 1.8 ft, always upright: as statues the game tilted them with the slope, e.g. on the
+# freestyle kicker and the finish take-off); tables (items in `tables`): a stake at BOTH ends of the top (the top within
+# `table_drop` ft of the highest point: these tables rise a little to their end, so only the end was found before)
 # v28: blue nets on the outside of 5 turns (user), on the berm crest (drone photos: blue posts + net)
 NETS = dict(turns='all', skip=('curve west column -> L4',), step=8.0, flat_off=8.0, flat_gap=3.0)   # v34 (user): no net in the turn after the finish jump
 #   # v32 (user): a net in every turn (v28: 5 turns); turns without a
@@ -152,17 +155,17 @@ PYLON_GROUND = dict(mound=dict(h=0.75, r_flat=1.6, r=3.6), curb=dict(turns=(2, 3
 # v38 (user): mound higher (0.45 -> 0.75 ft), same width. Curb: a 90 deg arc around the pylon only (v37: 220 deg, a half turn),
 # from the entry lane side to the exit lane side, + a short straight tail back along the entry lane and a short one at the exit
 # (the user's 'P' drawing: it marks the inside of the turn)
-START_BANNER = dict(board=True, foot_h=0.4, back=1.4)   # v40 (user): a BIG board on the platform at the foot of the start wall
+START_BANNER = dict(board=True, foot_h=0.4, back=1.4, model='start_sign')   # v41: sign on posts   # v40 (user): a BIG board on the platform at the foot of the start wall
 # (v39: a 31.5 ft banner on top of the wall, in front of the fence: too small). Origin `back` ft in front of the wall foot
 # (first point east of the wall within foot_h of the platform level).
-FLAG_STAND = dict(side=1, v0=15.2, w=8.0, back=12.0, fwd=12.0, drop=1.0, slope=1.0)   # v40b: the bump's own profile widened 8 ft, cut flat 1 ft under the crest (flat top ~6 ft long)
+FLAG_STAND = dict(side=1, v0=15.2, w=8.0, back=12.0, fwd=12.0, drop=1.0, slope=1.0, flip=1)   # v41 (user): flagger turned round (flag towards the track; v40 -1)   # v40b: the bump's own profile widened 8 ft, cut flat 1 ft under the crest (flat top ~6 ft long)
 # v40 (user): at the finish take-off, a dirt platform joined to the side of the bump (west side, outside the lane), its flat
 # top `drop` ft under the crest, from `back` ft before the crest to `fwd` ft after it, `w` ft wide, sides 1:1; the finish
 # flagger stands on it inside a small steel cage (stt_ads.flag_cage).
-STAKE_PADS = dict(items=('(cut',), half_u=0.7, half_v=0.8, skirt=0.6)
+STAKE_PADS = None   # v41 (user): no pad any more (it bent the side of the kicker); v40: dict(items=('(cut',), half_u=0.7, half_v=0.8, skirt=0.6)
 # v40 (user: the yellow stakes on the freestyle kicker lean): a small flat pad under each stake of the dirt kicker, at the
 # highest ground under the stake, so they stand straight.
-CROWD = dict(rows=(6.0, 13.0), step=10.0, jitter=3.5, skip=0.18, size=48.0,
+CROWD = dict(rows=tuple(np.arange(6.0, 112.0, 9.0)), step=11.0, jitter=4.0, skip=0.12, size=48.0, side_jit=3.0,   # v41 (user): the whole bank, up to the top
              imgs=('Crowd1', 'Crowd2', 'Crowd3', 'Crowd4', 'Crowd5', 'Crowd6', 'Crowd8', 'Crowd9'), src='@2022Miamibeachrace/billboard')
 # v40 (user): public on the grass bank: billboards (people cut-outs) from the 2022 Miami Beach Race track (installed in the
 # user's game, referenced, not copied), 2 rows behind the fence (`rows` ft beyond it), about every `step` ft, some gaps.

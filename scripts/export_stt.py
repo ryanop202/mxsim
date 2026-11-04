@@ -133,6 +133,8 @@ def main():
                 if rg.random() < CR['skip']: continue
                 s1 = float(np.clip(s0 + rg.uniform(-CR['jitter'], CR['jitter']), 0, sv[-1]))
                 q = np.array([np.interp(s1, sv, pts[:, 0]), np.interp(s1, sv, pts[:, 1])])
+                k_ = min(int(np.searchsorted(sv, s1)), len(pts) - 1); tg_ = pts[min(k_ + 1, len(pts) - 1)] - pts[max(k_ - 1, 0)]
+                if np.linalg.norm(tg_) > 0: q = q + np.array([-tg_[1], tg_[0]]) / np.linalg.norm(tg_) * rg.uniform(-CR.get('side_jit', 0), CR.get('side_jit', 0))
                 bb.append(f"[{q[0]:.6f} 0.000000 {q[1]:.6f}] {CR['size'] * rg.uniform(0.95, 1.05):.6f} 1.000000 {CR['src']}/{CR['imgs'][rg.integers(len(CR['imgs']))]}.png")
         open(f'{OUT}/billboards', 'w', newline='\n').write('\n'.join(bb) + '\n'); print('crowd billboards', len(bb))
     # timing gates (JGSX method, timing.py) + our gate model on the starting gates
@@ -160,7 +162,7 @@ def main():
         import stt_ads as AD_                      # v38: logo boudins (textures only), advertising tarps on the fence
         for nm in [f'boudin_{n}' for n in AD_.BOUDIN_LOGOS] + [f'ad_{n}' for n in AD_.TARP['order']]:
             shutil.copy(f'{ROOT}/assets/props/{nm}.png', f'{OUT}/statue/{nm}.png')
-        for nm in ('ad_tarp.jm', 'boudin_logo.jm', 'boudin_logo.shp', 'start_board.jm', 'start_board.png', 'flag_cage.jm', 'flag_cage.png'):   # v39 / v40
+        for nm in ('ad_tarp.jm', 'boudin_logo.jm', 'boudin_logo.shp', 'start_sign.jm', 'start_sign.png', 'flag_cage.jm', 'flag_cage.png'):   # v39 / v40 / v41
             shutil.copy(f'{ROOT}/assets/props/{nm}', f'{OUT}/statue/{nm}')
         f = np.array([-np.sin(fa), -np.cos(fa)])
         st.append(f'[{gx:.6f} 0.000000 {gz:.6f}] {PP.statue_ang(*f):.6f} {P}/statue/start_floor.jm {P}/statue/start_floor.png null')
@@ -235,7 +237,7 @@ def main():
             q_ = lip - d_ * FS_['back'] + nn * sgn * hw
             st.append(f'[{q_[0]:.6f} {FS_["y"]:.6f} {q_[1]:.6f}] {PP.statue_ang(d_[0], d_[1]):.6f} {P}/statue/stake_yellow.jm {P}/statue/stake_yellow.png null')
     # v28: yellow marker stakes on the crest of every bump, both lane edges (drone photos)
-    SK = getattr(LT, 'STAKES', None); nsk = 0
+    SK = getattr(LT, 'STAKES', None); nsk = 0; bb_sk = []
     if SK:
         from scipy.signal import find_peaks
         for g in p.segs:
@@ -250,11 +252,23 @@ def main():
                     while a_ > 0 and top[a_ - 1]: a_ -= 1
                     while b_ < len(prof) - 1 and top[b_ + 1]: b_ += 1
                     us = [a_ * 0.1 + 0.5, b_ * 0.1 - 0.5] if (b_ - a_) * 0.1 > SK['table'] else [k * 0.1]
+                    it_ = [n_ for n_, a2, b2, h_ in LS.COMBOS[name]['items'] if a2 <= k * 0.1 <= b2]
+                    if it_ and it_[0] in SK.get('tables', ()):   # v41: tables: both ends of the top
+                        topt = prof >= prof[k] - SK['table_drop']; a_ = k; b_ = k
+                        while a_ > 0 and topt[a_ - 1]: a_ -= 1
+                        while b_ < len(prof) - 1 and topt[b_ + 1]: b_ += 1
+                        us = [a_ * 0.1 + 1.6, b_ * 0.1 - 0.5]
                     for uu in us:
                         for sg in (-1, 1):
                             x_ = g['x0'] + (u0 + uu) * c_ - sg * SK['v'] * s_; z_ = g['z0'] + (u0 + uu) * s_ + sg * SK['v'] * c_
-                            st.append(f'[{x_:.6f} 0.000000 {z_:.6f}] {PP.statue_ang(c_, s_):.6f} {P}/statue/stake_yellow.jm {P}/statue/stake_yellow.png null'); nsk += 1   # v29: flat paddle facing the riders
+                            if SK.get('sprite'):           # v41: billboard, always upright
+                                bb_sk.append(f'[{x_:.6f} 0.000000 {z_:.6f}] {SK["sprite"]:.6f} 1.000000 {P}/billboard/stake_sprite.png'); nsk += 1
+                            else:
+                                st.append(f'[{x_:.6f} 0.000000 {z_:.6f}] {PP.statue_ang(c_, s_):.6f} {P}/statue/stake_yellow.jm {P}/statue/stake_yellow.png null'); nsk += 1   # v29: flat paddle facing the riders
         print('stakes', nsk)
+        if bb_sk:
+            os.makedirs(f'{OUT}/billboard', exist_ok=True); shutil.copy(f'{ROOT}/assets/props/stake_sprite.png', f'{OUT}/billboard/stake_sprite.png')
+            open(f'{OUT}/billboards', 'a', newline='\n').write('\n'.join(bb_sk) + '\n')
     # v28: blue nets on the outside of the turns asked by the user, on the berm crest (flat part: r + half lane + flat_off)
     NT = getattr(LT, 'NETS', None); nnet = 0
     for f_ in os.listdir(f'{OUT}/statue'):          # v34: no stale net from an earlier export (a turn may lose its net)
@@ -349,7 +363,8 @@ def main():
             hp_ = float(h_at(H, gx_ - 5.0, gz_)); xf_ = gx_ - 5.0                 # v40: big board at the foot of the wall
             while xf_ > gx_ - 80 and float(h_at(H, xf_ - 0.25, gz_)) <= hp_ + SB_['foot_h']: xf_ -= 0.25
             bx_, bz_ = xf_ + SB_['back'], gz_
-            st.append(f"[{bx_:.6f} 0.000000 {bz_:.6f}] {PP.statue_ang(1.0, 0.0):.6f} {P}/statue/start_board.jm {P}/statue/start_board.png null")
+            mdl_ = SB_.get('model', 'start_board')
+            st.append(f"[{bx_:.6f} 0.000000 {bz_:.6f}] {PP.statue_ang(1.0, 0.0):.6f} {P}/statue/{mdl_}.jm {P}/statue/{mdl_}.png null")
             print('start banner at', round(bx_, 1), round(bz_, 1))
     # v25: 3D grass tufts on the grass (outside the fence), random size mix and rotation
     GT = getattr(LT, 'GRASS_TUFTS', None)
@@ -417,7 +432,7 @@ def main():
         open(f'{OUT}/statues', 'w', newline='\n').write(st_)
     open(f'{OUT}/flaggers', 'w', newline='\n').write('\n'.join([f'[{b1[0]:.6f} 0.000 {b1[1]:.6f}]', f'[{b2[0]:.6f} 0.000 {b2[1]:.6f}]', '8.4 1', '9',
         '@30sec_30.png', '@30sec_turn.seq', '@30sec_5.png', '@30sec_run.seq', '@30sec_done.png', '',
-        f'[{fl[0]:.6f} 0.000 {fl[1]:.6f}]', '8 -1', '@finish_green.png', '@finish_crossed.png', '@finish_white.png',
+        f'[{fl[0]:.6f} 0.000 {fl[1]:.6f}]', f"8 {getattr(LT, 'FLAG_STAND', {}).get('flip', -1)}", '@finish_green.png', '@finish_crossed.png', '@finish_white.png',
         '@checkerwave.seq', '', '', '', '[0.00000000 0.000 0.00000000]', '9.6 1', '3 4 5 -1', '@flagger_resting.png', '@flagger_waving.seq', '']))
     # minimap over the whole terrain (the game stretches map.png over it), this track only
     M = 1024; N = H.shape[0]; side = (N - 1) * S; g1 = (np.arange(M) + 0.5) * side / M
