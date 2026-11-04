@@ -9,11 +9,11 @@
 @30sec_done.png
 
 [335.800000 0.000 317.450000]
-8 1
-@finish_green.png
-@finish_crossed.png
-@finish_white.png
-@checkerwave.seq
+10.5 1
+@2024Bh1Conway/flaggerfiles/defaultflag.png
+@2024Bh1Conway/flaggerfiles/halfway.png
+@2024Bh1Conway/flaggerfiles/lastlap.png
+@2024Bh1Conway/flaggerfiles/rf.flagger_waving.seq
 
 
 

@@ -494,6 +494,10 @@ def main():
                 dec.append(f'[{x_:.6f} {z_:.6f}] {rg.uniform(-np.pi, np.pi):.6f} {GD["size"]:.6f} 1.000000 {P}/decal/grass_dvdb.png'); ng += 1
         print('grass decals', ng)
     open(f'{OUT}/decals', 'w', newline='\n').write('\n'.join(dec) + '\n')
+    # v46 (user): the finish flagger = the 'RF' animated photo flagger of the 2024 Boot's House tracks (22 frames waving the
+    # checkered flag + green / halfway / last lap), referenced from @2024Bh1Conway (not copied). Still a sprite: MX flaggers are.
+    FLAG_FILES_ = lambda: [f"{LT.FLAG_STAND['rf']['size']} {LT.FLAG_STAND.get('flip', 1)}"] + [f"{LT.FLAG_STAND['rf']['src']}/{n_}" for n_ in
+                          ('defaultflag.png', 'halfway.png', 'lastlap.png', 'rf.flagger_waving.seq')]
     # flaggers: 30 s board behind the gate row, finish flagger beside the finish line on flat ground away from the lanes
     smp = p.samples(1.0); tr = cKDTree(np.c_[smp['x'], smp['z']])
     fr = np.array([-np.sin(fa), -np.cos(fa)]); nr = np.array([-fr[1], fr[0]]); half = (LS.N_GATES - 1) / 2 * LS.GATE_PITCH
@@ -506,8 +510,8 @@ def main():
         open(f'{OUT}/statues', 'w', newline='\n').write(st_)
     open(f'{OUT}/flaggers', 'w', newline='\n').write('\n'.join([f'[{b1[0]:.6f} 0.000 {b1[1]:.6f}]', f'[{b2[0]:.6f} 0.000 {b2[1]:.6f}]', '8.4 1', '9',
         '@30sec_30.png', '@30sec_turn.seq', '@30sec_5.png', '@30sec_run.seq', '@30sec_done.png', '',
-        f'[{fl[0]:.6f} 0.000 {fl[1]:.6f}]', f"8 {getattr(LT, 'FLAG_STAND', {}).get('flip', -1)}", '@finish_green.png', '@finish_crossed.png', '@finish_white.png',
-        '@checkerwave.seq', '', '', '', '[0.00000000 0.000 0.00000000]', '9.6 1', '3 4 5 -1', '@flagger_resting.png', '@flagger_waving.seq', '']))
+        f'[{fl[0]:.6f} 0.000 {fl[1]:.6f}]', *(FLAG_FILES_() if getattr(LT, 'FLAG_STAND', {}).get('rf') else
+        [f"8 {getattr(LT, 'FLAG_STAND', {}).get('flip', -1)}", '@finish_green.png', '@finish_crossed.png', '@finish_white.png', '@checkerwave.seq']), '', '', '', '[0.00000000 0.000 0.00000000]', '9.6 1', '3 4 5 -1', '@flagger_resting.png', '@flagger_waving.seq', '']))
     # minimap over the whole terrain (the game stretches map.png over it), this track only
     M = 1024; N = H.shape[0]; side = (N - 1) * S; g1 = (np.arange(M) + 0.5) * side / M
     Hc = H[np.ix_((g1 / S).astype(int), (g1 / S).astype(int))]

@@ -161,7 +161,8 @@ VIPS = [dict(img='vip_mrbeast', h=6.4, sink=0.1, at=(452.0, 596.0)),          # 
 START_BANNER = dict(board=True, foot_h=0.4, back=1.4, model='start_sign')   # v41: sign on posts   # v40 (user): a BIG board on the platform at the foot of the start wall
 # (v39: a 31.5 ft banner on top of the wall, in front of the fence: too small). Origin `back` ft in front of the wall foot
 # (first point east of the wall within foot_h of the platform level).
-FLAG_STAND = dict(side=1, v0=15.2, w=8.0, back=12.0, fwd=12.0, drop=1.0, slope=1.0, flip=1)   # v41 (user): flagger turned round (flag towards the track; v40 -1)   # v40b: the bump's own profile widened 8 ft, cut flat 1 ft under the crest (flat top ~6 ft long)
+FLAG_STAND = dict(side=1, v0=15.2, w=8.0, back=12.0, fwd=12.0, drop=1.0, slope=1.0, flip=1,
+                  rf=dict(src='@2024Bh1Conway/flaggerfiles', size=10.5))   # v46 (user): animated photo flagger (RF), person about 6 ft   # v41 (user): flagger turned round (flag towards the track; v40 -1)   # v40b: the bump's own profile widened 8 ft, cut flat 1 ft under the crest (flat top ~6 ft long)
 # v40 (user): at the finish take-off, a dirt platform joined to the side of the bump (west side, outside the lane), its flat
 # top `drop` ft under the crest, from `back` ft before the crest to `fwd` ft after it, `w` ft wide, sides 1:1; the finish
 # flagger stands on it inside a small steel cage (stt_ads.flag_cage).
