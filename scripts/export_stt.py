@@ -307,7 +307,7 @@ def main():
                 tx_ = pat_[nsb % len(pat_)]
                 hs_ = [float(h_at(H, *(c + d_ * a2 + np.array([-d_[1], d_[0]]) * b2))) for a2 in (-2.9, 0, 2.9) for b2 in (-1.2, 0, 1.2)]
                 if max(hs_) - min(hs_) > 0.15: print('  start boudin not flat at', c.round(1), round(max(hs_) - min(hs_), 2))
-                st.append(f'[{c[0]:.6f} 0.000000 {c[1]:.6f}] {float(np.arctan2(-d_[1], d_[0])):.6f} {P}/statue/boudin_logo.jm {P}/statue/startb_{tx_}.png {P}/statue/startb.shp')   # v51b: soft collision
+                st.append(f'[{c[0]:.6f} 0.000000 {c[1]:.6f}] {float(np.arctan2(-d_[1], d_[0])):.6f} {P}/statue/boudin_logo.jm {P}/statue/startb_{tx_}.png null')   # v53: no collision again (with startb.shp the game did not move them)
                 nsb += 1
         print('start boudins', nsb)
     FS_ = getattr(LT, 'FMX_STAKES', None); R3_ = getattr(LT, 'FMX_RAMP', None)

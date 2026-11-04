@@ -65,7 +65,7 @@ BERM_GAIN = {'L7 -> east lane (real high berm)': 1.2, 'bowl (L4 -> L3)': 0.85, '
 ROLLER, SMALL_B = 'Custom1_g30_1', 'Glendale_g40_2'                        # 1.9 / 2.5 ft
 # v12: freestyle landing wider ("beaucoup de place", mostly on the right): section -> (from_ft, to_ft, left_ft, right_ft)
 # v13: start on a raised platform (gates and grates on it), a short descent right after the gate line (ft)
-START_GATE, START_HEADING = (-100.0, 175.0), 0.0                         # gate row centre (local), heading (deg)
+START_GATE, START_HEADING = (-100.0, 183.0), 0.0                         # gate row centre (local), heading (deg); v53 (user): 2 gates (8 ft) outwards, platform with it
 START_PLATFORM = dict(h=10.0, back=40.0, front=5.0, down=55.0, side=6.0, side_ramp=30.0, lin=6.0)   # v24: smooth side ramps (30 ft), the bank takes over behind
 # v13: freestyle ramp beside the wheel tap (right, off the lane), turned slightly to face the wide part of the landing (local)
 FMX_RAMP = dict(lip=(98.0, 153.0), aim=(170.0, 150.0), H=7.5, width=8.0, side=0.5,

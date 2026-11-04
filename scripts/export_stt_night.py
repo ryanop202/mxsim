@@ -149,8 +149,7 @@ def main():
                'then they are moved under the ground. Before a gate drop (practice) they stay. Plain ASCII on purpose.', '*/', '',
                'var g_sb = [' + ', '.join(rows_) + '];', 'var g_sb_after = ' + str(SBD['hide_after']) + ';', 'var g_sb_hidden = false;', '',
                'function sbSet(hide) {', '    var i, s;', '    for (i = 0; i < g_sb.length; i++) {', '        s = g_sb[i];',
-               '        mx.move_statue(s[0], s[1], hide ? -200.0 : 0.0, s[2], s[3]);', '    }', '    g_sb_hidden = hide;',
-               '    if (hide)', '        mx.message("Saint-Thibery: start boudins removed (" + g_sb_after + " s after the gate drop)");', '}', '',
+               '        mx.move_statue(s[0], s[1], hide ? -200.0 : 0.0, s[2], s[3]);', '    }', '    g_sb_hidden = hide;', '}', '',
                'function startBoudins(seconds) {', '    var d = mx.get_gate_drop_time();', '    var hide = (d >= 0 && mx.seconds >= d + g_sb_after);',
                '    if (hide != g_sb_hidden)', '        sbSet(hide);', '    if (startBoudinsPrev)', '        startBoudinsPrev(seconds);', '}', '',
                'var startBoudinsPrev = mx.frame_handler;', 'mx.frame_handler = startBoudins;', '']

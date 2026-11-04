@@ -15,8 +15,6 @@ function sbSet(hide) {
         mx.move_statue(s[0], s[1], hide ? -200.0 : 0.0, s[2], s[3]);
     }
     g_sb_hidden = hide;
-    if (hide)
-        mx.message("Saint-Thibery: start boudins removed (" + g_sb_after + " s after the gate drop)");
 }
 
 function startBoudins(seconds) {
