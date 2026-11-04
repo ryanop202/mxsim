@@ -68,20 +68,63 @@ def fit(lg, cx, cy, max_w, max_h):
 # ------------------------------------------------------------------ boudins with logos (whoops)
 BOUDIN_LOGOS = ('sxtour', 'mcst')            # alternated along the row
 
-def boudin_logo_texture(name):
-    """the plain boudin texture with a logo on both vertical sides (rows 0..255 = +z side, 256..511 = -z side, both read
-    left -> right from outside: see stt_props.boudin), as big as the vertical part allows."""
+BL = dict(rows=480, logo_h=1.40, logo_s=1.50, logo_w=5.2)   # v39 (user): logo bigger and higher (v38: 0.8 ft, vertical part only)
+
+def _boudin_arc():
+    """cross-section of the boudin (stt_props.BOUDIN) from the +z foot over the top to the -z foot: list of (z, y, normal, s)
+    with s = arc length from the +z foot."""
     import stt_props as SP
-    B = SP.BOUDIN; img = np.asarray(SP.boudin_texture(False)).astype(float).copy()
-    ys = B['H'] - B['W'] / 2; pxu, pxv = 1024 / B['L'], 255 / (ys + B['sink'])
-    lg = logo(name, dark=True); lh = 0.80; cyf = B['sink'] + 0.62          # logo 0.8 ft high, centre 0.52 ft above the ground
-    for r0 in (0, 256):
-        cy = r0 + 255 - cyf * pxv
-        paste(img, fit(lg, 512, cy, (B['L'] - 1.2) * pxu, lh * pxv), lg)
+    B = SP.BOUDIN; R = B['W'] / 2; ys = B['H'] - R; y_b = -B['sink']; sg = B['seg']
+    sec = [(R, y_b, (0, 0, 1)), (R, ys, (0, 0, 1))]
+    for t in np.linspace(0, np.pi, sg + 1)[1:-1]: sec.append((R * np.cos(t), ys + R * np.sin(t), (0, np.sin(t), np.cos(t))))
+    sec += [(-R, ys, (0, 0, -1)), (-R, y_b, (0, 0, -1))]
+    out, acc = [], 0.0
+    for k, (z, y, n) in enumerate(sec):
+        if k: acc += np.hypot(z - sec[k - 1][0], y - sec[k - 1][1])
+        out.append((z, y, n, acc))
+    return out
+
+def boudin_logo_texture(name):
+    """1024 x 1024: rows 0..479 = +z half (row 479 = foot, row 0 = top of the round), rows 480..959 = -z half (same), rows
+    960.. plain (ends). u = along the boudin, read left -> right from outside on both halves. Logo centred `logo_s` ft of arc
+    above the foot (over the shoulder), `logo_h` ft high."""
+    import stt_props as SP
+    B = SP.BOUDIN; sec = _boudin_arc(); half = sec[-1][3] / 2; RW = BL['rows']
+    img = np.zeros((1024, 1024, 3)); img[:] = SP._vinyl(1024, 1024, 60, 30, 44, amp=4)
+    pxu, pxv = 1024 / B['L'], RW / half
+    lg = logo(name, dark=True)
+    for r0 in (0, RW):
+        cy = r0 + RW - BL['logo_s'] * pxv
+        paste(img, fit(lg, 512, cy, BL['logo_w'] * pxu, BL['logo_h'] * pxv), lg)
     return Image.fromarray(np.clip(img, 0, 255).astype(np.uint8))
 
+def boudin_logo():
+    """same shape as stt_props.boudin_plain (segments touching), sides mapped by arc length so the logo can go over the
+    shoulder without being deformed (developable surface)."""
+    import stt_props as SP
+    B = SP.BOUDIN; m = Mesh(1024, 1024); sec = _boudin_arc(); half = sec[-1][3] / 2; RW = BL['rows']
+    hx = B['L'] / 2; pxu, pxv = 1024 / B['L'], RW / half; xs = np.linspace(-hx, hx, 9)
+    def uv(x, s_):
+        if s_ <= half + 1e-9: return m.uv_px((x + hx) * pxu, RW - s_ * pxv)                   # +z half: right = +x
+        return m.uv_px((hx - x) * pxu, RW + RW - (sec[-1][3] - s_) * pxv)                   # -z half: right = -x
+    for k in range(len(sec) - 1):
+        (za, ya, na, sa), (zb, yb, nb, sb) = sec[k], sec[k + 1]
+        if sa < half < sb:                                                                   # never: the top point is a vertex
+            raise ValueError('top not a vertex')
+        for i in range(len(xs) - 1):
+            xa, xb = xs[i], xs[i + 1]
+            if sb <= half + 1e-9: U = [uv(xa, sa), uv(xb, sa), uv(xb, sb), uv(xa, sb)]
+            else:                                                                            # -z half: measure from its foot
+                U = [uv(xa, sa + 1e-6), uv(xb, sa + 1e-6), uv(xb, sb), uv(xa, sb)]
+            SP._smooth(m, [(xa, ya, za), (xb, ya, za), (xb, yb, zb), (xa, yb, zb)], [na, na, nb, nb], U)
+    cu = m.uv_px(512, 990)
+    for sx in (1, -1):
+        m.tri_fan([np.array((sx * hx, y, z)) for z, y, _, _ in sec], np.array([sx * 1.0, 0, 0]), [cu] * len(sec))
+    return m
+
 # ------------------------------------------------------------------ advertising tarps on the fence
-TARP = dict(w=7.2, y0=0.85, y1=3.25, z=0.43, every=12, order=('usland', 'mcst', 'rbt', 'motopark', 'sxtour'))
+TARP = dict(w=7.2, y0=0.85, y1=3.25, z=0.43, every=6,   # v39 (user): twice as many (12 -> 6)
+            order=('usland', 'mcst', 'rbt', 'motopark', 'sxtour'))
 TARP_BG = dict(usland=(246, 246, 246), mcst=(14, 14, 16), rbt=(246, 246, 246), motopark=(14, 14, 16), sxtour=(246, 246, 246))
 
 def tarp_texture(name):
@@ -118,15 +161,20 @@ def tarp():
     return m
 
 # ------------------------------------------------------------------ START banner (design only, v38)
-def start_banner_texture(length_ft=88.0, height_ft=2.7, px_ft=60):
-    """the user's photo: a black banner, white italic START in the middle, sponsor logos on both sides. Pattern repeated
-    so it reads along the whole gate line: Suttel | Moto Club | START | Moto Club | Moto Park (x3)."""
+BANNER = dict(h=2.9, top=3.6, blocks=('suttel', 'mcst', 'START', 'mcst', 'motopark'), aspect=10.86, z=0.9, leg_r=0.09,
+              n_legs=5, px=2048)
+# v39 (user): the pattern only ONCE ('comme le zoom sur un tiers'), as big as possible: top at the fence top (3.6 ft), 2.9 ft
+# high, the zoom's proportions (10.86 : 1) -> 31.5 ft long, centred behind the gates; a steel frame under it (legs, rail,
+# braces, foot plates). Placed just in front of the fence on top of the start wall, facing the gates.
+
+def start_banner_texture(length_ft=None, height_ft=None, px_ft=130):
+    """black banner, white italic START in the middle, sponsor logos either side (the user's photo / the zoom he approved)."""
+    height_ft = height_ft or BANNER['h']; length_ft = length_ft or height_ft * BANNER['aspect']
     W, H = int(length_ft * px_ft), int(height_ft * px_ft)
     from scipy.ndimage import gaussian_filter
     n = gaussian_filter(np.random.default_rng(7).normal(0, 1, (H, W)), (12, 40)); n /= n.std() + 1e-9
     img = np.zeros((H, W, 3)) + 13.0 + n[..., None] * 2.5
-    blocks = ['suttel', 'mcst', 'START', 'mcst', 'motopark'] * 3
-    bw = W / len(blocks)
+    blocks = list(BANNER['blocks']); bw = W / len(blocks)
     font = ImageFont.truetype('C:/Windows/Fonts/impact.ttf', int(H * 0.78))
     for i, b in enumerate(blocks):
         cx = (i + 0.5) * bw
@@ -138,14 +186,53 @@ def start_banner_texture(length_ft=88.0, height_ft=2.7, px_ft=60):
             img[:, x0:x0 + t.width] = img[:, x0:x0 + t.width] * (1 - al) + 244 * al
         else:
             lg = logo(b, dark=True); paste(img, fit(lg, cx, H / 2, bw * 0.78, H * (0.70 if b != 'mcst' else 0.62)), lg)
-    img[:6] = 200; img[-6:] = 200                                    # white piping top and bottom (as the photo)
+    pp = max(4, int(H * 0.02)); img[:pp] = 200; img[-pp:] = 200            # white piping top and bottom (as the photo)
     return Image.fromarray(np.clip(img, 0, 255).astype(np.uint8))
+
+def start_banner():
+    """mesh + texture. Texture 2048 x 1024: banner in 2 strips (left half rows 0..376, right half rows 384..760), black back
+    / edges at (1000, 900), steel at (1000, 980). Origin: centre, on the ground; front = +z."""
+    Bn = BANNER; ban = start_banner_texture(); L = Bn['h'] * Bn['aspect']; Wt = Bn['px']
+    hh = int(round(ban.height * (Wt / (ban.width / 2)))); assert hh <= 380, hh
+    tex = Image.new('RGB', (Wt, 1024), (16, 16, 18))
+    tex.paste(ban.crop((0, 0, ban.width // 2, ban.height)).resize((Wt, hh), Image.LANCZOS), (0, 0))
+    tex.paste(ban.crop((ban.width // 2, 0, ban.width, ban.height)).resize((Wt, hh), Image.LANCZOS), (0, 384))
+    d = ImageDraw.Draw(tex); d.rectangle((1500, 940, 2047, 1023), fill=(150, 154, 160)); d.rectangle((1500, 860, 2047, 939), fill=(14, 14, 16))
+    m = Mesh(Wt, 1024); y0, y1 = Bn['top'] - Bn['h'], Bn['top']; z = Bn['z']; t = 0.06; hx = L / 2
+    blk, stl = m.uv_px(1700, 900), ('steel', (1700, 985))
+    for k, (xa, xb) in enumerate(((-hx, 0.0), (0.0, hx))):                    # front, seen from +z: right = +x
+        r0 = 384 * k
+        m.tri_fan([np.array(p) for p in [(xa, y0, z + t), (xb, y0, z + t), (xb, y1, z + t), (xa, y1, z + t)]], np.array([0, 0, 1.0]),
+                  [m.uv_px(0, r0 + hh), m.uv_px(Wt, r0 + hh), m.uv_px(Wt, r0), m.uv_px(0, r0)])
+    m.tri_fan([np.array(p) for p in [(hx, y0, z - t), (-hx, y0, z - t), (-hx, y1, z - t), (hx, y1, z - t)]], np.array([0, 0, -1.0]), [blk] * 4)
+    for P_, N_ in (([(-hx, y1, z - t), (hx, y1, z - t), (hx, y1, z + t), (-hx, y1, z + t)], (0, 1, 0)),
+                   ([(-hx, y0, z + t), (hx, y0, z + t), (hx, y0, z - t), (-hx, y0, z - t)], (0, -1, 0)),
+                   ([(hx, y0, z - t), (hx, y1, z - t), (hx, y1, z + t), (hx, y0, z + t)], (1, 0, 0)),
+                   ([(-hx, y0, z + t), (-hx, y1, z + t), (-hx, y1, z - t), (-hx, y0, z - t)], (-1, 0, 0))):
+        m.tri_fan([np.array(p, float) for p in P_], np.array(N_, float), [blk] * 4)
+    # steel frame behind / under the banner: legs from the ground to the top, a rail under the banner, X braces, feet
+    from props_usland import pipe
+    r = Bn['leg_r']; zl = z - t - r - 0.02; xs = np.linspace(-hx + 0.4, hx - 0.4, Bn['n_legs'])
+    for x in xs:
+        pipe(m, [(x, -0.3, zl), (x, y1 - 0.1, zl)], r, stl, seg=10)
+        pipe(m, [(x, 0.0, zl - 1.4), (x, y0 + 0.4, zl)], r * 0.8, stl, seg=8)              # back strut (keeps it up)
+        m.tri_fan([np.array(p) for p in [(x - 0.35, 0.02, zl - 1.6), (x + 0.35, 0.02, zl - 1.6), (x + 0.35, 0.02, zl + 0.35), (x - 0.35, 0.02, zl + 0.35)]],
+                  np.array([0, 1.0, 0]), [m.uv_px(1700, 985)] * 4)                       # foot plate
+    pipe(m, [(-hx + 0.2, y0 - 0.12, zl + 0.05), (hx - 0.2, y0 - 0.12, zl + 0.05)], r, stl, seg=10)   # rail under the banner
+    pipe(m, [(-hx + 0.2, 0.35, zl), (hx - 0.2, 0.35, zl)], r * 0.8, stl, seg=8)                   # low rail
+    for a, b in zip(xs[:-1], xs[1:]):                                                           # X braces
+        pipe(m, [(a, 0.35, zl), (b, y0 - 0.12, zl)], r * 0.6, stl, seg=6)
+        pipe(m, [(a, y0 - 0.12, zl), (b, 0.35, zl)], r * 0.6, stl, seg=6)
+    return m, tex
 
 def build(outd=OUTD):
     os.makedirs(outd, exist_ok=True); out = {}
     for n in BOUDIN_LOGOS: boudin_logo_texture(n).save(f'{outd}/boudin_{n}.png'); out[f'boudin_{n}'] = 'png'
     m = tarp(); nv, nt = m.write(f'{outd}/ad_tarp.jm', (0, 0, 0, 0, 0)); out['ad_tarp'] = (nv, nt)
     for n in TARP['order']: tarp_texture(n).save(f'{outd}/ad_{n}.png')
+    m = boudin_logo(); out['boudin_logo'] = m.write(f'{outd}/boudin_logo.jm', (24, 0.5, 0.4, 0.4, 0.4))   # v39
+    import stt_props as SP; open(f'{outd}/boudin_logo.shp', 'w', newline='\n').write(SP.boudin_shape())
+    m, tex = start_banner(); out['start_banner'] = m.write(f'{outd}/start_banner.jm', (0, 0, 0, 0, 0)); tex.save(f'{outd}/start_banner.png')
     return out
 
 if __name__ == '__main__':

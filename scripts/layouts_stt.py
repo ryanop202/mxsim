@@ -140,8 +140,8 @@ BALES = [  # v37 (user's 4 top views: red dot = remove, white = add, 2 redrawn =
 # v35: first layout (2 facing pairs at each end of the top lane, the west ones removed in v36)
 # v35 (user's photo): black foam tubes, segments end to end along both edges of the lane (`off` ft from the lane axis to the tube
 # axis): from `before` ft before the whoops to half of them (L7), and along both sides of the freestyle gap (lip -> landing)
-BOUDINS = dict(whoops=dict(tag='L7 small double', x=(393.0, 513.0), side=-1, off=22.0, model='boudin_plain', tex=('boudin_sxtour', 'boudin_mcst')),   # v38 (user): 1 ft closer, still straight (whoops foot < 0.1 ft under its edge = the sink); SX Tour / Moto Club logos alternated   # v37: off 17.9 -> 23 (it sat half on the whoops' side slopes, which reach z 523)   # v36b (user): same plain tube as the freestyle one
-               fmx=dict(p0=(497.1, 445.7), p1=(535.4, 448.7), model='boudin_plain'))   # v37: user's line (top view), lip -> landing corner
+BOUDINS = dict(whoops=dict(tag='L7 small double', x=(393.0, 513.0), side=-1, off=22.0, model='boudin_logo', tex=('boudin_sxtour', 'boudin_mcst')),   # v39: logo mesh (logo bigger, higher)   # v38 (user): 1 ft closer, still straight (whoops foot < 0.1 ft under its edge = the sink); SX Tour / Moto Club logos alternated   # v37: off 17.9 -> 23 (it sat half on the whoops' side slopes, which reach z 523)   # v36b (user): same plain tube as the freestyle one
+               fmx=dict(p0=(497.1, 445.7), p1=(535.4, 448.7), model='boudin_logo', tex=('boudin_sxtour', 'boudin_mcst')))   # v39 (user): logos here too   # v37: user's line (top view), lip -> landing corner
 # v36 (user's marks): whoops: ONE side only (north, the infield side), along the small double and the first whoops, from x 393
 # to 513 (where the user's line stops); freestyle gap: one single line in the middle, plain black (no logo), segments touching
 # v36 (user): no stakes on the steel freestyle ramp (v35); they go on the dirt take-off of the freestyle jump (L4) instead
@@ -152,6 +152,7 @@ PYLON_GROUND = dict(mound=dict(h=0.75, r_flat=1.6, r=3.6), curb=dict(turns=(2, 3
 # v38 (user): mound higher (0.45 -> 0.75 ft), same width. Curb: a 90 deg arc around the pylon only (v37: 220 deg, a half turn),
 # from the entry lane side to the exit lane side, + a short straight tail back along the entry lane and a short one at the exit
 # (the user's 'P' drawing: it marks the inside of the turn)
+START_BANNER = dict(x_off=0.8)   # v39 (user): START banner just in front of the fence behind the gates (on the start wall)
 TURN_GATES = dict(half_lane=15.2, inner=2.0, outer=12.0, fr=(0.15, 0.85), fan=True, start_pad=4.0)
 
 # v24: the bank starts at the height of the ground it touches (the start platform: 10 ft) and rises in ONE smooth slope
