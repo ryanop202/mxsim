@@ -157,7 +157,9 @@ PYLON_GROUND = dict(mound=dict(h=0.75, r_flat=1.6, r=3.6), curb=dict(turns=(2, 3
 # (the user's 'P' drawing: it marks the inside of the turn)
 VIPS = [dict(img='vip_mrbeast', h=6.4, sink=0.1, at=(452.0, 596.0)),          # v45 (user): cut-outs (rembg), all in ONE place: front row right behind the south
         dict(img='vip_netanyahu', h=5.5, sink=0.5, at=(468.0, 596.0)),        # fence facing the start of the whoops, one fence
-        dict(img='vip_branson_epstein', h=6.0, sink=0.1, at=(484.0, 596.0))]  # section each, no tarp on those sections
+        dict(img='vip_branson_epstein', h=6.0, sink=0.1, at=(484.0, 596.0)),  # section each, no tarp on those sections
+        dict(img='vip_xddl', h=2.3, sink=-3.0, at=(500.0, 596.0), keep_tarp=True)]   # v49 (user): a head-and-shoulders portrait:
+# standing behind the tarp of the next section (bust from 3.0 to 5.3 ft). v49: VIPs are billboards too (turn to the view)
 START_BANNER = dict(board=True, foot_h=0.4, back=1.4, model='start_sign')   # v41: sign on posts   # v40 (user): a BIG board on the platform at the foot of the start wall
 # (v39: a 31.5 ft banner on top of the wall, in front of the fence: too small). Origin `back` ft in front of the wall foot
 # (first point east of the wall within foot_h of the platform level).
@@ -172,7 +174,9 @@ STAKE_PADS = None   # v41 (user): no pad any more (it bent the side of the kicke
 CROWD = dict(rows=tuple(np.arange(6.0, 112.0, 9.0)), step=5.5, jitter=3.0, skip=0.12, size=48.0, side_jit=3.0,   # v41 (user): the whole bank, up to the top; v43: twice as dense (step 11 -> 5.5)
              own={'Crowd5': 'Crowd5_fr'},   # v43 (user): the US-flag skirt recoloured as a French flag (work/flag_fr.py), shipped in the track
              imgs=('Crowd1', 'Crowd2', 'Crowd3', 'Crowd4', 'Crowd5', 'Crowd6', 'Crowd8', 'Crowd9'), src='@2022Miamibeachrace/billboard',
-             mesh=True, game='C:/Program Files (x86)/MX Simulator')   # v42 (user: less lag): 8 meshes of cropped quads, not billboards
+             mesh=True, game='C:/Program Files (x86)/MX Simulator', sprites=True)   # v49 (user): billboards again (they turn to the view;
+# the v42 fixed quads were invisible edge-on, e.g. from the start), but each picture CROPPED to its people (own copies in
+# billboard/, 256 px, stretched back by the aspect value): no more huge transparent squares   # v42 (user: less lag): 8 meshes of cropped quads, not billboards
 # v40 (user): public on the grass bank: billboards (people cut-outs) from the 2022 Miami Beach Race track (installed in the
 # user's game, referenced, not copied), 2 rows behind the fence (`rows` ft beyond it), about every `step` ft, some gaps.
 # Size 48 -> people about 6 ft (Miami uses 61: 7.6 ft).

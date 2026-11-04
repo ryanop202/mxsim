@@ -139,7 +139,20 @@ def main():
                 if CR.get('mesh'): crowd_pos.append((q, sz_, im_))
                 else: bb.append(f"[{q[0]:.6f} 0.000000 {q[1]:.6f}] {sz_:.6f} 1.000000 {CR['src']}/{im_}.png")
         open(f'{OUT}/billboards', 'w', newline='\n').write(('\n'.join(bb) + '\n') if bb else ''); print('crowd billboards', len(bb))
-        if crowd_pos:                              # v42 (user: same crowd, less lag): one mesh per picture, each person a quad
+        if crowd_pos and CR.get('sprites'):        # v49: billboards cropped to the people (they turn to the view)
+            from PIL import Image as Im_
+            os.makedirs(f'{OUT}/billboard', exist_ok=True); cr_ = {}
+            for im_ in CR['imgs']:
+                own_ = CR.get('own', {}).get(im_)
+                src_ = f'{ROOT}/assets/crowd/{own_}.png' if own_ else f"{CR['game']}/{CR['src'][1:]}/{im_}.png"
+                pic_ = Im_.open(src_).convert('RGBA'); x0_, y0_, x1_, y1_ = pic_.getchannel('A').point(lambda a: 255 if a > 8 else 0).getbbox()
+                pic_.crop((x0_, y0_, x1_, y1_)).resize((256, 256), Im_.LANCZOS).save(f'{OUT}/billboard/crowd_{im_}.png')
+                cr_[im_] = ((y1_ - y0_) / pic_.height, (x1_ - x0_) / (y1_ - y0_))       # height share of the square, aspect w / h
+            bb = [f"[{q[0]:.6f} 0.000000 {q[1]:.6f}] {sz_ * cr_[nm_][0]:.6f} {cr_[nm_][1]:.6f} {P}/billboard/crowd_{nm_}.png" for q, sz_, nm_ in crowd_pos]
+            open(f'{OUT}/billboards', 'w', newline=chr(10)).write(chr(10).join(bb) + chr(10)); print('crowd billboards (cropped)', len(bb))
+            for f_ in os.listdir(f'{OUT}/statue'):
+                if f_.startswith(('crowd_', 'vip_')) and f_.endswith('.jm'): os.remove(f'{OUT}/statue/{f_}')
+        elif crowd_pos:                              # v42 (user: same crowd, less lag): one mesh per picture, each person a quad
             # cropped to the people (the Miami pictures are 1024 px squares, people ~2 % of them: 2221 big transparent
             # billboards = huge overdraw). Quads face the arena centre. Textures referenced from the Miami track (not copied).
             # One origin on flat ground inside the arena for all meshes (the game tilts a statue with the slope at its origin).
@@ -399,7 +412,7 @@ def main():
             i = min(int(np.searchsorted(L_, sv, 'right')) - 1, len(seg) - 1); a, b = seg[i]
             return a + (b - a) * (sv - L_[i]) / max(np.linalg.norm(b - a), 1e-9)
         dfl = lambda q: float(DF[int(q[1] + LT.STT_ORIGIN[1]), int(q[0] + LT.STT_ORIGIN[0])])
-        nf = 0; nad = 0; import stt_ads as AD_
+        nf = 0; nad = 0; import stt_ads as AD_; vip_bb = []
         vip_q = {}                                 # v45: VIP cut-outs right behind the nearest fence section (no tarp there)
         for vp in getattr(LT, 'VIPS', []):
             qs = [(np.hypot(*((at((q + 0.5) * stp) + np.array(LT.STT_ORIGIN)) - np.array(vp['at']))), q) for q in range(m_)]
@@ -413,24 +426,19 @@ def main():
             # gates (the START banner goes there)
             gx_, gz_ = LT.START_GATE[0] + LT.STT_ORIGIN[0], LT.START_GATE[1] + LT.STT_ORIGIN[1]
             behind_start = c_[0] < gx_ and abs(c_[1] - gz_) < 52.0
-            if q in vip_q:                             # v45: the VIP stands behind this section, facing the track
-                vp = vip_q[q]; from PIL import Image as Im_
-                os.makedirs(f'{OUT}/billboard', exist_ok=True); shutil.copy(f"{ROOT}/assets/crowd/{vp['img']}.png", f"{OUT}/billboard/{vp['img']}.png")
-                im_ = Im_.open(f"{ROOT}/assets/crowd/{vp['img']}.png"); w_ = vp['h'] * im_.width / im_.height
-                rt_ = np.array([inw[1], -inw[0]])     # seen from the track (looking along -inw) its right
-                pc_ = c_ - inw * 1.0; h0_ = float(h_at(H, *c_)); hb_ = float(h_at(H, *pc_)) - h0_ - vp['sink']
-                o_ = pc_ - c_; mv_ = PU.Mesh(im_.width, im_.height)
-                pl_ = np.array([o_[0] - rt_[0] * w_ / 2, hb_, o_[1] - rt_[1] * w_ / 2]); pr_ = np.array([o_[0] + rt_[0] * w_ / 2, hb_, o_[1] + rt_[1] * w_ / 2])
-                up_ = np.array([0, vp['h'], 0])
-                mv_.tri_fan([pl_, pr_, pr_ + up_, pl_ + up_], np.array([inw[0], 0.0, inw[1]]),
-                            [mv_.uv_px(0, im_.height), mv_.uv_px(im_.width, im_.height), mv_.uv_px(im_.width, 0), mv_.uv_px(0, 0)])
-                mv_.write(f"{OUT}/statue/{vp['img']}.jm", (0, 0, 0, 0, 0))
-                st.append(f"[{c_[0]:.6f} 0.000000 {c_[1]:.6f}] 0.000000 {P}/statue/{vp['img']}.jm {P}/billboard/{vp['img']}.png null")
-                print('vip', vp['img'], 'at', c_.round(1))
-            elif q % AD_.TARP['every'] != AD_.TARP['gap'] and not behind_start:       # v45: every section
+            vp = vip_q.get(q)
+            if vp:                                     # v49: the VIP = a billboard 1 ft behind this section (turns to the view)
+                from PIL import Image as Im_
+                os.makedirs(f'{OUT}/billboard', exist_ok=True)
+                im_ = Im_.open(f"{ROOT}/assets/crowd/{vp['img']}.png").convert('RGBA'); im_.resize((512, 512), Im_.LANCZOS).save(f"{OUT}/billboard/{vp['img']}.png")
+                pc_ = c_ - inw * 1.0
+                vip_bb.append(f"[{pc_[0]:.6f} {-vp['sink']:.6f} {pc_[1]:.6f}] {vp['h']:.6f} {im_.width / im_.height:.6f} {P}/billboard/{vp['img']}.png")
+                print('vip', vp['img'], 'at', pc_.round(1))
+            if (not vp or vp.get('keep_tarp')) and q % AD_.TARP['every'] != AD_.TARP['gap'] and not behind_start:       # v45: every section
                 n_ = AD_.TARP['order'][nad % len(AD_.TARP['order'])]; nad += 1
                 st.append(f"[{c_[0]:.6f} 0.000000 {c_[1]:.6f}] {PP.statue_ang(inw[0], inw[1]):.6f} {P}/statue/ad_tarp.jm {P}/statue/ad_{n_}.png null")
         print('fence sections', nf, 'tarps', nad)
+        if vip_bb: open(f'{OUT}/billboards', 'a', newline=chr(10)).write(chr(10).join(vip_bb) + chr(10))
         SB_ = getattr(LT, 'START_BANNER', None)
         if SB_:                                    # v39: START banner in front of the fence section right behind the gate centre
             gx_, gz_ = LT.START_GATE[0] + LT.STT_ORIGIN[0], LT.START_GATE[1] + LT.STT_ORIGIN[1]
