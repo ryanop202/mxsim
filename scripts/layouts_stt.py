@@ -162,9 +162,9 @@ VIPS = [dict(img='vip_mrbeast', h=6.4, sink=0.1, at=(452.0, 596.0)),          # 
 # standing behind the tarp of the next section (bust from 3.0 to 5.3 ft). v49: VIPs are billboards too (turn to the view)
 PYLON_SKINS = {0: 'pylon_f50', 2: 'pylon_f50', 4: 'pylon_f50', 5: 'pylon_motul', 8: 'pylon_motul'}
 # v50 (user's circles on the in-game top view): yellow = all 50 Factory yellow with its logo, red = red Motul column, black base
-START_BOUDINS = dict(lines=[[(702.0, 407.0), (654.3, 522.0)],                       # v51: starts where the ground is flat (not up the bowl berm)
-                            [(350.0, 426.0), (384.0, 449.0), (462.0, 449.0), (468.0, 453.0), (532.0, 453.0), (538.0, 457.0),
-                             (598.0, 457.0), (603.0, 441.0)]],
+START_BOUDINS = dict(lines=[[(704.6, 409.8), (658.3, 522.0)],                       # v52 (user): 4 ft further out (more room in the
+                            [(350.0, 426.0), (384.0, 449.0), (468.0, 453.0), (534.0, 453.0)]],   # turn); v52: one diagonal from the
+                     # first slant straight to the line beside the FMX ramp, then straight, stopped at the landing (user's lines)
                      hide_after=15.0, pattern=(('50factory', 10), ('mcst', 10), ('sxtour', 10)))
 # v51 (user): flat ground only (not up the L4 bump shoulders, z up to 447, nor the landing, z up to 456), on the start side of
 # the steel FMX ramp (z 447-451) so the start cannot use it, along the landing and back to L4 right behind it; pattern: 10 x
