@@ -293,10 +293,9 @@ def night_map(MS, H, RF=None):
     w = np.array([complex(*p[0]) for p in MS['pts']]); q = np.array([complex(*p[1]) for p in MS['pts']])
     (a, b), *_ = np.linalg.lstsq(np.c_[w, np.ones_like(w)], q, rcond=None)
     res = np.abs(q - (a * w + b)); print('map fit: %.3f px/ft, rot %.2f deg, max residual %.1f px' % (abs(a), np.degrees(np.angle(a)), res.max()))
-    M = MS['M']; N = H.shape[0]
+    N = H.shape[0]; Mx, Mz = MS['M'] if isinstance(MS['M'], tuple) else (MS['M'], MS['M'])   # v62c: (width, height) px
     fx0, fz0, side = (RF['x0'], RF['z0'], RF['side']) if RF else (0.0, 0.0, (N - 1) * S)     # v62: map over the (cut) terrain
-    g = (np.arange(M) + 0.5) * side / M
-    X, Z = np.meshgrid(fx0 + g, fz0 + g); p = a * (X + 1j * Z) + b
+    X, Z = np.meshgrid(fx0 + (np.arange(Mx) + 0.5) * side / Mx, fz0 + (np.arange(Mz) + 0.5) * side / Mz); p = a * (X + 1j * Z) + b
     px = np.clip(p.real, 0, shot.shape[1] - 1); py = np.clip(p.imag, 0, shot.shape[0] - 1)   # just outside the shot: edge pixels
     rgb = np.dstack([ndi_.map_coordinates(shot[:, :, c], [py, px], order=1) for c in range(3)])
     # v61b (user: crop inside the arena's rounded edge, straight): rounded rectangle, world-axis aligned, from the floor edge
@@ -312,25 +311,22 @@ def night_map(MS, H, RF=None):
     im = Image.fromarray(np.dstack([np.clip(rgb, 0, 255), al * 255]).astype(np.uint8), 'RGBA')
     gx_, gz_ = LT.START_GATE[0] + LT.STT_ORIGIN[0], LT.START_GATE[1] + LT.STT_ORIGIN[1]
     # v61c (user): START smaller, along the grid (reads top -> bottom), inside the start descent (box in world ft)
-    k = M / side; bx0, bz0, bx1, bz1 = MS['text_box']; up = 4
+    kx, kz = Mx / side, Mz / side; bx0, bz0, bx1, bz1 = MS['text_box']
     fnt = ImageFont.truetype('C:/Windows/Fonts/impact.ttf', 200); sw = 14
     tb = ImageDraw.Draw(Image.new('L', (1, 1))).textbbox((0, 0), MS['text'], font=fnt, stroke_width=sw)
     t = Image.new('RGBA', (tb[2] - tb[0], tb[3] - tb[1]), (0, 0, 0, 0))
     ImageDraw.Draw(t).text((-tb[0], -tb[1]), MS['text'], font=fnt, fill=(255, 255, 255, 255), stroke_width=sw, stroke_fill=(0, 0, 0, 255))
     t = t.rotate(90, expand=True)                                    # map: x right, z down -> reads from the bottom up (v61d, user)
-    bw, bh = (bx1 - bx0) * k, (bz1 - bz0) * k; f_ = min(bw / t.width, bh / t.height)
+    bw, bh = (bx1 - bx0) * kx, (bz1 - bz0) * kz; f_ = min(bw / t.width, bh / t.height)
     t = t.resize((max(1, int(t.width * f_)), max(1, int(t.height * f_))), Image.LANCZOS)
-    cx, cy = ((bx0 + bx1) / 2 - fx0) * k, ((bz0 + bz1) / 2 - fz0) * k
+    cx, cy = ((bx0 + bx1) / 2 - fx0) * kx, ((bz0 + bz1) / 2 - fz0) * kz
     im.alpha_composite(t, (int(round(cx - t.width / 2)), int(round(cy - t.height / 2))))
-    if MS.get('title'):                                               # v62 (user): signature over the arena (like other maps)
-        f2 = ImageFont.truetype(MS['title_font'], 200); sw2 = 10
-        tb = ImageDraw.Draw(Image.new('L', (1, 1))).textbbox((0, 0), MS['title'], font=f2, stroke_width=sw2)
-        t2 = Image.new('RGBA', (tb[2] - tb[0], tb[3] - tb[1]), (0, 0, 0, 0))
-        ImageDraw.Draw(t2).text((-tb[0], -tb[1]), MS['title'], font=f2, fill=(255, 255, 255, 255), stroke_width=sw2, stroke_fill=(0, 0, 0, 255))
-        X0, Z0, X1, Z1 = MS['title_box']; f_ = min((X1 - X0) * k / t2.width, (Z1 - Z0) * k / t2.height)
+    if MS.get('title_img'):                                           # v62b (user): BAZO WORX logo over the arena (like other maps)
+        t2 = Image.open(f"{ROOT}/{MS['title_img']}").convert('RGBA')
+        X0, Z0, X1, Z1 = MS['title_box']; f_ = min((X1 - X0) * kx / t2.width, (Z1 - Z0) * kz / t2.height)
         t2 = t2.resize((max(1, int(t2.width * f_)), max(1, int(t2.height * f_))), Image.LANCZOS)
-        im.alpha_composite(t2, (int(round(((X0 + X1) / 2 - fx0) * k - t2.width / 2)), int(round(((Z0 + Z1) / 2 - fz0) * k - t2.height / 2))))
-    im.save(f'{OUT}/map.png'); print('map.png from the top view, START in', MS['text_box'], 'size %.0f x %.0f ft' % (t.width / k, t.height / k))
+        im.alpha_composite(t2, (int(round(((X0 + X1) / 2 - fx0) * kx - t2.width / 2)), int(round(((Z0 + Z1) / 2 - fz0) * kz - t2.height / 2))))
+    im.save(f'{OUT}/map.png'); print('map.png from the top view, START in', MS['text_box'], 'size %.0f x %.0f ft' % (t.width / kx, t.height / kz))
 
 if __name__ == '__main__':
     print(main())
