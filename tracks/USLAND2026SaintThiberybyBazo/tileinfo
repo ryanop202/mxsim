@@ -26,11 +26,11 @@ erode_limit 0.75 0.7 1.7
 erode_limit 1.5 0.3 0.75
 erode_limit 2.5 0.3 0.3
 erode_lateral_scale 0.025
-texture @USLAND2026StThiberyNuit/ext/USLAND2026SX1/tiles/dirt.ppm
+texture @USLAND2026SaintThiberybyBazo/ext/USLAND2026SX1/tiles/dirt.ppm
 roost texture=@splash.png count=4 slip_threshold=2.0 slow_speed=0.0 fast_speed=64.0 slow_angle=1.07 fast_angle=0.196 size=0.80 grow=2.3 drag=1.90 vscale=1.0 randomize=5.0 r=123 g=73 b=52 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=1024
-roost texture=@USLAND2026StThiberyNuit/ext/USLAND2026SX1/roost/redroost.png count=8 dig=0.0 slip_threshold=2.0 slow_speed=0.0 fast_speed=64.0 slow_angle=1.07 fast_angle=0.196 size=1.5 grow=4.0 drag=2.0 vscale=1.0 randomize=5.0 r=255 g=255 b=255 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=1024
-treadmark texture=@USLAND2026StThiberyNuit/ext/USLAND2026SX1/treads/dirt2x4.png size=4 aspect=0.5 spacing=3 speed_threshold=-20
-treadmark texture=@USLAND2026StThiberyNuit/ext/USLAND2026SX1/treads/dirt2x8.png size=8 aspect=0.25 spacing=6
+roost texture=@USLAND2026SaintThiberybyBazo/ext/USLAND2026SX1/roost/redroost.png count=8 dig=0.0 slip_threshold=2.0 slow_speed=0.0 fast_speed=64.0 slow_angle=1.07 fast_angle=0.196 size=1.5 grow=4.0 drag=2.0 vscale=1.0 randomize=5.0 r=255 g=255 b=255 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=1024
+treadmark texture=@USLAND2026SaintThiberybyBazo/ext/USLAND2026SX1/treads/dirt2x4.png size=4 aspect=0.5 spacing=3 speed_threshold=-20
+treadmark texture=@USLAND2026SaintThiberybyBazo/ext/USLAND2026SX1/treads/dirt2x8.png size=8 aspect=0.25 spacing=6
 addtile
 
 name Jumps Sx
@@ -62,11 +62,11 @@ erode_limit 0.95 0.80 4.00
 erode_limit 1.5 0.35 3.35
 erode_limit 2.25 0.25 3.25
 erode_limit 3.25 0.05 2.05
-texture @USLAND2026StThiberyNuit/ext/USLAND2026SX1/tiles/dirt.ppm
+texture @USLAND2026SaintThiberybyBazo/ext/USLAND2026SX1/tiles/dirt.ppm
 roost texture=@splash.png count=4 slip_threshold=2.0 slow_speed=0.0 fast_speed=64.0 slow_angle=1.07 fast_angle=0.196 size=0.80 grow=2.3 drag=1.90 vscale=1.0 randomize=5.0 r=123 g=73 b=52 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=1024
-roost texture=@USLAND2026StThiberyNuit/ext/USLAND2026SX1/roost/redroost.png count=8 dig=0.0 slip_threshold=2.0 slow_speed=0.0 fast_speed=64.0 slow_angle=1.07 fast_angle=0.196 size=1.5 grow=4.0 drag=2.0 vscale=1.0 randomize=5.0 r=255 g=255 b=255 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=1024
-treadmark texture=@USLAND2026StThiberyNuit/ext/USLAND2026SX1/treads/dirt2x4.png size=4 aspect=0.5 spacing=3 speed_threshold=-20
-treadmark texture=@USLAND2026StThiberyNuit/ext/USLAND2026SX1/treads/dirt2x8.png size=8 aspect=0.25 spacing=6
+roost texture=@USLAND2026SaintThiberybyBazo/ext/USLAND2026SX1/roost/redroost.png count=8 dig=0.0 slip_threshold=2.0 slow_speed=0.0 fast_speed=64.0 slow_angle=1.07 fast_angle=0.196 size=1.5 grow=4.0 drag=2.0 vscale=1.0 randomize=5.0 r=255 g=255 b=255 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=1024
+treadmark texture=@USLAND2026SaintThiberybyBazo/ext/USLAND2026SX1/treads/dirt2x4.png size=4 aspect=0.5 spacing=3 speed_threshold=-20
+treadmark texture=@USLAND2026SaintThiberybyBazo/ext/USLAND2026SX1/treads/dirt2x8.png size=8 aspect=0.25 spacing=6
 addtile
 
 name WhoopsV2
@@ -98,11 +98,11 @@ erode_limit 1.5 1.05 1.05
 erode_limit 2.00 0.5 0.75
 erode_limit 3.00 0.05 0.05
 erode_lateral_scale 1.75
-texture @USLAND2026StThiberyNuit/ext/USLAND2026SX1/tiles/dirt.ppm
+texture @USLAND2026SaintThiberybyBazo/ext/USLAND2026SX1/tiles/dirt.ppm
 roost texture=@splash.png count=4 slip_threshold=2.0 slow_speed=0.0 fast_speed=64.0 slow_angle=1.07 fast_angle=0.196 size=0.80 grow=2.3 drag=1.90 vscale=1.0 randomize=5.0 r=123 g=73 b=52 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=1024
-roost texture=@USLAND2026StThiberyNuit/ext/USLAND2026SX1/roost/redroost.png count=8 dig=0.0 slip_threshold=2.0 slow_speed=0.0 fast_speed=64.0 slow_angle=1.07 fast_angle=0.196 size=1.5 grow=4.0 drag=2.0 vscale=1.0 randomize=5.0 r=255 g=255 b=255 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=1024
-treadmark texture=@USLAND2026StThiberyNuit/ext/USLAND2026SX1/treads/dirt2x4.png size=4 aspect=0.5 spacing=3 speed_threshold=-20
-treadmark texture=@USLAND2026StThiberyNuit/ext/USLAND2026SX1/treads/dirt2x8.png size=8 aspect=0.25 spacing=6
+roost texture=@USLAND2026SaintThiberybyBazo/ext/USLAND2026SX1/roost/redroost.png count=8 dig=0.0 slip_threshold=2.0 slow_speed=0.0 fast_speed=64.0 slow_angle=1.07 fast_angle=0.196 size=1.5 grow=4.0 drag=2.0 vscale=1.0 randomize=5.0 r=255 g=255 b=255 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=1024
+treadmark texture=@USLAND2026SaintThiberybyBazo/ext/USLAND2026SX1/treads/dirt2x4.png size=4 aspect=0.5 spacing=3 speed_threshold=-20
+treadmark texture=@USLAND2026SaintThiberybyBazo/ext/USLAND2026SX1/treads/dirt2x8.png size=8 aspect=0.25 spacing=6
 addtile
 
 name Berm Exit Sx
@@ -135,11 +135,11 @@ erode_limit 1.5 0.05 1.35
 erode_limit 2.25 0.05 0.75
 erode_limit 3.25 0.05 0.05
 erode_lateral_scale 1.5
-texture @USLAND2026StThiberyNuit/ext/USLAND2026SX1/tiles/dirt.ppm
+texture @USLAND2026SaintThiberybyBazo/ext/USLAND2026SX1/tiles/dirt.ppm
 roost texture=@splash.png count=4 slip_threshold=2.0 slow_speed=0.0 fast_speed=64.0 slow_angle=1.07 fast_angle=0.196 size=0.80 grow=2.3 drag=1.90 vscale=1.0 randomize=5.0 r=123 g=73 b=52 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=1024
-roost texture=@USLAND2026StThiberyNuit/ext/USLAND2026SX1/roost/redroost.png count=8 dig=0.0 slip_threshold=2.0 slow_speed=0.0 fast_speed=64.0 slow_angle=1.07 fast_angle=0.196 size=1.5 grow=4.0 drag=2.0 vscale=1.0 randomize=5.0 r=255 g=255 b=255 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=1024
-treadmark texture=@USLAND2026StThiberyNuit/ext/USLAND2026SX1/treads/dirt2x4.png size=4 aspect=0.5 spacing=3 speed_threshold=-20
-treadmark texture=@USLAND2026StThiberyNuit/ext/USLAND2026SX1/treads/dirt2x8.png size=8 aspect=0.25 spacing=6
+roost texture=@USLAND2026SaintThiberybyBazo/ext/USLAND2026SX1/roost/redroost.png count=8 dig=0.0 slip_threshold=2.0 slow_speed=0.0 fast_speed=64.0 slow_angle=1.07 fast_angle=0.196 size=1.5 grow=4.0 drag=2.0 vscale=1.0 randomize=5.0 r=255 g=255 b=255 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=1024
+treadmark texture=@USLAND2026SaintThiberybyBazo/ext/USLAND2026SX1/treads/dirt2x4.png size=4 aspect=0.5 spacing=3 speed_threshold=-20
+treadmark texture=@USLAND2026SaintThiberybyBazo/ext/USLAND2026SX1/treads/dirt2x8.png size=8 aspect=0.25 spacing=6
 addtile
 
 name Sand Straight
@@ -172,11 +172,11 @@ erode_limit 1.5 1.05 1.05
 erode_limit 2.00 0.5 0.75
 erode_limit 3.00 0.05 0.05
 erode_lateral_scale 1.75
-texture @USLAND2026StThiberyNuit/ext/USLAND2026SX1/tiles/sand.ppm
-roost texture=@USLAND2026StThiberyNuit/ext/USLAND2026SX1/roost/hha.dust.png count=4 dig=1.0 slip_threshold=2.0 slow_speed=0.0 fast_speed=50.0 slow_angle=1 fast_angle=0.1 size=2.0 grow=2.0 drag=1.5 vscale=1.0 randomize=1 r=255 g=255 b=255 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=-256
-roost texture=@USLAND2026StThiberyNuit/ext/USLAND2026SX1/roost/dirt4.png count=4 dig=0.0 slip_threshold=2.0 slow_speed=0.0 fast_speed=50.0 slow_angle=1.57 fast_angle=0.296 size=1.0 grow=2.5 drag=1.0 vscale=1.0 randomize=1 r=255 g=255 b=255 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=256
-treadmark texture=@USLAND2026StThiberyNuit/ext/USLAND2026SX1/treads/sand1x4.png size=4 aspect=0.25 spacing=3 speed_threshold=-20
-treadmark texture=@USLAND2026StThiberyNuit/ext/USLAND2026SX1/treads/sand1x8.png size=8 aspect=0.125 spacing=6
+texture @USLAND2026SaintThiberybyBazo/ext/USLAND2026SX1/tiles/sand.ppm
+roost texture=@USLAND2026SaintThiberybyBazo/ext/USLAND2026SX1/roost/hha.dust.png count=4 dig=1.0 slip_threshold=2.0 slow_speed=0.0 fast_speed=50.0 slow_angle=1 fast_angle=0.1 size=2.0 grow=2.0 drag=1.5 vscale=1.0 randomize=1 r=255 g=255 b=255 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=-256
+roost texture=@USLAND2026SaintThiberybyBazo/ext/USLAND2026SX1/roost/dirt4.png count=4 dig=0.0 slip_threshold=2.0 slow_speed=0.0 fast_speed=50.0 slow_angle=1.57 fast_angle=0.296 size=1.0 grow=2.5 drag=1.0 vscale=1.0 randomize=1 r=255 g=255 b=255 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=256
+treadmark texture=@USLAND2026SaintThiberybyBazo/ext/USLAND2026SX1/treads/sand1x4.png size=4 aspect=0.25 spacing=3 speed_threshold=-20
+treadmark texture=@USLAND2026SaintThiberybyBazo/ext/USLAND2026SX1/treads/sand1x8.png size=8 aspect=0.125 spacing=6
 addtile
 
 name Sand Bump Straight
@@ -209,11 +209,11 @@ erode_limit 1.5 1.0 1.0
 erode_limit 2.00 0.5 0.5
 erode_limit 2.5 0.05 0.05
 erode_lateral_scale 0.13
-texture @USLAND2026StThiberyNuit/ext/USLAND2026SX1/tiles/sand.ppm
-roost texture=@USLAND2026StThiberyNuit/ext/USLAND2026SX1/roost/hha.dust.png count=4 dig=1.0 slip_threshold=2.0 slow_speed=0.0 fast_speed=50.0 slow_angle=1 fast_angle=0.1 size=2.0 grow=2.0 drag=1.5 vscale=1.0 randomize=1 r=255 g=255 b=255 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=-256
-roost texture=@USLAND2026StThiberyNuit/ext/USLAND2026SX1/roost/dirt4.png count=4 dig=0.0 slip_threshold=2.0 slow_speed=0.0 fast_speed=50.0 slow_angle=1.57 fast_angle=0.296 size=1.0 grow=2.5 drag=1.0 vscale=1.0 randomize=1 r=255 g=255 b=255 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=256
-treadmark texture=@USLAND2026StThiberyNuit/ext/USLAND2026SX1/treads/sand1x4.png size=4 aspect=0.25 spacing=3 speed_threshold=-20
-treadmark texture=@USLAND2026StThiberyNuit/ext/USLAND2026SX1/treads/sand1x8.png size=8 aspect=0.125 spacing=6
+texture @USLAND2026SaintThiberybyBazo/ext/USLAND2026SX1/tiles/sand.ppm
+roost texture=@USLAND2026SaintThiberybyBazo/ext/USLAND2026SX1/roost/hha.dust.png count=4 dig=1.0 slip_threshold=2.0 slow_speed=0.0 fast_speed=50.0 slow_angle=1 fast_angle=0.1 size=2.0 grow=2.0 drag=1.5 vscale=1.0 randomize=1 r=255 g=255 b=255 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=-256
+roost texture=@USLAND2026SaintThiberybyBazo/ext/USLAND2026SX1/roost/dirt4.png count=4 dig=0.0 slip_threshold=2.0 slow_speed=0.0 fast_speed=50.0 slow_angle=1.57 fast_angle=0.296 size=1.0 grow=2.5 drag=1.0 vscale=1.0 randomize=1 r=255 g=255 b=255 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=256
+treadmark texture=@USLAND2026SaintThiberybyBazo/ext/USLAND2026SX1/treads/sand1x4.png size=4 aspect=0.25 spacing=3 speed_threshold=-20
+treadmark texture=@USLAND2026SaintThiberybyBazo/ext/USLAND2026SX1/treads/sand1x8.png size=8 aspect=0.125 spacing=6
 addtile
 
 name Sand Exit
@@ -248,11 +248,11 @@ erode_limit 2.25 1.25 2.25
 erode_limit 3.25 0.25 1.05
 erode_limit 3.75 0.05 1.05
 erode_lateral_scale 1.5
-texture @USLAND2026StThiberyNuit/ext/USLAND2026SX1/tiles/sand.ppm
-roost texture=@USLAND2026StThiberyNuit/ext/USLAND2026SX1/roost/hha.dust.png count=4 dig=1.0 slip_threshold=2.0 slow_speed=0.0 fast_speed=50.0 slow_angle=1 fast_angle=0.1 size=2.0 grow=2.0 drag=1.5 vscale=1.0 randomize=1 r=255 g=255 b=255 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=-256
-roost texture=@USLAND2026StThiberyNuit/ext/USLAND2026SX1/roost/dirt4.png count=4 dig=0.0 slip_threshold=2.0 slow_speed=0.0 fast_speed=50.0 slow_angle=1.57 fast_angle=0.296 size=1.0 grow=2.5 drag=1.0 vscale=1.0 randomize=1 r=255 g=255 b=255 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=256
-treadmark texture=@USLAND2026StThiberyNuit/ext/USLAND2026SX1/treads/sand1x4.png size=4 aspect=0.25 spacing=3 speed_threshold=-20
-treadmark texture=@USLAND2026StThiberyNuit/ext/USLAND2026SX1/treads/sand1x8.png size=8 aspect=0.125 spacing=6
+texture @USLAND2026SaintThiberybyBazo/ext/USLAND2026SX1/tiles/sand.ppm
+roost texture=@USLAND2026SaintThiberybyBazo/ext/USLAND2026SX1/roost/hha.dust.png count=4 dig=1.0 slip_threshold=2.0 slow_speed=0.0 fast_speed=50.0 slow_angle=1 fast_angle=0.1 size=2.0 grow=2.0 drag=1.5 vscale=1.0 randomize=1 r=255 g=255 b=255 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=-256
+roost texture=@USLAND2026SaintThiberybyBazo/ext/USLAND2026SX1/roost/dirt4.png count=4 dig=0.0 slip_threshold=2.0 slow_speed=0.0 fast_speed=50.0 slow_angle=1.57 fast_angle=0.296 size=1.0 grow=2.5 drag=1.0 vscale=1.0 randomize=1 r=255 g=255 b=255 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=256
+treadmark texture=@USLAND2026SaintThiberybyBazo/ext/USLAND2026SX1/treads/sand1x4.png size=4 aspect=0.25 spacing=3 speed_threshold=-20
+treadmark texture=@USLAND2026SaintThiberybyBazo/ext/USLAND2026SX1/treads/sand1x8.png size=8 aspect=0.125 spacing=6
 addtile
 
 name Sand Bump Solo
@@ -284,11 +284,11 @@ erode_limit 1.25 0.35 0.35
 erode_limit 1.75 0.15 0.15
 erode_limit 2.25 0.05 0.05
 erode_front_scale 1.0
-texture @USLAND2026StThiberyNuit/ext/USLAND2026SX1/tiles/sand.ppm
-roost texture=@USLAND2026StThiberyNuit/ext/USLAND2026SX1/roost/hha.dust.png count=4 dig=1.0 slip_threshold=2.0 slow_speed=0.0 fast_speed=50.0 slow_angle=1 fast_angle=0.1 size=2.0 grow=2.0 drag=1.5 vscale=1.0 randomize=1 r=255 g=255 b=255 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=-256
-roost texture=@USLAND2026StThiberyNuit/ext/USLAND2026SX1/roost/dirt4.png count=4 dig=0.0 slip_threshold=2.0 slow_speed=0.0 fast_speed=50.0 slow_angle=1.57 fast_angle=0.296 size=1.0 grow=2.5 drag=1.0 vscale=1.0 randomize=1 r=255 g=255 b=255 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=256
-treadmark texture=@USLAND2026StThiberyNuit/ext/USLAND2026SX1/treads/sand1x4.png size=4 aspect=0.25 spacing=3 speed_threshold=-20
-treadmark texture=@USLAND2026StThiberyNuit/ext/USLAND2026SX1/treads/sand1x8.png size=8 aspect=0.125 spacing=6
+texture @USLAND2026SaintThiberybyBazo/ext/USLAND2026SX1/tiles/sand.ppm
+roost texture=@USLAND2026SaintThiberybyBazo/ext/USLAND2026SX1/roost/hha.dust.png count=4 dig=1.0 slip_threshold=2.0 slow_speed=0.0 fast_speed=50.0 slow_angle=1 fast_angle=0.1 size=2.0 grow=2.0 drag=1.5 vscale=1.0 randomize=1 r=255 g=255 b=255 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=-256
+roost texture=@USLAND2026SaintThiberybyBazo/ext/USLAND2026SX1/roost/dirt4.png count=4 dig=0.0 slip_threshold=2.0 slow_speed=0.0 fast_speed=50.0 slow_angle=1.57 fast_angle=0.296 size=1.0 grow=2.5 drag=1.0 vscale=1.0 randomize=1 r=255 g=255 b=255 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=256
+treadmark texture=@USLAND2026SaintThiberybyBazo/ext/USLAND2026SX1/treads/sand1x4.png size=4 aspect=0.25 spacing=3 speed_threshold=-20
+treadmark texture=@USLAND2026SaintThiberybyBazo/ext/USLAND2026SX1/treads/sand1x8.png size=8 aspect=0.125 spacing=6
 addtile
 
 name Road
@@ -319,9 +319,9 @@ erode_limit 0.75 0.7 1.7
 erode_limit 1.5 0.3 0.75
 erode_limit 2.5 0.3 0.3
 erode_lateral_scale 0.025
-texture @USLAND2026StThiberyNuit/ext/USLAND2026SX1/tiles/concrete.ppm
-treadmark texture=@USLAND2026StThiberyNuit/ext/USLAND2026SX1/treads/dirt2x4.png size=4 aspect=0.5 spacing=3 speed_threshold=-20
-treadmark texture=@USLAND2026StThiberyNuit/ext/USLAND2026SX1/treads/dirt2x8.png size=8 aspect=0.25 spacing=6
+texture @USLAND2026SaintThiberybyBazo/ext/USLAND2026SX1/tiles/concrete.ppm
+treadmark texture=@USLAND2026SaintThiberybyBazo/ext/USLAND2026SX1/treads/dirt2x4.png size=4 aspect=0.5 spacing=3 speed_threshold=-20
+treadmark texture=@USLAND2026SaintThiberybyBazo/ext/USLAND2026SX1/treads/dirt2x8.png size=8 aspect=0.25 spacing=6
 addtile
 
 name Grass
@@ -352,10 +352,10 @@ erode_limit 0.75 0.7 1.7
 erode_limit 1.5 0.3 0.75
 erode_limit 2.5 0.3 0.3
 erode_lateral_scale 0.025
-texture @USLAND2026StThiberyNuit/tiles/grass.ppm
+texture @USLAND2026SaintThiberybyBazo/tiles/grass.ppm
 roost texture=@splash.png count=4 slip_threshold=2.0 slow_speed=0.0 fast_speed=64.0 slow_angle=1.07 fast_angle=0.196 size=0.80 grow=2.3 drag=1.90 vscale=1.0 randomize=5.0 r=72 g=104 b=46 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=1024
-roost texture=@USLAND2026StThiberyNuit/ext/USLAND2026SX1/roost/redroost.png count=8 dig=0.0 slip_threshold=2.0 slow_speed=0.0 fast_speed=64.0 slow_angle=1.07 fast_angle=0.196 size=1.5 grow=4.0 drag=2.0 vscale=1.0 randomize=5.0 r=255 g=255 b=255 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=1024
-treadmark texture=@USLAND2026StThiberyNuit/ext/USLAND2026SX1/treads/dirt2x4.png size=4 aspect=0.5 spacing=3 speed_threshold=-20
-treadmark texture=@USLAND2026StThiberyNuit/ext/USLAND2026SX1/treads/dirt2x8.png size=8 aspect=0.25 spacing=6
+roost texture=@USLAND2026SaintThiberybyBazo/ext/USLAND2026SX1/roost/redroost.png count=8 dig=0.0 slip_threshold=2.0 slow_speed=0.0 fast_speed=64.0 slow_angle=1.07 fast_angle=0.196 size=1.5 grow=4.0 drag=2.0 vscale=1.0 randomize=5.0 r=255 g=255 b=255 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=1024
+treadmark texture=@USLAND2026SaintThiberybyBazo/ext/USLAND2026SX1/treads/dirt2x4.png size=4 aspect=0.5 spacing=3 speed_threshold=-20
+treadmark texture=@USLAND2026SaintThiberybyBazo/ext/USLAND2026SX1/treads/dirt2x8.png size=8 aspect=0.25 spacing=6
 addtile
 

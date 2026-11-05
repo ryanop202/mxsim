@@ -144,7 +144,7 @@ def main():
         for i_, l_ in enumerate(st):
             if '/statue/startb_' in l_:
                 v_ = l_.split(']')[0][1:].split(); rows_.append(f"[{i_}, {float(v_[0]):.3f}, {float(v_[2]):.3f}, {float(l_.split(']')[1].split()[0]):.6f}]")
-        js_ = ['/*', 'USLAND 2026 Saint-Thibery (night): start-only boudins.',
+        js_ = ['/*', 'USLAND 2026 Saint Thibery by bazo: start-only boudins.',
                'Statues using the startb_*.png textures (no collision) stay until ' + str(SBD['hide_after']) + ' s after the gate drop,',
                'then they are moved under the ground. Before a gate drop (practice) they stay. Plain ASCII on purpose.', '*/', '',
                'var g_sb = [' + ', '.join(rows_) + '];', 'var g_sb_after = ' + str(SBD['hide_after']) + ';', 'var g_sb_hidden = -1;', 'var g_sb_t = -1.0;', '',

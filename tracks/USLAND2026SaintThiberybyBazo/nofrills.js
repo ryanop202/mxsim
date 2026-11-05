@@ -1,5 +1,5 @@
 /*
-USLAND 2026 Saint-Thibery (night): start-only boudins.
+USLAND 2026 Saint Thibery by bazo: start-only boudins.
 Statues using the startb_*.png textures (no collision) stay until 15.0 s after the gate drop,
 then they are moved under the ground. Before a gate drop (practice) they stay. Plain ASCII on purpose.
 */
@@ -38,12 +38,12 @@ var g_py_snd = [];
 var g_py_pos = [[149.25, 23.38, 438.00], [149.25, 23.38, 518.00]];
 var g_py_i;
 for (g_py_i = 0; g_py_i < 2; g_py_i++) {
-    g_py_snd[g_py_i] = mx.add_sound("@USLAND2026StThiberyNuit/js/sounds/startflame.raw");
+    g_py_snd[g_py_i] = mx.add_sound("@USLAND2026SaintThiberybyBazo/js/sounds/startflame.raw");
     mx.set_sound_freq(g_py_snd[g_py_i], 44100);
     mx.set_sound_vol(g_py_snd[g_py_i], 1.0);
     mx.set_sound_pos(g_py_snd[g_py_i], g_py_pos[g_py_i][0], g_py_pos[g_py_i][1], g_py_pos[g_py_i][2]);
 }
-var g_py_tex = [mx.read_texture('@USLAND2026StThiberyNuit/js/pyro/finishflames2.seq'), mx.read_texture('@USLAND2026StThiberyNuit/js/pyro/finishflames.seq')];
+var g_py_tex = [mx.read_texture('@USLAND2026SaintThiberybyBazo/js/pyro/finishflames2.seq'), mx.read_texture('@USLAND2026SaintThiberybyBazo/js/pyro/finishflames.seq')];
 var g_py_frames = 41;
 var g_py_frame = -1;
 var g_py_fired = -1;
