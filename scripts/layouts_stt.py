@@ -60,7 +60,7 @@ ARENA = (-110.0, 475.0, Z['L1'] - 24.0, 274.0)                            # fenc
 ROWS = dict(L1=('L1', XU + 50), L2=('L2', XU + 50), L3=('L3', XU + 50), L4=('L4', 100.0), L6=('L6', 40.0), L7=('L7', 40.0))
 FINISH_SEC = 'STT-ouest saut d arrivee (court)'
 HALF_BERM = ('bowl (L4 -> L3)', 'U L6 -> L7')
-BERM_FADE = {'U L6 -> L7': (0.54, 0.14)}   # v54 (user, top view): this berm started (45 %) right in front of the last start gates
+BERM_FADE = {'U L6 -> L7': (0.54, 0.05)}   # v55 (user): the entry high right away (fade 14 % -> 5 %), easier to take;   # v54 (user, top view): this berm started (45 %) right in front of the last start gates
 # since the start moved 8 ft south -> it starts at 54 % (past the gate row end, z ~ 526); the others keep 45 % / 15 %                             # berm only on the second half of these turns
 BERM90_GAIN = 1.4                                                           # berms of the 90 deg turns higher (v6)
 BERM_GAIN = {'L7 -> east lane (real high berm)': 1.2, 'bowl (L4 -> L3)': 0.85, 'east lane -> L1 (high berm, as after the whoops)': 1.2}   # v13: bowl berm a bit lower                      # v7: that one a bit lower
@@ -166,7 +166,8 @@ PYLON_SKINS = {0: 'pylon_f50', 2: 'pylon_f50', 4: 'pylon_f50', 5: 'pylon_motul',
 # v50 (user's circles on the in-game top view): yellow = all 50 Factory yellow with its logo, red = red Motul column, black base
 START_BOUDINS = dict(lines=[[(704.6, 409.8), (658.3, 522.0)],                       # v52 (user): 4 ft further out (more room in the
                             [(350.0, 426.0), (384.0, 449.0), (468.0, 453.0), (534.0, 453.0)],
-                            [(290.0, 525.5), (296.0, 525.5)], [(302.0, 525.5), (338.0, 525.5)]],   # v54 (user's red line): from the
+                            [(302.0, 528.0), (344.0, 528.0)]],   # v55 (user): no boudin on the flat; all 7 on the descent
+                     # (x 302-344, from the top edge down to where the descent stops), on the pad edge (flat ends z ~527), straight;   # v54 (user's red line): from the
                      # gates to the U L6 -> L7 berm; v54b (user): one straight on the flat (pad top, x < 296), the others wholly
                      # on the straight descent (x 302-338) so the game tilts them parallel to the slope, none across the edge; turn); v52: one diagonal from the
                      # first slant straight to the line beside the FMX ramp, then straight, stopped at the landing (user's lines)
@@ -181,7 +182,9 @@ START_BOUDINS = dict(lines=[[(704.6, 409.8), (658.3, 522.0)],                   
 START_BANNER = dict(board=True, foot_h=0.4, back=1.4, model='start_sign')   # v41: sign on posts   # v40 (user): a BIG board on the platform at the foot of the start wall
 # (v39: a 31.5 ft banner on top of the wall, in front of the fence: too small). Origin `back` ft in front of the wall foot
 # (first point east of the wall within foot_h of the platform level).
-BOARD30 = dict(stand=(9.0, 0.0), hide=(8.0, -1), hide_out=16.0, speed=12)
+BOARD30 = dict(stand=(201.0, 9.5), hide=(201.0, 1), hide_out=6.0, speed=12)
+# v55 (user's red line on a top view): not at the gates but ~200 ft ahead (x 491), across the start straight between the start
+# boudins (z 453) and the fixed boudin line (z 522): stands in its middle (z 487.5), runs off behind the fixed line (z 526)
 # v54 (user): the 30 s board man stands in the middle of the start line, 9 ft in front of the gates (first flaggers point);
 # at the 5 s board he runs (second point = where the game makes him run to) off the north side of the start pad
 # (16 ft past the last gate, down the pad shoulder). Speed 12 like the Bud / Miami tracks. Before: behind the gates.
