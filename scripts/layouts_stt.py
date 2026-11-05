@@ -166,7 +166,9 @@ PYLON_SKINS = {0: 'pylon_f50', 2: 'pylon_f50', 4: 'pylon_f50', 5: 'pylon_motul',
 # v50 (user's circles on the in-game top view): yellow = all 50 Factory yellow with its logo, red = red Motul column, black base
 START_BOUDINS = dict(lines=[[(704.6, 409.8), (658.3, 522.0)],                       # v52 (user): 4 ft further out (more room in the
                             [(350.0, 426.0), (384.0, 449.0), (468.0, 453.0), (534.0, 453.0)],
-                            [(293.0, 525.5), (331.0, 525.5)]],   # v54 (user's red line): from the gates to the U L6 -> L7 berm; turn); v52: one diagonal from the
+                            [(290.0, 525.5), (296.0, 525.5)], [(302.0, 525.5), (338.0, 525.5)]],   # v54 (user's red line): from the
+                     # gates to the U L6 -> L7 berm; v54b (user): one straight on the flat (pad top, x < 296), the others wholly
+                     # on the straight descent (x 302-338) so the game tilts them parallel to the slope, none across the edge; turn); v52: one diagonal from the
                      # first slant straight to the line beside the FMX ramp, then straight, stopped at the landing (user's lines)
                      hide_after=15.0, pattern=(('50factory', 10), ('mcst', 10), ('sxtour', 10)))
 # v51 (user): flat ground only (not up the L4 bump shoulders, z up to 447, nor the landing, z up to 456), on the start side of
