@@ -81,7 +81,7 @@ FMX_RAMP = dict(lip=(98.0, 153.0), aim=(170.0, 150.0), H=7.5, width=8.0, side=0.
                                                     # replaces the dirt ramp; its lip is put where the dirt lip was
 # v18: grass all around the dirt arena (as on the drone photos); dirt kept under the start area (local box x0, x1, z0, z1)
 # v21: night version (USLAND2026StThiberyNuit): light poles on the bank, `d` ft from the dirt area, lights baked in the lightmap
-NIGHT = dict(folder='USLAND2026StThiberyNuit', desc='USLAND: Saint-Thibery (nuit)', d=45.0, n_long=5, n_short=3, keep_every=2, pad=(7.0, 15.0))
+NIGHT = dict(folder='USLAND2026StThiberyNuit', desc='USLAND: 2026 Saint Thibery by bazo', d=45.0, n_long=5, n_short=3, keep_every=2, pad=(7.0, 15.0))
 # v24: track-coloured decals over all the dirt up to the fence ("le contour marron clair")
 DIRT_DECALS = dict(size=26.0, step=10.0)
 # v23: grass decal patches over the grass (DVDBVisualsCompound grass.png, the user's choice): size ft, grid step ft, clear ft from the dirt
