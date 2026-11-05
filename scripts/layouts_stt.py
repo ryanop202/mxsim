@@ -193,7 +193,7 @@ START_BOUDINS = dict(lines=[[(704.6, 409.8), (658.3, 522.0)],                   
 # position shifted by (-x0, -z0). Only the back slope of the bank (not seen from the track) is lost.
 REFRAME = dict(x0=100.0, z0=0.0, side=920.0)
 MAP_SHOT = dict(img='assets/map/stt_topview_v38.png', rect=(30, 8, 1083, 553), r_px=50, soft=1.5,   # rect: arena floor edge in the shot (px)
-                title_img='assets/map/bazo_wurx.png', title_box=(262.0, 110.0, 860.0, 228.0),   # v62f (user): his BAZOWURX logo as sent (black), only the grey background removed
+                title_img='assets/map/bazo_wurx.png', title_box=(262.0, 110.0, 860.0, 228.0),   # v62h (user): his BAZOWURX logo as sent (black, grey background removed) + a white outline
                text='START', text_box=(304.0, 440.0, 342.0, 516.0),   # v61d: a bit bigger; inside the start descent (x 302-344), along the grid
                 M=1024,   # v62g: square again (v40 test: the game forces map.png into a square, the x2 stretch only squashed the logo)
                
