@@ -187,8 +187,14 @@ START_BOUDINS = dict(lines=[[(704.6, 409.8), (658.3, 522.0)],                   
 # one in two
 # v61 (user): minimap = the user's in-game top view (v38), straightened and fitted on the terrain with the 9 pylons
 # ((world x, z), (screenshot px x, y)), cut inside the arena (distance to the arena floor <= dmax ft), START written on the grid
+# v62 (user: minimap far too small next to other tracks): the game draws map.png over the WHOLE terrain at a fixed size on
+# screen -> the night terrain is cut down to a square that just holds the arena, the stands and the crowd (bank crests at
+# x ~120 / ~1000, z ~100 / ~715): world x 100..1020, z 0..920 (was 0..1187). Same 4097 px (finer: 0.2246 ft), every
+# position shifted by (-x0, -z0). Only the back slope of the bank (not seen from the track) is lost.
+REFRAME = dict(x0=100.0, z0=0.0, side=920.0)
 MAP_SHOT = dict(img='assets/map/stt_topview_v38.png', rect=(30, 8, 1083, 553), r_px=50, soft=1.5,   # rect: arena floor edge in the shot (px)
-                text='START', text_box=(304.0, 437.0, 342.0, 519.0),   # v61d: a bit bigger; inside the start descent (x 302-344), along the grid
+                title='BAZO WORX', title_font='C:/Windows/Fonts/segoescb.ttf', title_box=(330.0, 138.0, 792.0, 214.0),
+               text='START', text_box=(304.0, 437.0, 342.0, 519.0),   # v61d: a bit bigger; inside the start descent (x 302-344), along the grid
                 M=1024,
                 pts=[((375.5, 292.0), (250, 97)), ((376.6, 403.3), (252, 282)), ((387.9, 523.9), (272, 481)), ((427.8, 359.6), (337, 208)),
                      ((665.3, 400.2), (727, 270)), ((733.9, 356.9), (840, 198)), ((735.8, 481.7), (845, 404)), ((812.2, 295.8), (967, 97)),

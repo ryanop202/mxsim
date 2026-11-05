@@ -178,8 +178,10 @@ def main():
     L += [f'{k} @{NIGHT}/sky/{os.path.basename(v)}' for k, v in sky.items()]
     L += ['flare_vector [ -0.30\t0.90\t0.30 ]', 'dynamic_lighting 1']
     open(f'{OUT}/lighting', 'w', newline='\n').write('\n'.join(L) + '\n')
+    RF = getattr(LT, 'REFRAME', None)
+    if RF: reframe(RF)
     MS = getattr(LT, 'MAP_SHOT', None)
-    if MS: night_map(MS, H)
+    if MS: night_map(MS, H, RF)
     lit = sh[int((oz + 120) / S), int((ox + 180) / S)]
     return dict(pads=NG['pad'], poles=len(P), statues=len(st), shade_track_centre=int(lit), shade_min=int(sh.min()), shade_max=int(sh.max()))
 
@@ -231,7 +233,57 @@ def start_pyro(PY, H, st):
           'var startPyroPrev = mx.frame_handler;', 'mx.frame_handler = startPyro;', '']
     return js
 
-def night_map(MS, H):
+def reframe(RF):
+    """v62 (user: minimap too small): cut the night terrain down to the square [x0, x0 + side] x [z0, z0 + side] (same
+    4097 px, finer step) and shift every position by (-x0, -z0): terrain, lightmaps, tilemap, statues, billboards, decals,
+    timing gates (only the centre of each line, never the gate vector), flaggers, nofrills.js (boudins, flame sounds)."""
+    from scipy import ndimage as ndi_
+    x0, z0, side = RF['x0'], RF['z0'], RF['side']; hf = open(f'{OUT}/terrain.hf').read().split()
+    a_, b_ = float(hf[2]), float(hf[3]); T0 = np.asarray(Image.open(f'{OUT}/terrain.png'), np.float64)
+    N = T0.shape[0]; S1 = side / (N - 1); g = np.arange(N) * S1
+    cx_, cz_ = (x0 + g) / S, (z0 + g) / S                                     # new pixel -> old pixel
+    ZZ, XX = np.meshgrid(cz_, cx_, indexing='ij')
+    Hn = ndi_.map_coordinates(T0 / 65535 * (b_ - a_) + a_, [ZZ, XX], order=1, mode='nearest')
+    hmin, hmax = float(Hn.min()) - 0.5, float(Hn.max()) + 0.5
+    open(f'{OUT}/terrain.hf', 'w', newline='\n').write(f'{hf[0]} {S1:.6f} {hmin:.6f} {hmax:.6f}\n')
+    Image.fromarray(np.round((Hn - hmin) / (hmax - hmin) * 65535).astype(np.uint16)).save(f'{OUT}/terrain.png')
+    for nm in ('shading.ppm', 'shadingx2.ppm'):
+        raw = open(f'{OUT}/{nm}', 'rb').read(); hd = f'P6\n{N} {N}\n255\n'.encode(); assert raw.startswith(hd), nm
+        im_ = np.frombuffer(raw[len(hd):], np.uint8).reshape(N, N, 3)[:, :, 0].astype(float)
+        sh_ = np.clip(np.round(ndi_.map_coordinates(im_, [ZZ, XX], order=1, mode='nearest')), 0, 255).astype(np.uint8)
+        with open(f'{OUT}/{nm}', 'wb') as fh: fh.write(hd); fh.write(np.repeat(sh_[:, :, None], 3, axis=2).tobytes())
+    tm = np.fromfile(f'{OUT}/tilemap', np.uint8); TN = int(round(np.sqrt(tm.size))); tm = tm.reshape(TN, TN)
+    gt = (np.arange(TN) + 0.5) * side / TN; it = np.clip(((z0 + gt) / (2 * S)).astype(int), 0, TN - 1); jt = np.clip(((x0 + gt) / (2 * S)).astype(int), 0, TN - 1)
+    tm[np.ix_(it, jt)].astype(np.uint8).tofile(f'{OUT}/tilemap')
+    v3 = re.compile(r'\[\s*([-\d.]+)\s+([-\d.]+)\s+([-\d.]+)\s*\]'); v2 = re.compile(r'^\[\s*([-\d.]+)\s+([-\d.]+)\s*\]')
+    def sh3(m):
+        x, y, z = (float(m.group(i)) for i in (1, 2, 3))
+        if x == 0.0 and z == 0.0: return m.group(0)                          # flaggers: unused flagger placeholder
+        return f'[{x - x0:.6f} {m.group(2)} {z - z0:.6f}]'
+    n_ = {}
+    for nm in ('statues', 'billboards', 'timing_gates', 'flaggers'):
+        out = []
+        for l in open(f'{OUT}/{nm}').read().split('\n'):
+            l2 = v3.sub(sh3, l, count=1); n_[nm] = n_.get(nm, 0) + (l2 != l); out.append(l2)
+        open(f'{OUT}/{nm}', 'w', newline='\n').write('\n'.join(out))
+    out = []
+    for l in open(f'{OUT}/decals').read().split('\n'):
+        m = v2.match(l)
+        if m: l = f'[{float(m.group(1)) - x0:.6f} {float(m.group(2)) - z0:.6f}]' + l[m.end():]; n_['decals'] = n_.get('decals', 0) + 1
+        out.append(l)
+    open(f'{OUT}/decals', 'w', newline='\n').write('\n'.join(out))
+    js = open(f'{OUT}/nofrills.js').read().split('\n')
+    for i, l in enumerate(js):
+        if l.startswith('var g_sb = ['):
+            js[i] = re.sub(r'\[(\d+), ([-\d.]+), ([-\d.]+), ([-\d.]+)\]',
+                           lambda m: f'[{m.group(1)}, {float(m.group(2)) - x0:.3f}, {float(m.group(3)) - z0:.3f}, {m.group(4)}]', l)
+        if l.startswith('var g_py_pos = ['):
+            js[i] = re.sub(r'\[([-\d.]+), ([-\d.]+), ([-\d.]+)\]',
+                           lambda m: f'[{float(m.group(1)) - x0:.2f}, {m.group(2)}, {float(m.group(3)) - z0:.2f}]', l)
+    open(f'{OUT}/nofrills.js', 'w', newline='\n', encoding='ascii').write('\n'.join(js))
+    print('reframe: x %.0f..%.0f z %.0f..%.0f, step %.4f ft, shifted' % (x0, x0 + side, z0, z0 + side, S1), n_)
+
+def night_map(MS, H, RF=None):
     """v61 (user): map.png from the user's in-game top view. The game stretches map.png over the WHOLE terrain, so the shot is
     resampled into terrain coordinates (similarity fitted on the pylons: rotation, scale, shift), kept inside the arena's
     rounded edge, transparent elsewhere; START written on the start grid."""
@@ -241,8 +293,10 @@ def night_map(MS, H):
     w = np.array([complex(*p[0]) for p in MS['pts']]); q = np.array([complex(*p[1]) for p in MS['pts']])
     (a, b), *_ = np.linalg.lstsq(np.c_[w, np.ones_like(w)], q, rcond=None)
     res = np.abs(q - (a * w + b)); print('map fit: %.3f px/ft, rot %.2f deg, max residual %.1f px' % (abs(a), np.degrees(np.angle(a)), res.max()))
-    M = MS['M']; N = H.shape[0]; side = (N - 1) * S; g = (np.arange(M) + 0.5) * side / M
-    X, Z = np.meshgrid(g, g); p = a * (X + 1j * Z) + b
+    M = MS['M']; N = H.shape[0]
+    fx0, fz0, side = (RF['x0'], RF['z0'], RF['side']) if RF else (0.0, 0.0, (N - 1) * S)     # v62: map over the (cut) terrain
+    g = (np.arange(M) + 0.5) * side / M
+    X, Z = np.meshgrid(fx0 + g, fz0 + g); p = a * (X + 1j * Z) + b
     px = np.clip(p.real, 0, shot.shape[1] - 1); py = np.clip(p.imag, 0, shot.shape[0] - 1)   # just outside the shot: edge pixels
     rgb = np.dstack([ndi_.map_coordinates(shot[:, :, c], [py, px], order=1) for c in range(3)])
     # v61b (user: crop inside the arena's rounded edge, straight): rounded rectangle, world-axis aligned, from the floor edge
@@ -266,8 +320,16 @@ def night_map(MS, H):
     t = t.rotate(90, expand=True)                                    # map: x right, z down -> reads from the bottom up (v61d, user)
     bw, bh = (bx1 - bx0) * k, (bz1 - bz0) * k; f_ = min(bw / t.width, bh / t.height)
     t = t.resize((max(1, int(t.width * f_)), max(1, int(t.height * f_))), Image.LANCZOS)
-    cx, cy = (bx0 + bx1) / 2 * k, (bz0 + bz1) / 2 * k
+    cx, cy = ((bx0 + bx1) / 2 - fx0) * k, ((bz0 + bz1) / 2 - fz0) * k
     im.alpha_composite(t, (int(round(cx - t.width / 2)), int(round(cy - t.height / 2))))
+    if MS.get('title'):                                               # v62 (user): signature over the arena (like other maps)
+        f2 = ImageFont.truetype(MS['title_font'], 200); sw2 = 10
+        tb = ImageDraw.Draw(Image.new('L', (1, 1))).textbbox((0, 0), MS['title'], font=f2, stroke_width=sw2)
+        t2 = Image.new('RGBA', (tb[2] - tb[0], tb[3] - tb[1]), (0, 0, 0, 0))
+        ImageDraw.Draw(t2).text((-tb[0], -tb[1]), MS['title'], font=f2, fill=(255, 255, 255, 255), stroke_width=sw2, stroke_fill=(0, 0, 0, 255))
+        X0, Z0, X1, Z1 = MS['title_box']; f_ = min((X1 - X0) * k / t2.width, (Z1 - Z0) * k / t2.height)
+        t2 = t2.resize((max(1, int(t2.width * f_)), max(1, int(t2.height * f_))), Image.LANCZOS)
+        im.alpha_composite(t2, (int(round(((X0 + X1) / 2 - fx0) * k - t2.width / 2)), int(round(((Z0 + Z1) / 2 - fz0) * k - t2.height / 2))))
     im.save(f'{OUT}/map.png'); print('map.png from the top view, START in', MS['text_box'], 'size %.0f x %.0f ft' % (t.width / k, t.height / k))
 
 if __name__ == '__main__':

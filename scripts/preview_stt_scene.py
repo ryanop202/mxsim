@@ -13,7 +13,8 @@ GAME = r'C:/Program Files (x86)/MX Simulator'
 
 
 def load_track(T):
-    hf = open(f'{T}/terrain.hf').read().split(); hmin, hmax = float(hf[2]), float(hf[3])
+    global S
+    hf = open(f'{T}/terrain.hf').read().split(); hmin, hmax = float(hf[2]), float(hf[3]); S = float(hf[1])   # v62: step from the file
     H = np.asarray(Image.open(f'{T}/terrain.png'), np.float32) / 65535 * (hmax - hmin) + hmin
     N = H.shape[0]
     raw = open(f'{T}/shading.ppm', 'rb').read(); hdr = f'P6\n{N} {N}\n255\n'.encode()
