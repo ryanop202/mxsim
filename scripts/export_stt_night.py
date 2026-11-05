@@ -263,7 +263,7 @@ def night_map(MS, H):
     tb = ImageDraw.Draw(Image.new('L', (1, 1))).textbbox((0, 0), MS['text'], font=fnt, stroke_width=sw)
     t = Image.new('RGBA', (tb[2] - tb[0], tb[3] - tb[1]), (0, 0, 0, 0))
     ImageDraw.Draw(t).text((-tb[0], -tb[1]), MS['text'], font=fnt, fill=(255, 255, 255, 255), stroke_width=sw, stroke_fill=(0, 0, 0, 255))
-    t = t.rotate(-90, expand=True)                                   # map: x right, z down -> reads from the top down
+    t = t.rotate(90, expand=True)                                    # map: x right, z down -> reads from the bottom up (v61d, user)
     bw, bh = (bx1 - bx0) * k, (bz1 - bz0) * k; f_ = min(bw / t.width, bh / t.height)
     t = t.resize((max(1, int(t.width * f_)), max(1, int(t.height * f_))), Image.LANCZOS)
     cx, cy = (bx0 + bx1) / 2 * k, (bz0 + bz1) / 2 * k
