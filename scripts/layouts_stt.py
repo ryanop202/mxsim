@@ -61,7 +61,7 @@ ROWS = dict(L1=('L1', XU + 50), L2=('L2', XU + 50), L3=('L3', XU + 50), L4=('L4'
 FINISH_SEC = 'STT-ouest saut d arrivee (court)'
 HALF_BERM = ('bowl (L4 -> L3)', 'U L6 -> L7')
 BERM_FADE = {}   # v56 (user): back to the usual fade (45 % / 15 %) for the U L6 -> L7 (v54 54 % / 14 %, v55 54 % / 5 %)
-BERM_SHIFT = {'U L6 -> L7': (94.0, 122.0, 180.0, 0.87, 0.8)}   # v59 (user): same entry start (red line; its toe may spill <1 ft over it: user OK), peak at the 3rd net post
+BERM_SHIFT = {'U L6 -> L7': (94.0, 122.0, 155.0, 0.87, 0.8)}   # v63 (user): exit ends earlier and lower, smooth (t1 180 -> 155); v59: same entry start (red line; its toe may spill <1 ft over it: user OK), peak at the 3rd net post
 # (t 122), then a long way down to the turn end; a bit lower (x0.87, like the bowl after the freestyle 0.85) and less hollow
 # (height^0.8 on the face). (t0, t_peak, t1, gain, face power).   v58: (94.0, 180.0)   # v58 (user): not cut, a whole berm (own entry + exit, same shape both ends) moved into
 # the 2nd half of the U: starts at 0 at turn progress 94 deg (= the red line z 524), peak in the corner, exit at the turn end
