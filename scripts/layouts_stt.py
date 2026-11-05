@@ -61,7 +61,9 @@ ROWS = dict(L1=('L1', XU + 50), L2=('L2', XU + 50), L3=('L3', XU + 50), L4=('L4'
 FINISH_SEC = 'STT-ouest saut d arrivee (court)'
 HALF_BERM = ('bowl (L4 -> L3)', 'U L6 -> L7')
 BERM_FADE = {}   # v56 (user): back to the usual fade (45 % / 15 %) for the U L6 -> L7 (v54 54 % / 14 %, v55 54 % / 5 %)
-BERM_SHIFT = {'U L6 -> L7': (94.0, 180.0)}   # v58 (user): not cut, a whole berm (own entry + exit, same shape both ends) moved into
+BERM_SHIFT = {'U L6 -> L7': (94.0, 122.0, 180.0, 0.87, 0.8)}   # v59 (user): same entry start (red line; its toe may spill <1 ft over it: user OK), peak at the 3rd net post
+# (t 122), then a long way down to the turn end; a bit lower (x0.87, like the bowl after the freestyle 0.85) and less hollow
+# (height^0.8 on the face). (t0, t_peak, t1, gain, face power).   v58: (94.0, 180.0)   # v58 (user): not cut, a whole berm (own entry + exit, same shape both ends) moved into
 # the 2nd half of the U: starts at 0 at turn progress 94 deg (= the red line z 524), peak in the corner, exit at the turn end
 BERM_CLIP = {}   # was v57 {'U L6 -> L7': (524.0, 10.0)}   # v57 (user): progressive, not a cut: 0 at z 524 rising smoothly over 10 ft;   # v56 (user's red line: grid end -> pylon): the berm comes exactly to z 524, never past it
 # (z < 524 = in front of the gate row); full height from z 525.5
@@ -186,7 +188,8 @@ START_BOUDINS = dict(lines=[[(704.6, 409.8), (658.3, 522.0)],                   
 START_BANNER = dict(board=True, foot_h=0.4, back=1.4, model='start_sign')   # v41: sign on posts   # v40 (user): a BIG board on the platform at the foot of the start wall
 # (v39: a 31.5 ft banner on top of the wall, in front of the fence: too small). Origin `back` ft in front of the wall foot
 # (first point east of the wall within foot_h of the platform level).
-BOARD30 = dict(stand=(201.0, -2.0), hide=(201.0, -1), hide_out=-20.0, speed=60, done='blank')   # v58 (user): 3x faster (20 -> 60)   # v57 (user: still running when the riders get there): starts 12 ft closer (z 476, 20 ft run), speed 12 -> 20
+BOARD30 = dict(stand=(201.0, -14.0), hide=(201.0, -1), hide_out=-20.0, speed=10, done='blank')   # v59 (user): speed 60 broke him
+# (stayed all race, did not run): back to 10 (official tracks 8-12), and he already stands near the side (z 464): 8 ft run to z 456   # v57 (user: still running when the riders get there): starts 12 ft closer (z 476, 20 ft run), speed 12 -> 20
 # v56 (user): he looked like running backwards going right -> runs left (the way the game's sprite faces) to z 456, just inside
 # the start boudins; his last picture (standing there) = an empty picture: he disappears once tucked away (the game has no
 # script call for flaggers, so not exactly at drop + 15 s)

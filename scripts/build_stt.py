@@ -285,11 +285,15 @@ def build():
         elif g['kind'] == 'T':
             if g.get('berm') and g.get('tag') in getattr(LT, 'BERM_SHIFT', {}):
                 # v58: a whole crescent (130 deg) compressed between turn progress t0 and t1 (its own entry and exit tapers)
-                t0_, t1_ = LT.BERM_SHIFT[g['tag']]; tc_ = (t0_ + t1_) / 2; sc_ = 130.0 / (t1_ - t0_)
-                mid_ = turn_mid_angle(g) - np.sign(g['ang']) * np.radians(tc_ - abs(g['ang']) / 2)
-                gain = getattr(LT, 'BERM_GAIN', {}).get(g.get('tag'), 1.0)
-                tmp = np.zeros((N, N)); sl = render_berm_stamp(G, tmp, g['berm'], g['cx'], g['cz'], mid_, ang_scale=sc_)
-                berms[sl] = np.maximum(berms[sl], tmp[sl] * gain)
+                # v59: (t0, t_peak, t1, gain, power): entry half squeezed into t0..t_peak, exit half into t_peak..t1 (peak anywhere)
+                t0_, tp_, t1_, gain, pw_ = LT.BERM_SHIFT[g['tag']]
+                mid_ = turn_mid_angle(g) - np.sign(g['ang']) * np.radians(tp_ - abs(g['ang']) / 2)
+                tA = np.zeros((N, N)); sl = render_berm_stamp(G, tA, g['berm'], g['cx'], g['cz'], mid_, ang_scale=65.0 / (tp_ - t0_))
+                tB = np.zeros((N, N)); render_berm_stamp(G, tB, g['berm'], g['cx'], g['cz'], mid_, ang_scale=65.0 / (t1_ - tp_))
+                jj, ii = np.meshgrid(np.arange(sl[1].start, sl[1].stop), np.arange(sl[0].start, sl[0].stop))
+                d_ = np.angle(np.exp(1j * (np.arctan2(ii * S - g['cz'], jj * S - g['cx']) - mid_))) * -np.sign(g['ang'])   # > 0: past the peak
+                h_ = np.where(d_ < 0, tA[sl], tB[sl]); hm_ = max(float(h_.max()), 1e-6)
+                berms[sl] = np.maximum(berms[sl], gain * hm_ * (h_ / hm_) ** pw_)
             elif g.get('berm') and g.get('tag') in getattr(LT, 'HALF_BERM', ()):
                 # v4: berm only on the second half of the turn (user's drawing): fade in between 45 % and 60 % of the turn
                 tmp = np.zeros((N, N)); sl = render_berm_stamp(G, tmp, g['berm'], g['cx'], g['cz'], turn_mid_angle(g), ang_scale=berm_ang_scale(g['berm'], g['ang']))
