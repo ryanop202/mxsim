@@ -177,6 +177,7 @@ def pylon_texture(skin='black'):
     # v36: vertical logo on the column; on the cylinder u grows towards the viewer's LEFT on both the +z (angle 90) and the -z
     # (angle 270) side -> the logo is mirrored in u.
     y0_, y1_ = P['col_logo']; L_ = y1_ - y0_; Wd = L_ / 4.43
+    y0_, y1_ = (yc + yt) / 2 - L_ / 2, (yc + yt) / 2 + L_ / 2        # v60 (user): centred on the visible column (was 0.5..2.5 ft: low)
     lg = Image.open(FLY).rotate(90, expand=True).transpose(Image.FLIP_LEFT_RIGHT)
     for uc in (128, 384):
         _paste_logo(img, (uc - Wd * pxu / 2, row(y1_), uc + Wd * pxu / 2, row(y0_)), lg)

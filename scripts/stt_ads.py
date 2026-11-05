@@ -310,7 +310,7 @@ def flag_cage():
         for i in range(1, n): f = i / n; pipe(m, [(xa + (xb - xa) * f, C['rails'][0], za + (zb - za) * f), (xa + (xb - xa) * f, C['rails'][1], za + (zb - za) * f)], r * 0.7, stl, seg=6)
     return m, tex
 
-SIGN = dict(w=84.0, h=7.5, top=12.6, z=1.1, px=68, posts=8, post_r=0.22, strips=3)   # v44 (user): wider (60 -> 84 ft), SX Tour at both ends
+SIGN = dict(w=84.0, h=7.5, top=12.6, z=1.1, px=68, posts=8, post_r=0.22, strips=3, burner=(0.9, 0.3))   # v60: flame burners (h, r) on top   # v44 (user): wider (60 -> 84 ft), SX Tour at both ends
 # v41 (user's drawing): a big black SIGN on steel posts (6), START in the middle and the sponsors on ONE row (v40: two rows,
 # and a braced frame behind that showed as a weird lattice from far away). Top level with the fence top.
 
@@ -363,6 +363,13 @@ def start_sign():
         pipe(m, [(x, -0.4, zl), (x, y0, zl)], min(r, t * 0.95), stl, seg=12)
         m.tri_fan([np.array(p) for p in [(x - 0.45, 0.03, zl - 0.45), (x + 0.45, 0.03, zl - 0.45), (x + 0.45, 0.03, zl + 0.45), (x - 0.45, 0.03, zl + 0.45)]],
                   np.array([0, 1.0, 0]), [m.uv_px(1920, 2024)] * 4)                # base plate
+    if S_.get('burner'):                                                        # v60 (user): 2 flame torches, above the end posts
+        bh_, br_ = S_['burner']
+        for x in (-hx + 2.0, hx - 2.0):
+            pipe(m, [(x, y1 - 0.05, zl), (x, y1 + bh_, zl)], br_, stl, seg=12)
+            pipe(m, [(x, y1 + bh_ - 0.18, zl), (x, y1 + bh_, zl)], br_ * 1.5, stl, seg=12)
+            m.tri_fan([np.array((x + br_ * 1.5 * np.cos(a), y1 + bh_, zl + br_ * 1.5 * np.sin(a))) for a in np.linspace(0, 2 * np.pi, 13)[:-1]],
+                      np.array([0, 1.0, 0]), [blk] * 12)                         # dark nozzle top
     return m, tex
 
 def stake_sprite():

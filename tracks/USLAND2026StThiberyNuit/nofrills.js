@@ -31,3 +31,64 @@ function startBoudins(seconds) {
 
 var startBoudinsPrev = mx.frame_handler;
 mx.frame_handler = startBoudins;
+
+
+/* v60: START sign flames (billboards 0 and 1) + flame sound, fired at the gate drop (again after each New Race). */
+var g_py_snd = [];
+var g_py_pos = [[249.25, 23.38, 438.00], [249.25, 23.38, 518.00]];
+var g_py_i;
+for (g_py_i = 0; g_py_i < 2; g_py_i++) {
+    g_py_snd[g_py_i] = mx.add_sound("@USLAND2026StThiberyNuit/js/sounds/startflame.raw");
+    mx.set_sound_freq(g_py_snd[g_py_i], 44100);
+    mx.set_sound_vol(g_py_snd[g_py_i], 1.0);
+    mx.set_sound_pos(g_py_snd[g_py_i], g_py_pos[g_py_i][0], g_py_pos[g_py_i][1], g_py_pos[g_py_i][2]);
+}
+var g_py_tex = [mx.read_texture('@USLAND2026StThiberyNuit/js/pyro/finishflames2.seq'), mx.read_texture('@USLAND2026StThiberyNuit/js/pyro/finishflames.seq')];
+var g_py_frames = 41;
+var g_py_frame = -1;
+var g_py_fired = -1;
+var g_py_t = -1.0;
+mx.color_billboard(0, 1, 1, 1, 0);
+mx.color_billboard(1, 1, 1, 1, 0);
+
+function pyroShow(a) {
+    mx.color_billboard(0, 1, 1, 1, a);
+    mx.color_billboard(1, 1, 1, 1, a);
+}
+
+function startPyro(seconds) {
+    var d = mx.get_gate_drop_time();
+    var k;
+    if (d < 0 || mx.seconds < d || mx.seconds < g_py_t) {
+        if (g_py_frame >= 0) pyroShow(0);
+        g_py_frame = -1;
+        if (d < 0 || mx.seconds < d) g_py_fired = -1;
+        g_py_t = mx.seconds;
+    }
+    else if (g_py_fired != d && mx.seconds < d + 3.0) {
+        g_py_fired = d;
+        g_py_frame = 0;
+        g_py_t = -1.0;
+        for (k = 0; k < 2; k++) mx.start_sound(g_py_snd[k]);
+    }
+    if (g_py_frame >= 0 && mx.seconds - g_py_t >= 0.03125) {
+        g_py_t = mx.seconds;
+        if (g_py_frame < g_py_frames) {
+            for (k = 0; k < 2; k++) {
+                mx.begin_custom_frame(g_py_tex[k]);
+                mx.paste_custom_frame(g_py_tex[k], g_py_frame, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0);
+                mx.end_custom_frame(g_py_tex[k]);
+            }
+            if (g_py_frame == 0) pyroShow(1);
+            g_py_frame++;
+        } else {
+            pyroShow(0);
+            g_py_frame = -1;
+        }
+    }
+    if (startPyroPrev)
+        startPyroPrev(seconds);
+}
+
+var startPyroPrev = mx.frame_handler;
+mx.frame_handler = startPyro;

@@ -185,6 +185,8 @@ START_BOUDINS = dict(lines=[[(704.6, 409.8), (658.3, 522.0)],                   
 # collision along: to check in game), shown until 15 s
 # after the gate drop, then sunk under the ground by nofrills.js; black ones with the sponsors and 50 Factory yellow ones,
 # one in two
+START_PYRO = dict(local_x=40.0, size=30.0, fps=32.0, boost=2.0)   # v60 (user): flames (finish-arch pyro of the RF / SX1) on the
+# 2 burners of the START sign, fired at the gate drop, with the flame sound (one per torch, samples boosted: loud)
 START_BANNER = dict(board=True, foot_h=0.4, back=1.4, model='start_sign')   # v41: sign on posts   # v40 (user): a BIG board on the platform at the foot of the start wall
 # (v39: a 31.5 ft banner on top of the wall, in front of the fence: too small). Origin `back` ft in front of the wall foot
 # (first point east of the wall within foot_h of the platform level).
@@ -322,7 +324,7 @@ def stt():
     l4 = [ROLLER, SA[1], ('gap', 6.0), ROLLER] + fmx                         # wheel tap (v13: 3rd = same roller as the 1st) + freestyle
     p.straight(XBOWL - x_l4, [sec('STT-L4 roller, bosse, roller, saut freestyle', l4, 14.0)], tag='L4 roller, bump, roller, freestyle jump')
     p.turn(+180, RB, BIG, tag='bowl (L4 -> L3)')
-    l3 = [('scale', SA[0], 1.6), SA[1], ('fuse', TABLE_B, 4.4, 5.5, 2.2, 46.0, 0.58, 4.0), SA[2], SA[1], SA[0]]   # v11: roller, bump, fused double; v58 (user): 1st roller a bit lower (2.0 -> 1.6 ft)
+    l3 = [('scale', SA[0], 1.6), ('scale', SA[1], 3.3), ('fuse', TABLE_B, 4.4, 5.5, 2.2, 46.0, 0.58, 4.0), SA[2], SA[1], SA[0]]   # v11: roller, bump, fused double; v58 (user): 1st roller a bit lower (2.0 -> 1.6 ft); v60 (user): 2nd bump a bit lower (3.66 -> 3.3 ft, same length)
                                                                             # (2nd hump = mirror of the 1st), 3 bumps
     p.straight(XBOWL - XU, [rounded(sec('STT-L3 roller, long creux, 3 bosses', even(l3, XBOWL - XU, 0.5, 1.0, 4.0), 0.5), full=0.3)], tag='L3 roller, bump, long raised dip, 3 bumps')
     p.turn(-180, RB, BIG2, tag='U L3 -> L2 (rays)')

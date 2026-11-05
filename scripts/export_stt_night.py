@@ -153,6 +153,8 @@ def main():
                'function startBoudins(seconds) {', '    var d = mx.get_gate_drop_time();', '    var hide = (d >= 0 && mx.seconds >= d + g_sb_after);',
                '    if (hide != g_sb_hidden || mx.seconds < g_sb_t || mx.seconds - g_sb_t > 1.0) {', '        sbSet(hide);', '        g_sb_t = mx.seconds;', '    }', '    if (startBoudinsPrev)', '        startBoudinsPrev(seconds);', '}', '',
                'var startBoudinsPrev = mx.frame_handler;', 'mx.frame_handler = startBoudins;', '']
+        PY = getattr(LT, 'START_PYRO', None)
+        if PY: js_ += start_pyro(PY, H, st)
         open(f'{OUT}/nofrills.js', 'w', newline='\n', encoding='ascii').write('\n'.join(js_))
         print('nofrills.js: start boudins', len(rows_))
     # lightmap
@@ -178,6 +180,54 @@ def main():
     open(f'{OUT}/lighting', 'w', newline='\n').write('\n'.join(L) + '\n')
     lit = sh[int((oz + 120) / S), int((ox + 180) / S)]
     return dict(pads=NG['pad'], poles=len(P), statues=len(st), shade_track_centre=int(lit), shade_min=int(sh.min()), shade_max=int(sh.max()))
+
+def start_pyro(PY, H, st):
+    """v60 (user): the SX1 / RaceTrack finish flames on the 2 burners of the START sign, fired at the gate drop (again after
+    each New Race), with the flame sound at each torch. Billboards 0 and 1 (put first in the billboards file)."""
+    import stt_ads as AD_
+    src = f'{ROOT}/tracks/USLAND2026SX1/js'; os.makedirs(f'{OUT}/js/pyro', exist_ok=True); os.makedirs(f'{OUT}/js/sounds', exist_ok=True)
+    for nm in ('finishflames', 'finishflames2'):
+        if os.path.exists(f'{OUT}/js/pyro/{nm}'): shutil.rmtree(f'{OUT}/js/pyro/{nm}')
+        shutil.copytree(f'{src}/pyro/{nm}', f'{OUT}/js/pyro/{nm}')
+        open(f'{OUT}/js/pyro/{nm}.seq', 'w', newline='\n').write(open(f'{src}/pyro/{nm}.seq').read().replace('@USLAND2026SX1/', f'@{NIGHT}/'))
+    a = np.fromfile(f'{src}/sounds/finishlineflame.raw', np.int16).astype(float) / 32768.0
+    b = np.tanh(PY['boost'] * a) / np.tanh(PY['boost'])                       # louder: soft-limited gain (peak stays < 1)
+    (np.clip(b, -1, 1) * 32000).astype(np.int16).tofile(f'{OUT}/js/sounds/startflame.raw')
+    sg = [l for l in st if '/statue/start_sign.jm' in l][0]; v = sg.split(']')[0][1:].split(); bx, bz = float(v[0]), float(v[2])
+    an = float(sg.split(']')[1].split()[0]); ux, uz = np.cos(an), -np.sin(an); fx, fz = np.sin(an), np.cos(an)   # local +x / +z in the world
+    g0 = float(H[int(bz / S), int(bx / S)]); top = AD_.SIGN['top'] + AD_.SIGN['burner'][0]
+    bb, pos = [], []
+    for k, (sx, nm) in enumerate(((1, 'finishflames2'), (-1, 'finishflames'))):
+        x_ = bx + ux * sx * PY['local_x'] + fx * AD_.SIGN['z']; z_ = bz + uz * sx * PY['local_x'] + fz * AD_.SIGN['z']
+        y_ = g0 + top - float(H[int(z_ / S), int(x_ / S)])                    # billboard y = height above the ground under it
+        bb.append(f'[{x_:.6f} {y_:.6f} {z_:.6f}] {PY["size"]:.6f} 1.000000 @{NIGHT}/js/pyro/{nm}.seq'); pos.append((x_, g0 + top, z_))
+        print('pyro', nm, 'at', round(x_, 1), round(z_, 1), 'y', round(y_, 2))
+    old = [l for l in open(f'{OUT}/billboards').read().split('\n') if l.strip()]
+    open(f'{OUT}/billboards', 'w', newline='\n').write('\n'.join(bb + old) + '\n')
+    P_ = f'@{NIGHT}/js'
+    js = ['', '/* v60: START sign flames (billboards 0 and 1) + flame sound, fired at the gate drop (again after each New Race). */',
+          'var g_py_snd = [];', 'var g_py_pos = [' + ', '.join(f'[{x:.2f}, {y:.2f}, {z:.2f}]' for x, y, z in pos) + '];',
+          'var g_py_i;', 'for (g_py_i = 0; g_py_i < 2; g_py_i++) {',
+          f'    g_py_snd[g_py_i] = mx.add_sound("{P_}/sounds/startflame.raw");',
+          '    mx.set_sound_freq(g_py_snd[g_py_i], 44100);', '    mx.set_sound_vol(g_py_snd[g_py_i], 1.0);',
+          '    mx.set_sound_pos(g_py_snd[g_py_i], g_py_pos[g_py_i][0], g_py_pos[g_py_i][1], g_py_pos[g_py_i][2]);', '}',
+          f"var g_py_tex = [mx.read_texture('{P_}/pyro/finishflames2.seq'), mx.read_texture('{P_}/pyro/finishflames.seq')];",
+          'var g_py_frames = 41;', 'var g_py_frame = -1;', 'var g_py_fired = -1;', 'var g_py_t = -1.0;',
+          'mx.color_billboard(0, 1, 1, 1, 0);', 'mx.color_billboard(1, 1, 1, 1, 0);', '',
+          'function pyroShow(a) {', '    mx.color_billboard(0, 1, 1, 1, a);', '    mx.color_billboard(1, 1, 1, 1, a);', '}', '',
+          'function startPyro(seconds) {', '    var d = mx.get_gate_drop_time();', '    var k;',
+          '    if (d < 0 || mx.seconds < d || mx.seconds < g_py_t) {', '        if (g_py_frame >= 0) pyroShow(0);',
+          '        g_py_frame = -1;', '        if (d < 0 || mx.seconds < d) g_py_fired = -1;', '        g_py_t = mx.seconds;', '    }',
+          '    else if (g_py_fired != d && mx.seconds < d + 3.0) {', '        g_py_fired = d;', '        g_py_frame = 0;', '        g_py_t = -1.0;',
+          '        for (k = 0; k < 2; k++) mx.start_sound(g_py_snd[k]);', '    }',
+          f'    if (g_py_frame >= 0 && mx.seconds - g_py_t >= {1.0 / PY["fps"]:.5f}) {{', '        g_py_t = mx.seconds;',
+          '        if (g_py_frame < g_py_frames) {',
+          '            for (k = 0; k < 2; k++) {', '                mx.begin_custom_frame(g_py_tex[k]);',
+          '                mx.paste_custom_frame(g_py_tex[k], g_py_frame, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0);', '                mx.end_custom_frame(g_py_tex[k]);', '            }',
+          '            if (g_py_frame == 0) pyroShow(1);', '            g_py_frame++;', '        } else {', '            pyroShow(0);', '            g_py_frame = -1;', '        }', '    }',
+          '    if (startPyroPrev)', '        startPyroPrev(seconds);', '}', '',
+          'var startPyroPrev = mx.frame_handler;', 'mx.frame_handler = startPyro;', '']
+    return js
 
 if __name__ == '__main__':
     print(main())
