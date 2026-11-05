@@ -178,6 +178,8 @@ def main():
     L += [f'{k} @{NIGHT}/sky/{os.path.basename(v)}' for k, v in sky.items()]
     L += ['flare_vector [ -0.30\t0.90\t0.30 ]', 'dynamic_lighting 1']
     open(f'{OUT}/lighting', 'w', newline='\n').write('\n'.join(L) + '\n')
+    MS = getattr(LT, 'MAP_SHOT', None)
+    if MS: night_map(MS, H)
     lit = sh[int((oz + 120) / S), int((ox + 180) / S)]
     return dict(pads=NG['pad'], poles=len(P), statues=len(st), shade_track_centre=int(lit), shade_min=int(sh.min()), shade_max=int(sh.max()))
 
@@ -228,6 +230,45 @@ def start_pyro(PY, H, st):
           '    if (startPyroPrev)', '        startPyroPrev(seconds);', '}', '',
           'var startPyroPrev = mx.frame_handler;', 'mx.frame_handler = startPyro;', '']
     return js
+
+def night_map(MS, H):
+    """v61 (user): map.png from the user's in-game top view. The game stretches map.png over the WHOLE terrain, so the shot is
+    resampled into terrain coordinates (similarity fitted on the pylons: rotation, scale, shift), kept inside the arena's
+    rounded edge, transparent elsewhere; START written on the start grid."""
+    from PIL import ImageDraw, ImageFont
+    from scipy import ndimage as ndi_
+    shot = np.asarray(Image.open(f"{ROOT}/{MS['img']}").convert('RGB')).astype(float)
+    w = np.array([complex(*p[0]) for p in MS['pts']]); q = np.array([complex(*p[1]) for p in MS['pts']])
+    (a, b), *_ = np.linalg.lstsq(np.c_[w, np.ones_like(w)], q, rcond=None)
+    res = np.abs(q - (a * w + b)); print('map fit: %.3f px/ft, rot %.2f deg, max residual %.1f px' % (abs(a), np.degrees(np.angle(a)), res.max()))
+    M = MS['M']; N = H.shape[0]; side = (N - 1) * S; g = (np.arange(M) + 0.5) * side / M
+    X, Z = np.meshgrid(g, g); p = a * (X + 1j * Z) + b
+    px = np.clip(p.real, 0, shot.shape[1] - 1); py = np.clip(p.imag, 0, shot.shape[0] - 1)   # just outside the shot: edge pixels
+    rgb = np.dstack([ndi_.map_coordinates(shot[:, :, c], [py, px], order=1) for c in range(3)])
+    # v61b (user: crop inside the arena's rounded edge, straight): rounded rectangle, world-axis aligned, from the floor edge
+    # seen in the shot (px) -> world
+    inv = lambda u, v: ((complex(u, v) - b) / a)
+    x0_, y0_, x1_, y1_ = MS['rect']; ym_, xm_ = (y0_ + y1_) / 2, (x0_ + x1_) / 2
+    wx0, wx1 = inv(x0_, ym_).real, inv(x1_, ym_).real; wz0, wz1 = inv(xm_, y0_).imag, inv(xm_, y1_).imag; rr = MS['r_px'] / abs(a)
+    cxr, czr, hx_, hz_ = (wx0 + wx1) / 2, (wz0 + wz1) / 2, (wx1 - wx0) / 2 - rr, (wz1 - wz0) / 2 - rr
+    qx, qz = np.abs(X - cxr) - hx_, np.abs(Z - czr) - hz_
+    sd = np.hypot(np.maximum(qx, 0), np.maximum(qz, 0)) + np.minimum(np.maximum(qx, qz), 0) - rr      # < 0 inside
+    al = np.clip(-sd / MS['soft'] + 0.5, 0, 1)
+    print('map frame: x %.1f-%.1f z %.1f-%.1f, corner r %.1f ft' % (wx0, wx1, wz0, wz1, rr))
+    im = Image.fromarray(np.dstack([np.clip(rgb, 0, 255), al * 255]).astype(np.uint8), 'RGBA')
+    gx_, gz_ = LT.START_GATE[0] + LT.STT_ORIGIN[0], LT.START_GATE[1] + LT.STT_ORIGIN[1]
+    # v61c (user): START smaller, along the grid (reads top -> bottom), inside the start descent (box in world ft)
+    k = M / side; bx0, bz0, bx1, bz1 = MS['text_box']; up = 4
+    fnt = ImageFont.truetype('C:/Windows/Fonts/impact.ttf', 200); sw = 14
+    tb = ImageDraw.Draw(Image.new('L', (1, 1))).textbbox((0, 0), MS['text'], font=fnt, stroke_width=sw)
+    t = Image.new('RGBA', (tb[2] - tb[0], tb[3] - tb[1]), (0, 0, 0, 0))
+    ImageDraw.Draw(t).text((-tb[0], -tb[1]), MS['text'], font=fnt, fill=(255, 255, 255, 255), stroke_width=sw, stroke_fill=(0, 0, 0, 255))
+    t = t.rotate(-90, expand=True)                                   # map: x right, z down -> reads from the top down
+    bw, bh = (bx1 - bx0) * k, (bz1 - bz0) * k; f_ = min(bw / t.width, bh / t.height)
+    t = t.resize((max(1, int(t.width * f_)), max(1, int(t.height * f_))), Image.LANCZOS)
+    cx, cy = (bx0 + bx1) / 2 * k, (bz0 + bz1) / 2 * k
+    im.alpha_composite(t, (int(round(cx - t.width / 2)), int(round(cy - t.height / 2))))
+    im.save(f'{OUT}/map.png'); print('map.png from the top view, START in', MS['text_box'], 'size %.0f x %.0f ft' % (t.width / k, t.height / k))
 
 if __name__ == '__main__':
     print(main())

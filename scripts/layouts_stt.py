@@ -185,6 +185,14 @@ START_BOUDINS = dict(lines=[[(704.6, 409.8), (658.3, 522.0)],                   
 # collision along: to check in game), shown until 15 s
 # after the gate drop, then sunk under the ground by nofrills.js; black ones with the sponsors and 50 Factory yellow ones,
 # one in two
+# v61 (user): minimap = the user's in-game top view (v38), straightened and fitted on the terrain with the 9 pylons
+# ((world x, z), (screenshot px x, y)), cut inside the arena (distance to the arena floor <= dmax ft), START written on the grid
+MAP_SHOT = dict(img='assets/map/stt_topview_v38.png', rect=(30, 8, 1083, 553), r_px=50, soft=1.5,   # rect: arena floor edge in the shot (px)
+                text='START', text_box=(306.0, 446.0, 340.0, 510.0),   # v61c: inside the start descent (x 302-344), along the grid
+                M=1024,
+                pts=[((375.5, 292.0), (250, 97)), ((376.6, 403.3), (252, 282)), ((387.9, 523.9), (272, 481)), ((427.8, 359.6), (337, 208)),
+                     ((665.3, 400.2), (727, 270)), ((733.9, 356.9), (840, 198)), ((735.8, 481.7), (845, 404)), ((812.2, 295.8), (967, 97)),
+                     ((811.1, 521.8), (970, 468))])
 START_PYRO = dict(local_x=40.0, size=30.0, fps=32.0, boost=2.0)   # v60 (user): flames (finish-arch pyro of the RF / SX1) on the
 # 2 burners of the START sign, fired at the gate drop, with the flame sound (one per torch, samples boosted: loud)
 START_BANNER = dict(board=True, foot_h=0.4, back=1.4, model='start_sign')   # v41: sign on posts   # v40 (user): a BIG board on the platform at the foot of the start wall
