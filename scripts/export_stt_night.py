@@ -182,6 +182,7 @@ def main():
     if RF: reframe(RF)
     MS = getattr(LT, 'MAP_SHOT', None)
     if MS: night_map(MS, H, RF)
+    selfcontain()
     lit = sh[int((oz + 120) / S), int((ox + 180) / S)]
     return dict(pads=NG['pad'], poles=len(P), statues=len(st), shade_track_centre=int(lit), shade_min=int(sh.min()), shade_max=int(sh.max()))
 
@@ -282,6 +283,34 @@ def reframe(RF):
                            lambda m: f'[{float(m.group(1)) - x0:.2f}, {m.group(2)}, {float(m.group(3)) - z0:.2f}]', l)
     open(f'{OUT}/nofrills.js', 'w', newline='\n', encoding='ascii').write('\n'.join(js))
     print('reframe: x %.0f..%.0f z %.0f..%.0f, step %.4f ft, shifted' % (x0, x0 + side, z0, z0 + side, S1), n_)
+
+def selfcontain():
+    """v64 (user: folder to send to people for online play): the track no longer needs any other track. Every file it takes
+    from another folder (@USLAND2026SX1 ground textures / decals / roost / treads, @2024Bh1Conway finish flagger, user OK) is
+    copied to ext/<folder>/... inside the track, with its _tnorm / _tspec / _norm / _spec siblings, and every path is rewritten.
+    Game built-ins (@splash.png, @startgate.shp, @flagger_waving.seq...) stay as they are."""
+    SRCS = {'USLAND2026SX1': f'{ROOT}/tracks/USLAND2026SX1', '2024Bh1Conway': 'C:/Program Files (x86)/MX Simulator/2024Bh1Conway'}
+    pat = re.compile(r'@(' + '|'.join(re.escape(k) for k in SRCS) + r')/([^\s"\'\]\)\[,;]+)')
+    texts = [f for f in ('decals', 'tileinfo', 'flaggers', 'statues', 'billboards', 'timing_gates', 'lighting', 'nofrills.js')
+             if os.path.exists(f'{OUT}/{f}')]
+    texts += [os.path.relpath(os.path.join(dp, f), OUT).replace(os.sep, '/') for dp, _, fs in os.walk(OUT) for f in fs if f.endswith(('.seq', '.js'))]
+    texts = list(dict.fromkeys(texts)); done = set(); todo = list(texts); n_ref = 0
+    while todo:
+        f = todo.pop(); s = open(f'{OUT}/{f}', encoding='latin1').read(); refs = set(pat.findall(s))
+        for fold, rel in refs:
+            if (fold, rel) in done: continue
+            done.add((fold, rel)); dst = f'{OUT}/ext/{fold}/{rel}'; os.makedirs(os.path.dirname(dst), exist_ok=True)
+            shutil.copyfile(f'{SRCS[fold]}/{rel}', dst)
+            b_, e_ = os.path.splitext(rel)
+            for sfx in ('_tnorm', '_tspec', '_norm', '_spec'):
+                if os.path.exists(f'{SRCS[fold]}/{b_}{sfx}{e_}'): shutil.copyfile(f'{SRCS[fold]}/{b_}{sfx}{e_}', f'{OUT}/ext/{fold}/{b_}{sfx}{e_}'); done.add((fold, b_ + sfx + e_))
+            if rel.endswith('.seq'): todo.append(f'ext/{fold}/{rel}')
+        if refs:
+            n_ref += len(pat.findall(s))
+            open(f'{OUT}/{f}', 'w', encoding='latin1', newline='').write(pat.sub(lambda m: f'@{NIGHT}/ext/{m.group(1)}/{m.group(2)}', s))
+    left = [f for f in texts if pat.search(open(f'{OUT}/{f}', encoding='latin1').read())]
+    assert not left, left
+    print('self-contained: %d files copied to ext/, %d paths rewritten' % (len(done), n_ref))
 
 def night_map(MS, H, RF=None):
     """v61 (user): map.png from the user's in-game top view. The game stretches map.png over the WHOLE terrain, so the shot is
