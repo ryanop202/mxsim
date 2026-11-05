@@ -61,7 +61,7 @@ ROWS = dict(L1=('L1', XU + 50), L2=('L2', XU + 50), L3=('L3', XU + 50), L4=('L4'
 FINISH_SEC = 'STT-ouest saut d arrivee (court)'
 HALF_BERM = ('bowl (L4 -> L3)', 'U L6 -> L7')
 BERM_FADE = {}   # v56 (user): back to the usual fade (45 % / 15 %) for the U L6 -> L7 (v54 54 % / 14 %, v55 54 % / 5 %)
-BERM_CLIP = {'U L6 -> L7': (524.0, 1.5)}   # v56 (user's red line: grid end -> pylon): the berm comes exactly to z 524, never past it
+BERM_CLIP = {'U L6 -> L7': (524.0, 10.0)}   # v57 (user): progressive, not a cut: 0 at z 524 rising smoothly over 10 ft;   # v56 (user's red line: grid end -> pylon): the berm comes exactly to z 524, never past it
 # (z < 524 = in front of the gate row); full height from z 525.5
 # since the start moved 8 ft south -> it starts at 54 % (past the gate row end, z ~ 526); the others keep 45 % / 15 %                             # berm only on the second half of these turns
 BERM90_GAIN = 1.4                                                           # berms of the 90 deg turns higher (v6)
@@ -184,7 +184,7 @@ START_BOUDINS = dict(lines=[[(704.6, 409.8), (658.3, 522.0)],                   
 START_BANNER = dict(board=True, foot_h=0.4, back=1.4, model='start_sign')   # v41: sign on posts   # v40 (user): a BIG board on the platform at the foot of the start wall
 # (v39: a 31.5 ft banner on top of the wall, in front of the fence: too small). Origin `back` ft in front of the wall foot
 # (first point east of the wall within foot_h of the platform level).
-BOARD30 = dict(stand=(201.0, 9.5), hide=(201.0, -1), hide_out=-20.0, speed=12, done='blank')
+BOARD30 = dict(stand=(201.0, -2.0), hide=(201.0, -1), hide_out=-20.0, speed=20, done='blank')   # v57 (user: still running when the riders get there): starts 12 ft closer (z 476, 20 ft run), speed 12 -> 20
 # v56 (user): he looked like running backwards going right -> runs left (the way the game's sprite faces) to z 456, just inside
 # the start boudins; his last picture (standing there) = an empty picture: he disappears once tucked away (the game has no
 # script call for flaggers, so not exactly at drop + 15 s)
