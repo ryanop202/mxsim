@@ -530,14 +530,19 @@ def main():
     # flaggers: 30 s board behind the gate row, finish flagger beside the finish line on flat ground away from the lanes
     smp = p.samples(1.0); tr = cKDTree(np.c_[smp['x'], smp['z']])
     fr = np.array([-np.sin(fa), -np.cos(fa)]); nr = np.array([-fr[1], fr[0]]); half = (LS.N_GATES - 1) / 2 * LS.GATE_PITCH
-    b1 = np.array([gx, gz]) - fr * 25 + nr * (half - 15); b2 = np.array([gx, gz]) - fr * 25 - nr * (half - 15)
+    B30 = getattr(LT, 'BOARD30', None)              # v54 (user): stands in the middle in front of the gates, runs off to the side
+    if B30:
+        b1 = np.array([gx, gz]) + fr * B30['stand'][0] + nr * B30['stand'][1]
+        b2 = np.array([gx, gz]) + fr * B30['hide'][0] + nr * (B30['hide'][1] * (half + B30['hide_out']))
+    else:
+        b1 = np.array([gx, gz]) - fr * 25 + nr * (half - 15); b2 = np.array([gx, gz]) - fr * 25 - nr * (half - 15)
     cands = [c + n * sg * o_ + f * a_ for sg in (1, -1) for o_ in (24.0, 28.0, 32.0) for a_ in (6.0, -6.0)]
     fl = max(cands, key=lambda q: tr.query(q)[0] - 50 * float(h_at(H, *q) > 0.1))
     if getattr(LT, 'FLAG_STAND', None):            # v40 (user): the finish flagger on his platform, in a steel cage
         fl = B.flag_stand_geom(p)[4]
         st_ = open(f'{OUT}/statues').read().rstrip('\n') + '\n' + f'[{fl[0]:.6f} 0.000000 {fl[1]:.6f}] 0.000000 {P}/statue/flag_cage.jm {P}/statue/flag_cage.png null' + '\n'
         open(f'{OUT}/statues', 'w', newline='\n').write(st_)
-    open(f'{OUT}/flaggers', 'w', newline='\n').write('\n'.join([f'[{b1[0]:.6f} 0.000 {b1[1]:.6f}]', f'[{b2[0]:.6f} 0.000 {b2[1]:.6f}]', '8.4 1', '9',
+    open(f'{OUT}/flaggers', 'w', newline='\n').write('\n'.join([f'[{b1[0]:.6f} 0.000 {b1[1]:.6f}]', f'[{b2[0]:.6f} 0.000 {b2[1]:.6f}]', '8.4 1', str(B30['speed'] if B30 else 9),
         '@30sec_30.png', '@30sec_turn.seq', '@30sec_5.png', '@30sec_run.seq', '@30sec_done.png', '',
         f'[{fl[0]:.6f} 0.000 {fl[1]:.6f}]', *(FLAG_FILES_() if getattr(LT, 'FLAG_STAND', {}).get('rf') else
         [f"8 {getattr(LT, 'FLAG_STAND', {}).get('flip', -1)}", '@finish_green.png', '@finish_crossed.png', '@finish_white.png', '@checkerwave.seq']), '', '', '', '[0.00000000 0.000 0.00000000]', '9.6 1', '3 4 5 -1', '@flagger_resting.png', '@flagger_waving.seq', '']))

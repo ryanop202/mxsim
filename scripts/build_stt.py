@@ -290,7 +290,8 @@ def build():
                 phi0 = np.arctan2(smp['z'][k0] - g['cz'], smp['x'][k0] - g['cx']); sgn = -np.sign(g['ang'])     # left turn: heading (and angle) decreases
                 jj, ii = np.meshgrid(np.arange(sl[1].start, sl[1].stop), np.arange(sl[0].start, sl[0].stop))
                 phi = np.arctan2(ii * S - g['cz'], jj * S - g['cx']); rel = np.angle(np.exp(1j * (phi - phi0))) * sgn
-                u = rel / np.radians(abs(g['ang'])); w = np.clip((u - 0.45) / 0.15, 0, 1); w = w * w * (3 - 2 * w)
+                u = rel / np.radians(abs(g['ang'])); f0_, f1_ = getattr(LT, 'BERM_FADE', {}).get(g.get('tag'), (0.45, 0.15))   # v54: per turn
+                w = np.clip((u - f0_) / f1_, 0, 1); w = w * w * (3 - 2 * w)
                 gain = getattr(LT, 'BERM_GAIN', {}).get(g.get('tag'), getattr(LT, 'BERM90_GAIN', 1.0) if abs(abs(g['ang']) - 90) < 1 else 1.0)   # v13: per-turn gain on 180s too
                 berms[sl] = np.maximum(berms[sl], tmp[sl] * w * gain)
             elif g.get('berm') and abs(abs(g['ang']) - 90) < 1 and getattr(LT, 'BERM90_GAIN', 1.0) != 1.0:

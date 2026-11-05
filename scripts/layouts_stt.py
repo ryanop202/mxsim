@@ -59,7 +59,9 @@ XWL, XBOWL, XU, XMID, XEL, XU67 = -35.0, 277.0, 40.0, 364.0, 445.0, -5.0   # v8:
 ARENA = (-110.0, 475.0, Z['L1'] - 24.0, 274.0)                            # fence box (x0, x1, z0, z1), local
 ROWS = dict(L1=('L1', XU + 50), L2=('L2', XU + 50), L3=('L3', XU + 50), L4=('L4', 100.0), L6=('L6', 40.0), L7=('L7', 40.0))
 FINISH_SEC = 'STT-ouest saut d arrivee (court)'
-HALF_BERM = ('bowl (L4 -> L3)', 'U L6 -> L7')                             # berm only on the second half of these turns
+HALF_BERM = ('bowl (L4 -> L3)', 'U L6 -> L7')
+BERM_FADE = {'U L6 -> L7': (0.54, 0.14)}   # v54 (user, top view): this berm started (45 %) right in front of the last start gates
+# since the start moved 8 ft south -> it starts at 54 % (past the gate row end, z ~ 526); the others keep 45 % / 15 %                             # berm only on the second half of these turns
 BERM90_GAIN = 1.4                                                           # berms of the 90 deg turns higher (v6)
 BERM_GAIN = {'L7 -> east lane (real high berm)': 1.2, 'bowl (L4 -> L3)': 0.85, 'east lane -> L1 (high berm, as after the whoops)': 1.2}   # v13: bowl berm a bit lower                      # v7: that one a bit lower
 ROLLER, SMALL_B = 'Custom1_g30_1', 'Glendale_g40_2'                        # 1.9 / 2.5 ft
@@ -163,7 +165,8 @@ VIPS = [dict(img='vip_mrbeast', h=6.4, sink=0.1, at=(452.0, 596.0)),          # 
 PYLON_SKINS = {0: 'pylon_f50', 2: 'pylon_f50', 4: 'pylon_f50', 5: 'pylon_motul', 8: 'pylon_motul'}
 # v50 (user's circles on the in-game top view): yellow = all 50 Factory yellow with its logo, red = red Motul column, black base
 START_BOUDINS = dict(lines=[[(704.6, 409.8), (658.3, 522.0)],                       # v52 (user): 4 ft further out (more room in the
-                            [(350.0, 426.0), (384.0, 449.0), (468.0, 453.0), (534.0, 453.0)]],   # turn); v52: one diagonal from the
+                            [(350.0, 426.0), (384.0, 449.0), (468.0, 453.0), (534.0, 453.0)],
+                            [(293.0, 525.5), (331.0, 525.5)]],   # v54 (user's red line): from the gates to the U L6 -> L7 berm; turn); v52: one diagonal from the
                      # first slant straight to the line beside the FMX ramp, then straight, stopped at the landing (user's lines)
                      hide_after=15.0, pattern=(('50factory', 10), ('mcst', 10), ('sxtour', 10)))
 # v51 (user): flat ground only (not up the L4 bump shoulders, z up to 447, nor the landing, z up to 456), on the start side of
@@ -176,6 +179,10 @@ START_BOUDINS = dict(lines=[[(704.6, 409.8), (658.3, 522.0)],                   
 START_BANNER = dict(board=True, foot_h=0.4, back=1.4, model='start_sign')   # v41: sign on posts   # v40 (user): a BIG board on the platform at the foot of the start wall
 # (v39: a 31.5 ft banner on top of the wall, in front of the fence: too small). Origin `back` ft in front of the wall foot
 # (first point east of the wall within foot_h of the platform level).
+BOARD30 = dict(stand=(9.0, 0.0), hide=(8.0, -1), hide_out=16.0, speed=12)
+# v54 (user): the 30 s board man stands in the middle of the start line, 9 ft in front of the gates (first flaggers point);
+# at the 5 s board he runs (second point = where the game makes him run to) off the north side of the start pad
+# (16 ft past the last gate, down the pad shoulder). Speed 12 like the Bud / Miami tracks. Before: behind the gates.
 FLAG_STAND = dict(side=1, v0=15.2, w=8.0, back=12.0, fwd=12.0, drop=1.0, slope=1.0, flip=1,
                   rf=dict(src='@2024Bh1Conway/flaggerfiles', size=10.5, flip=1))   # v48 (user, in game): -1 showed the flag on the wrong side -> 1   # v46 (user): animated photo flagger (RF), person about 6 ft   # v41 (user): flagger turned round (flag towards the track; v40 -1)   # v40b: the bump's own profile widened 8 ft, cut flat 1 ft under the crest (flat top ~6 ft long)
 # v40 (user): at the finish take-off, a dirt platform joined to the side of the bump (west side, outside the lane), its flat
