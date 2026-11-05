@@ -283,7 +283,14 @@ def build():
                 secs.append(dict(lane=g['tag'], name=name, s0=g['s0'] + u0, length=len(prof) * 0.1, hmax=float(prof.max()),
                                  items=LS.COMBOS[name]['items']))
         elif g['kind'] == 'T':
-            if g.get('berm') and g.get('tag') in getattr(LT, 'HALF_BERM', ()):
+            if g.get('berm') and g.get('tag') in getattr(LT, 'BERM_SHIFT', {}):
+                # v58: a whole crescent (130 deg) compressed between turn progress t0 and t1 (its own entry and exit tapers)
+                t0_, t1_ = LT.BERM_SHIFT[g['tag']]; tc_ = (t0_ + t1_) / 2; sc_ = 130.0 / (t1_ - t0_)
+                mid_ = turn_mid_angle(g) - np.sign(g['ang']) * np.radians(tc_ - abs(g['ang']) / 2)
+                gain = getattr(LT, 'BERM_GAIN', {}).get(g.get('tag'), 1.0)
+                tmp = np.zeros((N, N)); sl = render_berm_stamp(G, tmp, g['berm'], g['cx'], g['cz'], mid_, ang_scale=sc_)
+                berms[sl] = np.maximum(berms[sl], tmp[sl] * gain)
+            elif g.get('berm') and g.get('tag') in getattr(LT, 'HALF_BERM', ()):
                 # v4: berm only on the second half of the turn (user's drawing): fade in between 45 % and 60 % of the turn
                 tmp = np.zeros((N, N)); sl = render_berm_stamp(G, tmp, g['berm'], g['cx'], g['cz'], turn_mid_angle(g), ang_scale=berm_ang_scale(g['berm'], g['ang']))
                 smp = p.samples(0.5); k0 = int(np.argmin(np.abs(smp['s'] - g['s0'])))
