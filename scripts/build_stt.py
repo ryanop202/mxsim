@@ -292,6 +292,8 @@ def build():
                 phi = np.arctan2(ii * S - g['cz'], jj * S - g['cx']); rel = np.angle(np.exp(1j * (phi - phi0))) * sgn
                 u = rel / np.radians(abs(g['ang'])); f0_, f1_ = getattr(LT, 'BERM_FADE', {}).get(g.get('tag'), (0.45, 0.15))   # v54: per turn
                 w = np.clip((u - f0_) / f1_, 0, 1); w = w * w * (3 - 2 * w)
+                if g.get('tag') in getattr(LT, 'BERM_CLIP', {}):          # v56: berm cut along a z line (user's red line)
+                    zc_, tw_ = LT.BERM_CLIP[g['tag']]; c_ = np.clip((ii * S - zc_) / tw_, 0, 1); w = w * c_ * c_ * (3 - 2 * c_)
                 gain = getattr(LT, 'BERM_GAIN', {}).get(g.get('tag'), getattr(LT, 'BERM90_GAIN', 1.0) if abs(abs(g['ang']) - 90) < 1 else 1.0)   # v13: per-turn gain on 180s too
                 berms[sl] = np.maximum(berms[sl], tmp[sl] * w * gain)
             elif g.get('berm') and abs(abs(g['ang']) - 90) < 1 and getattr(LT, 'BERM90_GAIN', 1.0) != 1.0:
