@@ -1,0 +1,24 @@
+[490.999995 0.000 463.999934]
+[490.999993 0.000 455.999934]
+8.4 1
+10
+@30sec_30.png
+@30sec_turn.seq
+@30sec_5.png
+@30sec_run.seq
+@USLAND2026StThibery/billboard/blank.png
+
+[335.800000 0.000 317.450000]
+10.5 1
+@2024Bh1Conway/flaggerfiles/defaultflag.png
+@2024Bh1Conway/flaggerfiles/halfway.png
+@2024Bh1Conway/flaggerfiles/lastlap.png
+@2024Bh1Conway/flaggerfiles/rf.flagger_waving.seq
+
+
+
+[0.00000000 0.000 0.00000000]
+9.6 1
+3 4 5 -1
+@flagger_resting.png
+@flagger_waving.seq

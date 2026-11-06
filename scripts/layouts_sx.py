@@ -19,6 +19,7 @@ TRIPLE = ['Detroit_g27_1', 'Arlington_g29_2']                                   
 STEPUP = ['Arlington_g30_1', 'Arlington_g30_2']                                                                      # 8.8 -> 11.2
 BIGDBL = ['Glendale_g83_1', 'Glendale_g83_2']                                                                        # 7.1 -> 7.9, 40.5 ft floor gap
 BIG_TRIPLE = ['Custom1_g29_2', ('gap', 0.5), 'Custom1_g29_3', ('gap', 1.6), 'Arlington_g29_2']                    # Cleveland g29 big triple 7.9 / 6.0 / 7.4 (as built)
+FINISH_TRIPLE_SX2 = [('scale', 'Custom1_g29_2', 6.0), ('gap', 0.5), 'Custom1_g29_3', ('gap', 1.6), 'Arlington_g29_2']   # v13b SX2 finish: Cleveland g29 big triple, 1st jump lowered 7.9 -> 6.0 ft (same length)
 FINISH_DBL = ['Custom1_g30_2', ('gap', 21.9), 'Arlington_g30_2']                                                    # JGSX finish double 8.8 -> 11.2 (Cleveland / Test Track g30)
 XE3 = 450.0                                                                                                           # SX3: start U-turn exit on the F lane (local x)
 HARD_TRIPLE = ['Detroit_g0_2', 'Arlington_g28_2', 'Custom_g6_1']                                                    # 5.8 / 5.8 / 6.0 ft short big singles (v4)
@@ -56,7 +57,7 @@ def sx1():
     ox, oz = SX1_ORIGIN
     xe, xw, z0 = 520.0, 150.0, 395.0
     p = Path(ox + 77, oz + z0, 0.0, 'SX1')
-    p.straight(xe - 77, [sec('SX1-F petite bosse, gros single, single + on-off (ligne d arrivee)', [('split', 'Glendale_g40_2', SA[0]), 'Arlington_g1_2', SA[1], ('gap', 12.0), 'Detroit_g35_2'], 18.0)], tag='finish straight: triple + on-off Detroit (v5)')
+    p.straight(xe - 77, [sec('SX1-F petite bosse, gros single, single + on-off (ligne d arrivee)', [('split', 'Glendale_g66_1', SA[0]), 'Arlington_g1_2', SA[1], ('gap', 12.0), 'Detroit_g35_2'], 18.0)], tag='finish straight: triple + on-off Detroit (v5)')
     p.turn(+180, RB, BIG, tag='T1 first turn')
     p.straight(xe - xw, [sec('SX1-A S-GROS-S ecarte, 3 S, GROS, S, GROS', [SA[0], ('gap', 8.5), 'Arlington_g37_2', ('gap', 5.0), SA[1], SA[2], SC[0], SC[1], 'Custom1_g29_3', SC[3], 'Arlington_g37_2'], 6.0)], tag='A 2e, 7e et derniere bosses grosses, entree ecartee (v7)')
     p.turn(-180, RB, BIG2, tag='T2')
@@ -97,7 +98,8 @@ def sx2():
     p.turn(-180, RB, BIG, tag='T7')                          # north -> south
     # v11b: first triple = the first three bumps of W1 (double ligne Detroit g36_1 | low Custom1 g30_1, Arlington g37_2,
     # Glendale g36_1, measured gaps) with the double ligne mirrored (low bump on the LEFT); big triple at the same place as before
-    p.straight(345.0 - 60.0, [sec('SX2-W2 small big small + big triple', [('split', 'Custom1_g30_1', SD[0]), 'Arlington_g37_2', SD[1], ('gap', 6.8)] + BIG_TRIPLE, 22.0)], tag='W2 small (double ligne)-big-small (depart) + big triple (arrivee) (v11)')
+    # v13b: finish jump too high (asked): first jump of the big triple scaled 7.9 -> 6.0 ft, same length, same place
+    p.straight(345.0 - 60.0, [sec('SX2-W2 small big small + big triple', [('split', 'Custom1_g30_1', SD[0]), 'Arlington_g37_2', SD[1], ('gap', 6.8)] + FINISH_TRIPLE_SX2, 22.0)], tag='W2 small (double ligne)-big-small (depart) + triple (arrivee 6,0 ft) (v13b)')
     p.turn(+180, RB, BIG2, tag='T8')                         # south -> north (finish lane F)
     p.straight(345.0 - 140.0, [sec('SX2-F triple (singles d avant + 1)', SC[:3], 8.0)], tag='F triple de singles normaux (v5)')
     # v10: grid in the infield heading north, flat left turn, crosses the (flat) top of the F lane, flat left turn into W2
