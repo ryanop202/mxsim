@@ -50,6 +50,8 @@ def read_jm(path):
 
 stats = dict(models=0, blocks=0, verts=0, tris=0, max_verts=0, degenerate=0, bad_normals=0)
 for f in sorted(os.listdir(os.path.join(TRACK_DIR, "statue"))):
+    if not (f.endswith(".jm") or f.endswith(".jm.gz")):      # textures / collisions (.png, .shp) rangées avec leur modèle
+        continue
     p = os.path.join(TRACK_DIR, "statue", f)
     try:
         bl = read_jm(p)

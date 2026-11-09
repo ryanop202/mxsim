@@ -2,288 +2,227 @@
  "sections": [
   {
    "lane": "L5 arrivée",
-   "name": "L5-1 Custom_g32_9",
-   "u0": 36.4,
-   "s0": 36.4,
-   "L": 19.6,
-   "H": 2.78,
-   "seg_L": 293.0
-  },
-  {
-   "lane": "L5 arrivée",
-   "name": "L5-2 Custom_g32_2",
-   "u0": 71.6,
-   "s0": 71.6,
-   "L": 20.4,
-   "H": 2.99,
-   "seg_L": 293.0
-  },
-  {
-   "lane": "L5 arrivée",
-   "name": "L5-3 Detroit_g29_3",
-   "u0": 101.2,
-   "s0": 101.2,
-   "L": 37.7,
-   "H": 4.71,
-   "seg_L": 293.0
-  },
-  {
-   "lane": "L5 arrivée",
-   "name": "L5-4 Custom_g30_3",
-   "u0": 158.2,
-   "s0": 158.2,
-   "L": 34.7,
-   "H": 4.88,
-   "seg_L": 293.0
-  },
-  {
-   "lane": "L5 arrivée",
-   "name": "L5-5 Custom1_g23_1",
-   "u0": 206.5,
-   "s0": 206.5,
-   "L": 63.1,
-   "H": 6.01,
-   "seg_L": 293.0
+   "name": "PAR-L5 single, single, triple d arrivee (ZION 2025)",
+   "u0": 32.5,
+   "s0": 32.5,
+   "L": 236.7,
+   "H": 11.15,
+   "seg_L": 293.0,
+   "items": [
+    [
+     "Arlington_g37_0 (H 3.4)",
+     0.0,
+     27.4
+    ],
+    [
+     "Arlington_g37_1 (H 3.9)",
+     35.2,
+     63.1
+    ],
+    [
+     "appel arrivee ZION 2025 (10,0)",
+     68.3,
+     109.6
+    ],
+    [
+     "triple arrivee ZION 2025 (6,0 / 11,2)",
+     109.6,
+     236.6
+    ]
+   ]
   },
   {
    "lane": "L3 grande table",
-   "name": "L3-1 Custom1_g62_2",
-   "u0": 100.1,
-   "s0": 881.0,
-   "L": 26.2,
-   "H": 3.6,
-   "seg_L": 264.9
-  },
-  {
-   "lane": "L3 grande table",
-   "name": "L3-2 grande table SUPERCROSS Paris (forme créée)",
-   "u0": 142.1,
-   "s0": 923.0,
-   "L": 97.0,
-   "H": 8.0,
-   "seg_L": 264.9
-  },
-  {
-   "lane": "L2 singles",
-   "name": "L2-1 Custom_g32_9",
-   "u0": 28.2,
-   "s0": 1162.8,
-   "L": 19.6,
-   "H": 2.78,
-   "seg_L": 288.4
+   "name": "PAR-L3 appel, gros saut rond du milieu (ZION 2025)",
+   "u0": 87.9,
+   "s0": 868.8,
+   "L": 165.0,
+   "H": 24.25,
+   "seg_L": 264.9,
+   "items": [
+    [
+     "appel gros saut ZION 2025 (10,0)",
+     0.0,
+     56.4
+    ],
+    [
+     "butte gros saut rond ZION 2025 (24,2)",
+     56.4,
+     164.9
+    ]
+   ]
   },
   {
    "lane": "L2 singles",
-   "name": "L2-2 Custom_g32_2",
-   "u0": 64.7,
-   "s0": 1199.3,
-   "L": 20.4,
-   "H": 2.99,
-   "seg_L": 288.4
-  },
-  {
-   "lane": "L2 singles",
-   "name": "L2-3 Custom_g32_2",
-   "u0": 103.3,
-   "s0": 1237.8,
-   "L": 20.4,
-   "H": 2.99,
-   "seg_L": 288.4
-  },
-  {
-   "lane": "L2 singles",
-   "name": "L2-4 Custom_g32_2",
-   "u0": 139.2,
-   "s0": 1273.7,
-   "L": 20.4,
-   "H": 2.99,
-   "seg_L": 288.4
-  },
-  {
-   "lane": "L2 singles",
-   "name": "L2-5 Custom_g55_2",
-   "u0": 176.6,
-   "s0": 1311.2,
-   "L": 30.0,
-   "H": 3.6,
-   "seg_L": 288.4
-  },
-  {
-   "lane": "L2 singles",
-   "name": "L2-6 Custom_g32_2",
-   "u0": 222.7,
-   "s0": 1357.2,
-   "L": 20.4,
-   "H": 2.99,
-   "seg_L": 288.4
-  },
-  {
-   "lane": "L2 singles",
-   "name": "L2-7 Custom_g32_2",
-   "u0": 257.9,
-   "s0": 1392.4,
-   "L": 20.4,
-   "H": 2.99,
-   "seg_L": 288.4
+   "name": "PAR-L2 7 bosses",
+   "u0": 23.2,
+   "s0": 1157.7,
+   "L": 256.7,
+   "H": 4.9,
+   "seg_L": 288.4,
+   "items": [
+    [
+     "Arlington_g37_0 (H 3.6)",
+     1.1,
+     28.5
+    ],
+    [
+     "Arlington_g37_1 (H 4.4)",
+     37.7,
+     65.6
+    ],
+    [
+     "Arlington_g1_1 (H 4.5)",
+     75.7,
+     104.6
+    ],
+    [
+     "Arlington_g37_1 (H 4.4)",
+     112.0,
+     139.9
+    ],
+    [
+     "Arlington_g37_4 (H 4.9)",
+     150.5,
+     182.8
+    ],
+    [
+     "Arlington_g1_1 (H 4.5)",
+     193.3,
+     222.2
+    ],
+    [
+     "Arlington_g37_0 (H 4.0)",
+     229.2,
+     256.6
+    ]
+   ]
   },
   {
    "lane": "L1 whoops",
-   "name": "L1-1 whoops",
-   "u0": 10.6,
-   "s0": 1501.1,
-   "L": 203.6,
-   "H": 2.99,
-   "seg_L": 342.9
-  },
-  {
-   "lane": "L1 whoops",
-   "name": "L1-2 Glendale_g80_1",
-   "u0": 230.7,
-   "s0": 1721.1,
-   "L": 41.4,
-   "H": 5.0,
-   "seg_L": 342.9
-  },
-  {
-   "lane": "L1 whoops",
-   "name": "L1-3 Custom1_g62_2",
-   "u0": 280.8,
-   "s0": 1771.3,
-   "L": 26.2,
-   "H": 3.6,
-   "seg_L": 342.9
-  },
-  {
-   "lane": "L1 whoops",
-   "name": "L1-4 Custom_g32_2",
-   "u0": 315.7,
-   "s0": 1806.1,
-   "L": 20.4,
-   "H": 2.99,
-   "seg_L": 342.9
+   "name": "PAR-L1 whoops, table, bosse",
+   "u0": 8.1,
+   "s0": 1498.6,
+   "L": 323.3,
+   "H": 6.6,
+   "seg_L": 342.9,
+   "items": [
+    [
+     "whoops Custom_0 x10 (x1.15)",
+     0.0,
+     203.8
+    ],
+    [
+     "Arlington_g49_2 (H 6.6)",
+     238.8,
+     293.8
+    ],
+    [
+     "Arlington_g37_1 (H 4.0)",
+     295.3,
+     323.2
+    ]
+   ]
   },
   {
    "lane": "LR tribune Est",
-   "name": "LR-1 Glendale_g65_1",
-   "u0": 1.9,
-   "s0": 1869.1,
-   "L": 19.2,
-   "H": 2.18,
-   "seg_L": 276.4
-  },
-  {
-   "lane": "LR tribune Est",
-   "name": "LR-2 Custom1_g23_1",
-   "u0": 131.3,
-   "s0": 1998.4,
-   "L": 63.1,
-   "H": 6.01,
-   "seg_L": 276.4
-  },
-  {
-   "lane": "LR tribune Est",
-   "name": "LR-3 Custom_g32_2",
-   "u0": 198.8,
-   "s0": 2066.0,
-   "L": 20.4,
-   "H": 2.99,
-   "seg_L": 276.4
-  },
-  {
-   "lane": "LR tribune Est",
-   "name": "LR-4 Custom_g32_2",
-   "u0": 225.1,
-   "s0": 2092.3,
-   "L": 20.4,
-   "H": 2.99,
-   "seg_L": 276.4
-  },
-  {
-   "lane": "LR tribune Est",
-   "name": "LR-5 Custom_g32_2",
-   "u0": 250.7,
-   "s0": 2117.9,
-   "L": 20.4,
-   "H": 2.99,
-   "seg_L": 276.4
+   "name": "PAR-LR roller, longue bosse, 2 bosses",
+   "u0": 2.0,
+   "s0": 1869.2,
+   "L": 266.1,
+   "H": 5.79,
+   "seg_L": 276.4,
+   "items": [
+    [
+     "Custom1_g30_1 (H 1.8)",
+     1.0,
+     27.9
+    ],
+    [
+     "longue bosse ondulee (couloir Est)",
+     120.1,
+     206.1
+    ],
+    [
+     "Arlington_g37_1 (H 4.0)",
+     209.2,
+     237.1
+    ],
+    [
+     "Arlington_g37_0 (H 3.6)",
+     238.6,
+     266.0
+    ]
+   ]
   },
   {
    "lane": "L6 tribune Sud",
-   "name": "L6-1 Custom1_g62_2",
-   "u0": 11.6,
-   "s0": 2189.0,
-   "L": 26.2,
-   "H": 3.6,
-   "seg_L": 342.9
-  },
-  {
-   "lane": "L6 tribune Sud",
-   "name": "L6-2 Custom_g32_2",
-   "u0": 50.8,
-   "s0": 2228.1,
-   "L": 20.4,
-   "H": 2.99,
-   "seg_L": 342.9
-  },
-  {
-   "lane": "L6 tribune Sud",
-   "name": "L6-3 Arlington_g45_2",
-   "u0": 86.8,
-   "s0": 2264.2,
-   "L": 26.7,
-   "H": 3.17,
-   "seg_L": 342.9
-  },
-  {
-   "lane": "L6 tribune Sud",
-   "name": "L6-4 Custom1_g62_2",
-   "u0": 127.3,
-   "s0": 2304.7,
-   "L": 26.2,
-   "H": 3.6,
-   "seg_L": 342.9
-  },
-  {
-   "lane": "L6 tribune Sud",
-   "name": "L6-5 Custom_g32_9",
-   "u0": 166.2,
-   "s0": 2343.6,
-   "L": 19.6,
-   "H": 2.78,
-   "seg_L": 342.9
-  },
-  {
-   "lane": "L6 tribune Sud",
-   "name": "L6-6 Glendale_g80_1",
-   "u0": 200.5,
-   "s0": 2377.9,
-   "L": 41.4,
-   "H": 5.0,
-   "seg_L": 342.9
-  },
-  {
-   "lane": "L6 tribune Sud",
-   "name": "L6-7 Custom_g32_9",
-   "u0": 255.6,
-   "s0": 2433.0,
-   "L": 19.6,
-   "H": 2.78,
-   "seg_L": 342.9
-  },
-  {
-   "lane": "L6 tribune Sud",
-   "name": "L6-8 Custom_g32_9",
-   "u0": 287.2,
-   "s0": 2464.6,
-   "L": 19.6,
-   "H": 2.78,
-   "seg_L": 342.9
+   "name": "PAR-L6 8 bosses dont une table",
+   "u0": 9.1,
+   "s0": 2186.5,
+   "L": 301.0,
+   "H": 6.6,
+   "seg_L": 342.9,
+   "items": [
+    [
+     "Arlington_g1_1 (H 4.3)",
+     1.1,
+     30.0
+    ],
+    [
+     "Arlington_g37_1 (H 4.2)",
+     37.7,
+     65.6
+    ],
+    [
+     "Arlington_g1_3 (H 4.5)",
+     74.8,
+     106.7
+    ],
+    [
+     "Arlington_g1_1 (H 4.3)",
+     116.4,
+     145.3
+    ],
+    [
+     "Arlington_g37_0 (H 3.8)",
+     152.6,
+     180.0
+    ],
+    [
+     "Arlington_g49_2 (H 6.6)",
+     183.9,
+     238.9
+    ],
+    [
+     "Arlington_g37_0 (H 3.8)",
+     241.8,
+     269.2
+    ],
+    [
+     "Arlington_g37_1 (H 3.6)",
+     273.0,
+     300.9
+    ]
+   ]
   }
  ],
+ "objets": {
+  "tuffs": 190,
+  "murets": 20,
+  "blocs_virages": 125,
+  "poteaux": 10,
+  "total": 359,
+  "fichiers": 42,
+  "ecartes": []
+ },
+ "public": 6415,
  "export": {
   "hmin": -0.5,
-  "hmax": 10.425114657182057,
-  "statues_relevees": 56
+  "hmax": 24.75,
+  "statues_relevees": 48,
+  "decals": 7990,
+  "decals_terre": 3366
  },
  "lap_ft": 2587.8,
  "start": {
@@ -314,9 +253,14 @@
    "detail": "0 points hors sol"
   },
   {
-   "name": "hauteur max <= 10,5 ft (tremplins FMX 10 ft)",
+   "name": "bosses <= 25 ft (gros saut rond ZION 2025 24,2 ft)",
    "ok": true,
-   "detail": "9.93 ft"
+   "detail": "24.25 ft"
+  },
+  {
+   "name": "berms <= 10 ft (90° x1,4 comme Saint-Thibéry)",
+   "ok": true,
+   "detail": "9.71 ft"
   },
   {
    "name": "couloir de départ sur le sol",

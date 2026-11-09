@@ -55,25 +55,47 @@ def mx_poly(P):
 
 
 # ---------------------------------------------------------------- terrain
+def render_wide(out, g, prof, u0, w_half_h, w_foot):
+    """bloc dont la coupe en travers suit la butte de ZION 2025 : plein sur le dessus, flancs en cosinus du demi-largeur
+    à mi-hauteur jusqu'au pied (largeurs mesurées)."""
+    L = len(prof) * 0.1; c, s_ = np.cos(g['t']), np.sin(g['t']); half = w_foot / 2 + 2.0
+    pts = np.array([(g['x0'] + uu * c - vv * s_, g['z0'] + uu * s_ + vv * c) for uu in (u0, u0 + L) for vv in (-half, half)])
+    sl, X, Z = G.window(pts[:, 0].min(), pts[:, 0].max(), pts[:, 1].min(), pts[:, 1].max())
+    dx, dz = X - g['x0'], Z - g['z0']; u = dx * c + dz * s_ - u0; v = np.abs(-dx * s_ + dz * c)
+    pu = np.interp(u / 0.1, np.arange(len(prof)), prof, left=0, right=0)
+    a_, b_ = w_half_h / 2 - (w_foot - w_half_h) / 2, w_foot / 2          # plein jusqu'à a_, 0 au pied b_ (1/2 à mi-largeur)
+    lat = np.where(v <= a_, 1.0, np.where(v >= b_, 0.0, 0.5 * (1 + np.cos(np.pi * (v - a_) / (b_ - a_)))))
+    out[sl] = np.maximum(out[sl], pu * lat)
+
+
 def render(path, st):
     jumps = np.zeros((N, N)); whoops = np.zeros((N, N)); berms = np.zeros((N, N)); fmx = np.zeros((N, N))
+    import layouts_sx as LS
     secs = []
     for g in path.segs:
         if g['kind'] == 'S':
             for prof, u0, name in g['sections']:
-                big = 'grande table' in name
-                tw = 55.0 if big else TW                       # visuel : 63 ft de large (dessus ~55 ft + flancs)
-                render_lane_block(G, whoops if 'whoops' in name else jumps, g, prof, u0, tw)
+                render_lane_block(G, whoops if 'whoops' in name else jumps, g, prof, u0, TW)
+                if name == LP.L3_SEC:                          # butte ZION 2025 : sa largeur mesurée (68 ft à mi-hauteur, 110 au pied)
+                    it = [i for i in LS.COMBOS[name]['items'] if 'butte' in i[0]][0]
+                    i0, i1 = int(it[1] / 0.1), int(it[2] / 0.1)
+                    render_wide(jumps, g, prof[i0:i1], u0 + it[1], *LP.Z25_BUTTE_W)
                 secs.append(dict(lane=g['tag'], name=name, u0=round(u0, 1), s0=round(g['s0'] + u0, 1),
-                                 L=round(len(prof) * 0.1, 1), H=round(float(prof.max()), 2), seg_L=round(g['L'], 1)))
+                                 L=round(len(prof) * 0.1, 1), H=round(float(prof.max()), 2), seg_L=round(g['L'], 1),
+                                 items=[(i[0], round(i[1], 1), round(i[2], 1)) for i in LS.COMBOS[name]['items']]))
         elif g.get('berm'):
-            render_berm_stamp(G, berms, g['berm'], g['cx'], g['cz'], turn_mid_angle(g),
-                              ang_scale=berm_ang_scale(g['berm'], g['ang']))
-    k = LP.fmx_kicker(); Lk = len(k) * 0.1
-    for r in LP.fmx_ramps():
-        (x, z), h = r['lip'], r['heading']
-        seg = dict(x0=x - Lk * np.cos(h), z0=z - Lk * np.sin(h), t=h)
-        render_lane_block(G, fmx, seg, k, 0.0, 9.0)
+            # berms : 90° plus hauts (BERM90_GAIN 1,4 de Saint-Thibéry / Saint-Georges), 180° tels que mesurés
+            gain = LP.BERM90_GAIN if abs(abs(g['ang']) - 90) < 1 else 1.0
+            tmp = np.zeros((N, N))
+            sl = render_berm_stamp(G, tmp, g['berm'], g['cx'], g['cz'], turn_mid_angle(g),
+                                   ang_scale=berm_ang_scale(g['berm'], g['ang']))
+            berms[sl] = np.maximum(berms[sl], tmp[sl] * gain)
+    # pieds des bosses arrondis (SOFT_FEET de Saint-Georges : pas de cassure de pente au pied)
+    from scipy.ndimage import gaussian_filter
+    sf = LP.SOFT_FEET
+    for A_ in (jumps, whoops):
+        t_ = np.clip(A_ / sf['h'], 0, 1); w_ = t_ * t_ * (3 - 2 * t_)
+        A_[:] = A_ * w_ + gaussian_filter(A_, sf['sigma'] / S) * (1 - w_)
     REPORT['sections'] = secs
     return jumps, whoops, berms, fmx
 
@@ -104,7 +126,9 @@ def checks(path, st, H, jumps, whoops, berms, fmx, floor_mx):
     ok = inside(pts, floor_mx)
     out.append(("relief entièrement sur le sol de l'arène", bool(ok.all()), "%d points hors sol" % int((~ok).sum())))
     # 4. hauteurs
-    out.append(("hauteur max <= 10,5 ft (tremplins FMX 10 ft)", H.max() <= 10.5, "%.2f ft" % H.max()))
+    hj = float(max(jumps.max(), whoops.max())); hb = float(berms.max())
+    out.append(("bosses <= 25 ft (gros saut rond ZION 2025 24,2 ft)", hj <= 25.0, "%.2f ft" % hj))
+    out.append(("berms <= 10 ft (90° x1,4 comme Saint-Thibéry)", hb <= 10.0, "%.2f ft" % hb))
     # 5. départ : grilles et couloir de départ sur le sol, plat
     from starts import StartRoute
     R = StartRoute(st, LP.N_GATES, LP.GATE_PITCH)
@@ -131,23 +155,10 @@ def export(H, tiles, gates_txt, floor_mx, inside_mx):
     open(os.path.join(OUT, "terrain.hf"), "w", newline="\n").write("11 %.6f %.6f %.6f\n" % (S, hmin, hmax))
     Image.fromarray(raw).save(os.path.join(OUT, "terrain.png"))
     tiles.astype(np.uint8).tofile(os.path.join(OUT, "tilemap"))
-    # tileinfo + textures du sol (blocs JGSX des pistes USLAND SX)
-    ti = open(os.path.join(SX_ASSETS, "tileinfo")).read().replace("@USLAND2026SX1/", "@%s/" % FOLDER)
-    open(os.path.join(OUT, "tileinfo"), "w", newline="\n").write(ti)
-    for d in ("tiles", "roost", "treads"):
-        shutil.copytree(os.path.join(SX_ASSETS, d), os.path.join(OUT, d))
-    for ref in sorted(set(re.findall(r"@%s/(\S+)" % FOLDER, ti))):
-        assert os.path.exists(os.path.join(OUT, ref)), ref
-    # éclairage : intérieur de l'arène ; ombrage du sol = carte de l'arène x pente (Lambert)
-    lighting = open(os.path.join(ARENA, "lighting")).read()
-    open(os.path.join(OUT, "lighting"), "w", newline="\n").write(lighting)
-    sun = [float(v) for v in re.search(r"sun_vector \[([^\]]+)\]", lighting).group(1).split()]
-    lam, _ = lambert_shadow(H, S, [sun[0], sun[1], sun[2]], shadow=False)
-    lam0 = sun[1] / np.linalg.norm(sun)
-    base = np.full((N, N), 222.0)
-    base[inside_mx] = 120.0
-    base[floor_mx] = 200.0
-    sh = np.clip(base * (lam / lam0) ** 1.3, 0, 255).astype(np.uint8)
+    # sol, textures, ciel et éclairage de Saint-Thibéry à l'identique (stt_look.py)
+    import stt_look as SL
+    SL.copy_assets(OUT, FOLDER)
+    sh = SL.shading(H, S, floor_mx)
     ppm(os.path.join(OUT, "shading.ppm"), sh)
     ppm(os.path.join(OUT, "shadingx2.ppm"), (sh // 2).astype(np.uint8))
     # statues de l'arène : même repère (origine OX, OZ), hauteur compensée si une origine tombe sur une bosse
@@ -177,12 +188,45 @@ def export(H, tiles, gates_txt, floor_mx, inside_mx):
             src = "\n".join(fix(l) for l in src.splitlines() if l.strip()) + "\n"
         open(os.path.join(OUT, "variants", f), "w", newline="\n").write(src)
     shutil.copytree(os.path.join(ARENA, "statue"), os.path.join(OUT, "statue"))
+    # tremplins FMX : le modèle acier de Ryan (ramp_50, collision .shp), comme à Saint-Thibéry / Saint-Georges ; le modèle a son
+    # pied à l'origine et va vers son -z local, lèvre à model_len : la lèvre est posée au point du visuel, face à la grande table
+    m_ = LP.FMX_MODEL['model']; src_ = os.path.join(ROOT, "assets", "fmx_ramp_user")
+    for e in (".jm", ".png", "_norm.png", ".shp"):
+        shutil.copy(os.path.join(src_, m_ + e), os.path.join(OUT, "statue", m_ + e))
+    sys.path.insert(0, os.path.join(ROOT, "scripts")); import props_place as PP
+    ramps = []
+    for r in LP.fmx_ramps(PATH):
+        (x, z), h = r['lip'], r['heading']; d = np.array([np.cos(h), np.sin(h)])
+        fx, fz = x - d[0] * LP.FMX_MODEL['model_len'], z - d[1] * LP.FMX_MODEL['model_len']
+        ramps.append("[%.6f 0.000000 %.6f] %.6f @%s/statue/%s.jm @%s/statue/%s.png @%s/statue/%s.shp"
+                     % (fx, fz, PP.statue_ang(-d[0], -d[1]), FOLDER, m_, FOLDER, m_, FOLDER, m_))
+    # étape 3 : objets ZION 2025 + Saint-Georges (objets.py)
+    import objets as OB
+    import layouts_sx as LS_
+    from starts import finish_s
+    ob, gate_model, REPORT['objets'] = OB.build(OUT, FOLDER, H, S, PATH, START, LS_.COMBOS, finish_s(PATH, START, LS_.COMBOS))
+    with open(os.path.join(OUT, "statues"), "a", newline="\n") as f_:
+        f_.write("\n".join(ramps + ob) + "\n")
     shutil.copytree(os.path.join(ARENA, "tex"), os.path.join(OUT, "tex"))
+    gl = gates_txt.split("\n"); i_ = gl.index("startinggate:"); j_ = gl.index("checkpoints:")
+    for k_ in range(i_ + 1, j_):                         # le cadre rouge de Saint-Georges sur chaque grille
+        if gl[k_].strip():
+            gl[k_] = gl[k_].rstrip() + " " + gate_model
+    gates_txt = "\n".join(gl)
     open(os.path.join(OUT, "timing_gates"), "w", newline="\n").write(gates_txt)
     open(os.path.join(OUT, "desc"), "w", newline="\n").write(DESC + "\n")
-    for e in ("decals", "billboards", "flaggers"):
-        open(os.path.join(OUT, e), "w").close()
-    REPORT['export'] = dict(hmin=hmin, hmax=hmax, statues_relevees=nfix)
+    # décals de Saint-Thibéry (terre sur tout le sol, surface du tour, obstacles, virages)
+    import layouts_sx as LS
+    from starts import StartRoute
+    dec, n_dirt = SL.decals(PATH, StartRoute(START, LP.N_GATES, LP.GATE_PITCH), floor_mx, S, FOLDER, LS.COMBOS)
+    open(os.path.join(OUT, "decals"), "w", newline="\n").write("\n".join(dec) + "\n")
+    # étape 4 : public dans les tribunes (silhouettes de Saint-Thibéry), public.py
+    import public as PB
+    bb = PB.build(OUT, FOLDER, LP.arena_to_mx, LP.FT)
+    open(os.path.join(OUT, "billboards"), "w", newline="\n").write("\n".join(bb) + "\n")
+    REPORT['public'] = len(bb)
+    open(os.path.join(OUT, "flaggers"), "w").close()
+    REPORT['export'] = dict(hmin=hmin, hmax=hmax, statues_relevees=nfix, decals=len(dec), decals_terre=n_dirt)
 
 
 def top_view(H, path, st, floor_mx, gates):
@@ -215,7 +259,8 @@ def top_view(H, path, st, floor_mx, gates):
 def main():
     dims = arena_dims()
     floor_mx = mx_poly(dims.floor_outline(1.0))
-    path = LP.paris(); st = LP.start(path)
+    global PATH, START
+    path = LP.paris(); st = LP.start(path); PATH, START = path, st
     jumps, whoops, berms, fmx = render(path, st)
     H = np.maximum.reduce([jumps, whoops, berms, fmx])
     from geo_tools import inside
@@ -231,7 +276,7 @@ def main():
     tiles[t(whoops) > 0.05] = T_WHOOP; tiles[t(berms) > 0.05] = T_BERM
     # portes de chrono (timing.py des pistes SX)
     import layouts_sx as LS
-    LS.COMBOS.clear(); LS.COMBOS.update(LP.COMBOS)
+    pass                                   # sections déjà dans LS.COMBOS (layout_paris.paris)
     from timing import gates
     gt = gates(path, st)
     gates_txt = gt[0]

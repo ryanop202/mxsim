@@ -21,7 +21,7 @@ OBJ = os.path.join(ROOT, "build", "obj")
 TEX = os.path.join(ROOT, "build", "textures")
 OUT = os.path.join(ROOT, "build", "web")
 PREVIEW_MATS = {"ground_plaza": dict(tex="plaza_preview.png"), "ground_floor": dict(tex="floor_preview.png"),
-                "piste": dict(tex="piste_top.png")}          # terrain de la piste Paris 2026 (paris2026/preview_track.py)
+                "piste": dict(tex="piste_top.png", unlit=True)}          # terrain de la piste Paris 2026 (paris2026/preview_track.py)
 
 
 def read_obj(path):
@@ -78,6 +78,21 @@ def main():
         src = os.path.join(TEX, t)
         if os.path.exists(src):
             shutil.copy(src, os.path.join(OUT, "tex", t))
+    # public (billboards de la piste Paris 2026) : sprites dans l'aperçu
+    bbf = os.path.join(ROOT, "..", "tracks", "USLAND2026SupercrossParis", "billboards")
+    crowd = []
+    if os.path.exists(bbf):
+        import re as _re
+        for l in open(bbf):
+            m = _re.match(r"\[([-\d.]+) ([-\d.]+) ([-\d.]+)\] ([-\d.]+) ([-\d.]+) @\S+/billboard/(\S+)", l)
+            if m:
+                x, y, z, h, a, n = float(m.group(1)), float(m.group(2)), float(m.group(3)), float(m.group(4)), float(m.group(5)), m.group(6)
+                crowd.append([(x - 549.0) / 3.28084, y / 3.28084, (z - 593.5) / 3.28084, h / 3.28084, a, n])
+                src_ = os.path.join(os.path.dirname(bbf), "billboard", n)
+                if os.path.exists(src_) and not os.path.exists(os.path.join(OUT, "tex", n)):
+                    shutil.copy(src_, os.path.join(OUT, "tex", n))
+    with open(os.path.join(OUT, "crowd.json"), "w") as f:
+        json.dump(crowd, f)
     with open(os.path.join(OUT, "groups.json"), "w") as f:
         json.dump(groups, f)
     with open(os.path.join(OUT, "index.html"), "w", encoding="utf-8") as f:
@@ -102,8 +117,9 @@ document.body.appendChild(R.domElement);
 const S = new THREE.Scene(); S.background = new THREE.Color(0x1a1c24);
 const C = new THREE.PerspectiveCamera(50, innerWidth/innerHeight, 0.5, 3000);
 const O = new OrbitControls(C, R.domElement);
-S.add(new THREE.HemisphereLight(0xffffff, 0x444450, 1.6));
-const sun = new THREE.DirectionalLight(0xffffff, 1.4); sun.position.set(-40, 120, 30); S.add(sun);
+// éclairage de Saint-Thibéry (lighting : soleil (-0.6528, 0.3590, 0.6671) couleur 0.85, ambiance 0.30 / 0.31 / 0.36)
+S.add(new THREE.AmbientLight(new THREE.Color(0.30, 0.31, 0.36), 2.2));
+const sun = new THREE.DirectionalLight(new THREE.Color(0.85, 0.85, 0.80), 2.4); sun.position.set(-65.28, 35.90, -66.71); S.add(sun);
 const L = new THREE.TextureLoader(), cache = {};
 function tex(n){ if(!cache[n]){ const t=L.load('tex/'+n); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.colorSpace=THREE.SRGBColorSpace; t.anisotropy=8; cache[n]=t;} return cache[n]; }
 const [G, buf] = await Promise.all([fetch('groups.json').then(r=>r.json()), fetch('data.bin').then(r=>r.arrayBuffer())]);
@@ -118,6 +134,10 @@ for (const g of G){
   const m = g.unlit ? new THREE.MeshBasicMaterial(o) : new THREE.MeshLambertMaterial(o);
   const mesh = new THREE.Mesh(geo, m); mesh.name = g.part + '/' + g.mat; S.add(mesh);
 }
+// public : sprites (billboards MX) - x local = (x_mx - 549) / ft ; z three = (z_mx - 593.5) / ft
+try { const CR = await fetch('crowd.json').then(r => r.json()); const mats = {};
+  for (const [x, y, z, h, a, n] of CR) { if (!mats[n]) { const t = tex(n); t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; mats[n] = new THREE.SpriteMaterial({map: t, alphaTest: 0.5}); }
+    const sp = new THREE.Sprite(mats[n]); sp.center.set(0.5, 0); sp.scale.set(h * a, h, 1); sp.position.set(x, y, z); sp.name = 'public/crowd'; S.add(sp); } } catch (e) {}
 // vues (x, y haut, z = -y local), en mètres ; K = agrandissement en plan de l'arène
 const K = __K__;
 const V = {

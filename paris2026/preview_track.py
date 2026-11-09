@@ -50,12 +50,19 @@ k = 0.5
 xs2 = np.arange(x0, x1, k); zs2 = np.arange(z0, z1, k)
 J2 = np.clip(np.round(xs2 / s).astype(int), 0, H.shape[1] - 1); I2 = np.clip(np.round(zs2 / s).astype(int), 0, H.shape[0] - 1)
 h2 = np.maximum(H[np.ix_(I2, J2)], 0.0)
-lam, _ = lambert_shadow(h2, k, [-0.4, 0.8, 0.45], shadow=False)
-g = np.clip(0.55 + 0.6 * lam, 0, 1.2)
-col = np.array([150, 112, 78], float) * g[..., None]
-col[h2 > 0.05] *= 0.92
-rng = np.random.default_rng(3)
-col *= (1 + 0.04 * rng.standard_normal(h2.shape))[..., None]
+# v2 (étape 2) : la terre de Saint-Thibéry (décal 'track', 26 ft) x l'ombrage exporté (shading.ppm), comme dans le jeu
+NN = H.shape[0]
+shd = np.fromfile(os.path.join(T, "shading.ppm"), dtype=np.uint8, offset=len(b"P6\n%d %d\n255\n" % (NN, NN))).reshape(NN, NN, 3)[:, :, 0]
+sh2 = shd[np.ix_(I2, J2)].astype(float)
+tile_px = int(round(26.0 / k))
+tra = np.asarray(Image.open(os.path.join(T, "ext", "USLAND2026SX1", "decal", "track.png")).convert("RGBA").resize((tile_px, tile_px), Image.LANCZOS), float)
+dp = int(round(8.0 / k))                                     # terre de base (dirt.ppm), répétée tous les ~8 ft
+base_t = np.asarray(Image.open(os.path.join(T, "ext", "USLAND2026SX1", "tiles", "dirt.ppm")).convert("RGB").resize((dp, dp), Image.LANCZOS), float)
+rep = lambda a, n: np.tile(a, (int(np.ceil(h2.shape[0] / n)) + 1, int(np.ceil(h2.shape[1] / n)) + 1, 1))[:h2.shape[0], :h2.shape[1]]
+base = rep(base_t, dp)
+dec_ = rep(tra, tile_px); al = dec_[..., 3:4] / 255.0
+dirt = base * (1 - al) + dec_[..., :3] * al
+col = dirt * (sh2 / 175.0)[..., None]
 im = Image.fromarray(np.clip(col, 0, 255).astype(np.uint8)).resize((2048, 2048), Image.LANCZOS)
 im.save(os.path.join(SB, "textures", "piste_top.png"))
 print("terrain d'aperçu :", P.shape[0], "sommets,", F.shape[0], "triangles")

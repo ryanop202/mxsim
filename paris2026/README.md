@@ -71,3 +71,21 @@ py -3.15 -I paris2026/build_paris.py
 - Coin nord-est (sous le logo) et couloir LR (faisceaux) : lecture à confirmer.
 - Grande table de L3 : 97 ft, aucune unité JGSX aussi longue (max 86,7 ft, `Custom_g29_1`).
 - Hauteurs : non mesurables sur des visuels ; elles viennent des unités JGSX choisies.
+
+## Refonte v2 (retours de Ryan sur la v1 : « bosses carrées, terrain / stade / rampes nuls »)
+
+- **Bosses** : formes déjà validées sur Saint-Thibéry / Saint-Georges (singles Arlington redimensionnés, table 6,6 ft, whoops
+  x1,15, `rounded()` + pieds lissés, berms 90° x1,4), chaque obstacle au centre de celui du visuel (`layout_paris.from_render`).
+- **Saut d'arrivée et saut du milieu** : repris TELS QUELS de ZION.2025.SupercrossParis (archive de Ryan, mesures dans
+  `data/zion_p25_profils.json`) : triple 10,0 / 6,0 / 11,2 ft (arrivée sur le 1er) ; appel 10 ft + butte ronde 24,2 ft
+  (68 ft à mi-hauteur, 90 ft au pied au lieu de 110 faute de place). Superposition : `apercu/zion2025_vs_paris.png`.
+- **Table après les whoops** : 6,6 ft, à 35 ft des whoops (la 2e petite bosse de fin de couloir retirée pour la place).
+- **Couloir Est** : une longue bosse ondulée (forme créée d'après la vue de côté) puis 2 bosses.
+- **Sol et éclairage** : ceux de Saint-Thibéry à l'identique (`stt_look.py` : tileinfo, terre, ~8 000 décals, ombrage, lighting, ciel).
+- **Objets** (`objets.py`) : tuff blocks à logos, gros blocs de virage, banderole FINISH, structure de départ, arches Monster,
+  paddock de ZION 2025 ; grilles de départ, cadres qui tombent, poteaux ronds, cage du drapeau de Saint-Georges ; tremplins
+  acier ramp_50 de Ryan ; murets blancs le long des whoops. Tuff blocks à retoucher par Ryan dans l'éditeur.
+- **Stade** : public de Saint-Thibéry dans les tribunes (`public.py`, 6 415 silhouettes assises).
+- Le build a besoin de l'archive ZION extraite dans `refs/zion25_full` (local, pas sur GitHub). Fichiers ZION copiés dans la
+  piste : usage privé ; pour une version publique, demander l'accord de leur auteur.
+- Contrôles : 7 / 7, `validate_mx.py` 0 problème, 0 référence manquante. **Non testé en jeu.**
