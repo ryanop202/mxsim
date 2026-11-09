@@ -1,0 +1,12 @@
+sun_vector [ -0.6528	0.3590	0.6671 ]
+sun_color [ 1.05 1.00 0.82 ]
+ambient [ 0.27 0.29 0.42 ]
+fog [ 0.0 0.0 0.0 ] 0.0015
+sky_n @USLAND2026SaintGeorgesbyBazo/sky/sky-n.png
+sky_e @USLAND2026SaintGeorgesbyBazo/sky/sky-e.png
+sky_s @USLAND2026SaintGeorgesbyBazo/sky/sky-s.png
+sky_w @USLAND2026SaintGeorgesbyBazo/sky/sky-w.png
+sky_u @USLAND2026SaintGeorgesbyBazo/sky/sky-u.png
+sky_env @USLAND2026SaintGeorgesbyBazo/sky/sky-env.png
+flare_vector [ -0.30	0.90	0.30 ]
+dynamic_lighting 1

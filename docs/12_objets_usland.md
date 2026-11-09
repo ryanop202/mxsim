@@ -30,7 +30,10 @@ Ce qui est sûr vient des fichiers des références (doc 01) ; ce qui est *(à v
 - 1 unité = 1 pied (ft). y vers le haut. Dans un modèle : **+z = l'avant** (véhicule) ou le sens de la course (arche,
   portique, grates), x = le côté.
 - Ligne `statues` : `[x y z] angle @USLAND2026SX1/statue/<modèle>.jm @USLAND2026SX1/statue/<texture>.png null`.
-  L'axe z local va vers (−sin a, −cos a) : `a = atan2(−fx, −fz)` (`props_place.ang_of`).
+  **L'axe +z local va vers (sin a, cos a)** : `a = atan2(fx, fz)` (`props_place.statue_ang`), **vu en jeu (v12b)**, l'inverse de la
+  convention des grilles de départ (`timing_gates`, pilote vers (−sin a, −cos a)). L'axe +x local va vers (cos a, −sin a).
+- Le jeu pose l'objet sur le sol sous son **origine** : la mettre sur du plat (arche : au pied d'un poteau, sinon elle flottait
+  de toute la hauteur du saut).
 - `y` = sol local sous l'objet (le plus bas sous ses appuis ; l'objet descend sous le sol si besoin, jamais en l'air).
 
 **Format `.jm` (JM1, texte)**
@@ -102,7 +105,8 @@ grillage et tourné pour que son entrée parte vers l'extérieur (sens de l'axe 
 | repère d'arrivée (aucun objet) | arche FINISH | posé |
 | — | portique de départ + grates | posé |
 | `gate01` (grilles de départ) | grille USLAND (plaque noire + U, tube rouge) | posé |
-| `watertruck`, `watertank`, `dozer`, `bobcat`, `matrixa2` + `ezup` | à faire ou à retirer | à décider |
+| `watertruck`, `watertank`, `matrixa2` | pick-ups USLAND + vélo (v12b) | posé |
+| `dozer`, `bobcat`, `ezup` | retirés (v12b) | fait |
 | grillages, poteaux d'éclairage, cônes, decals, sol, ciel | à faire pour une version publique | à faire |
 
 ## 3. Règles de design (retours de l'utilisateur, à respecter pour tout nouvel objet)
@@ -157,3 +161,37 @@ Ces règles viennent des retours sur la v12. Les relire **avant** de dessiner un
 **Méthode**
 - Toujours un **aperçu 3D** avant de mettre en jeu, vérifié soi-même dans le navigateur (onglet par onglet) avant de l'envoyer.
 - Poser des questions avant un gros changement ; demander les images de référence (une vue « fil de fer » aide beaucoup).
+
+## v12b — tente et camion-citerne
+
+- Tente JGSX (`ezup`) → `tent_usland` (10 x 10 ft, toit bleu marine uni, bandeau : USLAND devant / derrière, RBT et FOX sur
+  les côtés). Toit et bandeau du même bleu (le dessous du toit est décalé de 0,06 ft pour éviter le scintillement).
+- Camion-citerne JGSX (`watertruck`) **gardé** (demandé) ; l'icône U est un petit modèle à nous (`watertruck_u`,
+  `scripts/sticker_usland.py`) moulé sur le haut des deux flancs de la citerne, posé avec la même position / le même angle.
+- Matrix, bulldozer, bobcat retirés ; citerne (`watertank`) → pick-up USLAND + vélo.
+
+## v13b — grates reculées, torches sur l'arche
+
+- **Grates** : vu en jeu (capture), la grille tombe **vers l'avant** (côté piste) autour de sa charnière. La grate commence
+  donc **0,2 ft** derrière la charnière, pile sous la moto (un essai à 2,5 ft laissait un trou). Longueur 6,8 ft (s'arrête à la roue arrière). Forme : partie étroite courte
+  (1,8 ft) devant, large 2,4 x 2,8 ft au milieu (sous les repose-pieds), étroite longue (2,2 ft) derrière. Sol plat sous les 66 grates.
+- **Torches** : un petit bâton de flamme (socle noir, tige alu, coupelle noire, 2,85 ft) sur la poutre au-dessus de chaque
+  poteau de l'arche FINISH, dans le modèle de l'arche (un objet posé seul serait remis au sol par le jeu). Les flammes de
+  `pyro_chalk.py` partent du haut des torches, **seulement quand le vainqueur passe l'arrivée**.
+
+## v13b — stand de bannières, angles
+
+- **Stand** (`props_place.stand_banners`) : ligne de 8 bannières à 29 ft devant la remorque, **centrée sur le tapis rouge**
+  (ouverture de 12,4 ft), les 4 dans le même ordre de chaque côté, + **2 bannières en retour** (RBT puis FOX) à chaque bout,
+  vers la remorque : 12 bannières par stand. Contrôlé : à ≥ 92 ft des lignes de course, rien à moins de 9 ft, sol plat.
+- **Angles** : tous nos objets sont écrits avec un angle entre −π et π (les vélos à a + π = 4,7 / 6,27 étaient de travers
+  dans certains pick-ups en jeu).
+
+## v13b — arche ancrée au milieu (vu en jeu : arche SX2 décalée d'un demi-portique)
+
+- En jeu, l'arche SX2 (origine au pied d'un poteau) apparaissait décalée sur le côté, un poteau sur le saut, alors que
+  l'aperçu 3D était juste. C'était le seul de nos modèles avec l'origine hors du milieu.
+- Maintenant (`props_place.centred_arch`) : un modèle par piste `finish_arch_SXn.jm` (texture `finish_arch.png`), origine au
+  **milieu du couloir sur la ligne d'arrivée**, modèle symétrique autour, **abaissé de la hauteur du sol à cet endroit** (crête
+  du saut : SX1 8,8 ft, SX2 6,0 ft, SX3 8,8 ft) puisque le jeu pose l'objet sur le sol sous son origine. Pieds des poteaux
+  toujours sur le plat à côté du saut. Même rendu dans l'aperçu (vérifié : x 652–702 sur SX2). À vérifier en jeu.

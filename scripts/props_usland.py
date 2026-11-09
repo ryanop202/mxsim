@@ -26,7 +26,7 @@ TEAM = dict(riders=['B.PIGOIS', 'R.OPPLIGER', 'M.SONNERAT', 'E.VIDALENC'], coach
 NAVY, RED, WHITE = (22, 27, 58), (225, 30, 60), (250, 250, 250)
 GOLD = (246, 190, 0)
 ARCH_X = 22.0          # pillar centre, ft from the lane centre: past the 4 ft side walls of the finish jumps (flat ground on SX1-3)
-GRATE = dict(parts=[(1.5, 3.2), (2.7, 3.8), (1.5, 2.4)], gap=0.4, t=0.06)   # cross shape (width, length) ft, from the gate backwards
+GRATE = dict(parts=[(1.5, 1.8), (2.4, 2.8), (1.5, 2.2)], gap=0.2, t=0.06)   # cross shape (width, length) ft, from the gate backwards; v13b: seen in game, the gate falls FORWARD (away from the riders): the grate starts right behind the hinge (0.2 ft), under the whole bike ; v13b: short narrow part at the front (gate), long one at the back (asked) ; v13b: shorter (ended 2.5 ft behind the bike) -> 6.8 ft, ends at the rear tyre; middle part 2.7 x 3.8 -> 2.4 x 2.8 under the pegs
 
 # ------------------------------------------------------------------ mesh builder
 class Mesh:
@@ -549,14 +549,14 @@ def pickup_texture():
         d.line([Z(-3.45), Y(2.05), Z(4.0), Y(2.05)], fill=(52, 52, 56), width=3)
         for z in (-0.4, 3.4): d.rounded_rectangle([Z(z), Y(4.35), Z(z + 0.55), Y(4.22)], radius=3, fill=(58, 58, 62))  # handles
         d.line([0, Y(3.95), W, Y(3.95)], fill=(38, 38, 42), width=2)                                          # body crease
-        gloss(im, Y(4.75), Y(4.05), 38); gloss(im, Y(3.6), Y(3.1), 18)                                        # glossy black paint reflections
+        gloss(im, Y(4.75), Y(4.05), 18); gloss(im, Y(3.6), Y(3.1), 8)                                        # glossy black paint reflections
         d.rectangle([0, Y(2.05), W, H], fill=(14, 14, 15))                                                     # rocker (black plastic)
         _arch_cut(d, W, H, *BODY_Z, *BODY_Y, PK['wf'], 2.0)
     img.paste(panel((BODY_Z[1] - BODY_Z[0], BODY_Y[1] - BODY_Y[0]), 1008, body_side).resize((1008, 240), Image.LANCZOS), (8, 8))
     def bed_side(im):
         d = ImageDraw.Draw(im); W, H = im.size; d.rectangle([0, 0, W, H], fill=PK_BODY)
         d.line([0, H - (3.95 - BED_Y[0]) / (BED_Y[1] - BED_Y[0]) * H, W, H - (3.95 - BED_Y[0]) / (BED_Y[1] - BED_Y[0]) * H], fill=(38, 38, 42), width=2)
-        gloss(im, H * 0.05, H * 0.30, 38); gloss(im, H * 0.42, H * 0.55, 18)
+        gloss(im, H * 0.05, H * 0.30, 18); gloss(im, H * 0.42, H * 0.55, 8)
         _arch_cut(d, W, H, *BED_Z, *BED_Y, PK['wr'], 2.0)
     img.paste(panel((BED_Z[1] - BED_Z[0], BED_Y[1] - BED_Y[0]), 504, bed_side).resize((504, 160), Image.LANCZOS), (8, 264))
     def windows(im):                                                       # side glass strip, z from WIN_Z[0] (left)
@@ -598,7 +598,7 @@ def pickup_texture():
     def paint_top(im):                                                     # hood / roof: glossy black paint, soft reflection
         d = ImageDraw.Draw(im); W, H = im.size; d.rectangle([0, 0, W, H], fill=PK_BODY)
         a = np.array(im).astype(float); x = np.linspace(-1, 1, W)[None, :, None]; y = np.linspace(0, 1, H)[:, None, None]
-        a += 34 * np.exp(-(x / 0.35) ** 2) * (0.6 + 0.4 * np.cos(y * 6.0)) + 10 * np.exp(-((x - 0.7) / 0.12) ** 2)
+        a += 16 * np.exp(-(x / 0.35) ** 2) * (0.6 + 0.4 * np.cos(y * 6.0)) + 5 * np.exp(-((x - 0.7) / 0.12) ** 2)
         im.paste(Image.fromarray(np.clip(a, 0, 255).astype(np.uint8)))
     img.paste(panel((6.6, 14.0), 232, paint_top, ao=0).resize((232, 170), Image.LANCZOS), (280, 600))
     rim_face(img, (8, 520, 264, 776), metal=(36, 36, 39), dark=(12, 12, 13), spokes=6)
@@ -830,6 +830,7 @@ def sign_pair(m, name, xc, yb, width, gap, thick, black, metal, step=1.6):
 ARCH_CLEAR = 30.0      # beam bottom above the statue base
 AP = 2.1               # pillar half size (4.2 ft square)
 BEAM = (30.0, 37.5)    # beam y range
+TORCH = 2.85          # v13b: flame torch on the beam above each pillar (base 0.3 + stick + cup), flames start at its top
 BLK, SEAM, GREY = (14, 15, 17), (44, 46, 50), (150, 154, 160)
 
 def _rot(im, draw, box, angle=90):
@@ -939,6 +940,12 @@ def arch_model(pal):
     m.rbox(-X - AP - 0.6, X + AP + 0.6, BEAM[0], BEAM[1], -2.4, 2.4, 0.5, 0,
            {'-z': P['beam'], '+z': P['beam'], '*': P['black']}, P['black'])
     sign_pair(m, 'arch_sign', 0.0, BEAM[1] - 0.05, 22.0, 1.6, 0.3, P['black'], P['metal'])   # two cut plates (front / back) tied by rods, on the beam
+    for s in (-1, 1):                                                         # v13b: flame torches on the beam, above each pillar
+        cx, y = s * X, BEAM[1]                                                # (the finish flames of pyro_chalk.py come out of them)
+        m.rbox(cx - 0.45, cx + 0.45, y, y + 0.3, -0.45, 0.45, 0.15, 1, {'*': P['black']}, P['black'])                 # base plate
+        m.rbox(cx - 0.22, cx + 0.22, y + 0.3, y + TORCH - 0.35, -0.22, 0.22, 0.2, 1, {'*': P['metal']}, P['metal'])   # stick
+        m.rbox(cx - 0.36, cx + 0.36, y + TORCH - 0.35, y + TORCH, -0.36, 0.36, 0.3, 1, {'*': P['black']}, P['black'])  # nozzle cup
+    for i, v in enumerate(m.V): m.V[i] = (v[0] + ARCH_X,) + tuple(v[1:])            # v12b: origin = foot of the -x pillar (flat ground)
     return m
 
 
@@ -1073,16 +1080,17 @@ def grate_outline():
 def grate_texture():
     img = Image.new('RGB', (1024, 1024), (110, 86, 60)); d = ImageDraw.Draw(img)
     steel, edge, hole = (178, 182, 186), (206, 209, 213), (92, 72, 52)
-    poly, zend = grate_outline(); wmax = max(w for w, _ in GRATE['parts']); L = -zend
+    poly, zend = grate_outline(); wmax = max(w for w, _ in GRATE['parts']); L = -zend - GRATE['gap']   # sheet only (not the gap)
     x0, y0 = 8, 8; x1, y1 = x0 + int(wmax * PXF), y0 + int(L * PXF)
     d.rectangle([x0, y0, x1, y1], fill=steel); cw, chh = 13, 8                 # small diamonds (expanded metal), one continuous sheet
     for j, y in enumerate(np.arange(y0 + 2, y1 - 2, chh / 2)):
         off = cw / 2 * (j % 2)
         for xx in np.arange(x0 + 2 + off - cw, x1, cw):
             d.polygon([(xx + 2, y + chh / 2), (xx + cw / 2, y + 1.2), (xx + cw - 2, y + chh / 2), (xx + cw / 2, y + chh - 1.2)], fill=hole)
-    P_ = [(x0 + (x + wmax / 2) * PXF, y0 + (-zz) * PXF) for x, zz in poly]
+    P_ = [(x0 + (x + wmax / 2) * PXF, y0 + (-zz - GRATE['gap']) * PXF) for x, zz in poly]
     d.line(P_ + [P_[0]], fill=edge, width=9, joint='curve')                    # flat border following the cut outline
     pal = palette(img, ['steel', 'edge', 'dark'], [steel, edge, (70, 70, 72)])
+    assert y1 < 1024 - 128, 'grate sheet runs into the palette squares'
     pal.update(top=(x0, y0, x1, y1), wmax=wmax, L=L)
     return img, pal
 
@@ -1090,7 +1098,7 @@ def grate_model(pal):
     """one grate per gate, cut from one sheet (cross outline), local z = riding direction, gate at z = 0, runs backwards."""
     m = Mesh(1024, 1024); P = pal; t = GRATE['t']; poly, zend = grate_outline()
     x0, y0, x1, y1 = P['top']; wmax, L = P['wmax'], P['L']
-    uv = lambda x, z: m.uv_px(x0 + (x + wmax / 2) / wmax * (x1 - x0), y0 + (-z) / L * (y1 - y0))
+    uv = lambda x, z: m.uv_px(x0 + (x + wmax / 2) / wmax * (x1 - x0), y0 + (-z - GRATE['gap']) / L * (y1 - y0))   # v13b: from the sheet front
     tris = _ear_clip(poly); ed = m.uv_px(*P['edge'][1])
     for i, j, k in tris:
         m.tri_fan([np.array([poly[q][0], t, poly[q][1]]) for q in (i, j, k)], np.array([0, 1.0, 0]), [uv(*poly[q]) for q in (i, j, k)])
@@ -1145,8 +1153,10 @@ def gate_model(pal):
         for i, j, k in _ear_clip(poly):
             pts = [np.array([poly[q][0], poly[q][1], zz]) for q in (i, j, k)]
             # -z face: viewer's right is -x ; +z face: +x
-            uv = [m.uv_px(px0 + (0.5 + poly[q][0] / (2 * hw)) * (px1 - px0), py1 - (poly[q][1] - yh) / (top - yh) * (py1 - py0))
-                  for q in (i, j, k)] if nz > 0 else [bl] * 3                         # logo on the outer (track) side only
+            # v13b: logo on the -z face = the face that is UP once the gate has fallen (seen in game: the gate falls forward,
+            # the old +z logo face ended up against the ground). Read from behind the gate, top of the logo at the gate top.
+            uv = [m.uv_px(px0 + (0.5 - poly[q][0] / (2 * hw)) * (px1 - px0), py1 - (poly[q][1] - yh) / (top - yh) * (py1 - py0))
+                  for q in (i, j, k)] if nz < 0 else [bl] * 3
             m.tri_fan(pts, np.array([0, 0, nz]), uv)
     n = len(poly)
     for q in range(n):
@@ -1330,6 +1340,66 @@ def bike_model(pal):
     return m
 
 
+# ------------------------------------------------------------------ pop-up tent (EZ-up type, replaces the JGSX ezup)
+# 10 x 10 ft, toit en pyramide bleu marine USLAND, bandeau (0,8 ft) tout autour : USLAND devant et derrière, RBT et FOX sur
+# les côtés (un logo par face, centré, blanc). Pieds alu carrés avec lests, ciseaux sous le bandeau. Pas de collision.
+TENT = dict(half=5.0, eave=7.0, peak=9.6, val=0.8)
+ROOF = NAVY           # roof and valance: same navy
+
+def tent_texture():
+    img = Image.new('RGB', (1024, 1024), NAVY)
+    H_, V_ = TENT['half'], TENT['val']
+    for k, nm in enumerate(('USLAND', 'RBT', 'FOX')):                       # valance strips (10 x 0.8 ft each)
+        def val(im, nm=nm):
+            d = ImageDraw.Draw(im); W, H = im.size; d.rectangle([0, 0, W, H], fill=NAVY)
+            d.rectangle([0, H - 6, W, H], fill=RED)
+            box = (W * 0.25, H * 0.16, W * 0.75, H * 0.80)
+            if nm == 'USLAND': paste_logo(im, box, WHITE)
+            else: logo(im, nm, box, on='dark')
+        img.paste(panel((2 * H_, V_), 1008, val, ao=0).resize((1008, 96), Image.LANCZOS), (8, 8 + k * 104))
+    def roof(im):                                                           # roof panel: plain navy (as seen and approved, v12b)
+        d = ImageDraw.Draw(im); W, H = im.size; d.rectangle([0, 0, W, H], fill=ROOF)
+    img.paste(panel((10, 10), 400, roof, ao=0).resize((400, 400), Image.LANCZOS), (8, 330))
+    def plain(im):
+        d = ImageDraw.Draw(im); W, H = im.size; d.rectangle([0, 0, W, H], fill=ROOF)
+    img.paste(panel((10, 10), 400, plain, ao=0).resize((400, 400), Image.LANCZOS), (420, 330))
+    pal = palette(img, ['navy', 'alu', 'dark', 'red'], [NAVY, (190, 193, 198), (22, 22, 24), RED])
+    pal.update(v_usland=('r', (8, 8, 1016, 104)), v_rbt=('r', (8, 112, 1016, 208)), v_fox=('r', (8, 216, 1016, 312)),
+               roof_logo=(8, 330, 408, 730), roof_plain=(420, 330, 820, 730))
+    return img, pal
+
+def tent_model(pal):
+    """local +z = front of the tent (USLAND side), y up, origin at the centre of the footprint on the ground."""
+    m = Mesh(1024, 1024); P = pal; h, e, pk, v = TENT['half'], TENT['eave'], TENT['peak'], TENT['val']
+    for sx in (-1, 1):                                                       # legs (telescopic: thicker lower part) + weights
+        for sz in (-1, 1):
+            x, z = sx * (h - 0.1), sz * (h - 0.1)
+            m.rbox(x - 0.09, x + 0.09, 0.0, 3.6, z - 0.09, z + 0.09, 0.03, 1, {'*': P['alu']}, P['alu'])
+            m.rbox(x - 0.07, x + 0.07, 3.6, e, z - 0.07, z + 0.07, 0.025, 1, {'*': P['alu']}, P['alu'])
+            m.rbox(x - 0.45, x + 0.45, 0.0, 0.25, z - 0.45, z + 0.45, 0.1, 1, {'*': P['dark']}, P['dark'])
+    C = [(-h + 0.1, -h + 0.1), (h - 0.1, -h + 0.1), (h - 0.1, h - 0.1), (-h + 0.1, h - 0.1)]
+    for i in range(4):                                                       # scissor truss under the valance
+        (ax_, az), (bx, bz) = C[i], C[(i + 1) % 4]
+        m.tube((ax_, e - v + 0.05, az), (bx, e - 0.05, bz), 0.035, P['alu']); m.tube((ax_, e - 0.05, az), (bx, e - v + 0.05, bz), 0.035, P['alu'])
+    # valance: 4 printed strips outside the frame (USLAND front + back, RBT left, FOX right), readable from outside
+    m.box(-h, h, e - v, e, h, h + 0.03, {'+z': P['v_usland'], '-z': P['navy'], '*': P['navy']})
+    m.box(-h, h, e - v, e, -h - 0.03, -h, {'-z': P['v_usland'], '+z': P['navy'], '*': P['navy']})
+    m.box(-h - 0.03, -h, e - v, e, -h, h, {'-x': P['v_rbt'], '+x': P['navy'], '*': P['navy']})
+    m.box(h, h + 0.03, e - v, e, -h, h, {'+x': P['v_fox'], '-x': P['navy'], '*': P['navy']})
+    # pyramid roof, slightly overhanging; front and back panels carry the U icon
+    o = 0.15; apex = np.array([0.0, pk, 0.0])
+    corners = [np.array([-h - o, e, h + o]), np.array([h + o, e, h + o]), np.array([h + o, e, -h - o]), np.array([-h - o, e, -h - o])]
+    for i in range(4):
+        a_, b_ = corners[i], corners[(i + 1) % 4]; N = np.cross(b_ - a_, apex - a_); N /= np.linalg.norm(N)
+        if N[1] < 0: N = -N
+        rx0, ry0, rx1, ry1 = P['roof_logo'] if i in (0, 2) else P['roof_plain']
+        uv = [m.uv_px(rx0, ry1), m.uv_px(rx1, ry1), m.uv_px((rx0 + rx1) / 2, ry0)]
+        m.tri_fan([a_, b_, apex], N, uv)
+        dn = np.array([0.0, 0.06, 0.0])                                     # underside 0.06 ft lower: no z-fighting with the roof
+        m.tri_fan([b_ - dn, a_ - dn, apex - dn], -N, [m.uv_px(*P['navy'][1])] * 3)
+    return m
+
+
 # ------------------------------------------------------------------ track banners (on the inner side of the fences)
 BANNER_FT = (12.0, 3.0, 0.6)    # width, height, bottom above the ground
 BANNERS = ['ICON', 'RBT', 'FOX', 'USLAND']          # USLAND at the far end, never next to the U icon
@@ -1350,7 +1420,7 @@ def banner_model(pal):
     return m
 
 # ------------------------------------------------------------------ specs (docs/12_objets_usland.md) : contrôlés à chaque génération
-BUDGET = {'hospitality_usland': 8000, 'pickup_usland': 6000, 'finish_arch': 3000, 'start_gantry': 12000, 'start_grate': 200, 'start_gate': 1500, 'bike_trainer': 8000, 'banner': 100}
+BUDGET = {'tent_usland': 2500, 'hospitality_usland': 8000, 'pickup_usland': 6000, 'finish_arch': 3000, 'start_gantry': 12000, 'start_grate': 200, 'start_gate': 1500, 'bike_trainer': 8000, 'banner': 100}
 def check_specs(outd):
     """JM + PNG checks: triangle budget, indices, UV in [0, 1], unit normals, texture size (power of two, <= 2048, RGB),
     model sizes. Returns the rows printed by build(); raises on any failure."""
@@ -1373,7 +1443,7 @@ def check_specs(outd):
     return rows
 
 # grain only on matte materials (raw steel, fabric covers). Paint, glass, chrome, printed banners stay clean.
-MATTE = {'start_grate': dict(grain=2.5, mottle=0.05), 'start_gate': dict(grain=1.0, mottle=0.02),
+MATTE = {'tent_usland': dict(grain=1.2, mottle=0.03), 'start_grate': dict(grain=2.5, mottle=0.05), 'start_gate': dict(grain=1.0, mottle=0.02),
          'start_gantry': dict(grain=1.2, mottle=0.025), 'finish_arch': dict(grain=1.0, mottle=0.025)}   # light: barely visible
 def weather(img, seed=7, grain=4.0, mottle=0.06):
     """realistic surface: fine grain + large soft mottling (dust, wear). Palette squares are kept flat."""
@@ -1385,10 +1455,11 @@ def weather(img, seed=7, grain=4.0, mottle=0.06):
     return Image.fromarray(np.clip(a, 0, 255).astype(np.uint8))
 
 # materials: glossy paint / glass / carbon vs matte steel, fabric, rubber. spec = (base level, {palette name: level})
-MATERIAL = {'hospitality_usland': (50, 1, 1, 1, 1), 'pickup_usland': (50, 1, 1, 1, 1), 'bike_trainer': (50, 1, 1, 1, 1),
+MATERIAL = {'tent_usland': (4, 0.3, 0.3, 0.3, 0.3), 'hospitality_usland': (50, 1, 1, 1, 1), 'pickup_usland': (24, 0.45, 0.6, 0.6, 0.6),   # v12b: less shiny (seen in game)
+             'bike_trainer': (50, 1, 1, 1, 1),
             'start_gate': (16, 1, 0.35, 0.35, 0.35), 'start_grate': (16, 0.6, 0.35, 0.35, 0.35), 'finish_arch': (6, 0.5, 0.3, 0.3, 0.3),
             'start_gantry': (5, 0.5, 0.3, 0.3, 0.3), 'banner': (0, 0, 0, 0, 0)}
-SPEC = {'pickup_usland': (215, {'tyre': 10, 'plastic': 25, 'dark': 30, 'bed': 15, 'hook': 60}),
+SPEC = {'pickup_usland': (120, {'tyre': 10, 'plastic': 25, 'dark': 30, 'bed': 15, 'hook': 60}),
         'hospitality_usland': (150, {'tyre': 10, 'rope': 20, 'char': 40, 'steel': 90}),
         'bike_trainer': (170, {'tyre': 10, 'black': 30, 'tan': 20, 'grey': 40}),
         'start_gate': (110, {'black': 50})}
@@ -1404,7 +1475,7 @@ def spec_map(name, img, pal):
 def build(outd=OUTD):
     os.makedirs(outd, exist_ok=True); info = {}
     for name, tex, model in (('hospitality_usland', hospitality_texture, hospitality_model), ('pickup_usland', pickup_texture, pickup_model),
-                             ('finish_arch', arch_texture, arch_model), ('start_grate', grate_texture, grate_model), ('start_gate', gate_texture, gate_model), ('bike_trainer', bike_texture, bike_model),
+                             ('finish_arch', arch_texture, arch_model), ('start_grate', grate_texture, grate_model), ('start_gate', gate_texture, gate_model), ('bike_trainer', bike_texture, bike_model), ('tent_usland', tent_texture, tent_model),
                              ('start_gantry', gantry_texture, gantry_model)):
         img, pal = tex(); (weather(img, **MATTE[name]) if name in MATTE else img).save(f'{outd}/{name}.png', optimize=True)
         if name in SPEC: spec_map(name, img, pal).save(f'{outd}/{name}_spec.png', optimize=True)
