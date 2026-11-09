@@ -135,7 +135,7 @@ def write_track(scene, root, log=print):
     _lighting(out)
     _gates(out)
     with open(os.path.join(out, "desc"), "w", newline="\n") as f:
-        f.write("Paris La Defense Arena - architecture (phase 1, sans piste)\n")
+        f.write("USLAND Supercross Paris 2026 - Paris La Defense Arena (sans piste)\n")
     for empty in ("decals", "billboards"):
         open(os.path.join(out, empty), "w").close()
     stats["folder"] = out

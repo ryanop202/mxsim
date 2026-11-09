@@ -8,7 +8,7 @@ Hypothèse [HYP] : membrure basse des méga-poutres à 30,0 m, membrure haute so
 """
 import numpy as np
 
-from . import dims
+from . import dims, branding
 from .mesh import Mesh, box, beam, quad, grid_surface, tube, frame, concat
 from .roof import field
 
@@ -48,14 +48,26 @@ def stage_wall(scene):
 
     # écran de projection central [PHO P8/P10, DOC 1 400–2 600 m²] : 70 x 18 m
     scene.add("stage", "steel_black", box((0.5, 71.0, 19.0), _T(STAGE_X - 0.25, 0, 18.0)))
-    scene.add("stage", "screen_proj", panel("screen_proj", -35, 35, 9.0, 27.0, 0.52))
+    # habillage USLAND Supercross Paris 2026 (branding.py) : visuels au ratio exact, UV limitées à la zone dessinée
+    def _uv(tex):
+        u1, v1 = branding.uv_extent(tex)
+        return ((0, 0), (u1, 0), (u1, v1), (0, v1))
+
+    def _branded(mat, tex, *a):
+        m = panel(mat, *a, uv=_uv(tex))
+        assert branding.readable(m), "visuel %s à l'envers / en miroir" % tex
+        return m
+
+    scene.add("stage", "screen_main", _branded("screen_main", "poster_main.png", -35, 35, 9.0, 27.0, 0.52))
     # écrans latéraux 16 x 9 m
     for sy in (-1, 1):
         yc = sy * 54.0
         scene.add("stage", "steel_black", box((0.5, 17.0, 10.0), _T(STAGE_X - 0.25, yc, 18.5)))
-        scene.add("stage", "screen_proj", panel("screen_proj", yc - 8, yc + 8, 14.0, 23.0, 0.52))
-    # enseigne intérieure sous l'écran (24 x 3 m)
-    scene.add("stage", "signage_int", panel("signage_int", -12, 12, 5.2, 8.2, 0.08))
+        scene.add("stage", "screen_side", _branded("screen_side", "poster_side.png", yc - 8, yc + 8, 14.0, 23.0, 0.52))
+    # enseigne intérieure sous l'écran (24 x 3 m) : USLAND Supercross Paris 2026
+    sg = panel("signage_int", -12, 12, 5.2, 8.2, 0.08, uv=_uv("signage_usland.png"))
+    assert branding.readable(sg)
+    scene.add("stage", "signage_int", sg)
     # grande porte de chargement (rideau métallique)
     scene.add("stage", "steel_black", box((0.3, 24.0, 8.0), _T(STAGE_X - 0.15, 0, 4.0)))
     for z in np.arange(0.5, 8.0, 0.5):

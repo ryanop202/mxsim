@@ -12,7 +12,7 @@ Escaliers tous les 8 m (radiaux dans les angles), vomitoires dans la tribune bas
 """
 import numpy as np
 
-from . import dims
+from . import dims, branding
 from .facade import Ref
 from .mesh import Mesh, box, beam, quad, grid_surface, tube, concat, flat_from_tris
 from .geo2d import point_in_poly
@@ -248,7 +248,16 @@ def build(scene, with_seats=True):
 
     # ---- mur de front et circulation basse
     scene.add("bowl", "wall_black", _strip(ref, 0, S, LOWER["d0"], LOWER["d0"], 0.0, LOWER["z0"], flip=False))
-    scene.add("bowl", "led_off", _strip(ref, 0, S, LOWER["d0"] - 0.08, LOWER["d0"] - 0.08, 0.15, 0.95, flip=False, uvs=1 / 3))
+    # bandeau LED allumé : motif USLAND | SUPERCROSS PARIS 2026 (branding.led_board), ≈12,8 m x 0,8 m.
+    # Nombre entier de motifs sur le tour (pas de motif coupé à la jonction) : écart de longueur < 2 %.
+    n_led = max(1, int(round(S / branding.LED_SEG)))
+    uvs = n_led / S
+    led = _strip(ref, 0, S, LOWER["d0"] - 0.08, LOWER["d0"] - 0.08, 0.15, 0.15 + branding.LED_H, flip=False, uvs=uvs)
+    led.UV[:, 1] /= branding.LED_H * uvs                   # v : 0 en bas -> 1 en haut du bandeau
+    if not branding.readable(led):                          # texte lu depuis le sol : jamais en miroir
+        led.UV[:, 0] = -led.UV[:, 0]
+    assert branding.readable(led)
+    scene.add("bowl", "led_board", led)
     scene.add("bowl", "concrete_grey", _strip(ref, 0, S, LOWER["d0"] - 0.08, LOWER["d0"], LOWER["z0"], LOWER["z0"], flip=False))
 
     upper_counts = []

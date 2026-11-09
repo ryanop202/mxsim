@@ -414,6 +414,9 @@ def build_all(outdir):
     _save(atlas, os.path.join(outdir, "seat_atlas.png"), "RGBA"); written.append("seat_atlas.png")
     _save(signage(), os.path.join(outdir, "signage.png"), "RGBA"); written.append("signage.png")
     _save(signage_interior(), os.path.join(outdir, "signage_interior.png"), "RGBA"); written.append("signage_interior.png")
+    # habillage USLAND Supercross Paris 2026
+    from . import branding, dims
+    written += branding.build_all(outdir, [(e["screen_w"], e["screen_h"]) for e in dims.ENTRANCES.values()])
     return written
 
 

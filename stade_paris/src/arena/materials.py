@@ -33,5 +33,15 @@ MATERIALS = {
     "led_strip":     dict(tex="alu_white-repeat.png", jm=(40, 1, .35, .35, .35), rough=.35, night_unlit=True),
     "railing":       dict(tex="railing-repeat.png", jm=(30, 1, .3, .3, .3), alpha=True, two_sided=True, metal=.6),
     "signage":       dict(tex="signage.png", jm=(20, 1, .2, .2, .2), alpha=True),
-    "signage_int":   dict(tex="signage_interior.png", unlit=True, alpha=True, emit=1.0),
+    # habillage USLAND Supercross Paris 2026 (branding.py) : écrans allumés, enseigne, bandeau LED du sol
+    "signage_int":   dict(tex="signage_usland.png", unlit=True, alpha=True, emit=1.0),
+    "screen_main":   dict(tex="poster_main.png", unlit=True, emit=1.0),
+    "screen_side":   dict(tex="poster_side.png", unlit=True, emit=1.0),
+    "led_board":     dict(tex="led_board-hrepeat.png", unlit=True, emit=1.0),
 }
+
+# écrans de façade : un visuel par format d'écran (ratio exact)
+from . import dims as _dims, branding as _branding
+for _e in _dims.ENTRANCES.values():
+    _t = _branding.entrance_tex(_e["screen_w"], _e["screen_h"])
+    MATERIALS["screen_" + _t[:-4]] = dict(tex=_t, unlit=True, emit=1.0)

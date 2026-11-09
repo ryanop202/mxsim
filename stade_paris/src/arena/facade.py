@@ -7,7 +7,7 @@ ne dérive entre les couches.
 """
 import numpy as np
 
-from . import dims
+from . import dims, branding
 from .mesh import Mesh, grid_surface, quad, box, beam, tube, frame, flat_from_tris, concat
 from .geo2d import smooth_closed
 
@@ -436,7 +436,7 @@ def build_entrances(ref, scene):
         if e.get("sign"):
             hs = e["z1"] - e["z0"]
             sw = min(w - 1.0, hs * 0.62 * 8)
-            sh = sw / 8
+            sh = sw * branding.PLAN_K / 8      # arène agrandie en plan : ratio final 8:1 (texte non étiré)
             zc = (e["z0"] + e["z1"]) / 2 + 0.15
             yy = d + 0.06
             sg = quad((-sw / 2, yy, zc - sh / 2), (sw / 2, yy, zc - sh / 2), (sw / 2, yy, zc + sh / 2), (-sw / 2, yy, zc + sh / 2))
@@ -450,11 +450,16 @@ def build_entrances(ref, scene):
             y_face = 0.65
             frame_m = box((sw_ + 0.5, 0.6, sh_ + 0.5), M @ _T(xc, y_face - 0.3, z0 + sh_ / 2))
             scene.add("entrances", "alu_white", frame_m)
+            # écran allumé : visuel USLAND Supercross Paris 2026 au ratio exact de l'écran
+            tex = branding.entrance_tex(sw_, sh_)
+            u1, v1 = branding.UV.get(tex) or branding._canvas(branding.aspect((sw_, sh_)), 1024)[2]
             face = quad((xc - sw_ / 2, y_face + 0.01, z0), (xc + sw_ / 2, y_face + 0.01, z0),
                         (xc + sw_ / 2, y_face + 0.01, z0 + sh_), (xc - sw_ / 2, y_face + 0.01, z0 + sh_),
-                        uv=((0, 0), (sw_ / 3, 0), (sw_ / 3, sh_ / 3), (0, sh_ / 3)))
+                        uv=((0, 0), (u1, 0), (u1, v1), (0, v1)))
             face = face if face.N[0][1] > 0 else _flip_uv(face)
-            scene.add("entrances", "led_off", face.transformed(M))
+            face = face.transformed(M)
+            assert branding.readable(face), "écran de façade en miroir"
+            scene.add("entrances", "screen_" + tex[:-4], face)
             # consoles vers la structure
             for zz in (z0 + 1.0, z0 + sh_ - 1.0):
                 for xo in (-sw_ / 3, sw_ / 3):
