@@ -152,7 +152,7 @@ BOARD30 = dict(stand=(110.0, 7.5),   # v41c (user): 2 m to the riders' left (the
 CHECKPOINT_FIX = [((582.418814, 377.0), (601.320129, 395.110840), (-38.077026, 0.494507)),
                   ((513.459407, 377.0), (507.363861, 384.231689), (-28.186890, 0.494507))]
 GATES_PROPOSAL = dict(lanes=dict(off=30.0, half=21.0, min_len=50.0, gap=70.0, spacing=115.0, turns=True), half_lane=15.2, inner=12.0, outer=12.0, start_pad=4.0)   # v43 proposal (user): fewer gates, straights only
-TIMING_GATES_FILE = 'assets/sgm/user/timing_gates_v43.txt'   # v43 (user approved): the 33 gates frozen; the user retouches a few in game   # v41 (user): his gates (edited in the game editor on v40), kept as they are from now on
+TIMING_GATES_FILE = 'assets/sgm/user/timing_gates_user_v44.txt'   # v44 (user): his gates retouched in the game editor (from AppData, un-reframed); v43 file = the approved base   # v43 (user approved): the 33 gates frozen; the user retouches a few in game   # v41 (user): his gates (edited in the game editor on v40), kept as they are from now on
 TURN_GATES = GATES_PROPOSAL   # v43 (user: "on garde ca"): 33 gates, ~35 m apart in the lanes + one wide gate per turn
 _TURN_GATES_V39 = dict(half_lane=15.2, inner=2.0, outer=12.0, fr=(0.15, 0.85), fan=True, start_pad=4.0)
 # v39 (user): an extra day track, the track only (no decor), to take the in-game top view for the minimap
