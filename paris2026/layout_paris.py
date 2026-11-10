@@ -23,7 +23,7 @@ from compose import lane, unit, whoops   # noqa: E402
 D = json.load(open(os.path.join(HERE, "lecture_photos.json"), encoding="utf-8"))
 S = D["echelle_ft_par_px"]
 FT = 3.28084
-PLAN_K = 1.35                     # agrandissement en plan de l'arène (stade_paris/src/build.py)
+PLAN_K = 1.45                     # agrandissement en plan de l'arène (stade_paris/src/build.py) ; v5 : 1,35 -> 1,45 (paddock)
 FLOOR_X_SOUTH = -60.0 * PLAN_K    # m (dims.FLOOR_X_SOUTH x K)
 OX, OZ = 549.0, 593.5             # origine du repère de l'arène dans le terrain (ft) : bâtiment centré sur 1187 ft
 X0 = OX + FLOOR_X_SOUTH * FT
@@ -125,10 +125,18 @@ TABLE = ('scale', TABLE_B, 6.6)
 TRIPLE_SGM = [('scale', SA[3], 3.9), ('gap', 2.5), ('scale', SA[4], 2.3), ('gap', 3.5), ('stretch', SA[5], 4.0, 1.3)]
 FINISH_DBL = [smooth_takeoff(4.0, 10.0, 1.8, 9.0, 0.8, pad=0.4), ('gap', 24.5), ('stretch', SA[2], 5.4, 1.5)]
 FMX_LANDING = ('trapeze', 8.0, 22.0, 40.0, 35.0, 'lin', 4.0)
-BERM90_GAIN = 1.4                       # Saint-Thibéry / Saint-Georges : berms des 90° plus hauts
+BERM90_GAIN = 1.0                       # v5 (Ryan : « les virages à 90 sont trop hauts ») : berms 90° tels que mesurés (était 1,4)
 SOFT_FEET = dict(sigma=1.2, h=1.5)       # Saint-Georges v22 : pieds des bosses arrondis
 FMX_MODEL = dict(model='ramp_50', model_len=18.47)   # tremplin acier de Ryan (assets/fmx_ramp_user), lèvre 9 ft, collision .shp
-FINISH_SEC = 'PAR-L5 single, single, triple d arrivee (ZION 2025)'
+FINISH_SEC = 'PAR-L5 petit double, triple d arrivee (ZION 2025)'
+# v5 (retours de Ryan) : petit double avant l'arrivée ; L1 : la 2e bosse après la table remise (table un peu plus courte) ;
+# L6 : rythmique serrée (on peut faire double / quadruple, mais la 1re bosse est petite : pas de « 4 d'entrée »), table,
+# puis un double derrière la table (« sur table, derrière double »). Formes = bosses Arlington déjà utilisées ici.
+SMALL_DBL = [('scale', SA[0], 3.4), ('gap', 8.0), ('stretch', SA[1], 4.0, 1.25)]
+TABLE_L1 = ('stretch', TABLE_B, 6.6, 0.85)
+L6_RHYTHM = [('scale', SA[0], 2.6), ('gap', 3.0), ('scale', SA[2], 4.2), ('gap', 3.0), ('scale', SA[1], 4.4), ('gap', 3.0),
+             ('scale', SA[3], 4.5), ('gap', 3.0), ('scale', SA[2], 4.4), ('gap', 3.0), ('scale', SA[1], 4.2), ('gap', 4.0),
+             TABLE, ('gap', 12.0), ('scale', SA[0], 3.8), ('gap', 9.0), ('stretch', SA[1], 4.0, 1.25)]
 L3_SEC = 'PAR-L3 appel, gros saut rond du milieu (ZION 2025)'
 
 # ---------------------------------------------------------------- v3 (retours de Ryan sur l'étape 2)
@@ -153,7 +161,7 @@ def resample(p, k_len=1.0, H=None):
 FINISH_LANDING = ('raw', 'reception arrivee (butte ZION Paris 22 a 10,9 ft)', resample(_P22['butte'], 0.45, 10.9), 'X')
 
 
-def long_bump(L=86.0, H=5.8, crest=0.80, rip=0.55, n_rip=3):
+def long_bump(L=86.0, H=5.8, crest=0.75, rip=0.0, n_rip=3):     # v5 : sans ondulations (« la bosse est mal faite »)
     """couloir Est, « une bosse » (vue de côté refs/6.jpg) : longue montée douce avec de petites ondulations jusqu'à une
     crête arrondie aux ~80 % de la longueur, puis une descente raide. FORME CRÉÉE d'après la vue de côté (pas une mesure)."""
     x = np.arange(0, L, 0.1); xc = crest * L
@@ -175,14 +183,19 @@ _P25 = json.load(open(os.path.join(HERE, "data", "zion_p25_profils.json")))
 def _split_after_first(prof, name1, name2, kind2):
     """coupe un profil au creux qui suit sa 1re crête : 2 items (la ligne d'arrivée va sur le 1er)."""
     from scipy.signal import find_peaks
-    p = np.asarray(prof, float); pk, _ = find_peaks(p, prominence=1.0, distance=60)
+    from scipy.ndimage import gaussian_filter1d
+    p = np.asarray(prof, float)
+    q = gaussian_filter1d(p, 15)               # v5 : lissé (marches de la mesure ZION = « sortes de bosses » vues par Ryan)
+    p = np.maximum(q * (p.max() / q.max()), 0.0); p[0] = p[-1] = 0.0
+    pk, _ = find_peaks(p, prominence=1.0, distance=60)
     k = pk[0] + int(np.argmin(p[pk[0]:pk[1]]))
     return [('raw', name1, p[:k + 1], 'T'), ('gap', 0.0), ('raw', name2, p[k:], kind2)]
 
 
 Z25_TRIPLE = _split_after_first(_P25['triple_arrivee'], 'appel arrivee ZION 2025 (10,0)', 'triple arrivee ZION 2025 (6,0 / 11,2)', 'T')
 Z25_MILIEU = _split_after_first(_P25['milieu'], 'appel gros saut ZION 2025 (10,0)', 'butte gros saut rond ZION 2025 (24,2)', 'X')
-Z25_BUTTE_W = (_P25['largeur_butte_mi_hauteur'], 90.0)   # 68 ft à mi-hauteur comme ZION ; pied 90 ft au lieu de 110 :
+Z25_BUTTE_W = (44.0, 46.0)               # v5 (Ryan) : réception CARRÉE (dessus 42 ft, flancs presque verticaux) pour la bâche AMV ; était (68, 90)
+Z25_BUTTE_W_ZION = (_P25['largeur_butte_mi_hauteur'], 90.0)   # 68 ft à mi-hauteur comme ZION ; pied 90 ft au lieu de 110 :
 #   entre les singles (L2) et la ligne de départ il n'y a que ~98 ft -> flancs un peu plus raides que ZION
 
 
@@ -254,7 +267,7 @@ def paris():
     xTB = px_x(315.0)
     p = Path(xW, zL5, 180.0, 'PARIS')
     # L5 : single, single, SAUT D'ARRIVÉE (obstacles 3 + 4 du visuel = un double : appel / réception), table longue
-    toks, u0 = from_render('L5', xW, 'x', -1, {1: ('scale', SA[0], 3.4), 2: ('scale', SA[1], 3.9), (3, 5): Z25_TRIPLE},
+    toks, u0 = from_render('L5', xW, 'x', -1, {(1, 2): SMALL_DBL, (3, 5): Z25_TRIPLE},
                            lane_len=xW - (xT5 + RB))   # v4 : le triple d'arrivée de ZION 2025 couvre les obstacles 3 à 5 du visuel
     p.straight(xW - (xT5 + RB), [lane_sec(FINISH_SEC, toks, u0, finish=True)], tag='L5 arrivée')
     p.turn(90, RB, BIG, tag='T_L5a 90 gauche (berm)')
@@ -275,17 +288,15 @@ def paris():
                                                     7: ('scale', SA[0], 4.0)}, lane_len=xW - (xC + RB))
     p.straight(xW - (xC + RB), [lane_sec('PAR-L2 7 bosses', toks, u0)], tag='L2 singles')
     p.turn(-180, RB, BIG2, tag='T1 180 droite (berm)')
-    toks, u0 = from_render('L1', xW, 'x', -1, {1: [whoops_up(10, 1.15)], 2: TABLE, 3: ('scale', SA[1], 4.0)},   # la 2e bosse ne tient plus (table plus loin)
-                           lane_len=xW - (xLR + RB), min_gaps={0: 35.0})   # Ryan : la table plus loin des whoops et plus grosse
+    toks, u0 = from_render('L1', xW, 'x', -1, {1: [whoops_up(10, 1.15)], 2: TABLE_L1, 3: ('scale', SA[1], 4.0), 4: ('scale', SA[0], 3.6)},   # v5 : la 2e bosse remise
+                           lane_len=xW - (xLR + RB), min_gaps={0: 22.0})   # Ryan : la table plus loin des whoops et plus grosse
     p.straight(xW - (xLR + RB), [LS.sec('PAR-L1 whoops, table, bosse', toks, u0)], tag='L1 whoops')
     p.turn(-90, RB, BIG, tag='T_TR 90 droite (berm)')
     toks, u0 = from_render('LR', zL1 - RB, 'z', -1, {1: ('scale', ROLLER, 1.8), (2, 3): long_bump(), 4: ('scale', SA[1], 4.0), 5: ('scale', SA[0], 3.6)},
                            lane_len=(zL1 - RB) - (zL6 + RB))
     p.straight((zL1 - RB) - (zL6 + RB), [lane_sec('PAR-LR roller, longue bosse, 2 bosses', toks, u0)], tag='LR tribune Est')
     p.turn(-90, RB, BIG, tag='T_E 90 droite (berm)')
-    toks, u0 = from_render('L6', xLR + RB, 'x', +1, {1: ('scale', SA[2], 4.3), 2: ('scale', SA[1], 4.2), 3: ('scale', SA[3], 4.5),
-                                                    4: ('scale', SA[2], 4.3), 5: ('scale', SA[0], 3.8), 6: TABLE,
-                                                    7: ('scale', SA[0], 3.8), 8: ('scale', SA[1], 3.6)}, lane_len=xW - (xLR + RB))
+    toks, u0 = L6_RHYTHM, 4.0
     p.straight(xW - (xLR + RB), [lane_sec('PAR-L6 8 bosses dont une table', toks, u0)], tag='L6 tribune Sud')
     p.turn(-180, RB, BIG, tag='T_C 180 droite (berm)')
     p.lanes = dict(zL5=zL5, zLD=zLD, zL3=zL3, zL2=zL2, zL1=zL1, zL6=zL6, xW=xW, xLR=xLR, xC=xC, xT5=xT5, xTB=xTB)

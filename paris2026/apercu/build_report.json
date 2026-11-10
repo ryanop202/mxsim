@@ -2,10 +2,10 @@
  "sections": [
   {
    "lane": "L5 arrivée",
-   "name": "PAR-L5 single, single, triple d arrivee (ZION 2025)",
-   "u0": 32.5,
-   "s0": 32.5,
-   "L": 236.7,
+   "name": "PAR-L5 petit double, triple d arrivee (ZION 2025)",
+   "u0": 30.8,
+   "s0": 30.8,
+   "L": 238.5,
    "H": 11.15,
    "seg_L": 293.0,
    "items": [
@@ -15,19 +15,19 @@
      27.4
     ],
     [
-     "Arlington_g37_1 (H 3.9)",
-     35.2,
-     63.1
+     "Arlington_g37_1 (H 4.0, back x1.25)",
+     35.4,
+     67.3
     ],
     [
      "appel arrivee ZION 2025 (10,0)",
-     68.3,
-     109.6
+     70.1,
+     115.5
     ],
     [
      "triple arrivee ZION 2025 (6,0 / 11,2)",
-     109.6,
-     236.6
+     115.5,
+     238.4
     ]
    ]
   },
@@ -43,11 +43,11 @@
     [
      "appel gros saut ZION 2025 (10,0)",
      0.0,
-     56.4
+     58.7
     ],
     [
      "butte gros saut rond ZION 2025 (24,2)",
-     56.4,
+     58.7,
      164.9
     ]
    ]
@@ -101,9 +101,9 @@
   {
    "lane": "L1 whoops",
    "name": "PAR-L1 whoops, table, bosse",
-   "u0": 8.1,
-   "s0": 1498.6,
-   "L": 323.3,
+   "u0": 0.0,
+   "s0": 1490.5,
+   "L": 336.0,
    "H": 6.6,
    "seg_L": 342.9,
    "items": [
@@ -113,14 +113,19 @@
      203.8
     ],
     [
-     "Arlington_g49_2 (H 6.6)",
-     238.8,
-     293.8
+     "Arlington_g49_2 (H 6.6, back x0.85)",
+     225.8,
+     277.6
     ],
     [
      "Arlington_g37_1 (H 4.0)",
-     295.3,
-     323.2
+     279.1,
+     307.0
+    ],
+    [
+     "Arlington_g37_0 (H 3.6)",
+     308.5,
+     335.9
     ]
    ]
   },
@@ -158,51 +163,56 @@
   {
    "lane": "L6 tribune Sud",
    "name": "PAR-L6 8 bosses dont une table",
-   "u0": 9.1,
-   "s0": 2186.5,
-   "L": 301.0,
+   "u0": 3.4,
+   "s0": 2180.8,
+   "L": 327.9,
    "H": 6.6,
    "seg_L": 342.9,
    "items": [
     [
-     "Arlington_g1_1 (H 4.3)",
-     1.1,
-     30.0
+     "Arlington_g37_0 (H 2.6)",
+     0.6,
+     28.0
     ],
     [
-     "Arlington_g37_1 (H 4.2)",
-     37.7,
-     65.6
+     "Arlington_g1_1 (H 4.2)",
+     31.0,
+     59.9
+    ],
+    [
+     "Arlington_g37_1 (H 4.4)",
+     62.9,
+     90.8
     ],
     [
      "Arlington_g1_3 (H 4.5)",
-     74.8,
-     106.7
+     93.8,
+     125.7
     ],
     [
-     "Arlington_g1_1 (H 4.3)",
-     116.4,
-     145.3
+     "Arlington_g1_1 (H 4.4)",
+     128.7,
+     157.6
     ],
     [
-     "Arlington_g37_0 (H 3.8)",
-     152.6,
-     180.0
+     "Arlington_g37_1 (H 4.2)",
+     160.6,
+     188.5
     ],
     [
      "Arlington_g49_2 (H 6.6)",
-     183.9,
-     238.9
+     192.5,
+     247.5
     ],
     [
      "Arlington_g37_0 (H 3.8)",
-     241.8,
-     269.2
+     259.5,
+     286.9
     ],
     [
-     "Arlington_g37_1 (H 3.6)",
-     273.0,
-     300.9
+     "Arlington_g37_1 (H 4.0, back x1.25)",
+     295.9,
+     327.8
     ]
    ]
   }
@@ -212,13 +222,13 @@
    "boudins R (whoops)": 22,
    "tuffs honda": 44,
    "tuffs amv": 32,
-   "tuffs seong": 28,
-   "tuffs monster": 11,
+   "tuffs seong": 29,
+   "tuffs monster": 12,
    "tuffs motul": 35,
    "tuffs yamaha": 28,
    "poteaux ronds": 9,
-   "murs amv": 6,
-   "murs motoverte": 19,
+   "murs amv": 8,
+   "murs motoverte": 20,
    "murs honda": 22,
    "filets": 68,
    "murs seong": 24,
@@ -238,21 +248,21 @@
    "murs automoto": 12,
    "camions du paddock": 10
   },
-  "total": 437,
+  "total": 442,
   "amv_pied_ft": {
    "-1": 21.6,
-   "1": 21.6
+   "1": 21.4
   },
   "arche": {
-   "crete_ft": 3.6,
+   "crete_ft": 4.0,
    "sol_pieds_ft": [
     0.0,
-    0.41
+    0.02
    ],
-   "libre_sous_poutre_ft": 20.9
+   "libre_sous_poutre_ft": 20.5
   },
   "finish": {
-   "crete_ft": 10.0
+   "crete_ft": 9.54
   },
   "logos_redessines": [
    "amv",
@@ -264,22 +274,22 @@
    "r"
   ]
  },
- "public": 6415,
+ "public": 6851,
  "export": {
   "hmin": -0.5,
-  "hmax": 24.75,
-  "statues_relevees": 48,
-  "decals": 7990,
-  "decals_terre": 3366
+  "hmax": 24.749963834232567,
+  "statues_relevees": 42,
+  "decals": 8365,
+  "decals_terre": 3739
  },
  "lap_ft": 2587.8,
  "start": {
   "gate": [
-   737.44696,
+   717.76192,
    548.28
   ],
   "merge": [
-   396.30196,
+   376.61692,
    675.79375
   ],
   "length": 459.4
@@ -308,7 +318,7 @@
   {
    "name": "berms <= 10 ft (90° x1,4 comme Saint-Thibéry)",
    "ok": true,
-   "detail": "9.71 ft"
+   "detail": "6.94 ft"
   },
   {
    "name": "couloir de départ sur le sol",

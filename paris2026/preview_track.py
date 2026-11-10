@@ -17,7 +17,7 @@ SB = os.path.join(ROOT, "stade_paris", "build")
 n, s, hmin, hmax = open(os.path.join(T, "terrain.hf")).read().split()
 s, hmin, hmax = float(s), float(hmin), float(hmax)
 H = np.asarray(Image.open(os.path.join(T, "terrain.png")), np.float64) / 65535 * (hmax - hmin) + hmin
-x0, x1, z0, z1 = 280.0, 826.0, 390.0, 797.0          # sol de l'arène agrandie (+ marge), en ft
+x0, x1, z0, z1 = LP.X0 - 3.0, LP.OX + 62.0 * LP.PLAN_K * LP.FT + 3.0, LP.OZ - 45.0 * LP.PLAN_K * LP.FT - 3.0, LP.OZ + 45.0 * LP.PLAN_K * LP.FT + 3.0   # sol de l'arène agrandie (+ marge), en ft
 step = 1.5
 xs = np.arange(x0, x1 + 1e-6, step); zs = np.arange(z0, z1 + 1e-6, step)
 J = np.clip(np.round(xs / s).astype(int), 0, H.shape[1] - 1); I = np.clip(np.round(zs / s).astype(int), 0, H.shape[0] - 1)
