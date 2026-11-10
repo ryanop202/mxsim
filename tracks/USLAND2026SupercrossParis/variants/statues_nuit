@@ -16,7 +16,7 @@
 [392.7664 0.0000 326.8333] 0.000000 @USLAND2026SupercrossParis/statue/bowl__glass_dark__03_0.jm @USLAND2026SupercrossParis/tex/glass_dark-repeat.png null
 [696.3425 0.0000 883.0341] 0.000000 @USLAND2026SupercrossParis/statue/bowl__glass_dark__04_0.jm @USLAND2026SupercrossParis/tex/glass_dark-repeat.png null
 [696.3425 0.0000 303.9659] 0.000000 @USLAND2026SupercrossParis/statue/bowl__glass_dark__05_0.jm @USLAND2026SupercrossParis/tex/glass_dark-repeat.png null
-[403.0026 -0.0002 703.6706] 0.000000 @USLAND2026SupercrossParis/statue/bowl__led_board__00_0.jm @USLAND2026SupercrossParis/tex/led_board-hrepeat.png null
+[403.0026 -0.0090 703.6706] 0.000000 @USLAND2026SupercrossParis/statue/bowl__led_board__00_0.jm @USLAND2026SupercrossParis/tex/led_board-hrepeat.png null
 [403.0026 0.0000 483.2966] 0.000000 @USLAND2026SupercrossParis/statue/bowl__led_board__01_0.jm @USLAND2026SupercrossParis/tex/led_board-hrepeat.png null
 [696.3425 0.0000 813.8740] 0.000000 @USLAND2026SupercrossParis/statue/bowl__led_board__02_0.jm @USLAND2026SupercrossParis/tex/led_board-hrepeat.png null
 [696.3425 0.0000 373.1260] 0.000000 @USLAND2026SupercrossParis/statue/bowl__led_board__03_0.jm @USLAND2026SupercrossParis/tex/led_board-hrepeat.png null
@@ -38,7 +38,7 @@
 [396.8018 0.0000 320.7966] 0.000000 @USLAND2026SupercrossParis/statue/bowl__steel_black__03_0.jm @USLAND2026SupercrossParis/tex/steel_black-repeat.png null
 [699.5906 0.0000 882.8701] 0.000000 @USLAND2026SupercrossParis/statue/bowl__steel_black__04_0.jm @USLAND2026SupercrossParis/tex/steel_black-repeat.png null
 [693.3898 0.0000 304.1299] 0.000000 @USLAND2026SupercrossParis/statue/bowl__steel_black__05_0.jm @USLAND2026SupercrossParis/tex/steel_black-repeat.png null
-[402.8714 -0.0001 703.8018] 0.000000 @USLAND2026SupercrossParis/statue/bowl__wall_black__00_0.jm @USLAND2026SupercrossParis/tex/wall_black-repeat.png null
+[402.8714 -0.0056 703.8018] 0.000000 @USLAND2026SupercrossParis/statue/bowl__wall_black__00_0.jm @USLAND2026SupercrossParis/tex/wall_black-repeat.png null
 [402.8714 0.0000 483.1654] 0.000000 @USLAND2026SupercrossParis/statue/bowl__wall_black__01_0.jm @USLAND2026SupercrossParis/tex/wall_black-repeat.png null
 [696.3425 0.0000 814.1365] 0.000000 @USLAND2026SupercrossParis/statue/bowl__wall_black__02_0.jm @USLAND2026SupercrossParis/tex/wall_black-repeat.png null
 [696.3425 0.0000 372.8635] 0.000000 @USLAND2026SupercrossParis/statue/bowl__wall_black__03_0.jm @USLAND2026SupercrossParis/tex/wall_black-repeat.png null
@@ -185,12 +185,12 @@
 [913.7638 0.0000 251.4068] 0.000000 @USLAND2026SupercrossParis/statue/office_north__office__03_0.jm @USLAND2026SupercrossParis/tex/office_ribbon-repeat.png null
 [437.5171 0.0000 676.9646] 0.000000 @USLAND2026SupercrossParis/statue/rigging__light__00_0.jm @USLAND2026SupercrossParis/tex/light_emit.png null
 [437.5171 0.0000 504.3268] 0.000000 @USLAND2026SupercrossParis/statue/rigging__light__01_0.jm @USLAND2026SupercrossParis/tex/light_emit.png null
-[684.9252 -0.0102 707.4108] 0.000000 @USLAND2026SupercrossParis/statue/rigging__light__02_0.jm @USLAND2026SupercrossParis/tex/light_emit.png null
-[684.9252 -0.0020 479.5892] 0.000000 @USLAND2026SupercrossParis/statue/rigging__light__03_0.jm @USLAND2026SupercrossParis/tex/light_emit.png null
+[684.9252 -0.0117 707.4108] 0.000000 @USLAND2026SupercrossParis/statue/rigging__light__02_0.jm @USLAND2026SupercrossParis/tex/light_emit.png null
+[684.9252 -0.0023 479.5892] 0.000000 @USLAND2026SupercrossParis/statue/rigging__light__03_0.jm @USLAND2026SupercrossParis/tex/light_emit.png null
 [567.2415 0.0000 594.5499] 0.000000 @USLAND2026SupercrossParis/statue/rigging__steel_black__00_0.jm @USLAND2026SupercrossParis/tex/steel_black-repeat.png null
 [567.2415 0.0000 592.4501] 0.000000 @USLAND2026SupercrossParis/statue/rigging__steel_black__01_0.jm @USLAND2026SupercrossParis/tex/steel_black-repeat.png null
-[569.7021 -0.0214 707.2795] 0.000000 @USLAND2026SupercrossParis/statue/rigging__steel_black__02_0.jm @USLAND2026SupercrossParis/tex/steel_black-repeat.png null
-[569.7021 -7.2370 479.7205] 0.000000 @USLAND2026SupercrossParis/statue/rigging__steel_black__03_0.jm @USLAND2026SupercrossParis/tex/steel_black-repeat.png null
+[569.7021 -1.0460 707.2795] 0.000000 @USLAND2026SupercrossParis/statue/rigging__steel_black__02_0.jm @USLAND2026SupercrossParis/tex/steel_black-repeat.png null
+[569.7021 -2.6017 479.7205] 0.000000 @USLAND2026SupercrossParis/statue/rigging__steel_black__03_0.jm @USLAND2026SupercrossParis/tex/steel_black-repeat.png null
 [563.2717 -0.2505 760.0026] 0.000000 @USLAND2026SupercrossParis/statue/rigging__steel_galv__00_0.jm @USLAND2026SupercrossParis/tex/steel_galv-repeat.png null
 [563.2717 -6.0078 426.9974] 0.000000 @USLAND2026SupercrossParis/statue/rigging__steel_galv__01_0.jm @USLAND2026SupercrossParis/tex/steel_galv-repeat.png null
 [563.2717 -0.2505 760.0026] 0.000000 @USLAND2026SupercrossParis/statue/rigging__steel_galv__02_0.jm @USLAND2026SupercrossParis/tex/steel_galv-repeat.png null
@@ -204,7 +204,7 @@
 [554.2165 0.0000 549.9633] 0.000000 @USLAND2026SupercrossParis/statue/roof__roof__06_0.jm @USLAND2026SupercrossParis/tex/roof_kalzip-repeat.png null
 [392.0118 0.0000 258.1325] 0.000000 @USLAND2026SupercrossParis/statue/roof__roof__07_0.jm @USLAND2026SupercrossParis/tex/roof_kalzip-repeat.png null
 [705.1680 0.0000 943.8609] 0.000000 @USLAND2026SupercrossParis/statue/roof__roof__08_0.jm @USLAND2026SupercrossParis/tex/roof_kalzip-repeat.png null
-[554.8071 -0.0401 686.2822] 0.000000 @USLAND2026SupercrossParis/statue/roof__roof__09_0.jm @USLAND2026SupercrossParis/tex/roof_kalzip-repeat.png null
+[554.8071 -0.1135 686.2822] 0.000000 @USLAND2026SupercrossParis/statue/roof__roof__09_0.jm @USLAND2026SupercrossParis/tex/roof_kalzip-repeat.png null
 [554.8071 0.0000 549.9633] 0.000000 @USLAND2026SupercrossParis/statue/roof__roof__10_0.jm @USLAND2026SupercrossParis/tex/roof_kalzip-repeat.png null
 [705.9882 0.0000 258.1325] 0.000000 @USLAND2026SupercrossParis/statue/roof__roof__11_0.jm @USLAND2026SupercrossParis/tex/roof_kalzip-repeat.png null
 [960.0236 0.0000 943.8609] 0.000000 @USLAND2026SupercrossParis/statue/roof__roof__12_0.jm @USLAND2026SupercrossParis/tex/roof_kalzip-repeat.png null
@@ -220,7 +220,7 @@
 [387.4842 -3.3508 438.6772] 0.000000 @USLAND2026SupercrossParis/statue/roof_structure__steel_black__06_0.jm @USLAND2026SupercrossParis/tex/steel_black-repeat.png null
 [406.2835 0.0000 255.6719] 0.000000 @USLAND2026SupercrossParis/statue/roof_structure__steel_black__07_0.jm @USLAND2026SupercrossParis/tex/steel_black-repeat.png null
 [720.2598 0.0000 931.3281] 0.000000 @USLAND2026SupercrossParis/statue/roof_structure__steel_black__08_0.jm @USLAND2026SupercrossParis/tex/steel_black-repeat.png null
-[691.3228 -0.0024 748.2572] 0.000000 @USLAND2026SupercrossParis/statue/roof_structure__steel_black__09_0.jm @USLAND2026SupercrossParis/tex/steel_black-repeat.png null
+[691.3228 -0.0027 748.2572] 0.000000 @USLAND2026SupercrossParis/statue/roof_structure__steel_black__09_0.jm @USLAND2026SupercrossParis/tex/steel_black-repeat.png null
 [691.3228 0.0000 438.7428] 0.000000 @USLAND2026SupercrossParis/statue/roof_structure__steel_black__10_0.jm @USLAND2026SupercrossParis/tex/steel_black-repeat.png null
 [720.2598 0.0000 255.6719] 0.000000 @USLAND2026SupercrossParis/statue/roof_structure__steel_black__11_0.jm @USLAND2026SupercrossParis/tex/steel_black-repeat.png null
 [190.5682 0.0000 942.5814] 0.000000 @USLAND2026SupercrossParis/statue/roof_under__roof_under__00_0.jm @USLAND2026SupercrossParis/tex/roof_under-repeat.png null
@@ -232,7 +232,7 @@
 [554.2165 0.0000 549.9633] 0.000000 @USLAND2026SupercrossParis/statue/roof_under__roof_under__06_0.jm @USLAND2026SupercrossParis/tex/roof_under-repeat.png null
 [392.0118 0.0000 258.1325] 0.000000 @USLAND2026SupercrossParis/statue/roof_under__roof_under__07_0.jm @USLAND2026SupercrossParis/tex/roof_under-repeat.png null
 [705.1680 0.0000 943.8609] 0.000000 @USLAND2026SupercrossParis/statue/roof_under__roof_under__08_0.jm @USLAND2026SupercrossParis/tex/roof_under-repeat.png null
-[554.8071 -0.0401 686.2822] 0.000000 @USLAND2026SupercrossParis/statue/roof_under__roof_under__09_0.jm @USLAND2026SupercrossParis/tex/roof_under-repeat.png null
+[554.8071 -0.1135 686.2822] 0.000000 @USLAND2026SupercrossParis/statue/roof_under__roof_under__09_0.jm @USLAND2026SupercrossParis/tex/roof_under-repeat.png null
 [554.8071 0.0000 549.9633] 0.000000 @USLAND2026SupercrossParis/statue/roof_under__roof_under__10_0.jm @USLAND2026SupercrossParis/tex/roof_under-repeat.png null
 [705.9882 0.0000 258.1325] 0.000000 @USLAND2026SupercrossParis/statue/roof_under__roof_under__11_0.jm @USLAND2026SupercrossParis/tex/roof_under-repeat.png null
 [960.0236 0.0000 943.8609] 0.000000 @USLAND2026SupercrossParis/statue/roof_under__roof_under__12_0.jm @USLAND2026SupercrossParis/tex/roof_under-repeat.png null
@@ -319,7 +319,7 @@
 [843.9475 0.0000 248.0604] 0.000000 @USLAND2026SupercrossParis/statue/stage__wall_black__03_0.jm @USLAND2026SupercrossParis/tex/wall_black-repeat.png null
 [214.5184 0.0000 703.6050] 0.000000 @USLAND2026SupercrossParis/statue/stairs_lower__concrete_grey__00_0.jm @USLAND2026SupercrossParis/tex/concrete_grey-repeat.png null
 [214.5184 0.0000 483.3950] 0.000000 @USLAND2026SupercrossParis/statue/stairs_lower__concrete_grey__01_0.jm @USLAND2026SupercrossParis/tex/concrete_grey-repeat.png null
-[382.5302 -0.3478 734.3465] 0.000000 @USLAND2026SupercrossParis/statue/stairs_lower__concrete_grey__02_0.jm @USLAND2026SupercrossParis/tex/concrete_grey-repeat.png null
+[382.5302 -0.2619 734.3465] 0.000000 @USLAND2026SupercrossParis/statue/stairs_lower__concrete_grey__02_0.jm @USLAND2026SupercrossParis/tex/concrete_grey-repeat.png null
 [382.5302 -2.2581 452.6535] 0.000000 @USLAND2026SupercrossParis/statue/stairs_lower__concrete_grey__03_0.jm @USLAND2026SupercrossParis/tex/concrete_grey-repeat.png null
 [687.1890 0.0000 846.2887] 0.000000 @USLAND2026SupercrossParis/statue/stairs_lower__concrete_grey__04_0.jm @USLAND2026SupercrossParis/tex/concrete_grey-repeat.png null
 [687.1890 0.0000 340.7113] 0.000000 @USLAND2026SupercrossParis/statue/stairs_lower__concrete_grey__05_0.jm @USLAND2026SupercrossParis/tex/concrete_grey-repeat.png null

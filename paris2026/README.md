@@ -106,3 +106,51 @@ départ, filets, arrivée, et faire le paddock derrière le départ. Tout ce qui
 - Aperçu : `py -3.12 -I paris2026/apercu_habillage.py` puis `py -3.12 -I stade_paris/src/preview_web.py` ->
   `apercu/vue_dessus_habillage.png`, `apercu/habillage_3d.jpg`, aperçu 3D `stade_paris/build/web`.
 - Contrôles : 7 / 7, `validate_mx.py` 0 problème, 441 objets. **Non testé en jeu.**
+
+## Habillage v6 (2026-11-10, liste de `docs/14_suite_paris_autre_pc.md`)
+
+- a. Boudins des whoops : FLY Racing rouge, logo blanc (`assets/logos/fly_racing_white.png`).
+- b. Tuff blocks comme ZION 2025 (relevé de ses 322 blocs) : une rangée au bord de chaque couloir (14,5 ft de l'axe), un bloc tous
+  les ~12,4 ft, sur le plat comme sur les bosses, le long du bloc dans le sens du couloir (v6 avait trop de blocs, en travers).
+- c. Virages à berm : blocs gris unis au bord extérieur du couloir (un peu dans le virage), mur à sponsor en haut du berm, filet juste derrière.
+- d. Bâche AMV sur les deux côtés de la réception du saut du milieu, à sa forme (dessus plat + pentes amont / aval).
+- e. Arche 50 Factory sur la première bosse de L6.
+- f. Rampe acier + coins Honda du saut d'arrivée : retirée (Ryan : « enlève ce truc »).
+- g. Boudins Motul du couloir de départ retirés.
+- h. Long tuff block des deux côtés de la ligne de départ reprise par le tour : enterré au départ, il sort du sol 20 s après la
+  chute de la grille (`nofrills.js`, `mx.move_statue`, même méthode que les boudins de départ de Saint-Thibéry). Sans chute de
+  grille (entraînement libre) il reste enterré. **À vérifier en jeu : que sa collision suit bien le déplacement.**
+- i. Paddock : 10 camions sur une rangée, perpendiculaires au mur de scène, nez à 3 ft du mur, arrière vers la piste.
+- j. **Pas fait** : vrais logos AMV, Venum, Minerva Oil, Thor, Five, Moto Verte (téléchargement à confirmer par Ryan).
+- Contrôles : 7 / 7, `validate_mx.py` 0 problème, 18 248 références, 0 manquante, 706 objets. **Non testé en jeu.**
+
+## v9 (2026-11-10, retours de Ryan après son test en jeu)
+
+Terrain (`layout_paris.py`) :
+- Après le saut du milieu : T_C3 + colonne + T_D remplacés par **un seul 180 à gauche** (rayon 32 ft = moitié de l'écart L3 / L2),
+  sommet 6 ft plus loin, saut du milieu avancé de 8 ft (place pour poser puis tourner), un seul poteau à l'intérieur.
+  Berm = gros croissant JGSX décalé au rayon 32 ft (`engine.render_berm_stamp(r_shift=)`), sur la 2e moitié seulement : le départ
+  rejoint le tour au sommet par l'extérieur de la 1re moitié (comme avant par la colonne).
+- Avant le saut du milieu : la fine arête de 0,4 ft au début de la mesure ZION (« trou, truc cassant ») est retirée.
+- L2 : 7 bosses identiques (Arlington x1,35, 5 ft), **même écart partout** (5 ft au sol, ~33 ft de crête à crête), la 1re à 3 ft de
+  la sortie du 180 (pas d'élan). But : triple d'entrée, quad dur ensuite. **À juger en jeu** (pas de simulation de saut ici).
+- LR : remis comme en v6 (roller, longue bosse, 2 bosses) - « tu as enlevé l'appel, remets comme avant ».
+- L5 : le petit double avant l'arrivée remplacé par un roller de 2,2 ft ; triple d'arrivée x0,87 en hauteur et x0,93 en longueur
+  (8,7 / 5,2 / 9,7 ft).
+- Berms des 180 x1,15 (« un petit peu plus gros, faut pas abuser ») ; 90 inchangés.
+
+Habillage (`hab_objets2.py`, nouveaux modèles fermés, faces vers l'extérieur) :
+- Tuff blocks **pleins** (bloc de mousse arrondi, bouts fermés) au lieu des demi-tonneaux creux.
+- Virages : ballots ronds sous bâche grise + coussin du sponsor (photo 12), sur 70 % des 5 grands virages seulement, abaissés au
+  point le plus bas sous leur emprise, jupe de bâche de 3 ft (plus rien en l'air). Plus de murs aux 90 près du départ.
+- Filets : sur le sol plat juste derrière le berm (droits).
+- Whoops : boudins FLY en ligne droite, bout à bout, sur le plat après le pied des whoops, à la même distance tout du long.
+- Bâche AMV dessinée sur le **vrai bord** du saut du milieu (relevé dans le terrain), contre le flanc, des deux côtés.
+- Portique Minerva Oil et arche 50 Factory : volumes fermés (plus de faces manquantes), arêtes chanfreinées.
+- Départ : plus de mur de fond derrière les grilles (« ça me bloque la vue »). Bandeau START gardé.
+- Long boudin noir FLY / RBT / SX TOUR : visible en entraînement libre ; en course, enterré 20 s après la chute de la grille.
+- Camions : tracteur (cabine, déflecteur, pare-brise, rétros, réservoirs), remorque à angles arrondis et jupes, vraies roues.
+- Vrais logos pris dans les textures ZION 2025 : AMV, Kawasaki, KTM, Triumph (en plus de Honda, Yamaha, Seong, Monster, Automoto).
+  Encore redessinés : Venum, Minerva Oil, Thor, Five, Moto Verte.
+- Vérification : `rendu_objets.py` / `rendu_scenes.py` (rendu logiciel, l'aperçu WebGL était bloqué) -> `apercu/v9_*.png`.
+- Contrôles : 7 / 7, `validate_mx.py` 0 problème. **Non testé en jeu.**

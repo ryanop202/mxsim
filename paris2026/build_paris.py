@@ -68,6 +68,15 @@ def render_wide(out, g, prof, u0, w_half_h, w_foot):
     out[sl] = np.maximum(out[sl], pu * lat)
 
 
+def berm_seg(g):
+    """partie du virage qui porte le berm (tout le virage, ou à partir de la fraction g['berm_from'])."""
+    f = g.get('berm_from', 0.0)
+    if not f:
+        return g
+    a = np.radians(g['ang']) * f
+    return dict(g, t0=g['t0'] - a, ang=g['ang'] * (1 - f), s0=g['s0'] + g['L'] * f, L=g['L'] * (1 - f))
+
+
 def render(path, st):
     jumps = np.zeros((N, N)); whoops = np.zeros((N, N)); berms = np.zeros((N, N)); fmx = np.zeros((N, N))
     import layouts_sx as LS
@@ -84,11 +93,13 @@ def render(path, st):
                                  L=round(len(prof) * 0.1, 1), H=round(float(prof.max()), 2), seg_L=round(g['L'], 1),
                                  items=[(i[0], round(i[1], 1), round(i[2], 1)) for i in LS.COMBOS[name]['items']]))
         elif g.get('berm'):
-            # berms : 90° plus hauts (BERM90_GAIN 1,4 de Saint-Thibéry / Saint-Georges), 180° tels que mesurés
-            gain = LP.BERM90_GAIN if abs(abs(g['ang']) - 90) < 1 else 1.0
+            # berms : 90° tels que mesurés (BERM90_GAIN), 180° un peu plus gros (v9, BERM180_GAIN) ;
+            # v9 : 180 L3 -> L2 de rayon 32 ft, berm sur sa 2e moitié seulement (berm_seg), croissant décalé de r - 21,5 ft
+            gb = berm_seg(g)
+            gain = LP.BERM90_GAIN if abs(abs(gb['ang']) - 90) < 1 else LP.BERM180_GAIN
             tmp = np.zeros((N, N))
-            sl = render_berm_stamp(G, tmp, g['berm'], g['cx'], g['cz'], turn_mid_angle(g),
-                                   ang_scale=berm_ang_scale(g['berm'], g['ang']))
+            sl = render_berm_stamp(G, tmp, g['berm'], g['cx'], g['cz'], turn_mid_angle(gb),
+                                   ang_scale=berm_ang_scale(g['berm'], gb['ang']), r_shift=max(0.0, g['r'] - LP.RB))
             berms[sl] = np.maximum(berms[sl], tmp[sl] * gain)
     # pieds des bosses arrondis (SOFT_FEET de Saint-Georges : pas de cassure de pente au pied)
     from scipy.ndimage import gaussian_filter
@@ -207,6 +218,24 @@ def export(H, tiles, gates_txt, floor_mx, inside_mx):
     ob, gate_model, REPORT['objets'] = HB.build(OUT, FOLDER, H, S, PATH, START, LS_.COMBOS, finish_s(PATH, START, LS_.COMBOS))
     with open(os.path.join(OUT, "statues"), "a", newline="\n") as f_:
         f_.write("\n".join(ramps + ob) + "\n")
+    # (h) le long tuff block de la ligne de départ : enterré jusqu'à ~20 s après la chute de la grille (comme les boudins de départ
+    #     de Saint-Thibéry, mais à l'envers). Indices = rang de la statue dans le fichier statues.
+    allst = [l for l in open(os.path.join(OUT, "statues")).read().split("\n") if l.strip()]
+    late = set(HB.LATE); rows = []
+    for i_, l_ in enumerate(allst):
+        if l_ in late:
+            v_ = l_.split(']')[0][1:].split(); rows.append("[%d, %.3f, %.3f, %.6f]" % (i_, float(v_[0]), float(v_[2]), float(l_.split(']')[1].split()[0])))
+    js = ['/*', 'USLAND: Supercross Paris 2026 - long tuff block le long de la ligne de depart reprise par le tour.',
+          'Enterre au depart (il generait le depart), il sort du sol LATE_AFTER s apres la chute de la grille.',
+          'Sans chute de grille (entrainement libre) il est la (v9). Texte ASCII expres.', '*/', '',
+          'var g_lt = [' + ', '.join(rows) + '];', 'var LATE_AFTER = 20.0;', 'var g_lt_shown = -1;', 'var g_lt_t = -1.0;', '',
+          'function ltSet(show) {', '    var i, s;', '    for (i = 0; i < g_lt.length; i++) {', '        s = g_lt[i];',
+          '        mx.move_statue(s[0], s[1], show ? 0.0 : -200.0, s[2], s[3]);', '    }', '    g_lt_shown = show;', '}', '',
+          'function lateTuff(seconds) {', '    var d = mx.get_gate_drop_time();', '    var show = (d < 0 || mx.seconds >= d + LATE_AFTER);',
+          '    if (show != g_lt_shown || mx.seconds < g_lt_t || mx.seconds - g_lt_t > 1.0) {', '        ltSet(show);', '        g_lt_t = mx.seconds;', '    }',
+          '    if (lateTuffPrev)', '        lateTuffPrev(seconds);', '}', '', 'var lateTuffPrev = mx.frame_handler;', 'mx.frame_handler = lateTuff;', '']
+    open(os.path.join(OUT, "nofrills.js"), "w", newline="\n", encoding="ascii").write("\n".join(js))
+    REPORT['long_tuff_apres_depart'] = len(rows)
     shutil.copytree(os.path.join(ARENA, "tex"), os.path.join(OUT, "tex"))
     gl = gates_txt.split("\n"); i_ = gl.index("startinggate:"); j_ = gl.index("checkpoints:")
     for k_ in range(i_ + 1, j_):                         # le cadre rouge de Saint-Georges sur chaque grille

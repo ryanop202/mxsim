@@ -35,7 +35,8 @@ def _save(img, path, alpha=False):
 TUFF = dict(yamaha=((24, 52, 140), 'yamaha', None, (12, 12, 14)), honda=((214, 22, 28), 'honda', None, (120, 10, 14)),
             seong=((0, 160, 172), 'seong', (10, 10, 10), (205, 30, 36)), amv=((245, 245, 242), 'amv', None, (0, 150, 64)),
             monster=((14, 14, 15), 'monster', None, (14, 14, 15)), motul=((214, 22, 28), 'motul', None, (150, 12, 16)),
-            venum=((14, 14, 15), 'venum', None, (60, 60, 62)), thor=((120, 122, 126), 'thor', None, (60, 60, 62)))
+            venum=((14, 14, 15), 'venum', None, (60, 60, 62)), thor=((120, 122, 126), 'thor', None, (60, 60, 62)),
+            gris=((128, 130, 134), None, None, (92, 94, 98)))      # (c) blocs durs gris des virages, sans logo
 ARC_L, ARC_W, ARC_H = 1.95, 1.2, 1.5
 
 
@@ -80,7 +81,7 @@ def tuff_arc(out):
             fit(im, K.hstack([logo('seong_icon').resize((120, 134)), logo('seong')], 40), (20, 60, 492, 200), 0.12)
         elif name == 'monster':
             fit(im, K.hstack([logo('monster_claw'), logo('monster_text')], 30), (20, 30, 492, 232), 0.06)
-        else:
+        elif lg is not None:
             lgo = logo(lg) if ink is None else K.tint(logo(lg), ink)
             fit(im, lgo, (20, 30, 492, 232), 0.08)
         im = K.shade_v(im, (0, 0, 512, 262), 1.0, 0.74)
@@ -91,7 +92,8 @@ def tuff_arc(out):
 
 # ---------------------------------------------------------------- boudins (modèles de Saint-Georges, nouvelles peaux)
 BOUDIN = dict(motul=((214, 22, 28), 'motul', None), seong=((0, 160, 172), 'seong', (10, 10, 10)), honda=((214, 22, 28), 'honda', None),
-              thor=((120, 122, 126), 'thor', None), r=((214, 22, 28), 'r', None), monster=((14, 14, 15), 'monster_text', None))
+              thor=((120, 122, 126), 'thor', None), fly=((200, 16, 30), 'fly', None), monster=((14, 14, 15), 'monster_text', None),
+              noir=((14, 14, 16), 'fly', (255, 255, 255)))        # v8 (capture de Ryan) : noir, FLY / RBT / SX TOUR en blanc
 
 
 def boudins(out):
@@ -100,7 +102,10 @@ def boudins(out):
             row = Image.new('RGB', (int(L * 142), 512), bg); lgo = logo(lg) if ink is None else K.tint(logo(lg), ink)
             rw = row.size[0] / nlogo
             for k in range(nlogo):
-                if name == 'r':                                              # « R » répété (boudins des whoops)
+                if name == 'noir':                                           # FLY / RBT / SX TOUR à la suite (capture de Ryan)
+                    lg_k = ['fly', 'rbt', 'sxtour'][k % 3] if nlogo > 1 else 'fly'
+                    fit(row, logo(lg_k) if lg_k == 'sxtour' else K.tint(logo(lg_k), (255, 255, 255)), (k * rw, 120, (k + 1) * rw, 392), 0.12)
+                elif name == 'r':                                            # « R » répété (boudins des whoops)
                     for q in range(2):
                         fit(row, lgo, (k * rw + q * rw / 2, 120, k * rw + (q + 1) * rw / 2, 392), 0.05)
                 else:
@@ -202,8 +207,26 @@ def _mascotte(d, cx, cy, s, G=(0, 150, 64)):
     d.line([(cx + 0.5 * s, cy + 0.2 * s), (cx + 1.3 * s, cy - 0.3 * s)], fill=(25, 25, 28), width=int(0.3 * s))
 
 
-def amv_jupe(out, half_c=10.0, wing=22.0, h=10.0, head=2.6):
+def amv_jupe(out, half_c=10.0, wing=22.0, h=10.0, head=2.6, wing2=None, name='amv_jupe'):
+    """(d) bâche AMV qui suit la réception : panneau central (dessus plat, demi-longueur half_c) + 2 pentes (wing côté -x,
+    wing2 côté +x ; triangles jusqu'au pied), hauteur h = hauteur de la réception. Texture commune 'amv_jupe.png'."""
+    if wing2 is not None and abs(wing2 - wing) > 0.05:
+        r = amv_jupe(out, half_c, max(wing, wing2), h, head)               # texture (pente la plus longue)
+        m = Mesh(); W, H = 2048, 512; px = 31.0
+        cw, ch, ww, wh = int(2 * half_c * px), int((h + head) * px), int(max(wing, wing2) * px), int(h * px)
+        px = min(px, H / (h + head), (W - 24) / (2 * half_c + 2 * max(wing, wing2)))
+        cw, ch, ww, wh = int(2 * half_c * px), int((h + head) * px), int(max(wing, wing2) * px), int(h * px)
+        u = lambda x: (x + 0.5) / W; v = lambda y: 1 - (y + 0.5) / H
+        bc = (ww + 4, 0, ww + 4 + cw, ch); xg, xd = 0, ww + 8 + cw
+        m.quad([(-half_c, 0, 0), (half_c, 0, 0), (half_c, h + head, 0), (-half_c, h + head, 0)], R(bc, W, H), two=False)
+        m.tri([(-half_c - wing, 0, 0), (-half_c, 0, 0), (-half_c, h, 0)], [(u(xg), v(wh)), (u(xg + ww), v(wh)), (u(xg + ww), v(0))])
+        m.tri([(half_c, 0, 0), (half_c + wing2, 0, 0), (half_c, h, 0)], [(u(xd), v(wh)), (u(xd + ww), v(wh)), (u(xd), v(0))])
+        back = R((1960, 440, 2040, 500), W, H)
+        m.quad([(half_c, 0, -0.05), (-half_c, 0, -0.05), (-half_c, h + head, -0.05), (half_c, h + head, -0.05)], back)
+        m.write(os.path.join(out, name + '.jm'), MAT_BACHE)
+        return dict(half=half_c + max(wing, wing2), h=h + head)
     G = (0, 150, 64); W, H = 2048, 512; px = 31.0
+    px = min(px, H / (h + head), (W - 24) / (2 * half_c + 2 * wing))        # grande réception : échelle du dessin réduite pour tenir
     cw, ch, ww, wh = int(2 * half_c * px), int((h + head) * px), int(wing * px), int(h * px)
     im = Image.new('RGB', (W, H), (245, 245, 242)); d = ImageDraw.Draw(im)
     bc = (ww + 4, 0, ww + 4 + cw, ch)                                        # panneau central
@@ -213,9 +236,9 @@ def amv_jupe(out, half_c=10.0, wing=22.0, h=10.0, head=2.6):
         fit(im, logo('amv'), (bc[0] + 10 + k * (cw - 20) / 3, 8, bc[0] + 10 + (k + 1) * (cw - 20) / 3, int(head * px) - 8), 0.16)
     d.rounded_rectangle([bc[0] + cw * 0.3, int(head * px) + 14, bc[0] + cw * 0.7, int(head * px) + 62], 8, fill=G)
     fit(im, K.tint(logo('amv_fr'), (255, 255, 255)), (bc[0] + cw * 0.3, int(head * px) + 14, bc[0] + cw * 0.7, int(head * px) + 62), 0.12)
-    y = int(head * px) + 84
+    y = int(head * px) + int(84 * px / 31)
     for line in ("L'ASSURANCE", "DES DEUX-ROUES", "QUI COMPREND", "LES DEUX-ROUES !"):
-        t = K.text_img(line, 40, (30, 60, 40), 'arialbd.ttf'); fit(im, t, (bc[0] + 20, y, bc[2] - 20, y + 50), 0.02); y += 54
+        t = K.text_img(line, 40, (30, 60, 40), 'arialbd.ttf'); fit(im, t, (bc[0] + 20, y, bc[2] - 20, y + int(50 * px / 31)), 0.02); y += int(54 * px / 31)
     boxes = {}
     for side, x0 in (('g', 0), ('d', ww + 8 + cw)):                          # triangles : bonhomme + AMV.fr
         tri = [(x0, wh), (x0 + ww, wh), (x0 + ww, 0)] if side == 'g' else [(x0, 0), (x0, wh), (x0 + ww, wh)]
@@ -233,7 +256,7 @@ def amv_jupe(out, half_c=10.0, wing=22.0, h=10.0, head=2.6):
     m.tri([(half_c, 0, 0), (half_c + wing, 0, 0), (half_c, h, 0)], [(u(xd), v(wh)), (u(xd + ww), v(wh)), (u(xd), v(0))])
     back = R((1960, 440, 2040, 500), W, H)                                   # dos : bâche blanche unie
     m.quad([(half_c, 0, -0.05), (-half_c, 0, -0.05), (-half_c, h + head, -0.05), (half_c, h + head, -0.05)], back)
-    m.write(os.path.join(out, 'amv_jupe.jm'), MAT_BACHE)
+    m.write(os.path.join(out, name + '.jm'), MAT_BACHE)
     return dict(half=half_c + wing, h=h + head)
 
 
@@ -403,10 +426,7 @@ def depart(out, width=96.0):
     for sx in (-1, 1):                                                        # tours en treillis
         x0, x1 = sorted((sx * hw, sx * (hw + 1.6)))
         m.box((x0, 0, zb - 0.8), (x1, 18.2, zb + 0.8), rt, 'xXzZY')
-    zw = -15.0                                                                # mur de fond noir derrière les grilles + mur rouge plus haut
-    m.quad([(-50, 0, zw), (50, 0, zw), (50, 8, zw), (-50, 8, zw)], rw)
-    m.quad([(50, 0, zw - 0.3), (-50, 0, zw - 0.3), (-50, 8, zw - 0.3), (50, 8, zw - 0.3)], blk)
-    m.box((-50, 8, zw - 0.3), (50, 8.05, zw), blk, 'Y')
+    # v9 (Ryan : « la plaque derrière, ça me bloque la vue, je vois rien ») : plus de mur de fond derrière les grilles
     m.write(os.path.join(out, 'depart.jm'), MAT_MAT)
 
 

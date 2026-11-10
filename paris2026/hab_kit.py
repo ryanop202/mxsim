@@ -14,7 +14,7 @@ ROOT = os.path.dirname(HERE)
 ZSRC = os.path.join(HERE, "refs", "zion25_full", "ZION.2025.SupercrossParis")
 LOGOS = os.path.join(ROOT, "assets", "logos")
 FONTS = "C:/Windows/Fonts/"
-LOGOS_REDESSINES = ['amv', 'venum', 'minerva', 'thor', 'five', 'motoverte', 'r']
+LOGOS_REDESSINES = ['minerva', 'thor', 'motoverte']   # v9 : Venum et Five = logos officiels (assets/logos, sites des marques)   # v9 : AMV, Kawasaki, KTM, Triumph = vrais logos (textures ZION 2025)
 
 
 # ---------------------------------------------------------------- maillage
@@ -145,6 +145,25 @@ def shade_v(img, box, top=1.0, bot=0.72):
 
 
 # ---------------------------------------------------------------- logos
+def _zkey(rel, box, rot, key):
+    """v9 : logo d'une couleur pris dans une texture de ZION 2025 (lettres vertes AMV, noires KTM, blanches / grises sur noir),
+    petites taches retirées (composantes < 2 % de la plus grande)."""
+    from scipy import ndimage as ndi
+    a = np.asarray(Image.open(os.path.join(ZSRC, rel)).convert('RGB').crop(box), float)
+    if key == 'green':
+        al = np.clip((a[..., 1] - a[..., 0] - 40) / 60, 0, 1); rgb = np.broadcast_to(np.array([0, 156, 64.]), a.shape)
+    elif key == 'black_on_orange':
+        al = np.clip((160 - a.max(-1)) / 80, 0, 1) * (a[..., 0] < 120); rgb = np.broadcast_to(np.array([12, 12, 12.]), a.shape)
+    else:                                                    # clair sur noir -> blanc
+        al = np.clip((a.max(-1) - 50) / 80, 0, 1); rgb = np.full(a.shape, 255.0)
+    lab, n = ndi.label(al > 0.5)
+    if n > 1:
+        sz = ndi.sum(np.ones_like(al), lab, range(1, n + 1)); keep = np.isin(lab, 1 + np.nonzero(sz >= 0.02 * sz.max())[0])
+        al = al * ndi.binary_dilation(keep, iterations=2)
+    out = Image.fromarray(np.dstack([rgb, al * 255]).astype(np.uint8), 'RGBA').rotate(rot, expand=True)
+    return out.crop(out.getbbox())
+
+
 def _zcrop(rel, box, rot, mode):
     im = Image.open(os.path.join(ZSRC, rel)).convert('RGB').crop(box)
     a = np.asarray(im, float)
@@ -192,15 +211,26 @@ def logo(name):
         im = Image.fromarray(np.dstack([np.full(a.shape, 255.0), al * 255]).astype(np.uint8), 'RGBA'); im = im.crop(im.getbbox())
     elif name == '50factory':
         im = Image.open(os.path.join(LOGOS, '50factory.png')).convert('RGBA'); im = im.crop(im.getbbox())
+    elif name == 'fly':                                      # (a) boudins des whoops : FLY Racing blanc (assets/logos)
+        im = Image.open(os.path.join(LOGOS, 'fly_racing_white.png')).convert('RGBA'); im = im.crop(im.getbbox())
+    elif name == 'rbt':                                      # RBT (assets/logos/rbt_wide.png)
+        im = Image.open(os.path.join(LOGOS, 'rbt_wide.png')).convert('RGBA'); im = im.crop(im.getbbox())
     elif name == 'sxtour':
         im = Image.open(os.path.join(LOGOS, 'sxtour_long.png')).convert('RGBA'); im = im.crop(im.getbbox())
-    # ---- redessinés (pas de fichier officiel pour l'instant)
+    # ---- v9 : vrais logos lus dans les textures de ZION 2025 (même méthode que Honda / Yamaha / Seong)
     elif name == 'amv':
-        im = text_img('AMV', 200, G, 'ariblk.ttf', squeeze=1.05)
+        im = _zkey('statue/husqy.png', (490, 110, 618, 398), 90, 'green')
     elif name == 'amv_fr':
-        im = hstack([text_img('AMV', 200, G, 'ariblk.ttf', squeeze=1.05), text_img('.fr', 110, G, 'arialbd.ttf')], 6, 'b')
-    elif name == 'venum':
-        im = text_img('VENUM', 200, (255, 255, 255), 'arialbd.ttf', squeeze=1.25)
+        a_ = logo('amv'); im = hstack([a_, text_img('.fr', int(a_.size[1] * 0.62), G, 'arialbd.ttf')], 6, 'b')
+    elif name == 'kawasaki':
+        im = _zkey('statue/kawa.png', (840, 80, 960, 820), 90, 'light')
+    elif name == 'triumph':
+        im = _zkey('statue/triumph.png', (790, 60, 960, 880), 90, 'light')
+    elif name == 'ktm':
+        im = _zkey('statue/ktm.png', (788, 70, 960, 455), -90, 'black_on_orange')
+    # ---- redessinés (pas de fichier officiel pour l'instant)
+    elif name == 'venum':                                   # v9 : logo officiel (venum.com), noir dans le fichier -> blanc
+        im = tint(Image.open(os.path.join(LOGOS, 'venum.png')).convert('RGBA'), (255, 255, 255)); im = im.crop(im.getbbox())
     elif name == 'minerva':
         top = hstack([text_img('MINERVA', 150, G, 'ariblk.ttf', italic=0.2), text_img('OIL', 150, (255, 255, 255), 'ariblk.ttf', italic=0.2,
                                                                                        stroke=10, stroke_fill=G)], 26)
@@ -210,8 +240,18 @@ def logo(name):
                      text_img('OIL', 150, (255, 255, 255), 'ariblk.ttf', italic=0.15)], 40)
     elif name == 'thor':
         im = text_img('THOR', 200, (255, 255, 255), 'ariblk.ttf', italic=0.18, squeeze=1.15)
-    elif name == 'five':
-        im = hstack([text_img('5', 230, (215, 25, 32), 'ariblk.ttf', italic=0.2), text_img('FIVE', 200, (15, 15, 15), 'ariblk.ttf', italic=0.2)], 30)
+    elif name == 'five':                                    # v9 : logo officiel (five-gloves.com, SVG noir)
+        import re as _re, sys as _sys
+        _sys.path.insert(0, os.path.join(ROOT, 'scripts')); import svg_raster as SR
+        svg = open(os.path.join(LOGOS, 'five.svg'), encoding='utf-8').read()
+        vb = [float(v) for v in _re.search(r'viewBox="([^"]+)"', svg).group(1).split()]; k = 1400 / vb[2]
+        mask = np.zeros((int(vb[3] * k) + 1, int(vb[2] * k) + 1), bool)
+        for d_ in _re.findall(r'<path d="([^"]+)" fill="#[0-9A-Fa-f]{6}"', svg):
+            for sp in SR._subpaths(d_):
+                m_ = Image.new('1', mask.shape[::-1], 0); ImageDraw.Draw(m_).polygon([((x - vb[0]) * k, (y - vb[1]) * k) for x, y in sp], fill=1)
+                mask ^= np.array(m_)
+        im = Image.new('RGBA', mask.shape[::-1], (15, 15, 15, 0)); im.putalpha(Image.fromarray((mask * 255).astype(np.uint8)))
+        im = im.crop(im.getbbox())
     elif name == 'motoverte':
         im = hstack([text_img('moto', 200, (214, 30, 36), 'ariblk.ttf'), text_img('verte', 150, (0, 140, 60), 'segoescb.ttf')], -10, 'b')
     elif name == 'r':
