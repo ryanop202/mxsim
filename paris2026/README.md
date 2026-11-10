@@ -89,3 +89,20 @@ py -3.15 -I paris2026/build_paris.py
 - Le build a besoin de l'archive ZION extraite dans `refs/zion25_full` (local, pas sur GitHub). Fichiers ZION copiés dans la
   piste : usage privé ; pour une version publique, demander l'accord de leur auteur.
 - Contrôles : 7 / 7, `validate_mx.py` 0 problème, 0 référence manquante. **Non testé en jeu.**
+
+## Habillage « comme en vrai » (v3, 2026-11-10) — aperçu seulement, pas encore validé par Ryan
+
+Demande : refaire à l'identique des photos du Supercross de Paris (local : `paris2026/refs/photos2025/`) les pubs, tuff blocks,
+départ, filets, arrivée, et faire le paddock derrière le départ. Tout ce qui venait de ZION est retiré de la piste.
+
+- `habillage.py` (placement, remplace `objets.py` dans le build), `hab_objets.py` (modèles), `hab_kit.py` (maillage, logos).
+- Le tracé 2026 n'est pas celui des photos : chaque sponsor est posé à l'endroit équivalent (plan en tête de `habillage.py`).
+- Formes créées d'après les photos (pas des mesures) : demi-tonneaux, murs bâchés, filets, bâche AMV, rampe + coins Honda,
+  habillage Venum des tremplins, portique Minerva Oil (podium avec collision), arche 50 Factory, bandeau START, panneau FINISH
+  suspendu, canettes Monster, camions du paddock (provisoires).
+- Logos **redessinés en texte** faute de fichier officiel : AMV, Venum, Minerva Oil, Thor, Five, Moto Verte, « R » des whoops.
+  Les autres viennent de `assets/logos/` ou des textures de l'archive ZION (usage privé).
+- Paddock : 10 camions sur la bande de 22 m entre le départ et le mur de scène (l'arène n'a pas plus de place sans l'agrandir).
+- Aperçu : `py -3.12 -I paris2026/apercu_habillage.py` puis `py -3.12 -I stade_paris/src/preview_web.py` ->
+  `apercu/vue_dessus_habillage.png`, `apercu/habillage_3d.jpg`, aperçu 3D `stade_paris/build/web`.
+- Contrôles : 7 / 7, `validate_mx.py` 0 problème, 441 objets. **Non testé en jeu.**

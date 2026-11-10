@@ -208,13 +208,61 @@
   }
  ],
  "objets": {
-  "tuffs": 190,
-  "murets": 20,
-  "blocs_virages": 125,
-  "poteaux": 10,
-  "total": 359,
-  "fichiers": 42,
-  "ecartes": []
+  "objets": {
+   "boudins R (whoops)": 22,
+   "tuffs honda": 44,
+   "tuffs amv": 32,
+   "tuffs seong": 28,
+   "tuffs monster": 11,
+   "tuffs motul": 35,
+   "tuffs yamaha": 28,
+   "poteaux ronds": 9,
+   "murs amv": 6,
+   "murs motoverte": 19,
+   "murs honda": 22,
+   "filets": 68,
+   "murs seong": 24,
+   "murs five": 18,
+   "panneau FINISH suspendu": 1,
+   "rampe + coins Honda": 1,
+   "cage du drapeau": 1,
+   "boudins Thor": 6,
+   "bâche AMV": 2,
+   "habillage Venum des tremplins": 4,
+   "arche 50 Factory": 1,
+   "grilles de départ": 1,
+   "bandeau START + mur de fond": 1,
+   "canettes Monster": 2,
+   "portique Minerva Oil": 1,
+   "boudins Motul": 28,
+   "murs automoto": 12,
+   "camions du paddock": 10
+  },
+  "total": 437,
+  "amv_pied_ft": {
+   "-1": 21.6,
+   "1": 21.6
+  },
+  "arche": {
+   "crete_ft": 3.6,
+   "sol_pieds_ft": [
+    0.0,
+    0.41
+   ],
+   "libre_sous_poutre_ft": 20.9
+  },
+  "finish": {
+   "crete_ft": 10.0
+  },
+  "logos_redessines": [
+   "amv",
+   "venum",
+   "minerva",
+   "thor",
+   "five",
+   "motoverte",
+   "r"
+  ]
  },
  "public": 6415,
  "export": {

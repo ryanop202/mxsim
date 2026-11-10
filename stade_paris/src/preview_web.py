@@ -22,6 +22,11 @@ TEX = os.path.join(ROOT, "build", "textures")
 OUT = os.path.join(ROOT, "build", "web")
 PREVIEW_MATS = {"ground_plaza": dict(tex="plaza_preview.png"), "ground_floor": dict(tex="floor_preview.png"),
                 "piste": dict(tex="piste_top.png", unlit=True)}          # terrain de la piste Paris 2026 (paris2026/preview_track.py)
+_EXTRA = os.path.join(ROOT, "build", "extra_mats.json")                  # habillage de la piste (paris2026/apercu_habillage.py)
+if os.path.exists(_EXTRA):
+    PREVIEW_MATS.update(json.load(open(_EXTRA, encoding="utf-8")))
+_VIEWS = os.path.join(ROOT, "build", "extra_views.json")
+EXTRA_VIEWS = json.load(open(_VIEWS, encoding="utf-8")) if os.path.exists(_VIEWS) else {}
 
 
 def read_obj(path):
@@ -96,7 +101,7 @@ def main():
     with open(os.path.join(OUT, "groups.json"), "w") as f:
         json.dump(groups, f)
     with open(os.path.join(OUT, "index.html"), "w", encoding="utf-8") as f:
-        f.write(HTML.replace("__K__", str(json.load(open(os.path.join(ROOT, "build", "build_info.json"))).get("plan_scale", 1))))
+        f.write(HTML.replace("__EXTRA__", json.dumps(EXTRA_VIEWS, ensure_ascii=False)).replace("__K__", str(json.load(open(os.path.join(ROOT, "build", "build_info.json"))).get("plan_scale", 1))))
     print("aperçu :", OUT, "-", len(groups), "groupes,", len(blob) // 1024, "Ko")
 
 
@@ -152,6 +157,7 @@ const V = {
   'Piste : grande table': [[6, 6, 4], [-20, 2, 15.3]],
   'Piste : whoops': [[56, 4.5, 39], [0, 0.5, 48]],
 };
+Object.assign(V, __EXTRA__);
 const roofParts = ['roof', 'roof_under', 'roof_structure', 'rigging', 'catwalks'];
 function go(k){ const [p, t] = V[k]; C.position.set(...p); O.target.set(...t); O.update();
   const hide = k.startsWith('Vue de dessus'); S.traverse(o => { if (o.isMesh) o.visible = !(hide && roofParts.includes(o.name.split('/')[0])); }); }

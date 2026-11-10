@@ -200,11 +200,11 @@ def export(H, tiles, gates_txt, floor_mx, inside_mx):
         fx, fz = x - d[0] * LP.FMX_MODEL['model_len'], z - d[1] * LP.FMX_MODEL['model_len']
         ramps.append("[%.6f 0.000000 %.6f] %.6f @%s/statue/%s.jm @%s/statue/%s.png @%s/statue/%s.shp"
                      % (fx, fz, PP.statue_ang(-d[0], -d[1]), FOLDER, m_, FOLDER, m_, FOLDER, m_))
-    # étape 3 : objets ZION 2025 + Saint-Georges (objets.py)
-    import objets as OB
+    # étape 3 (v3) : habillage « comme en vrai » (habillage.py, d'après les photos du Supercross de Paris) ; plus rien de ZION
+    import habillage as HB
     import layouts_sx as LS_
     from starts import finish_s
-    ob, gate_model, REPORT['objets'] = OB.build(OUT, FOLDER, H, S, PATH, START, LS_.COMBOS, finish_s(PATH, START, LS_.COMBOS))
+    ob, gate_model, REPORT['objets'] = HB.build(OUT, FOLDER, H, S, PATH, START, LS_.COMBOS, finish_s(PATH, START, LS_.COMBOS))
     with open(os.path.join(OUT, "statues"), "a", newline="\n") as f_:
         f_.write("\n".join(ramps + ob) + "\n")
     shutil.copytree(os.path.join(ARENA, "tex"), os.path.join(OUT, "tex"))
