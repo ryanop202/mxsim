@@ -1,0 +1,24 @@
+sun_vector [ 12049 12000 -8049 ] 
+sun_color [ 1.3 1.3 1.3 ]
+ambient [ 0.08 0.08 0.08 ]
+sky_n @ZION.2025.SupercrossParis/sky/sky-n.png
+sky_e @ZION.2025.SupercrossParis/sky/sky-e.png
+sky_s @ZION.2025.SupercrossParis/sky/sky-s.png
+sky_w @ZION.2025.SupercrossParis/sky/sky-w.png
+sky_u @ZION.2025.SupercrossParis/sky/sky-u.png
+sky_env @ZION.2025.SupercrossParis/sky/sky-env.png
+flare_element [ 0.0 1.0 ] [ 1.0 1.0 1.0 ] 0.20 @ZION.2025.SupercrossParis/sky/flare.png
+flare_point [839.300659 220.000000 373.570557] 
+flare_element [ 0.0 1.0 ] [ 1.0 1.0 1.0 ] 0.20 @ZION.2025.SupercrossParis/sky/flare.png
+flare_point [730.073853 220.000000 685.321716] 
+flare_element [ 0.0 1.0 ] [ 1.0 1.0 1.0 ] 0.20 @ZION.2025.SupercrossParis/sky/flare.png
+flare_point [520.722717 220.000000 -78.506454] 
+flare_element [ 0.0 1.0 ] [ 1.0 1.0 1.0 ] 0.20 @ZION.2025.SupercrossParis/sky/flare.png
+flare_point [188.491776 220.000000 -78.506462] 
+flare_element [ 0.0 1.0 ] [ 1.0 1.0 1.0 ] 0.10 @ZION.2025.SupercrossParis/sky/flare.png
+flare_point [-76.231178 235.000000 343.988342] 
+flare_element [ 0.0 1.0 ] [ 1.0 1.0 1.0 ] 0.10 @ZION.2025.SupercrossParis/sky/flare.png
+flare_point [-70.163040 235.000000 399.360199] 
+flare_element [ 0.0 1.0 ] [ 1.0 1.0 1.0 ] 0.10 @ZION.2025.SupercrossParis/sky/flare.png
+flare_point [-71.680077 235.000000 371.295013] 
+dynamic_lighting 1

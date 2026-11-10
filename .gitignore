@@ -24,5 +24,6 @@ docs/img/refs_paddock/
 stade_paris/build/
 stade_paris/export/
 
-# paris2026 : visuels de référence du Supercross Paris (pas à nous) : en local seulement
-paris2026/refs/
+# paris2026 : photos + archive ZION 2025 extraite VERSIONNÉES depuis le 2026-11-10 (demandé par Ryan : un pote n'a que GitHub) ;
+# Superpole pas utilisée
+paris2026/refs/zion25_full/ZION.2025.SupercrossParisSuperpole/

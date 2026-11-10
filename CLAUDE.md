@@ -31,6 +31,7 @@ Tu reprends un projet commencé dans une autre conversation. Lis dans cet ordre 
 - **Fidélité** : toute géométrie vient des mesures (`lib/`). Pas d'obstacle inventé « à l'œil ». Si on crée une forme nouvelle, le dire.
 - **Garder les dimensions** des références (Ryan l'a demandé) : grille 0,28975 ft, couloirs 30,4 ft, espacement 43 ft, berms JGSX.
 - Les archives de référence ne vont **pas** sur GitHub (taille + ce n'est pas à nous). Elles sont dans `refs/archives/` en local.
+  Exception demandée par Ryan (2026-11-10, dépôt privé) : `paris2026/refs/` (photos de Paris + ZION 2025 extraite) est versionné.
 - Après tout changement : `./make_all.sh build` → doit finir sur `43 / 43` (ou plus si on ajoute des contrôles). Montrer les vues de dessus.
 
 ## Ce que Ryan a validé / rejeté (résumé)
