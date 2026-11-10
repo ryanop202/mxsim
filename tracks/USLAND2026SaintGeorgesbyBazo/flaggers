@@ -1,0 +1,24 @@
+[430.072249 0.000 168.941423]
+[427.152536 0.000 202.313946]
+8.4 1
+10
+@30sec_30.png
+@30sec_turn.seq
+@30sec_5.png
+@30sec_run.seq
+@USLAND2026SaintGeorgesbyBazo/billboard/blank.png
+
+[347.294036 0.000 339.807102]
+10.5 1
+@USLAND2026SaintGeorgesbyBazo/ext/2024Bh1Conway/flaggerfiles/defaultflag.png
+@USLAND2026SaintGeorgesbyBazo/ext/2024Bh1Conway/flaggerfiles/halfway.png
+@USLAND2026SaintGeorgesbyBazo/ext/2024Bh1Conway/flaggerfiles/lastlap.png
+@USLAND2026SaintGeorgesbyBazo/ext/2024Bh1Conway/flaggerfiles/rf.flagger_waving.seq
+
+
+
+[0.00000000 0.000 0.00000000]
+9.6 1
+3 4 5 -1
+@flagger_resting.png
+@flagger_waving.seq

@@ -1,0 +1,377 @@
+{
+ "sections": [
+  {
+   "lane": "L5 arrivée",
+   "name": "PAR-L5 single, single, triple d arrivee (ZION 2025)",
+   "u0": 32.5,
+   "s0": 32.5,
+   "L": 236.7,
+   "H": 11.15,
+   "seg_L": 293.0,
+   "items": [
+    [
+     "Arlington_g37_0 (H 3.4)",
+     0.0,
+     27.4
+    ],
+    [
+     "Arlington_g37_1 (H 3.9)",
+     35.2,
+     63.1
+    ],
+    [
+     "appel arrivee ZION 2025 (10,0)",
+     68.3,
+     109.6
+    ],
+    [
+     "triple arrivee ZION 2025 (6,0 / 11,2)",
+     109.6,
+     236.6
+    ]
+   ]
+  },
+  {
+   "lane": "L3 grande table",
+   "name": "PAR-L3 appel, gros saut rond du milieu (ZION 2025)",
+   "u0": 87.9,
+   "s0": 868.8,
+   "L": 165.0,
+   "H": 24.25,
+   "seg_L": 264.9,
+   "items": [
+    [
+     "appel gros saut ZION 2025 (10,0)",
+     0.0,
+     56.4
+    ],
+    [
+     "butte gros saut rond ZION 2025 (24,2)",
+     56.4,
+     164.9
+    ]
+   ]
+  },
+  {
+   "lane": "L2 singles",
+   "name": "PAR-L2 7 bosses",
+   "u0": 23.2,
+   "s0": 1157.7,
+   "L": 256.7,
+   "H": 4.9,
+   "seg_L": 288.4,
+   "items": [
+    [
+     "Arlington_g37_0 (H 3.6)",
+     1.1,
+     28.5
+    ],
+    [
+     "Arlington_g37_1 (H 4.4)",
+     37.7,
+     65.6
+    ],
+    [
+     "Arlington_g1_1 (H 4.5)",
+     75.7,
+     104.6
+    ],
+    [
+     "Arlington_g37_1 (H 4.4)",
+     112.0,
+     139.9
+    ],
+    [
+     "Arlington_g37_4 (H 4.9)",
+     150.5,
+     182.8
+    ],
+    [
+     "Arlington_g1_1 (H 4.5)",
+     193.3,
+     222.2
+    ],
+    [
+     "Arlington_g37_0 (H 4.0)",
+     229.2,
+     256.6
+    ]
+   ]
+  },
+  {
+   "lane": "L1 whoops",
+   "name": "PAR-L1 whoops, table, bosse",
+   "u0": 8.1,
+   "s0": 1498.6,
+   "L": 323.3,
+   "H": 6.6,
+   "seg_L": 342.9,
+   "items": [
+    [
+     "whoops Custom_0 x10 (x1.15)",
+     0.0,
+     203.8
+    ],
+    [
+     "Arlington_g49_2 (H 6.6)",
+     238.8,
+     293.8
+    ],
+    [
+     "Arlington_g37_1 (H 4.0)",
+     295.3,
+     323.2
+    ]
+   ]
+  },
+  {
+   "lane": "LR tribune Est",
+   "name": "PAR-LR roller, longue bosse, 2 bosses",
+   "u0": 2.0,
+   "s0": 1869.2,
+   "L": 266.1,
+   "H": 5.79,
+   "seg_L": 276.4,
+   "items": [
+    [
+     "Custom1_g30_1 (H 1.8)",
+     1.0,
+     27.9
+    ],
+    [
+     "longue bosse ondulee (couloir Est)",
+     120.1,
+     206.1
+    ],
+    [
+     "Arlington_g37_1 (H 4.0)",
+     209.2,
+     237.1
+    ],
+    [
+     "Arlington_g37_0 (H 3.6)",
+     238.6,
+     266.0
+    ]
+   ]
+  },
+  {
+   "lane": "L6 tribune Sud",
+   "name": "PAR-L6 8 bosses dont une table",
+   "u0": 9.1,
+   "s0": 2186.5,
+   "L": 301.0,
+   "H": 6.6,
+   "seg_L": 342.9,
+   "items": [
+    [
+     "Arlington_g1_1 (H 4.3)",
+     1.1,
+     30.0
+    ],
+    [
+     "Arlington_g37_1 (H 4.2)",
+     37.7,
+     65.6
+    ],
+    [
+     "Arlington_g1_3 (H 4.5)",
+     74.8,
+     106.7
+    ],
+    [
+     "Arlington_g1_1 (H 4.3)",
+     116.4,
+     145.3
+    ],
+    [
+     "Arlington_g37_0 (H 3.8)",
+     152.6,
+     180.0
+    ],
+    [
+     "Arlington_g49_2 (H 6.6)",
+     183.9,
+     238.9
+    ],
+    [
+     "Arlington_g37_0 (H 3.8)",
+     241.8,
+     269.2
+    ],
+    [
+     "Arlington_g37_1 (H 3.6)",
+     273.0,
+     300.9
+    ]
+   ]
+  }
+ ],
+ "objets": {
+  "objets": {
+   "boudins R (whoops)": 22,
+   "tuffs honda": 44,
+   "tuffs amv": 32,
+   "tuffs seong": 28,
+   "tuffs monster": 11,
+   "tuffs motul": 35,
+   "tuffs yamaha": 28,
+   "poteaux ronds": 9,
+   "murs amv": 6,
+   "murs motoverte": 19,
+   "murs honda": 22,
+   "filets": 68,
+   "murs seong": 24,
+   "murs five": 18,
+   "panneau FINISH suspendu": 1,
+   "rampe + coins Honda": 1,
+   "cage du drapeau": 1,
+   "boudins Thor": 6,
+   "bâche AMV": 2,
+   "habillage Venum des tremplins": 4,
+   "arche 50 Factory": 1,
+   "grilles de départ": 1,
+   "bandeau START + mur de fond": 1,
+   "canettes Monster": 2,
+   "portique Minerva Oil": 1,
+   "boudins Motul": 28,
+   "murs automoto": 12,
+   "camions du paddock": 10
+  },
+  "total": 437,
+  "amv_pied_ft": {
+   "-1": 21.6,
+   "1": 21.6
+  },
+  "arche": {
+   "crete_ft": 3.6,
+   "sol_pieds_ft": [
+    0.0,
+    0.41
+   ],
+   "libre_sous_poutre_ft": 20.9
+  },
+  "finish": {
+   "crete_ft": 10.0
+  },
+  "logos_redessines": [
+   "amv",
+   "venum",
+   "minerva",
+   "thor",
+   "five",
+   "motoverte",
+   "r"
+  ]
+ },
+ "public": 6415,
+ "export": {
+  "hmin": -0.5,
+  "hmax": 24.75,
+  "statues_relevees": 48,
+  "decals": 7990,
+  "decals_terre": 3366
+ },
+ "lap_ft": 2587.8,
+ "start": {
+  "gate": [
+   737.44696,
+   548.28
+  ],
+  "merge": [
+   396.30196,
+   675.79375
+  ],
+  "length": 459.4
+ },
+ "checks": [
+  {
+   "name": "boucle fermée (écart de fin de tour)",
+   "ok": true,
+   "detail": "0.000 ft"
+  },
+  {
+   "name": "obstacles dans leur ligne droite, sans chevauchement",
+   "ok": true,
+   "detail": "ok"
+  },
+  {
+   "name": "relief entièrement sur le sol de l'arène",
+   "ok": true,
+   "detail": "0 points hors sol"
+  },
+  {
+   "name": "bosses <= 25 ft (gros saut rond ZION 2025 24,2 ft)",
+   "ok": true,
+   "detail": "24.25 ft"
+  },
+  {
+   "name": "berms <= 10 ft (90° x1,4 comme Saint-Thibéry)",
+   "ok": true,
+   "detail": "9.71 ft"
+  },
+  {
+   "name": "couloir de départ sur le sol",
+   "ok": true,
+   "detail": "0 points hors sol"
+  },
+  {
+   "name": "ligne de départ plate (grilles)",
+   "ok": true,
+   "detail": "max 0.00 ft"
+  }
+ ],
+ "gates": {
+  "n_checkpoints": 29,
+  "first": [
+   27,
+   28,
+   10,
+   11,
+   12,
+   13,
+   14,
+   15,
+   16,
+   17,
+   18,
+   19,
+   20,
+   21,
+   22,
+   23,
+   24,
+   25,
+   26
+  ],
+  "normal": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12,
+   13,
+   14,
+   15,
+   16,
+   17,
+   18,
+   19,
+   20,
+   21,
+   22,
+   23,
+   24,
+   25,
+   26
+  ]
+ }
+}

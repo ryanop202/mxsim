@@ -19,3 +19,10 @@ refs/archives
 
 # v12: reference photos sent for the paddock objects (third-party, not ours): kept locally only
 docs/img/refs_paddock/
+
+# stade_paris : intermédiaires et export régénérés par src/build.py (la piste versionnée est tracks/ParisLaDefenseArena)
+stade_paris/build/
+stade_paris/export/
+
+# paris2026 : visuels de référence du Supercross Paris (pas à nous) : en local seulement
+paris2026/refs/

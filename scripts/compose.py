@@ -45,8 +45,18 @@ def whoops(key, n):
 LAST_SPLITS = []   # filled by lane(): [(start_ft, prof_left, prof_right)] for ('split', left_uid, right_uid) tokens
 
 
+def kick(uid, H, s, a=1.0):
+    """v13h: a measured bump scaled to H whose take-off face is replaced by a concave curve: flat at the bottom, the slope grows
+    linearly up to s at a*Lf (a = 1: y = H (x/Lf)^2, sharp lip), then (a < 1, v13i) rolls over linearly to 0 at the crest
+    ("plus plat sur le haut"); Lf = 2H/s. Then the measured top and back. Saint-Thibery: "une courbe en bas de l'appel"."""
+    q = unit(uid)[1]; q = q * (H / q.max()); c = int(np.argmax(q)); Lf = 2.0 * H / s
+    x = np.arange(int(round(Lf / 0.1))) * 0.1
+    sl = np.where(x < a * Lf, s * x / (a * Lf), s * (Lf - x) / max((1 - a) * Lf, 1e-9))
+    y = np.r_[0, np.cumsum(sl[:-1]) * 0.1]; y *= H / max(y[-1] + sl[-1] * 0.1, 1e-9)
+    return np.r_[y, q[c:]]
+
 def lane(tokens):
-    """tokens: list of uid strings, ('gap', ft), ('whoops', key, n), ('split', left_uid, right_uid).
+    """tokens: list of uid strings, ('gap', ft), ('whoops', key, n), ('split', left_uid, right_uid), ('scale', uid, H), ('landing', uid, H, back_ft).
     A split = double line: two measured units side by side, each on half of the lane width (left / right in the riding
     direction). Its slot in the returned (full-width) profile is left at 0; the halves are rendered separately (LAST_SPLITS).
     Returns (profile, items[(name, start_ft, end_ft, H)])."""
@@ -58,13 +68,88 @@ def lane(tokens):
         split = None
         if isinstance(t, tuple) and t[0] == 'whoops':
             p = whoops(t[1], t[2]); kind = 'W'; name = f'whoops {t[1]} x{t[2]}'; uid = None
+        elif isinstance(t, tuple) and t[0] == 'scale':
+            # v13b ('scale', uid, H): a measured unit with its height scaled to H ft (same length / shape), e.g. a finish jump
+            # judged too high in game; the walls follow (they are extruded from this profile)
+            u, p = unit(t[1]); p = p * (t[2] / p.max()); kind = u['kind']; name = f'{t[1]} (H {t[2]:.1f})'; uid = ALIAS.get(t[1], t[1])
+            if len(t) > 3 and t[3] == 'flip':     # v13c ('scale', uid, H, 'flip'): turned around (Saint-Thibery: steep side to the turn)
+                p = p[::-1].copy(); name += ' flip'
+        elif isinstance(t, tuple) and t[0] == 'kick':
+            # v13h ('kick', uid, H, s): see kick()
+            u = unit(t[1])[0]; p = kick(*t[1:]); kind = u['kind']; name = f'{t[1]} (kick H {t[2]:.1f}, lip {t[3]:.1f})'; uid = ALIAS.get(t[1], t[1])
+        elif isinstance(t, tuple) and t[0] == 'cut':
+            # v13f ('cut', uid, H, back_slope): a kicker cut at its first edge (where the face stops being steep), scaled so the
+            # edge is at H, then a straight back side (Saint-Thibery freestyle kicker: "a la premiere arete, fais droit")
+            u, p = unit(t[1]); d = np.diff(p) / 0.1; im = int(np.argmax(d)); e = im + int(np.nonzero(d[im:] < 0.6)[0][0])
+            p = p[:e + 1] * (t[2] / p[e]); n = int(round(t[2] / t[3] / 0.1))
+            p = np.r_[p, t[2] * (1 - np.arange(1, n + 1) / n)]; kind = u['kind']; name = f'{t[1]} (cut H {t[2]:.1f})'; uid = ALIAS.get(t[1], t[1])
+        elif isinstance(t, tuple) and t[0] == 'stretch':
+            # v13f ('stretch', uid, H, k): scaled to H, the side after the crest stretched k times longer (gentler landing,
+            # same crest place) - Saint-Thibery big triple landing "un peu plus longue"
+            u, p = unit(t[1]); p = p * (t[2] / p.max()); c = int(np.argmax(p)); b_ = p[c:]
+            n = int(round(len(b_) * t[3])); p = np.r_[p[:c], np.interp(np.linspace(0, len(b_) - 1, n), np.arange(len(b_)), b_)]
+            kind = u['kind']; name = f'{t[1]} (H {t[2]:.1f}, back x{t[3]:.2f})'; uid = ALIAS.get(t[1], t[1])
+        elif isinstance(t, tuple) and t[0] == 'fuse':
+            # v13g ('fuse', uid, H1, H2, bottom, span, f): two humps fused by a raised dip (Saint-Thibery L3). Both outer faces are
+            # the front face of the table uid (2nd one mirrored), crests H1 / H2 ft, crest to crest span ft, valley bottom at
+            # bottom ft, placed at f of the span (f > 0.5: shorter, steeper climb to the 2nd hump - "un peu plus raide")
+            u, q = unit(t[1]); H1, H2, bo, span, f = t[2:7]; q = q / q.max(); i = np.nonzero(q >= 0.85)[0][0]
+            d = np.diff(q); c1 = i + int(np.nonzero(d[i:] <= 0.002)[0][0]) if np.any(d[i:] <= 0.002) else i
+            face = q[:c1 + 1] / q[c1]; nd, nu = int(round(span * f / 0.1)), int(round(span * (1 - f) / 0.1))
+            down = bo + (H1 - bo) * (1 + np.cos(np.linspace(0, np.pi, nd))) / 2
+            upv = bo + (H2 - bo) * (1 - np.cos(np.linspace(0, np.pi, nu))) / 2
+            if len(t) > 7:                        # v13i: straight climb to the 2nd hump, rounded ends t[7] ft ("moins rond")
+                f_ = t[7]; Lu = nu * 0.1; xx = np.linspace(0, Lu, nu); m_ = 1.0 / (Lu - f_)
+                upv = bo + (H2 - bo) * np.where(xx < f_, m_ * xx * xx / (2 * f_), np.where(xx > Lu - f_, 1 - m_ * (Lu - xx) ** 2 / (2 * f_), m_ * (xx - f_ / 2)))
+            p = np.r_[face * H1, down[1:], upv[1:], (face * H2)[::-1][1:]]
+            kind = u['kind']; name = f'{t[1]} (fuse {H1:.1f}/{H2:.1f}, bottom {bo:.1f})'; uid = ALIAS.get(t[1], t[1])
+        elif isinstance(t, tuple) and t[0] == 'dip':
+            # v13c ('dip', uid, H, bottom): a table scaled to H whose top is dug into a raised dip (bottom = fraction of H):
+            # between a table and a double, the valley does not reach the floor (Saint-Thibery L3, asked by the user)
+            u, p = unit(t[1]); p = p * (t[2] / p.max()); i = np.nonzero(p >= 0.85 * t[2])[0]; i0, i1 = i[0], i[-1]
+            w = np.sin(np.linspace(0, np.pi, i1 - i0 + 1)) ** 2; seg = p[i0:i1 + 1]
+            p[i0:i1 + 1] = seg - (seg - t[2] * t[3]) * w
+            if len(t) > 4:                        # v13d: longer dip, crest to crest = t[4] ft (Saint-Thibery: "un long creux")
+                m = i0 + int(np.argmin(p[i0:i1 + 1])); c1 = int(np.argmax(p[:m])); c2 = m + int(np.argmax(p[m:]))
+                n = int(round(t[4] / 0.1)); tt = np.linspace(0, 1, n); lin = p[c1] + (p[c2] - p[c1]) * tt
+                p = np.r_[p[:c1], lin - (lin - t[2] * t[3]) * np.sin(np.pi * tt) ** 2, p[c2 + 1:]]
+                if len(t) > 5 and t[5] == 'sym':  # v13e: 2nd hump = mirror of the 1st (same steepness both sides, user)
+                    m = c1 + n // 2; p = np.r_[p[:m + 1], p[:m][::-1]]
+            kind = u['kind']; name = f'{t[1]} (dip H {t[2]:.1f}, bottom {t[2] * t[3]:.1f})'; uid = ALIAS.get(t[1], t[1])
+        elif isinstance(t, tuple) and t[0] == 'trapeze':
+            # v13b ('trapeze', H, up, top, down): one clean mound - rounded climb, short flat top, long gentle descent (Saint-Thibery
+            # freestyle landing, asked by the user: "juste une montee, avec un petit plat et une descente"). Not a measured unit.
+            H_, up_, top_, dn_ = t[1:5]
+            c = lambda n: (1 - np.cos(np.linspace(0, np.pi, n))) / 2
+            climb = c(int(up_ / 0.1))
+            if len(t) > 5 and t[5] == 'lin':      # v13f: straight climb with short rounded ends (f ft) - "moins ronde, plus droite"
+                f = t[6]; x = np.arange(int(up_ / 0.1)) * 0.1; m = 1.0 / (up_ - f)
+                climb = np.where(x < f, m * x * x / (2 * f), np.where(x > up_ - f, 1 - m * (up_ - x) ** 2 / (2 * f), m * (x - f / 2)))
+            p = H_ * np.r_[climb, np.ones(int(top_ / 0.1)), c(int(dn_ / 0.1))[::-1]]
+            kind = 'T'; name = f'trapeze H {H_:.1f} ({up_:.0f}/{top_:.0f}/{dn_:.0f} ft)'; uid = None
+        elif isinstance(t, tuple) and t[0] == 'landing':
+            # v13b ('landing', uid, H, back_ft): measured unit scaled to H, its back side replaced by a gentle cosine slope
+            # back_ft long (Saint-Thibery freestyle landing: "la deuxieme partie de la reception plus douce")
+            u, p = unit(t[1]); p = p * (t[2] / p.max()); k = int(np.nonzero(p >= 0.9 * t[2])[0][-1]); n = int(round(t[3] / 0.1))
+            p = np.r_[p[:k], p[k] * (1 + np.cos(np.linspace(0, np.pi, n))) / 2]; kind = u['kind']; name = f'{t[1]} (landing H {t[2]:.1f})'; uid = ALIAS.get(t[1], t[1])
         elif isinstance(t, tuple) and t[0] == 'split':
-            pa, pb = unit(t[1])[1], unit(t[2])[1]; n = max(len(pa), len(pb))
+            def _half(x):
+                if isinstance(x, tuple) and x[0] == 'scale':                  # v13b: scaled half (Saint-Thibery L2)
+                    q = unit(x[1])[1]; return q * (x[2] / q.max())
+                if isinstance(x, tuple) and x[0] == 'kick':                   # v13h: concave take-off half
+                    return kick(*x[1:])
+                return unit(x)[1]
+            pa, pb = _half(t[1]), _half(t[2]); n = max(len(pa), len(pb))
             if len(t) > 3 and t[3] == 'end':      # v11: both bumps END together (keeps the rhythm of the next jump on both lines)
                 pa = np.pad(pa, (n - len(pa), 0)); pb = np.pad(pb, (n - len(pb), 0))
             else:
                 pa = np.pad(pa, (0, n - len(pa))); pb = np.pad(pb, (0, n - len(pb)))
-            split = (pa, pb); p = np.zeros(n); kind = 'S'; name = f'split {t[1]} | {t[2]}'; uid = None
+            nm_ = lambda x: x[1] if isinstance(x, tuple) else x
+            split = (pa, pb); p = np.zeros(n); kind = 'S'; name = f'split {nm_(t[1])} | {nm_(t[2])}'; uid = None
+        elif isinstance(t, tuple) and t[0] == 'raw':
+            # v14 ('raw', name, profile, kind): a profile built by the layout itself (0.1 ft step), e.g. Saint-Georges L2
+            # "roller, roller, a flat on the last roller, then the table, without going down into the hole"
+            p = np.asarray(t[2], float); kind = t[3] if len(t) > 3 else 'T'; name = t[1]; uid = None
         else:
             u, p = unit(t); kind = u['kind']; name = t; uid = ALIAS.get(t, t)
         if prev is not None:

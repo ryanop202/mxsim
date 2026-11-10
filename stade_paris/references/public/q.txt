@@ -1,0 +1,1 @@
+[out:json][timeout:60];(way(around:700,48.8957,2.2290)["building"];relation(around:700,48.8957,2.2290)["building"];way(around:700,48.8957,2.2290)["leisure"];relation(around:700,48.8957,2.2290)["leisure"];);out body geom;

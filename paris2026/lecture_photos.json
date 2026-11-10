@@ -1,0 +1,58 @@
+{
+  "_doc": "Relevé du tracé Supercross Paris 2026 sur la vue de dessus (refs/5.webp, 1024 x 614 px). Coordonnées en px de cette image : x vers la droite (le départ regarde +x), y vers le bas. Chaque obstacle = [début, fin] le long du couloir, en px. Lecture à la main sur bandes agrandies x4 (précision ± 2 px). Les types viennent des photos de biais (refs/1-4.webp).",
+  "echelle_ft_par_px": 0.665,
+  "echelle_justif": "pas des whoops 30,2 px = 20,1 ft (JGSX : 20 ft) ; largeur des couloirs 55-57 px = 37-38 ft (JGSX : 30,4 + 2 x 4 ft)",
+  "sol_render_px": {"x": [213, 948], "y": [4, 600], "note": "x 213 = barrière derrière les grilles ; x 948 et y 4 / 600 = pied des tribunes"},
+  "poteaux_px": [[313, 93], [348, 306], [358, 518], [735, 187], [721, 291], [713, 392], [724, 444], [830, 522], [828, 94]],
+  "depart": {"grilles_x": 265, "y": [330, 410], "sens": "+x", "note": "6 grilles sur le visuel, 22 en jeu (demandé). Ligne droite vers l'est jusqu'à x ~740 puis virage à gauche vers le nord, rejoint le tour dans le couloir C (avant T_D). Au tour suivant, cette ligne droite est reprise en sens inverse (ouest)."},
+  "tour": [
+    {"id": "L5", "nom": "couloir d'arrivée", "axe": "y", "pos": [455, 507], "sens": "+x", "obstacles": [
+      {"px": [367, 396], "type": "S", "jgsx": "Custom_g32_9"},
+      {"px": [419, 451], "type": "S", "jgsx": "Custom_g32_2"},
+      {"px": [465, 520], "type": "B", "jgsx": "Detroit_g29_3", "note": "ligne d'arrivée à x 495, sur le saut"},
+      {"px": [550, 602], "type": "B", "jgsx": "Custom_g30_3"},
+      {"px": [624, 716], "type": "T", "jgsx": "Custom1_g23_1", "note": "table longue ~61 ft"}]},
+    {"id": "T_L5", "nom": "180 à gauche (berm sur le 1er quart, tuffs sur le 2e)", "virage": 180, "cote": "gauche", "centre_px": [740, 418]},
+    {"id": "LD", "nom": "ligne de départ reprise vers l'ouest", "axe": "y", "pos": [330, 410], "sens": "-x", "px": [716, 345], "obstacles": []},
+    {"id": "T_B", "nom": "180 à droite (ouest -> nord -> est), berm sur l'extérieur", "virage": 180, "cote": "droite", "centre_px": [345, 290]},
+    {"id": "L3", "nom": "couloir central", "axe": "y", "pos": [200, 253], "sens": "+x", "obstacles": [
+      {"px": [500, 535], "type": "S", "jgsx": "Custom1_g62_2"},
+      {"px": [561, 707], "type": "X", "jgsx": "Custom_g29_1", "note": "grande table « SUPERCROSS Paris » (réception FMX) : ~97 ft de long, 63 ft de large, montée raide à l'ouest, plateau ~58 ft, descente ~39 ft vers l'est. Rien d'aussi long chez JGSX (max 86,7 ft)."}]},
+    {"id": "T_C3", "nom": "90 à gauche vers le nord (sans berm, poteaux)", "virage": 90, "cote": "gauche"},
+    {"id": "C", "nom": "colonne vers le nord", "axe": "x", "pos": [735, 822], "sens": "-y", "px": [300, 175], "obstacles": []},
+    {"id": "T_D", "nom": "90 à gauche, berm", "virage": 90, "cote": "gauche", "centre_px": [760, 170]},
+    {"id": "L2", "nom": "rythmique de singles", "axe": "y", "pos": [103, 157], "sens": "-x", "obstacles": [
+      {"px": [675, 702], "type": "S", "jgsx": "Custom_g32_9"},
+      {"px": [616, 650], "type": "S", "jgsx": "Custom_g32_2"},
+      {"px": [560, 590], "type": "S", "jgsx": "Custom_g32_2"},
+      {"px": [505, 537], "type": "S", "jgsx": "Custom_g32_2"},
+      {"px": [435, 480], "type": "S", "jgsx": "Custom_g55_2"},
+      {"px": [380, 411], "type": "S", "jgsx": "Custom_g32_2"},
+      {"px": [326, 359], "type": "S", "jgsx": "Custom_g32_2"}]},
+    {"id": "T1", "nom": "180 à droite, berm", "virage": 180, "cote": "droite", "centre_px": [312, 93]},
+    {"id": "L1", "nom": "whoops", "axe": "y", "pos": [25, 92], "sens": "+x", "obstacles": [
+      {"px": [328, 627], "type": "whoops", "n": 10, "jgsx": "Detroit_0", "note": "10 whoops, pas 30,2 px = 20,1 ft ; bordées de murets blancs"},
+      {"px": [660, 720], "type": "B", "jgsx": "Glendale_g80_1", "note": "table 40 ft, 22 ft après la dernière whoop"},
+      {"px": [736, 772], "type": "S", "jgsx": "Custom1_g62_2"},
+      {"px": [787, 817], "type": "S", "jgsx": "Custom_g32_2"}]},
+    {"id": "T_TR", "nom": "90 à droite (caché par le logo sur la vue de dessus)", "virage": 90, "cote": "droite", "centre_px": [828, 94], "incertain": true},
+    {"id": "LR", "nom": "couloir le long de la tribune Est", "axe": "x", "pos": [830, 890], "sens": "+y", "incertain": true, "obstacles": [
+      {"px": [102, 128], "type": "S", "jgsx": "Glendale_g65_1"},
+      {"px": [295, 390], "type": "T", "jgsx": "Custom1_g23_1", "note": "table longue ; fin cachée par les faisceaux (photo 3 : table puis 3 bosses)"},
+      {"px": [397, 427], "type": "S", "jgsx": "Custom_g32_2", "note": "sous les faisceaux, à confirmer"},
+      {"px": [437, 466], "type": "S", "jgsx": "Custom_g32_2"},
+      {"px": [475, 505], "type": "S", "jgsx": "Custom_g32_2"}]},
+    {"id": "T_E", "nom": "90 à droite, berm", "virage": 90, "cote": "droite", "centre_px": [830, 560]},
+    {"id": "L6", "nom": "rythmique le long de la tribune Sud", "axe": "y", "pos": [527, 578], "sens": "-x", "obstacles": [
+      {"px": [772, 809], "type": "S", "jgsx": "Custom1_g62_2"},
+      {"px": [720, 752], "type": "S", "jgsx": "Custom_g32_2"},
+      {"px": [657, 697], "type": "S", "jgsx": "Arlington_g45_2"},
+      {"px": [599, 634], "type": "S", "jgsx": "Custom1_g62_2"},
+      {"px": [549, 577], "type": "S", "jgsx": "Custom_g32_9"},
+      {"px": [464, 526], "type": "B", "jgsx": "Glendale_g80_1"},
+      {"px": [415, 442], "type": "S", "jgsx": "Custom_g32_9"},
+      {"px": [367, 395], "type": "S", "jgsx": "Custom_g32_9"}]},
+    {"id": "T_C", "nom": "180 à droite, berm", "virage": 180, "cote": "droite", "centre_px": [358, 518]}
+  ],
+  "decor": {"fmx": "2 tremplins FMX noirs (diagonales x 300-620, de part et d'autre de L3) qui visent la grande table : décor, hors tracé"}
+}
