@@ -1,0 +1,378 @@
+{
+ "sections": [
+  {
+   "lane": "L5 arrivée",
+   "name": "PAR-L5 petit double, triple d arrivee (ZION 2025)",
+   "u0": 10.0,
+   "L": 259.3,
+   "H": 11.15,
+   "items": [
+    [
+     "bosse ZION 3.4 ft",
+     0.0,
+     26.5
+    ],
+    [
+     "bosse ZION 4.0 ft",
+     42.5,
+     71.3
+    ],
+    [
+     "appel arrivee ZION 2025 (10,0)",
+     90.9,
+     136.3
+    ],
+    [
+     "triple arrivee ZION 2025 (6,0 / 11,2)",
+     136.3,
+     259.2
+    ]
+   ]
+  },
+  {
+   "lane": "L3 grande table",
+   "name": "PAR-L3 appel, gros saut rond du milieu (ZION 2025)",
+   "u0": 67.5,
+   "L": 165.0,
+   "H": 24.25,
+   "items": [
+    [
+     "appel gros saut ZION 2025 (10,0)",
+     0.0,
+     58.7
+    ],
+    [
+     "butte gros saut rond ZION 2025 (24,2)",
+     58.7,
+     164.9
+    ]
+   ]
+  },
+  {
+   "lane": "L2 singles",
+   "name": "PAR-L2 triple, triple (7 bosses, meme ecart)",
+   "u0": 17.7,
+   "L": 308.1,
+   "H": 5.0,
+   "items": [
+    [
+     "bosse ZION 4.0 ft",
+     0.0,
+     28.8
+    ],
+    [
+     "bosse ZION 4.6 ft",
+     43.8,
+     74.7
+    ],
+    [
+     "bosse ZION 5.0 ft",
+     89.7,
+     121.9
+    ],
+    [
+     "bosse ZION 4.8 ft",
+     136.9,
+     168.4
+    ],
+    [
+     "bosse ZION 5.0 ft",
+     183.4,
+     215.6
+    ],
+    [
+     "bosse ZION 4.6 ft",
+     230.6,
+     261.5
+    ],
+    [
+     "bosse ZION 4.8 ft",
+     276.5,
+     308.0
+    ]
+   ]
+  },
+  {
+   "lane": "L1 whoops",
+   "name": "PAR-L1 whoops, table, bosse",
+   "u0": 8.2,
+   "L": 374.9,
+   "H": 6.6,
+   "items": [
+    [
+     "whoops ZION x11",
+     0.0,
+     245.8
+    ],
+    [
+     "table ZION 6.6 ft",
+     253.8,
+     315.7
+    ],
+    [
+     "bosse ZION 4.0 ft",
+     317.2,
+     346.0
+    ],
+    [
+     "bosse ZION 3.6 ft",
+     347.5,
+     374.8
+    ]
+   ]
+  },
+  {
+   "lane": "LR tribune Est",
+   "name": "PAR-LR saut de sortie, bosse, table, 3 bosses",
+   "u0": 10.0,
+   "L": 293.9,
+   "H": 6.6,
+   "items": [
+    [
+     "bosse ZION 4.0 ft",
+     0.0,
+     28.8
+    ],
+    [
+     "bosse ZION 3.0 ft",
+     78.8,
+     104.1
+    ],
+    [
+     "table ZION 6.6 ft",
+     114.1,
+     176.0
+    ],
+    [
+     "bosse ZION 4.2 ft",
+     186.0,
+     215.5
+    ],
+    [
+     "bosse ZION 4.2 ft",
+     225.5,
+     255.0
+    ],
+    [
+     "bosse ZION 4.0 ft",
+     265.0,
+     293.8
+    ]
+   ]
+  },
+  {
+   "lane": "L6 tribune Sud",
+   "name": "PAR-L6 triple, double, table, double",
+   "u0": 10.0,
+   "L": 372.5,
+   "H": 6.6,
+   "items": [
+    [
+     "bosse ZION 4.2 ft",
+     0.0,
+     29.5
+    ],
+    [
+     "bosse ZION 4.7 ft",
+     43.0,
+     74.2
+    ],
+    [
+     "bosse ZION 4.9 ft",
+     87.7,
+     119.6
+    ],
+    [
+     "bosse ZION 4.7 ft",
+     133.1,
+     164.3
+    ],
+    [
+     "bosse ZION 4.9 ft",
+     177.8,
+     209.7
+    ],
+    [
+     "table ZION 6.6 ft",
+     223.2,
+     285.1
+    ],
+    [
+     "bosse ZION 4.3 ft",
+     298.6,
+     328.4
+    ],
+    [
+     "bosse ZION 4.5 ft",
+     341.9,
+     372.4
+    ]
+   ]
+  }
+ ],
+ "sable_tuiles": 19949,
+ "tuiles_zion": [
+  "texture @USLAND2026SupercrossParisZion/ztile/2.png",
+  "roost texture=@USLAND2026SupercrossParisZion/ztile/roost.png count=0.1 slow_angle=1.0 vscale=0.2 size=.2 r=150 g=150 b=150 fade_a=0",
+  "roost texture=@USLAND2026SupercrossParisZion/ztile/roost.png count=1 grow=1.5 slow_angle=1.0 drag=10 size=1.0 fade_a=0.1",
+  "treadmark texture=@USLAND2026SupercrossParisZion/ztile/darkdirt_lroost2x4.png size=4 aspect=0.5 spacing=1.5 slip_threshold=4.0 speed_threshold=-20",
+  "treadmark texture=@USLAND2026SupercrossParisZion/ztile/darkdirt_lroost2x8.png size=8 aspect=0.25 spacing=3 slip_threshold=4.0",
+  "treadmark texture=@USLAND2026SupercrossParisZion/ztile/darkdirt_trackfade1x4.png size=4 aspect=0.25 spacing=1.5 speed_threshold=-20",
+  "treadmark texture=@USLAND2026SupercrossParisZion/ztile/darkdirt_trackfade1x8.png size=8 aspect=0.125 spacing=3"
+ ],
+ "objets": {
+  "objets": {
+   "retirés (v13) : boudins FLY Racing (whoops)": 30,
+   "retirés (v13) : ballots ZION (unis)": 266,
+   "retirés (v13) : poteaux ronds": 7,
+   "retirés (v13) : tuffs de virage ZION (unis)": 82,
+   "retirés (v13) : filets": 46,
+   "panneau FINISH suspendu": 1,
+   "cage du drapeau": 1,
+   "retirés (v13) : boudins Thor": 6,
+   "retirés (v13) : habillage Venum des tremplins": 2,
+   "retirés (v13) : arche 50 Factory": 1,
+   "grilles de départ": 1,
+   "retirés (v13) : bandeau START + mur de fond": 1,
+   "retirés (v13) : canettes Monster": 2,
+   "retirés (v13) : portique Minerva Oil": 1,
+   "retirés (v13) : murs automoto": 12,
+   "retirés (v13) : long boudin noir FLY / RBT / SX TOUR (dans le U)": 2,
+   "camions du paddock": 10
+  },
+  "total": 13,
+  "amv_pied_ft": {},
+  "arche": {
+   "crete_ft": 4.2,
+   "sol_pieds_ft": [
+    0.0,
+    0.0
+   ],
+   "libre_sous_poutre_ft": 20.3
+  },
+  "finish": {
+   "crete_ft": 9.52
+  },
+  "logos_redessines": [
+   "minerva",
+   "thor",
+   "motoverte"
+  ]
+ },
+ "long_tuff_apres_depart": 0,
+ "quartier_ign_dalles": 36,
+ "public": 7631,
+ "export": {
+  "hmin": -0.5,
+  "hmax": 24.749999962874497,
+  "statues_relevees": 32,
+  "decals": 87,
+  "decals_terre": 0
+ },
+ "sol_zion": {
+  "tuiles": 8,
+  "ombrage_plat": 228
+ },
+ "lap_ft": 2902.9,
+ "start": {
+  "gate": [
+   683.5099504,
+   543.28
+  ],
+  "merge": [
+   336.3649504,
+   692.79375
+  ],
+  "length": 484.5
+ },
+ "checks": [
+  {
+   "name": "boucle fermée (écart de fin de tour)",
+   "ok": true,
+   "detail": "0.000 ft"
+  },
+  {
+   "name": "obstacles dans leur ligne droite, sans chevauchement",
+   "ok": true,
+   "detail": "ok"
+  },
+  {
+   "name": "relief entièrement sur le sol de l'arène",
+   "ok": true,
+   "detail": "0 points hors sol"
+  },
+  {
+   "name": "bosses <= 25 ft (gros saut rond ZION 2025 24,2 ft)",
+   "ok": true,
+   "detail": "24.25 ft"
+  },
+  {
+   "name": "berms <= 10 ft (90° x1,4 comme Saint-Thibéry)",
+   "ok": true,
+   "detail": "8.12 ft"
+  },
+  {
+   "name": "couloir de départ sur le sol",
+   "ok": true,
+   "detail": "0 points hors sol"
+  },
+  {
+   "name": "ligne de départ plate (grilles)",
+   "ok": true,
+   "detail": "max 0.00 ft"
+  }
+ ],
+ "gates": {
+  "n_checkpoints": 29,
+  "first": [
+   27,
+   28,
+   10,
+   11,
+   12,
+   13,
+   14,
+   15,
+   16,
+   17,
+   18,
+   19,
+   20,
+   21,
+   22,
+   23,
+   24,
+   25,
+   26
+  ],
+  "normal": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12,
+   13,
+   14,
+   15,
+   16,
+   17,
+   18,
+   19,
+   20,
+   21,
+   22,
+   23,
+   24,
+   25,
+   26
+  ]
+ }
+}

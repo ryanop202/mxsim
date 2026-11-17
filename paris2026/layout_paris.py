@@ -30,6 +30,10 @@ X0 = OX + FLOOR_X_SOUTH * FT
 Z0 = OZ
 BIG, BIG2 = 'big_det_a', 'big_cle'
 RB = 21.5
+ZION = os.environ.get('PARIS_ZION') == '1'      # v15 : « version Zion » (paris2026/build_zion.py)
+if ZION:
+    RB = 28.3                     # rayon des 180 de ZION 2025 (couloirs à 56,6 ft)
+XW_SHIFT = 55.0 if ZION else 0.0  # v15 : couloirs allongés vers l'est (place libre du sol agrandi) pour les écarts ZION
 TOP_W = 30.4                      # largeur du dessus des obstacles (JGSX)
 
 
@@ -331,7 +335,7 @@ def paris():
     LS.COMBOS.clear(); LS.SPLITS.clear()
     zL5, zLD, zL3, zL2 = px_z(481.0), px_z(370.0) - LD_SHIFT, px_z(226.5) + L3_SHIFT, px_z(130.0) + L3_SHIFT + L2_SHIFT
     zL1, zL6 = zL2 + 2 * RB, zL5 - 2 * RB            # 180° JGSX : couloirs voisins à 43 ft
-    xW = px_x(312.0)                                   # virages Ouest (T1, T_C) : x des sorties de 180°
+    xW = px_x(312.0) + XW_SHIFT                        # virages Ouest (T1, T_C) : x des sorties de 180°
     xLR, xC, xT5 = px_x(860.0), px_x(778.0), px_x(785.0)
     xTB = px_x(315.0)
     R3 = (zL2 - zL3) / 2
@@ -341,7 +345,7 @@ def paris():
                            lane_len=xW - (xT5 + RB))   # v4 : le triple d'arrivée de ZION 2025 couvre les obstacles 3 à 5 du visuel
     # v13 (« le double plus en sortie de virage et un peu plus long ; le triple est bien ») : le triple reste où il est, le double
     # commence à EXIT_U0 de la sortie du virage, plus long (écart 8 -> 16 ft)
-    i_t = next(i for i, t in enumerate(toks) if t[0] == 'raw'); u_app = u0 + tlen(toks[:i_t])
+    i_t = next(i for i, t in enumerate(toks) if t[0] == 'raw'); u_app = u0 + tlen(toks[:i_t]) - XW_SHIFT
     toks = PRE_FINISH + [('gap', round(u_app - EXIT_U0 - tlen(PRE_FINISH), 1))] + toks[i_t:]; u0 = EXIT_U0
     p.straight(xW - (xT5 + RB), [lane_sec(FINISH_SEC, toks, u0, finish=True)], tag='L5 arrivée')
     p.turn(90, RB, BIG, tag='T_L5a 90 gauche (berm)')
@@ -374,12 +378,17 @@ def paris():
           ('scale', SA[1], 4.6), ('scale', SA[2], 4.8)]
     B7 = [('stretch', b[1], b[2], 1.25) for b in B7]      # v13 (« un peu trop pointues : bosse, plat, bosse, plat ») : plus rondes,
     toks = even(B7, xW - x_end3, L2_U0, 8.0)               #   même hauteur, même écart de crête à crête
-    u0 = L2_U0
+    if ZION:                                               # v15 : écart ZION (15 ft au sol, ZION 9 - 16), le reste avant la 1re bosse
+        toks = [B7[0]]
+        for b_ in B7[1:]:
+            toks += [('gap', 15.0), b_]
+        u0z = (xW - x_end3) - 8.0 - tlen(toks)
+    u0 = u0z if ZION else L2_U0
     p.straight(xW - x_end3, [lane_sec('PAR-L2 triple, triple (7 bosses, meme ecart)', toks, u0)], tag='L2 singles')
     p.turn(-180, RB, BIG2, tag='T1 180 droite (berm)')
     # v10 : 11 whoops (une petite + 10) plus hautes, plus rondes, plus de terre ; la table + 2 bosses gardées (« pas mal »)
     lL1 = xW - (xLR + RB)
-    toks = [whoops_paris(), ('gap', 15.0), TABLE_L1, ('gap', 1.5), ('scale', SA[1], 4.0), ('gap', 1.5), ('scale', SA[0], 3.6)]
+    toks = [whoops_paris(), ('gap', 8.0 if ZION else 15.0), TABLE_L1, ('gap', 1.5), ('scale', SA[1], 4.0), ('gap', 1.5), ('scale', SA[0], 3.6)]
     u0 = lL1 - 8.0 - tlen(toks); assert u0 >= 0.5, u0
     p.straight(xW - (xLR + RB), [LS.sec('PAR-L1 whoops, table, bosse', toks, u0)], tag='L1 whoops')
     p.turn(-90, RB, BIG, tag='T_TR 90 droite (berm)')
@@ -389,7 +398,8 @@ def paris():
     # v10 (« le saut en sortant du virage, une ligne droite, puis bosse, table, bosse, bosse, bosse ; la 1re plus basse pour aller
     # sur la table, pas de quadruple ») : single à 3 ft de la sortie, plat, puis l'enchaînement (écarts 7,5 ft comme STT L1), 8 ft du virage
     lLR = (zL1 - RB) - (zL6 + RB)
-    rh = [('scale', SA[0], 3.0), ('gap', 7.5), TABLE, ('gap', 7.5), ('scale', SA[1], 4.2), ('gap', 7.5), ('scale', SA[2], 4.2), ('gap', 7.5), ('scale', SA[1], 4.0)]
+    GR_ = 10.0 if ZION else 7.5                            # v15 : écart ZION (~10 ft) dans la version Zion
+    rh = [('scale', SA[0], 3.0), ('gap', GR_), TABLE, ('gap', GR_), ('scale', SA[1], 4.2), ('gap', GR_), ('scale', SA[2], 4.2), ('gap', GR_), ('scale', SA[1], 4.0)]
     kick = [('scale', SA[1], 4.0)]
     u0 = EXIT_U0                                           # v13 : plus collé au berm (marque entre l'appui et la bosse)
     toks = kick + [('gap', round(lLR - u0 - 8.0 - tlen(kick) - tlen(rh), 1))] + rh
@@ -454,6 +464,56 @@ def fmx_ramps(path=None):
         lip = P(ub + du, v); d = tgt - lip
         out.append(dict(lip=(float(lip[0]), float(lip[1])), heading=float(np.arctan2(d[1], d[0]))))
     return out
+
+
+# ---------------------------------------------------------------- v15 : version Zion
+# Formes MESURÉES sur ZION.2025.SupercrossParis (paris2026/data/zion_formes.npz / .json) : bosse (29,8 ft, 4,27 ft), table (62 ft,
+# 7,04 ft), whoop (19,8 ft, 3,14 ft, pas 22,6 ft) ; saut central et triple d'arrivée ZION non retouchés ; les obstacles de 2026
+# (nombre, ordre, hauteurs) restent ceux de la version USLAND.
+if ZION:
+    ZF = np.load(os.path.join(HERE, "data", "zion_formes.npz"))
+    Z25_TRIPLE = _split_after_first(_P25['triple_arrivee'], 'appel arrivee ZION 2025 (10,0)', 'triple arrivee ZION 2025 (6,0 / 11,2)', 'T')
+    Z25_MILIEU = _split_after_first(_P25['milieu'], 'appel gros saut ZION 2025 (10,0)', 'butte gros saut rond ZION 2025 (24,2)', 'X')
+    Z25_BUTTE_W = Z25_BUTTE_W_ZION
+    ZW_H = [2.58] + [3.14] * 7 + [2.87, 2.34, 1.17]          # 11 whoops sur le modèle des 10 de ZION (lancement, pleines, sortie)
+
+    def zsingle(h):
+        p = ZF['single'] * (h / ZF['single'].max()); k = float(np.clip(np.sqrt(h / ZF['single'].max()), 0.85, 1.12))
+        return ('raw', 'bosse ZION %.1f ft' % h, np.interp(np.linspace(0, len(p) - 1, int(len(p) * k)), np.arange(len(p)), p), 'T')
+
+    def ztable(h):
+        return ('raw', 'table ZION %.1f ft' % h, ZF['table'] * (h / ZF['table'].max()), 'T')
+
+    def zwhoops():
+        w = ZF['whoop'] / ZF['whoop'].max(); flat = np.zeros(int(round((22.6 - len(w) * 0.1) / 0.1)))
+        parts = []
+        for k, hh in enumerate(ZW_H):
+            parts.append(w * hh)
+            if k < len(ZW_H) - 1:
+                parts.append(flat)
+        return ('raw', 'whoops ZION x%d' % len(ZW_H), np.concatenate(parts), 'W')
+
+    def zionize(toks):
+        out = []
+        for t in (toks if isinstance(toks, list) else [toks]):
+            if not isinstance(t, tuple):
+                out.append(zsingle(4.0)); continue
+            if t[0] in ('scale', 'stretch'):
+                out.append(ztable(t[2]) if t[1] == TABLE_B else zsingle(t[2]))
+            elif t[0] == 'raw' and t[1].startswith('whoops'):
+                out.append(zwhoops())
+            else:
+                out.append(t)
+        return out
+    _tlen0 = tlen
+
+    def tlen(tok):
+        return _tlen0(zionize(tok if isinstance(tok, list) else [tok]))
+    _sec0 = LS.sec
+    LS.sec = lambda name, toks, u0: _sec0(name, zionize(toks), u0)
+
+    def lane_sec(name, toks, u0, finish=False, **kw):                 # formes ZION telles quelles (pas de rounded())
+        return LS.sec(name, toks, u0)
 
 
 if __name__ == "__main__":
