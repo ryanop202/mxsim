@@ -250,7 +250,7 @@
    "crete_ft": 2.6,
    "sol_pieds_ft": [
     0.0,
-    0.03
+    0.02
    ],
    "libre_sous_poutre_ft": 21.9
   },
@@ -264,22 +264,23 @@
   ]
  },
  "long_tuff_apres_depart": 0,
- "public": 6851,
+ "quartier_ign_dalles": 36,
+ "public": 7631,
  "export": {
   "hmin": -0.5,
-  "hmax": 24.74999997439086,
-  "statues_relevees": 42,
-  "decals": 8374,
-  "decals_terre": 3739
+  "hmax": 24.74998369830412,
+  "statues_relevees": 26,
+  "decals": 9164,
+  "decals_terre": 4529
  },
  "lap_ft": 2590.7,
  "start": {
   "gate": [
-   717.76192,
+   683.5099504,
    548.28
   ],
   "merge": [
-   370.61692,
+   336.3649504,
    675.79375
   ],
   "length": 465.4

@@ -177,17 +177,39 @@ def export(H, tiles, gates_txt, floor_mx, inside_mx):
     mxt = importlib.import_module("arena.mxtrack")
     dx, dz = LP.OX - mxt.OX, LP.OZ - mxt.OZ
     nfix = 0
+    RELOC = {}                     # v10 : modèle -> décalage (ft) de son origine vers un sol plat
+
+    def bumpy(x, z, r=4.0):
+        i0, i1 = int((z - r) / S), int((z + r) / S) + 1; j0, j1 = int((x - r) / S), int((x + r) / S) + 1
+        if i0 < 0 or j0 < 0 or i1 > N or j1 > N:
+            return False
+        return float(H[i0:i1, j0:j1].max()) > 0.005
+
+    def flat_spot(x, z):
+        for rad in np.arange(2.0, 300.0, 2.0):
+            for a in np.linspace(0, 2 * np.pi, int(2 * np.pi * rad / 2.0) + 1, endpoint=False):
+                xx, zz = x + rad * np.cos(a), z + rad * np.sin(a)
+                if 5 < xx < (N - 1) * S - 5 and 5 < zz < (N - 1) * S - 5 and not bumpy(xx, zz):
+                    return round(float(xx), 3), round(float(zz), 3)
+        raise RuntimeError("pas de sol plat près de (%.0f, %.0f)" % (x, z))
 
     def fix(line):
         nonlocal nfix
-        m = re.match(r"\[([-\d.]+) ([-\d.]+) ([-\d.]+)\] (.*)$", line)
+        m = re.match(r"\[([-\d.]+) ([-\d.]+) ([-\d.]+)\] ([-\d.]+) (\S+)(.*)$", line)
         if not m:
             return line
         x, y, z = float(m.group(1)) + dx, float(m.group(2)), float(m.group(3)) + dz
+        rest = (m.group(4) + " " + m.group(5) + m.group(6)).replace("@ParisLaDefenseArena/", "@%s/" % FOLDER)
+        # v10 (le jeu penche une statue selon la pente du sol sous son origine : rampes d'éclairage et charpente posées sur des
+        # bosses partaient en travers) : origine déplacée sur le sol plat le plus proche, modèle décalé d'autant (même place)
+        if bumpy(x, z):
+            assert abs(float(m.group(4))) < 1e-6, line
+            mdl = m.group(5).split("/")[-1]
+            if mdl not in RELOC:
+                nx_, nz_ = flat_spot(x, z); RELOC[mdl] = (nx_ - x, nz_ - z)
+            ox_, oz_ = RELOC[mdl]; nfix += 1
+            return "[%.4f %.4f %.4f] %s" % (x + ox_, y, z + oz_, rest)
         h = float(H[int(round(z / S)), int(round(x / S))])
-        if h > 0.01:
-            nfix += 1
-        rest = m.group(4).replace("@ParisLaDefenseArena/", "@%s/" % FOLDER)
         return "[%.4f %.4f %.4f] %s" % (x, y - h, z, rest)
     for name in ("statues",):
         L = open(os.path.join(ARENA, name)).read().splitlines()
@@ -199,6 +221,15 @@ def export(H, tiles, gates_txt, floor_mx, inside_mx):
             src = "\n".join(fix(l) for l in src.splitlines() if l.strip()) + "\n"
         open(os.path.join(OUT, "variants", f), "w", newline="\n").write(src)
     shutil.copytree(os.path.join(ARENA, "statue"), os.path.join(OUT, "statue"))
+    import gzip
+    for mdl, (ox_, oz_) in RELOC.items():                  # v10 : sommets décalés à l'inverse de l'origine
+        fn = os.path.join(OUT, "statue", mdl + ".gz") if os.path.exists(os.path.join(OUT, "statue", mdl + ".gz")) else os.path.join(OUT, "statue", mdl)
+        gz = fn.endswith(".gz"); L = (gzip.open(fn, "rt") if gz else open(fn)).read().split(chr(10))
+        nv = int(L[2].split()[0])
+        for k in range(3, 3 + nv):
+            v = L[k].split(); v[0] = "%.5f" % (float(v[0]) - ox_); v[2] = "%.5f" % (float(v[2]) - oz_); L[k] = " ".join(v)
+        (gzip.open(fn, "wt", newline=chr(10)) if gz else open(fn, "w", newline=chr(10))).write(chr(10).join(L))
+        print("origine déplacée sur sol plat : %s (%+.1f, %+.1f) ft" % (mdl, ox_, oz_))
     # tremplins FMX : le modèle acier de Ryan (ramp_50, collision .shp), comme à Saint-Thibéry / Saint-Georges ; le modèle a son
     # pied à l'origine et va vers son -z local, lèvre à model_len : la lèvre est posée au point du visuel, face à la grande table
     m_ = LP.FMX_MODEL['model']; src_ = os.path.join(ROOT, "assets", "fmx_ramp_user")
@@ -236,6 +267,10 @@ def export(H, tiles, gates_txt, floor_mx, inside_mx):
           '    if (lateTuffPrev)', '        lateTuffPrev(seconds);', '}', '', 'var lateTuffPrev = mx.frame_handler;', 'mx.frame_handler = lateTuff;', '']
     open(os.path.join(OUT, "nofrills.js"), "w", newline="\n", encoding="ascii").write("\n".join(js))
     REPORT['long_tuff_apres_depart'] = len(rows)
+    # v10 : le vrai quartier autour du bâtiment (photo IGN, agrandie comme l'arène) - ajouté en fin de fichier (indices ci-dessus inchangés)
+    import ign_ville as IV
+    poly_ = mx_poly(np.asarray(arena_dims().outline(offset=1.0)["p"], float))
+    REPORT['quartier_ign_dalles'] = IV.add(OUT, FOLDER, H, S, poly_, LP.OX, LP.OZ, LP.PLAN_K, LP.FT)
     shutil.copytree(os.path.join(ARENA, "tex"), os.path.join(OUT, "tex"))
     gl = gates_txt.split("\n"); i_ = gl.index("startinggate:"); j_ = gl.index("checkpoints:")
     for k_ in range(i_ + 1, j_):                         # le cadre rouge de Saint-Georges sur chaque grille

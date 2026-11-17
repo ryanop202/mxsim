@@ -23,7 +23,7 @@ from compose import lane, unit, whoops   # noqa: E402
 D = json.load(open(os.path.join(HERE, "lecture_photos.json"), encoding="utf-8"))
 S = D["echelle_ft_par_px"]
 FT = 3.28084
-PLAN_K = 1.45                     # agrandissement en plan de l'arène (stade_paris/src/build.py) ; v5 : 1,35 -> 1,45 (paddock)
+PLAN_K = 1.624                    # agrandissement en plan de l'arène (stade_paris/src/build.py) ; v5 : 1,35 -> 1,45 (paddock) ; v10 : x1,12 -> 1,624
 FLOOR_X_SOUTH = -60.0 * PLAN_K    # m (dims.FLOOR_X_SOUTH x K)
 OX, OZ = 549.0, 593.5             # origine du repère de l'arène dans le terrain (ft) : bâtiment centré sur 1187 ft
 X0 = OX + FLOOR_X_SOUTH * FT
