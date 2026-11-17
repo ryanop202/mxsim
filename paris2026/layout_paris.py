@@ -165,7 +165,28 @@ def even(blocks, lane_len, u0, end):
     return out
 
 
-def whoops_paris(n=11, k=1.25, first=0.85, sx=0.93, sm=1.0, base=0.45):   # v13 : bosse de lancement plus haute (0,55 -> 0,85)
+P25_WHOOPS = json.load(open(os.path.join(HERE, "data", "p25_whoops.json"), encoding="utf-8"))
+RAIL = dict(top=(15.5, 19.0), inner=1.0, outer=3.5, ramp=6.0)    # v14 : bord des whoops de 25 Paris SX (muret de chaque côté)
+
+
+def whoops_paris(n=11, H=3.6, first=0.6, pitch=18.6):
+    """v14 (« regarde les whoops de 25 Paris SX, smooth à l'intérieur, bien rondes, et fais pareil ») : la forme MESURÉE d'une whoop de
+    25 Paris SX (20 ft, crête ronde, creux remplis à 0,2 ft / 2,8 ft), mise à notre hauteur H (v11 : « un peu plus hautes ») et au pas
+    de la ligne (18,6 ft, place de la table + 2 bosses) ; la 1re = bosse de lancement (first x H), raccords au sol en douceur."""
+    w = np.asarray(P25_WHOOPS['whoop_profil_0p5ft'], float)
+    w = np.interp(np.linspace(0, len(w) - 1, int(round(pitch / 0.1)) + 1), np.arange(len(w)), w); w = w / w.max()
+    out = []
+    for k in range(n):
+        seg = w * H * (first if k == 0 else 1.0)
+        out.append(seg[:-1] if k < n - 1 else seg)
+    q = np.concatenate(out)
+    from scipy.ndimage import gaussian_filter1d
+    q = gaussian_filter1d(q, 0.4 / 0.1)                     # raccords entre whoops (1re plus basse) sans cassure
+    r = int(2.0 / 0.1); q[:r] *= np.linspace(0, 1, r); q[-r:] *= np.linspace(1, 0, r); q[0] = q[-1] = 0.0
+    return ('raw', 'whoops 25 Paris SX x%d (%.1f ft)' % (n, H), q, 'W')
+
+
+def whoops_paris_v13(n=11, k=1.25, first=0.85, sx=0.93, sm=1.0, base=0.45):   # v13 : bosse de lancement plus haute (0,55 -> 0,85)
     """v10 (« un peu plus hauts et plus ronds, plus de terre, un peu plus durs ; 11 = la petite bosse + 10 whoops ») : whoops
     Custom_0 x1,25 (3,7 ft), pas x0,93 (18,6 ft), la 1re à 55 %, crêtes arrondies (gaussienne 1 ft), creux remontés à 0,45 ft."""
     import compose

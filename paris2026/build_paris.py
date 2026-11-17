@@ -159,6 +159,26 @@ def berm_seg(g):
     return dict(g, t0=g['t0'] - a, ang=g['ang'] * (1 - f), s0=g['s0'] + g['L'] * f, L=g['L'] * (1 - f))
 
 
+def whoops_rails(out, g, prof, u0, it):
+    """v14 : muret continu de chaque côté des whoops, comme 25 Paris SX : dessus plat à la hauteur des crêtes entre |v| = 15,5 et
+    19 ft, face intérieure de 1 ft qui tombe dans les creux, talus extérieur en cosinus sur 3,5 ft ; rampes de 6 ft aux deux bouts."""
+    R = LP.RAIL; a, b = R['top']; Hr = float(np.max(prof[int(it[1] / 0.1):int(it[2] / 0.1)]))
+    ua, ub = u0 + it[1], u0 + it[2]; c, s_ = np.cos(g['t']), np.sin(g['t']); half = b + R['outer'] + 1.0
+    pts = np.array([(g['x0'] + uu * c - vv * s_, g['z0'] + uu * s_ + vv * c) for uu in (ua, ub) for vv in (-half, half)])
+    sl, X, Z = G.window(pts[:, 0].min(), pts[:, 0].max(), pts[:, 1].min(), pts[:, 1].max())
+    dx, dz = X - g['x0'], Z - g['z0']; u = dx * c + dz * s_; v = np.abs(-dx * s_ + dz * c)
+    ss = lambda t: np.clip(t, 0, 1) ** 2 * (3 - 2 * np.clip(t, 0, 1))
+    lat = np.where(v < a, ss((v - (a - R['inner'])) / R['inner']), np.where(v <= b, 1.0, 0.5 * (1 + np.cos(np.pi * np.clip((v - b) / R['outer'], 0, 1)))))
+    lon = ss((u - ua) / R['ramp']) * ss((ub - u) / R['ramp'])
+    # les whoops pleine largeur jusque sous le muret (comme 25 Paris SX : pas d'encoche à la jonction whoops / muret)
+    wu = np.interp((u - u0) / 0.1, np.arange(len(prof)), prof, left=0, right=0) * (u >= ua) * (u <= ub)
+    new = np.maximum(out[sl], np.maximum(Hr * lat * lon, wu * (v <= b)))
+    # jonction creux / muret arrondie (25 Paris SX : creux qui remontent en rond contre le muret, pas en pointe)
+    from scipy.ndimage import gaussian_filter
+    wgt = np.exp(-((v - (a - 0.5)) / 1.6) ** 2) * (lon > 0)
+    out[sl] = new * (1 - wgt) + gaussian_filter(new, 1.2 / S) * wgt
+
+
 def render(path, st):
     jumps = np.zeros((N, N)); whoops = np.zeros((N, N)); berms = np.zeros((N, N)); fmx = np.zeros((N, N))
     import layouts_sx as LS
@@ -167,6 +187,9 @@ def render(path, st):
         if g['kind'] == 'S':
             for prof, u0, name in g['sections']:
                 render_lane_block(G, whoops if 'whoops' in name else jumps, g, prof, u0, TW)
+                for it in LS.COMBOS[name]['items']:            # v14 : bord des whoops (muret de 25 Paris SX)
+                    if it[0].startswith('whoops 25 Paris'):
+                        whoops_rails(whoops, g, prof, u0, it)
                 if name == LP.L3_SEC:                          # butte ZION 2025 : sa largeur mesurée (68 ft à mi-hauteur, 110 au pied)
                     it = [i for i in LS.COMBOS[name]['items'] if 'butte' in i[0]][0]
                     i0, i1 = int(it[1] / 0.1), int(it[2] / 0.1)

@@ -101,31 +101,31 @@
   {
    "lane": "L1 whoops",
    "name": "PAR-L1 whoops, table, bosse",
-   "u0": 1.2,
-   "s0": 1512.3,
-   "L": 333.7,
+   "u0": 5.0,
+   "s0": 1516.1,
+   "L": 329.9,
    "H": 6.6,
    "seg_L": 342.9,
    "items": [
     [
-     "whoops Custom_0 x11 (x1.25, ronds, creux 0.45)",
+     "whoops 25 Paris SX x11 (3.6 ft)",
      0.0,
-     208.5
+     204.7
     ],
     [
      "Arlington_g49_2 (H 6.6, back x0.85)",
-     223.5,
-     275.3
+     219.7,
+     271.5
     ],
     [
      "Arlington_g37_1 (H 4.0)",
-     276.8,
-     304.7
+     273.0,
+     300.9
     ],
     [
      "Arlington_g37_0 (H 3.6)",
-     306.2,
-     333.6
+     302.4,
+     329.8
     ]
    ]
   },
@@ -234,8 +234,8 @@
  ],
  "objets": {
   "objets": {
-   "retirés (v13) : boudins FLY Racing (whoops)": 26,
-   "retirés (v13) : ballots ZION (unis)": 221,
+   "retirés (v13) : boudins FLY Racing (whoops)": 24,
+   "retirés (v13) : ballots ZION (unis)": 222,
    "retirés (v13) : poteaux ronds": 7,
    "retirés (v13) : tuffs de virage ZION (unis)": 68,
    "retirés (v13) : filets": 40,
