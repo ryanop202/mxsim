@@ -57,7 +57,14 @@ def build(out, folder, H, S, path, start, combos, finish_s_fn):
         f = lambda xx, zz: float(H[int(np.clip(round(zz / S), 0, H.shape[0] - 1)), int(np.clip(round(xx / S), 0, H.shape[1] - 1))])
         return float(np.degrees(np.arctan(np.hypot(f(x + d, z) - f(x - d, z), f(x, z + d) - f(x, z - d)) / (2 * d))))
 
+    KEEP = ('grilles de départ', 'panneau FINISH suspendu', 'cage du drapeau', 'camions du paddock')
+
     def put(kind, x, z, yaw, model, tex, shp=None, y=0.0, tilt_ok=False):
+        # v13 (« enlève tout de A à Z : ballots, trucs aux inters, plots, arche... on va refaire ») : seuls les objets utiles à la
+        # course restent (grilles, panneau FINISH, cage du drapeau) + les camions du paddock (hors piste)
+        if kind not in KEEP:
+            cnt['retirés (v13) : ' + kind] = cnt.get('retirés (v13) : ' + kind, 0) + 1
+            return
         # v10 (« tous les trucs de travers, enlève-les, on les remettra avec un plan définitif ») : le jeu penche une statue selon
         # le sol sous son origine -> un objet posé sur une pente de plus de 3° n'est pas posé (sauf ceux faits pour : tuffs de virage)
         if not tilt_ok and slope_deg(x, z) > 3.0:

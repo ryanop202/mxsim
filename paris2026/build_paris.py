@@ -66,6 +66,71 @@ def zion_look(OUT):
     REPORT['terre_zion'] = [round(float(v)) for v in zm]
 
 
+ZD = os.path.join(ROOT, "paris2026", "refs", "zion25_full", "ZION.2025.SupercrossParis")
+
+
+def zion_tileinfo(OUT):
+    """v13 (« je veux la texture ZION, là c'est la texture Saint-Tib avec la couleur ZION ») : les tuiles de terre (Main, Jumps,
+    Whoops, Berm) prennent la texture, les projections et les traces de pneus de ZION 2025 (bloc « dirtappel » de son tileinfo) ;
+    la physique reste celle des pistes USLAND."""
+    shutil.copytree(os.path.join(ZD, "tile"), os.path.join(OUT, "ztile"), dirs_exist_ok=True)
+    zb = open(os.path.join(ZD, "tileinfo")).read().split("addtile")[0].splitlines()
+    look = [l.replace("@ZION.2025.SupercrossParis/roost/", "@%s/ztile/" % FOLDER).replace("@ZION.2025.SupercrossParis/tile/", "@%s/ztile/" % FOLDER)
+            for l in zb if l.startswith(("texture", "roost", "treadmark"))]
+    ti = os.path.join(OUT, "tileinfo"); blocks = open(ti).read().split("addtile"); out = []
+    for b in blocks:
+        name = next((l for l in b.splitlines() if l.startswith("name ")), "")
+        if name[5:].strip() in ("Main", "Jumps Sx", "WhoopsV2", "Berm Exit Sx"):
+            keep = [l for l in b.splitlines() if not l.startswith(("texture", "roost", "treadmark"))]
+            while keep and not keep[-1].strip():
+                keep.pop()
+            b = chr(10).join(keep + look) + chr(10)
+        out.append(b)
+    open(ti, "w", newline=chr(10)).write("addtile".join(out))
+    REPORT['tuiles_zion'] = look
+
+
+def zion_decals(path, start_route, combos):
+    """v13 : décals de ZION 2025 posés comme sur sa piste : un grand « overlay » sur tout le tracé, des bandes « Straight » le long
+    des couloirs (135 ft, une tous les ~110 ft), les décals d'obstacles (single / Table / triplemiddle / Whoops) et de virages
+    (90 / 180), « startgate » devant chaque grille."""
+    from engine import turn_mid_angle
+    shutil.copytree(os.path.join(ZD, "decal"), os.path.join(OUT, "zdecal"), dirs_exist_ok=True)
+    SH = "@%s/zdecal" % FOLDER
+    ang_ = lambda fx, fz: float(np.arctan2(-fx, -fz))
+    dec = lambda x, z, a, size, tex: "[%.6f %.6f] %.6f %.6f 1.000000 %s/%s.png" % (x, z, a, size, SH, tex)
+    out = []
+    smp = path.samples(2.0); cx, cz = (smp['x'].min() + smp['x'].max()) / 2, (smp['z'].min() + smp['z'].max()) / 2
+    size = max(smp['x'].max() - smp['x'].min(), smp['z'].max() - smp['z'].min()) + 80.0
+    out.append(dec(cx, cz, 0.0, size, 'overlay'))
+    for g in path.segs:
+        if g['kind'] == 'S':
+            c, s_ = np.cos(g['t']), np.sin(g['t']); a = ang_(c, s_)
+            n_ = max(1, int(round(g['L'] / 110.0)))
+            for k in range(n_):
+                u = (k + 0.5) * g['L'] / n_; out.append(dec(g['x0'] + u * c, g['z0'] + u * s_, a, 135.4, 'Straight'))
+            for prof, u0, name in g['sections']:
+                for it in combos[name]['items']:
+                    nm, st, en, hh = it[0], it[1], it[2], it[3]; L = en - st; uu = u0 + (st + en) / 2
+                    if nm.startswith('whoops'):
+                        for k in range(max(1, int(L / 60))):
+                            u_ = u0 + st + (k + 0.5) * L / max(1, int(L / 60)); out.append(dec(g['x0'] + u_ * c, g['z0'] + u_ * s_, a, 130.0, 'Whoops'))
+                        continue
+                    tex = 'triplemiddle' if hh >= 6.6 and L < 52 else ('Table' if L >= 52 else 'single')
+                    out.append(dec(g['x0'] + uu * c, g['z0'] + uu * s_, a, 125.0 if tex == 'single' else 130.0, tex))
+        elif g['kind'] == 'T' and g.get('berm'):
+            m = turn_mid_angle(g); fx, fz = np.cos(m), np.sin(m)
+            if abs(g['ang']) > 120:
+                out.append(dec(g['cx'] + fx * 9, g['cz'] + fz * 9, ang_(fx, fz), 135.1, '180'))
+            else:
+                out.append(dec(g['cx'] + fx * 14, g['cz'] + fz * 14, ang_(fx, fz), 110.0, '90'))
+    gx, gz = START['gate']; h = np.radians(START['heading']); nn = np.array([-np.sin(h), np.cos(h)])
+    for k in range(LP.N_GATES):
+        v = (k - (LP.N_GATES - 1) / 2) * LP.GATE_PITCH
+        out.append(dec(gx + nn[0] * v, gz + nn[1] * v, ang_(np.cos(h), np.sin(h)), 8.0, 'startgate'))
+    return out, 0
+
+
 def mx_poly(P):
     x, z = LP.arena_to_mx(P[:, 0], P[:, 1])
     return np.c_[x, z]
@@ -114,6 +179,7 @@ def render(path, st):
             # v9 : 180 L3 -> L2 de rayon 32 ft, berm sur sa 2e moitié seulement (berm_seg), croissant décalé de r - 21,5 ft
             gb = berm_seg(g)
             gain = LP.BERM90_GAIN if abs(abs(gb['ang']) - 90) < 1 else LP.BERM180_GAIN
+            gain = LP.BERM_GAIN_TAG.get(g['tag'][:4], gain)                 # v13 : réglage par virage (T_D moins haut)
             tmp = np.zeros((N, N))
             sl = render_berm_stamp(G, tmp, g['berm'], g['cx'], g['cz'], turn_mid_angle(gb),
                                    ang_scale=berm_ang_scale(g['berm'], gb['ang']), r_shift=max(0.0, g['r'] - LP.RB))
@@ -186,7 +252,7 @@ def export(H, tiles, gates_txt, floor_mx, inside_mx):
     # sol, textures, ciel et éclairage de Saint-Thibéry à l'identique (stt_look.py)
     import stt_look as SL
     SL.copy_assets(OUT, FOLDER)
-    zion_look(OUT)
+    zion_tileinfo(OUT)
     sh = SL.shading(H, S, floor_mx)
     ppm(os.path.join(OUT, "shading.ppm"), sh)
     ppm(os.path.join(OUT, "shadingx2.ppm"), (sh // 2).astype(np.uint8))
@@ -300,7 +366,7 @@ def export(H, tiles, gates_txt, floor_mx, inside_mx):
     # décals de Saint-Thibéry (terre sur tout le sol, surface du tour, obstacles, virages)
     import layouts_sx as LS
     from starts import StartRoute
-    dec, n_dirt = SL.decals(PATH, StartRoute(START, LP.N_GATES, LP.GATE_PITCH), floor_mx, S, FOLDER, LS.COMBOS)
+    dec, n_dirt = zion_decals(PATH, StartRoute(START, LP.N_GATES, LP.GATE_PITCH), LS.COMBOS)   # v13 : décals de ZION (plus ceux de STT)
     open(os.path.join(OUT, "decals"), "w", newline="\n").write("\n".join(dec) + "\n")
     # étape 4 : public dans les tribunes (silhouettes de Saint-Thibéry), public.py
     import public as PB

@@ -134,7 +134,8 @@ FINISH_SEC = 'PAR-L5 petit double, triple d arrivee (ZION 2025)'
 # L6 : rythmique serrée (on peut faire double / quadruple, mais la 1re bosse est petite : pas de « 4 d'entrée »), table,
 # puis un double derrière la table (« sur table, derrière double »). Formes = bosses Arlington déjà utilisées ici.
 SMALL_DBL = [('scale', SA[0], 3.4), ('gap', 8.0), ('stretch', SA[1], 4.0, 1.25)]
-PRE_FINISH = SMALL_DBL                  # v10 : « avant le triple il manque une bosse, ça fait un double » (v9 : un seul roller) ;
+PRE_FINISH = [('scale', SA[0], 3.4), ('gap', 16.0), ('stretch', SA[1], 4.0, 1.25)]   # v13 : double plus long (était SMALL_DBL)
+# v10 (ancien commentaire) : « avant le triple il manque une bosse, ça fait un double » (v9 : un seul roller) ;
 #   la ligne d'arrivée (item 2) retombe ainsi sur l'APPEL du triple (avec le roller, l'item 2 était la réception -> FINISH mal placé)
 TABLE_L1 = ('stretch', TABLE_B, 6.6, 0.85)
 L6_RHYTHM = [('scale', SA[0], 2.6), ('gap', 3.0), ('scale', SA[2], 4.2), ('gap', 3.0), ('scale', SA[1], 4.4), ('gap', 3.0),
@@ -164,7 +165,7 @@ def even(blocks, lane_len, u0, end):
     return out
 
 
-def whoops_paris(n=11, k=1.25, first=0.55, sx=0.93, sm=1.0, base=0.45):
+def whoops_paris(n=11, k=1.25, first=0.85, sx=0.93, sm=1.0, base=0.45):   # v13 : bosse de lancement plus haute (0,55 -> 0,85)
     """v10 (« un peu plus hauts et plus ronds, plus de terre, un peu plus durs ; 11 = la petite bosse + 10 whoops ») : whoops
     Custom_0 x1,25 (3,7 ft), pas x0,93 (18,6 ft), la 1re à 55 %, crêtes arrondies (gaussienne 1 ft), creux remontés à 0,45 ft."""
     import compose
@@ -240,7 +241,8 @@ Z25_TRIPLE = [t if t[0] != 'raw' else ('raw', t[1].replace('(10,0)', '(8,7)').re
 Z25_MILIEU = _split_after_first(_P25['milieu'], 'appel gros saut ZION 2025 (10,0)', 'butte gros saut rond ZION 2025 (24,2)', 'X')
 # v10 (« fais le plus large sur les côtés, l'appel légèrement plus raide ») : réception plus large, appel 15 % plus court (même hauteur)
 Z25_BUTTE_W = (60.0, 66.0)               # v5 : (44, 46) réception carrée pour la bâche AMV (retirée en v10)
-Z25_MILIEU[0] = ('raw', Z25_MILIEU[0][1] + ' raidi', resample(Z25_MILIEU[0][2], 0.85), 'T')
+# v13 (« l'appel juste un peu moins haut, légèrement plus raide ») : 92 % de la hauteur, 80 % de la longueur
+Z25_MILIEU[0] = ('raw', Z25_MILIEU[0][1] + ' raidi', resample(Z25_MILIEU[0][2], 0.80, 0.92 * float(np.max(Z25_MILIEU[0][2]))), 'T')
 Z25_BUTTE_W_ZION = (_P25['largeur_butte_mi_hauteur'], 90.0)   # 68 ft à mi-hauteur comme ZION ; pied 90 ft au lieu de 110 :
 #   entre les singles (L2) et la ligne de départ il n'y a que ~98 ft -> flancs un peu plus raides que ZION
 
@@ -306,7 +308,7 @@ def lane_sec(name, toks, u0, finish=False, **kw):
 def paris():
     """Le tour (sens de course), départ du tour au début de L5 (sortie de T_C)."""
     LS.COMBOS.clear(); LS.SPLITS.clear()
-    zL5, zLD, zL3, zL2 = px_z(481.0), px_z(370.0) - LD_SHIFT, px_z(226.5), px_z(130.0)
+    zL5, zLD, zL3, zL2 = px_z(481.0), px_z(370.0) - LD_SHIFT, px_z(226.5) + L3_SHIFT, px_z(130.0) + L3_SHIFT + L2_SHIFT
     zL1, zL6 = zL2 + 2 * RB, zL5 - 2 * RB            # 180° JGSX : couloirs voisins à 43 ft
     xW = px_x(312.0)                                   # virages Ouest (T1, T_C) : x des sorties de 180°
     xLR, xC, xT5 = px_x(860.0), px_x(778.0), px_x(785.0)
@@ -314,8 +316,12 @@ def paris():
     R3 = (zL2 - zL3) / 2
     p = Path(xW, zL5, 180.0, 'PARIS')
     # L5 : single, single, SAUT D'ARRIVÉE (obstacles 3 + 4 du visuel = un double : appel / réception), table longue
-    toks, u0 = from_render('L5', xW, 'x', -1, {(1, 2): PRE_FINISH, (3, 5): Z25_TRIPLE},
+    toks, u0 = from_render('L5', xW, 'x', -1, {(1, 2): SMALL_DBL, (3, 5): Z25_TRIPLE},
                            lane_len=xW - (xT5 + RB))   # v4 : le triple d'arrivée de ZION 2025 couvre les obstacles 3 à 5 du visuel
+    # v13 (« le double plus en sortie de virage et un peu plus long ; le triple est bien ») : le triple reste où il est, le double
+    # commence à EXIT_U0 de la sortie du virage, plus long (écart 8 -> 16 ft)
+    i_t = next(i for i, t in enumerate(toks) if t[0] == 'raw'); u_app = u0 + tlen(toks[:i_t])
+    toks = PRE_FINISH + [('gap', round(u_app - EXIT_U0 - tlen(PRE_FINISH), 1))] + toks[i_t:]; u0 = EXIT_U0
     p.straight(xW - (xT5 + RB), [lane_sec(FINISH_SEC, toks, u0, finish=True)], tag='L5 arrivée')
     p.turn(90, RB, BIG, tag='T_L5a 90 gauche (berm)')
     p.straight(zLD - zL5 - 2 * RB, tag='T_L5 milieu')
@@ -345,7 +351,8 @@ def paris():
     # crête à crête comme STT L2 « long triple, triple »), la 1re plus basse à 3 ft de la sortie du 180, la dernière à 8 ft du virage
     B7 = [('scale', SA[1], 4.0), ('scale', SA[2], 4.6), ('scale', SA[0], 5.0), ('scale', SA[1], 4.8), ('scale', SA[2], 5.0),
           ('scale', SA[1], 4.6), ('scale', SA[2], 4.8)]
-    toks = even(B7, xW - x_end3, L2_U0, 8.0)
+    B7 = [('stretch', b[1], b[2], 1.25) for b in B7]      # v13 (« un peu trop pointues : bosse, plat, bosse, plat ») : plus rondes,
+    toks = even(B7, xW - x_end3, L2_U0, 8.0)               #   même hauteur, même écart de crête à crête
     u0 = L2_U0
     p.straight(xW - x_end3, [lane_sec('PAR-L2 triple, triple (7 bosses, meme ecart)', toks, u0)], tag='L2 singles')
     p.turn(-180, RB, BIG2, tag='T1 180 droite (berm)')
@@ -363,13 +370,16 @@ def paris():
     lLR = (zL1 - RB) - (zL6 + RB)
     rh = [('scale', SA[0], 3.0), ('gap', 7.5), TABLE, ('gap', 7.5), ('scale', SA[1], 4.2), ('gap', 7.5), ('scale', SA[2], 4.2), ('gap', 7.5), ('scale', SA[1], 4.0)]
     kick = [('scale', SA[1], 4.0)]
-    toks = kick + [('gap', round(lLR - 3.0 - 8.0 - tlen(kick) - tlen(rh), 1))] + rh; u0 = 3.0
+    u0 = EXIT_U0                                           # v13 : plus collé au berm (marque entre l'appui et la bosse)
+    toks = kick + [('gap', round(lLR - u0 - 8.0 - tlen(kick) - tlen(rh), 1))] + rh
     p.straight((zL1 - RB) - (zL6 + RB), [lane_sec('PAR-LR saut de sortie, bosse, table, 3 bosses', toks, u0)], tag='LR tribune Est')
     p.turn(-90, RB, BIG, tag='T_E 90 droite (berm)')
     # v10 (« triple : 3 bosses, 2 bosses, une table, 2 bosses ») : bosses de Saint-Thibéry, même écart partout, 8 ft du virage
-    L6B = [('scale', SA[0], 3.8), ('scale', SA[2], 4.4), ('scale', SA[1], 4.6), ('scale', SA[3], 4.4), ('scale', SA[2], 4.6), TABLE,
-           ('scale', SA[0], 4.0), ('scale', SA[1], 4.2)]
-    toks, u0 = even(L6B, xW - (xLR + RB), 4.0, 8.0), 4.0
+    # v13 : appel (1re bosse) un peu plus raide et un peu plus haut (« tu creuses un peu plus le bas »), sans aller plus loin ;
+    # les autres bosses un peu plus hautes et plus rondes ; plus de marque berm / 1re bosse (EXIT_U0)
+    L6B = [('stretch', SA[0], 4.2, 0.85), ('stretch', SA[2], 4.7, 1.15), ('stretch', SA[1], 4.9, 1.15), ('stretch', SA[3], 4.7, 1.15),
+           ('stretch', SA[2], 4.9, 1.15), TABLE, ('stretch', SA[0], 4.3, 1.15), ('stretch', SA[1], 4.5, 1.15)]
+    toks, u0 = even(L6B, xW - (xLR + RB), EXIT_U0, 8.0), EXIT_U0
     p.straight(xW - (xLR + RB), [lane_sec('PAR-L6 triple, double, table, double', toks, u0)], tag='L6 tribune Sud')
     p.turn(-180, RB, BIG, tag='T_C 180 droite (berm)')
     p.lanes = dict(x_end3=x_end3, R3=R3, zL5=zL5, zLD=zLD, zL3=zL3, zL2=zL2, zL1=zL1, zL6=zL6, xW=xW, xLR=xLR, xC=xC, xT5=xT5, xTB=xTB)
@@ -379,9 +389,14 @@ def paris():
 # ---------------------------------------------------------------- départ (22 grilles, comme JGSX)
 N_GATES, GATE_PITCH = 22, 4.0
 X_APEX_SHIFT, L3_ADVANCE = 6.0, 8.0     # v9 : sommet du 180 après le saut du milieu / avance du saut (ft)
+L3_SHIFT, L2_SHIFT = 12.0, 10.0          # v13 (« plus d'espace entre chaque enchaînement ») : L3 12 ft et L2 / L1 22 ft plus au sud
+#                                         -> couloir Est 22 ft plus long, 180 L3 -> L2 de rayon 37 ft
+EXIT_U0 = 10.0                           # v13 : 1re bosse à 10 ft de la sortie des virages (plus de marque berm / appel)
+L2_U0_V13 = 10.0
+BERM_GAIN_TAG = {'T_D ': 0.95}            # v13 : appui après le saut du milieu un peu moins haut (était 1,15)
 LD_SHIFT = 5.0                          # v10 : ligne de départ 5 ft plus loin du saut du milieu (place pour les tremplins FMX ;
 #                                         plus loin, le bout des 22 grilles monte sur le pied du berm T_C : grilles plus plates)
-L2_GAP, L2_U0 = 5.0, 3.0                # v9 : écart identique entre les 7 bosses de L2 ; 1re bosse à 3 ft de la sortie du 180
+L2_GAP, L2_U0 = 5.0, 10.0               # v9 : écart identique entre les 7 bosses de L2 ; v13 : 1re bosse à 10 ft du 180 (était 3 : marque)
 
 
 def start(p):
@@ -413,7 +428,8 @@ def fmx_ramps(path=None):
     tgt = P(uc, 0.0)
     out = []
     # v10 (« les rampes plus collées, pas au milieu de la ligne droite de départ ») : plus près de l'appel (v 22 - 28 ft au lieu de 25 - 40)
-    for du, v in ((-30.0, 22.0), (-16.0, 28.0), (-22.0, -22.0), (-38.0, -28.0)):   # v < 0 = nord (L2 à 64 ft seulement)
+    # v13 (« les 4 rampes, mais en que 2, d'un côté ») : 2 tremplins, côté L2 (plus d'espace depuis v13), loin du départ
+    for du, v in ((-22.0, -24.0), (-38.0, -30.0)):
         lip = P(ub + du, v); d = tgt - lip
         out.append(dict(lip=(float(lip[0]), float(lip[1])), heading=float(np.arctan2(d[1], d[0]))))
     return out
