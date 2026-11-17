@@ -126,10 +126,6 @@
 [563.7966 0.0000 592.2861] 0.000000 @USLAND2026SupercrossParis/statue/catwalks__railing__01_0.jm @USLAND2026SupercrossParis/tex/railing-repeat.png null
 [566.1916 0.0000 594.7139] 0.000000 @USLAND2026SupercrossParis/statue/catwalks__railing__02_0.jm @USLAND2026SupercrossParis/tex/railing-repeat.png null
 [566.1916 0.0000 592.2861] 0.000000 @USLAND2026SupercrossParis/statue/catwalks__railing__03_0.jm @USLAND2026SupercrossParis/tex/railing-repeat.png null
-[75.9029 0.0000 593.2375] 0.000000 @USLAND2026SupercrossParis/statue/crown__alu_white__00_0.jm @USLAND2026SupercrossParis/tex/alu_white-repeat.png null
-[75.9029 0.0000 593.0079] 0.000000 @USLAND2026SupercrossParis/statue/crown__alu_white__01_0.jm @USLAND2026SupercrossParis/tex/alu_white-repeat.png null
-[525.3123 0.0000 172.8307] 0.000000 @USLAND2026SupercrossParis/statue/crown__alu_white__02_0.jm @USLAND2026SupercrossParis/tex/alu_white-repeat.png null
-[629.1837 0.0000 172.8307] 0.000000 @USLAND2026SupercrossParis/statue/crown__alu_white__03_0.jm @USLAND2026SupercrossParis/tex/alu_white-repeat.png null
 [1108.1208 0.0000 971.5184] 0.000000 @USLAND2026SupercrossParis/statue/crown__concrete_white__00_0.jm @USLAND2026SupercrossParis/tex/concrete_white-repeat.png null
 [940.3386 0.0000 177.2926] 0.000000 @USLAND2026SupercrossParis/statue/crown__concrete_white__01_0.jm @USLAND2026SupercrossParis/tex/concrete_white-repeat.png null
 [149.8530 0.0000 967.3845] 0.000000 @USLAND2026SupercrossParis/statue/crown__crown__00_0.jm @USLAND2026SupercrossParis/tex/crown_panel.png null
@@ -142,9 +138,8 @@
 [707.2349 0.0000 169.3858] 0.000000 @USLAND2026SupercrossParis/statue/crown__crown__07_0.jm @USLAND2026SupercrossParis/tex/crown_panel.png null
 [991.0932 0.0000 1001.1116] 0.000000 @USLAND2026SupercrossParis/statue/crown__crown__08_0.jm @USLAND2026SupercrossParis/tex/crown_panel.png null
 [909.5971 0.0000 169.6483] 0.000000 @USLAND2026SupercrossParis/statue/crown__crown__09_0.jm @USLAND2026SupercrossParis/tex/crown_panel.png null
-[63.0748 0.0000 593.1063] 0.000000 @USLAND2026SupercrossParis/statue/crown__signage_roof__00_0.jm @USLAND2026SupercrossParis/tex/signage_roof.png null
-[63.0748 0.0000 593.1063] 0.000000 @USLAND2026SupercrossParis/statue/crown__signage_roof__01_0.jm @USLAND2026SupercrossParis/tex/signage_roof.png null
-[629.0525 0.0000 158.1981] 0.000000 @USLAND2026SupercrossParis/statue/crown__signage_roof__02_0.jm @USLAND2026SupercrossParis/tex/signage_roof.png null
+[67.3399 0.0000 593.1063] 0.000000 @USLAND2026SupercrossParis/statue/crown__signage_roof__00_0.jm @USLAND2026SupercrossParis/tex/signage_roof.png null
+[67.3399 0.0000 593.1063] 0.000000 @USLAND2026SupercrossParis/statue/crown__signage_roof__01_0.jm @USLAND2026SupercrossParis/tex/signage_roof.png null
 [507.9895 0.0000 148.6181] 0.000000 @USLAND2026SupercrossParis/statue/entrances__alu_white__00_0.jm @USLAND2026SupercrossParis/tex/alu_white-repeat.png null
 [740.7979 0.0000 1035.1995] 0.000000 @USLAND2026SupercrossParis/statue/entrances__alu_white__01_0.jm @USLAND2026SupercrossParis/tex/alu_white-repeat.png null
 [669.0131 0.0000 147.7979] 0.000000 @USLAND2026SupercrossParis/statue/entrances__alu_white__02_0.jm @USLAND2026SupercrossParis/tex/alu_white-repeat.png null
