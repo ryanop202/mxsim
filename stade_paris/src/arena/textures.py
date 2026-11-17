@@ -212,8 +212,71 @@ def _fonts(size):
     return f1, f2
 
 
+PLENITUDE_LOGO = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+                              "references", "public", "plenitude_arena_logo.webp")
+
+
+def plenitude_line(text_rgb=None):
+    """v10 (Paris 2026 : « Paris La Défense Arena devient la Plenitude Arena ; le logo sur 3 étages, mets-le sur une ligne ») :
+    le logo officiel fourni par l'utilisateur (chien + soleil / plenitude / arena) recomposé sur UNE ligne comme sur la façade :
+    chien, « plenitude », « arena », alignés sur la ligne de base, même échelle que le logo (rien d'étiré). RGBA, ratio naturel."""
+    src = Image.open(PLENITUDE_LOGO).convert("RGBA"); a = np.asarray(src)
+    ink = a[..., 3] > 20
+    rows = np.nonzero(ink.any(1))[0]; bands, s0 = [], rows[0]
+    for i in range(1, len(rows)):
+        if rows[i] - rows[i - 1] > 15:
+            bands.append((s0, rows[i - 1])); s0 = rows[i]
+    bands.append((s0, rows[-1]))
+    def crop(b):
+        cols = np.nonzero(ink[b[0]:b[1] + 1].any(0))[0]
+        return src.crop((int(cols.min()), int(b[0]), int(cols.max()) + 1, int(b[1]) + 1))
+    dog, plen, arena = (crop(b) for b in bands[:3])
+    if text_rgb:                                        # lettres d'une seule couleur (enseigne lumineuse du toit), chien inchangé
+        def _col(im):
+            q = np.asarray(im).copy(); q[..., :3] = text_rgb; return Image.fromarray(q, "RGBA")
+        plen, arena = _col(plen), _col(arena)
+    pa = np.asarray(plen)[..., 3] > 20
+    segs, inside, c0 = [], False, 0                     # lettres de « plenitude » : 1re = p (jambage), 2e = l (ligne de base)
+    for c in range(pa.shape[1]):
+        on = pa[:, c].any()
+        if on and not inside:
+            inside, c0 = True, c
+        elif not on and inside:
+            inside = False; segs.append((c0, c))
+    l0, l1 = segs[1]
+    base = int(np.nonzero(pa[:, l0:l1].any(1))[0].max())   # ligne de base dans « plenitude »
+    xh = arena.size[1]                                       # hauteur d'x (arena n'a ni hampe ni jambage)
+    k = 1.22 * (base + 1) / dog.size[1]                      # chien un peu plus haut que les hampes (photo de façade)
+    dog = dog.resize((max(1, int(dog.size[0] * k)), max(1, int(dog.size[1] * k))), Image.LANCZOS)
+    gap, space = int(0.45 * xh), int(0.42 * xh)
+    top = max(dog.size[1] - (base + 1), 0)                   # pieds du chien sur la ligne de base
+    Wl = dog.size[0] + gap + plen.size[0] + space + arena.size[0]; Hl = top + plen.size[1]
+    out = Image.new("RGBA", (Wl, Hl), (0, 0, 0, 0))
+    out.alpha_composite(dog, (0, top + base + 1 - dog.size[1]))
+    out.alpha_composite(plen, (dog.size[0] + gap, top))
+    out.alpha_composite(arena, (dog.size[0] + gap + plen.size[0] + space, top + base + 1 - arena.size[1]))
+    return out
+
+
 def signage(w=4096, h=512):
-    """Enseigne « PARIS LA DEFENSE ARENA » : lettres boîtier anthracite + logo vert (P1).
+    """Enseigne de façade « plenitude arena » (v10, était « PARIS LA DEFENSE ARENA ») : le logo sur une ligne, centré, ratio
+    naturel, sur fond transparent. Ratio de l'image = 8 : le panneau 3D respecte ce ratio (compensé de l'agrandissement en plan)."""
+    line = plenitude_line(); k = min(w * 0.96 / line.size[0], h * 0.86 / line.size[1])
+    line = line.resize((int(line.size[0] * k), int(line.size[1] * k)), Image.LANCZOS)
+    img = Image.new("RGBA", (w, h), (0, 0, 0, 0)); img.alpha_composite(line, ((w - line.size[0]) // 2, (h - line.size[1]) // 2))
+    return np.asarray(img, float)
+
+
+def signage_roof(w=4096, h=512):
+    """v10 : enseigne lumineuse du toit (photo de nuit) : « plenitude arena » en lettres blanches, chien vert, une ligne."""
+    line = plenitude_line((246, 246, 244)); k = min(w * 0.96 / line.size[0], h * 0.86 / line.size[1])
+    line = line.resize((int(line.size[0] * k), int(line.size[1] * k)), Image.LANCZOS)
+    img = Image.new("RGBA", (w, h), (0, 0, 0, 0)); img.alpha_composite(line, ((w - line.size[0]) // 2, (h - line.size[1]) // 2))
+    return np.asarray(img, float)
+
+
+def signage_paris_la_defense(w=4096, h=512):
+    """Ancienne enseigne « PARIS LA DEFENSE ARENA » : lettres boîtier anthracite + logo vert (P1).
 
     Ratio largeur/hauteur de l'image = 8 : le panneau 3D doit respecter ce ratio.
     """
@@ -414,6 +477,7 @@ def build_all(outdir):
     _save(atlas, os.path.join(outdir, "seat_atlas.png"), "RGBA"); written.append("seat_atlas.png")
     _save(signage(), os.path.join(outdir, "signage.png"), "RGBA"); written.append("signage.png")
     _save(signage_interior(), os.path.join(outdir, "signage_interior.png"), "RGBA"); written.append("signage_interior.png")
+    _save(signage_roof(), os.path.join(outdir, "signage_roof.png"), "RGBA"); written.append("signage_roof.png")   # v10 : toit
     # habillage USLAND Supercross Paris 2026
     from . import branding, dims
     written += branding.build_all(outdir, [(e["screen_w"], e["screen_h"]) for e in dims.ENTRANCES.values()])

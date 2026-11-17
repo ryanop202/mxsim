@@ -15,6 +15,10 @@ from .geo2d import signed_dist, point_in_poly, dist_to_poly, smooth_closed
 from .mesh import Mesh
 
 EDGE_OFFSET = -1.2       # ligne haute de la couronne / rive du toit
+# v10 (Paris 2026, « le toit est tout déformé, fais un truc lisse, propre, des belles courbes comme le vrai toit ») : le relevé
+# LiDAR lissé (équipements, bruit, patios) est remplacé par une surface polynomiale de degré 4 ajustée dessus (écart moyen
+# 0,75 m) -> voûte lisse, rives en courbes douces ; patios des bureaux fermés (plus de trous dans le toit)
+SMOOTH_ROOF, SMOOTH_DEG, CLOSED_PATIOS = True, 4, True
 GRID = 3.0
 MARGIN = 3.5
 
@@ -94,7 +98,21 @@ def field():
             np.savez_compressed(cache, x0=_FIELD.x0, y0=_FIELD.y0, step=_FIELD.step,
                                 h=_FIELD.h, xs=_FIELD.xs, ys=_FIELD.ys)
         _fill_ne_notch(_FIELD)     # appliqué après le cache (le cache reste le relevé brut lissé)
+        if SMOOTH_ROOF:
+            _smooth_fit(_FIELD)
     return _FIELD
+
+
+def _smooth_fit(f, deg=None, xm=10.0, sx=110.0, sy=90.0):
+    """remplace le champ par un polynôme de degré deg en (X, Y) ajusté sur le relevé (hors bords et patios), borné à 24 - 46 m."""
+    deg = deg or SMOOTH_DEG
+    X, Y = np.meshgrid(f.xs, f.ys, indexing="ij"); P = np.stack([X, Y], -1)
+    m = np.isfinite(f.h) & (signed_dist(P, dims.outline(0.0, 1.0)["p"]) < -4.0)
+    for pa in (dims.PATIO_A, dims.PATIO_B):
+        m &= ~point_in_poly(P, pa) & (dist_to_poly(P, pa) > 3.0)
+    B = lambda X_, Y_: np.stack([((X_ - xm) / sx) ** i * (Y_ / sy) ** j for i in range(deg + 1) for j in range(deg + 1 - i)], -1)
+    c = np.linalg.lstsq(B(X[m], Y[m]), f.h[m], rcond=None)[0]
+    f.h = np.clip(B(X, Y) @ c, 24.0, 46.0)
 
 
 def edge_loop(ds=1.0):
@@ -189,7 +207,7 @@ def build(ds_edge=2.0):
     X, Y = np.meshgrid(xs, ys, indexing="ij")
     P = np.stack([X, Y], -1)
     ok = signed_dist(P, poly) < -(MARGIN - EDGE_OFFSET)
-    for pa in (dims.PATIO_A, dims.PATIO_B):
+    for pa in (() if CLOSED_PATIOS else (dims.PATIO_A, dims.PATIO_B)):
         ok &= ~point_in_poly(P, pa) & (dist_to_poly(P, pa) > 2.0)
     K = ok[:-1, :-1] & ok[1:, :-1] & ok[:-1, 1:] & ok[1:, 1:]
     K = _clean_mask(K)

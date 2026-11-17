@@ -37,7 +37,7 @@ ENTRANCES = {
     "west": dict(side=+1, x=15.0, canopy_w=31.0, canopy_d=6.5, z0=5.2, z1=9.3,
                  screen_w=13.8, screen_h=9.0, screen_z=4.2, glass_w=26.0, sign=True),
     "east": dict(side=-1, x=36.0, canopy_w=18.0, canopy_d=5.0, z0=5.2, z1=8.8,
-                 screen_w=13.0, screen_h=9.0, screen_z=4.2, glass_w=14.0, sign=False),
+                 screen_w=13.0, screen_h=9.0, screen_z=4.2, glass_w=14.0, sign=True),   # v10 : « plenitude arena » aussi côté Est
 }
 LEDGE = dict(z=8.92, t=0.42, off_out=-1.75, x_west=-35.0, y_end=0.0)   # [PHO] P2, P3
 LEDGE_Z = 8.95        # [PHO] débord horizontal entre rang bas et rang milieu (angle SO)

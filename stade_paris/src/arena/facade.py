@@ -158,7 +158,36 @@ def build_crown(L, scene):
             m = m.flipped()
         scene.add("crown", "concrete_white", m.double_sided())
     ref.extra["panels"] = np.array([npanels])
+    # v10 (Paris 2026 : « sur le toit de l'arena, d'un côté, il y a écrit plenitude arena ; un peu plus gros, accroché avec des
+    # bâtonnets discrets derrière, pas dans le vide ; et sur le côté adjacent ») : enseigne lumineuse (lettres blanches, chien
+    # vert) debout sur la couronne de la façade Ouest (entrée 33, 70 m) et de l'extrémité Sud (60 m), ratio 8:1 compensé de
+    # l'agrandissement en plan (logo non étiré), tenue par des montants fins + jambes de force vers le toit
+    _roof_sign(scene, ref, S, (dims.ENTRANCES["west"]["x"], dims.HALF_W), 70.0)
+    _roof_sign(scene, ref, S, (dims.X_SOUTH, 0.0), 60.0)
     return ref
+
+
+def _roof_sign(scene, ref, S, xy, length_m):
+    """enseigne « plenitude arena » du toit au point de couronne le plus proche de xy ; length_m = longueur finale (arène agrandie)."""
+    ss_ = np.linspace(0, S, 3000); Pq, nq = ref.at(ss_)
+    i_ = int(np.argmin(np.hypot(Pq[:, 0] - xy[0], Pq[:, 1] - xy[1]))); p_, n_ = Pq[i_], nq[i_]
+    t_ = np.array([n_[1], -n_[0]]); hz = float(ref.get("H", ss_[i_]))
+    K = branding.PLAN_K; sw = length_m / K; sh = sw * K / 8.0
+    c_ = p_ - n_ * 0.8; z0 = hz + 0.9                        # posée au-dessus du rebord, un peu en retrait de la face
+    q = quad(tuple(np.r_[c_ - t_ * sw / 2, z0]), tuple(np.r_[c_ + t_ * sw / 2, z0]), tuple(np.r_[c_ + t_ * sw / 2, z0 + sh]),
+             tuple(np.r_[c_ - t_ * sw / 2, z0 + sh]))
+    q = q if np.dot(q.N[0][:2], n_) > 0 else _flip_uv(q)
+    scene.add("crown", "signage_roof", q)
+    # montants verticaux fins juste derrière les lettres (tous les ~6 m), lisse haute, jambes de force vers le toit
+    nb = max(3, int(round(length_m / 6.0)) + 1); back = c_ - n_ * 0.35
+    tops = []
+    for u in np.linspace(-sw / 2 + 0.5 / K, sw / 2 - 0.5 / K, nb):
+        b = back + t_ * u
+        scene.add("crown", "alu_white", beam(np.r_[b, hz - 0.5], np.r_[b, z0 + sh * 0.85], 0.09, 0.09))
+        f_ = b - n_ * (sh * 0.55)
+        scene.add("crown", "alu_white", beam(np.r_[b, z0 + sh * 0.55], np.r_[f_, hz - 0.3], 0.07, 0.07))
+        tops.append(np.r_[b, z0 + sh * 0.5])
+    scene.add("crown", "alu_white", beam(tops[0], tops[-1], 0.07, 0.07))
 
 
 # ------------------------------------------------------------------ socle, bandeau, peau intérieure

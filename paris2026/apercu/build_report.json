@@ -3,234 +3,243 @@
   {
    "lane": "L5 arrivée",
    "name": "PAR-L5 petit double, triple d arrivee (ZION 2025)",
-   "u0": 51.0,
-   "s0": 51.0,
-   "L": 212.4,
+   "u0": 30.8,
+   "s0": 30.8,
+   "L": 232.6,
    "H": 9.7,
    "seg_L": 293.0,
    "items": [
     [
-     "Custom1_g30_1 (H 2.2)",
+     "Arlington_g37_0 (H 3.4)",
      0.0,
-     26.9
+     27.4
+    ],
+    [
+     "Arlington_g37_1 (H 4.0, back x1.25)",
+     35.4,
+     67.3
     ],
     [
      "appel arrivee ZION 2025 (8,7)",
-     55.8,
-     98.0
+     76.0,
+     118.2
     ],
     [
      "triple arrivee ZION 2025 (5,2 / 9,7)",
-     98.0,
-     212.3
+     118.2,
+     232.5
     ]
    ]
   },
   {
    "lane": "L3 grande table",
    "name": "PAR-L3 appel, gros saut rond du milieu (ZION 2025)",
-   "u0": 79.3,
-   "s0": 860.2,
-   "L": 165.0,
+   "u0": 84.3,
+   "s0": 865.2,
+   "L": 156.2,
    "H": 24.25,
    "seg_L": 260.3,
    "items": [
     [
-     "appel gros saut ZION 2025 (10,0)",
+     "appel gros saut ZION 2025 (10,0) raidi",
      0.0,
-     58.7
+     49.9
     ],
     [
      "butte gros saut rond ZION 2025 (24,2)",
-     58.7,
-     164.9
+     49.9,
+     156.1
     ]
    ]
   },
   {
    "lane": "L2 singles",
-   "name": "PAR-L2 7 bosses au meme ecart",
-   "u0": 1.1,
-   "s0": 1143.1,
-   "L": 230.3,
-   "H": 4.98,
+   "name": "PAR-L2 triple, triple (7 bosses, meme ecart)",
+   "u0": 1.7,
+   "s0": 1143.7,
+   "L": 273.6,
+   "H": 5.0,
    "seg_L": 283.8,
    "items": [
     [
-     "Arlington_g37_1 (H 4.9)",
-     1.9,
-     29.8
+     "Arlington_g37_1 (H 4.0)",
+     1.3,
+     29.2
+    ],
+    [
+     "Arlington_g1_1 (H 4.6)",
+     41.6,
+     70.5
+    ],
+    [
+     "Arlington_g37_0 (H 5.0)",
+     82.9,
+     110.3
+    ],
+    [
+     "Arlington_g37_1 (H 4.8)",
+     122.7,
+     150.6
     ],
     [
      "Arlington_g1_1 (H 5.0)",
-     34.8,
-     63.7
+     163.0,
+     191.9
     ],
     [
-     "Arlington_g37_1 (H 4.9)",
-     68.7,
-     96.6
+     "Arlington_g37_1 (H 4.6)",
+     204.3,
+     232.2
     ],
     [
-     "Arlington_g1_1 (H 5.0)",
-     101.6,
-     130.5
-    ],
-    [
-     "Arlington_g37_1 (H 4.9)",
-     135.5,
-     163.4
-    ],
-    [
-     "Arlington_g1_1 (H 5.0)",
-     168.4,
-     197.3
-    ],
-    [
-     "Arlington_g37_1 (H 4.9)",
-     202.3,
-     230.2
+     "Arlington_g1_1 (H 4.8)",
+     244.6,
+     273.5
     ]
    ]
   },
   {
    "lane": "L1 whoops",
    "name": "PAR-L1 whoops, table, bosse",
-   "u0": 0.0,
-   "s0": 1493.4,
-   "L": 336.0,
+   "u0": 1.2,
+   "s0": 1494.6,
+   "L": 333.7,
    "H": 6.6,
    "seg_L": 342.9,
    "items": [
     [
-     "whoops Custom_0 x10 (x1.15)",
+     "whoops Custom_0 x11 (x1.25, ronds, creux 0.45)",
      0.0,
-     203.8
+     208.5
     ],
     [
      "Arlington_g49_2 (H 6.6, back x0.85)",
-     225.8,
-     277.6
+     223.5,
+     275.3
     ],
     [
      "Arlington_g37_1 (H 4.0)",
-     279.1,
-     307.0
+     276.8,
+     304.7
     ],
     [
      "Arlington_g37_0 (H 3.6)",
-     308.5,
-     335.9
+     306.2,
+     333.6
     ]
    ]
   },
   {
    "lane": "LR tribune Est",
-   "name": "PAR-LR roller, longue bosse, 2 bosses",
-   "u0": 2.0,
-   "s0": 1872.1,
-   "L": 266.1,
-   "H": 5.79,
+   "name": "PAR-LR saut de sortie, bosse, table, 3 bosses",
+   "u0": 1.7,
+   "s0": 1871.8,
+   "L": 266.6,
+   "H": 6.6,
    "seg_L": 276.4,
    "items": [
     [
-     "Custom1_g30_1 (H 1.8)",
-     1.0,
-     27.9
+     "Arlington_g37_1 (H 4.0)",
+     1.3,
+     29.2
     ],
     [
-     "longue bosse ondulee (couloir Est)",
-     120.1,
-     206.1
+     "Arlington_g37_0 (H 3.0)",
+     69.4,
+     96.8
+    ],
+    [
+     "Arlington_g49_2 (H 6.6)",
+     104.3,
+     159.3
+    ],
+    [
+     "Arlington_g37_1 (H 4.2)",
+     166.8,
+     194.7
+    ],
+    [
+     "Arlington_g1_1 (H 4.2)",
+     202.2,
+     231.1
     ],
     [
      "Arlington_g37_1 (H 4.0)",
-     209.2,
-     237.1
-    ],
-    [
-     "Arlington_g37_0 (H 3.6)",
      238.6,
-     266.0
+     266.5
     ]
    ]
   },
   {
    "lane": "L6 tribune Sud",
-   "name": "PAR-L6 8 bosses dont une table",
-   "u0": 3.4,
-   "s0": 2183.7,
-   "L": 327.9,
+   "name": "PAR-L6 triple, double, table, double",
+   "u0": 2.8,
+   "s0": 2183.1,
+   "L": 331.5,
    "H": 6.6,
    "seg_L": 342.9,
    "items": [
     [
-     "Arlington_g37_0 (H 2.6)",
-     0.6,
-     28.0
-    ],
-    [
-     "Arlington_g1_1 (H 4.2)",
-     31.0,
-     59.9
-    ],
-    [
-     "Arlington_g37_1 (H 4.4)",
-     62.9,
-     90.8
-    ],
-    [
-     "Arlington_g1_3 (H 4.5)",
-     93.8,
-     125.7
+     "Arlington_g37_0 (H 3.8)",
+     1.2,
+     28.6
     ],
     [
      "Arlington_g1_1 (H 4.4)",
-     128.7,
-     157.6
+     39.3,
+     68.2
     ],
     [
-     "Arlington_g37_1 (H 4.2)",
-     160.6,
-     188.5
+     "Arlington_g37_1 (H 4.6)",
+     78.9,
+     106.8
+    ],
+    [
+     "Arlington_g1_3 (H 4.4)",
+     117.5,
+     149.4
+    ],
+    [
+     "Arlington_g1_1 (H 4.6)",
+     160.1,
+     189.0
     ],
     [
      "Arlington_g49_2 (H 6.6)",
-     192.5,
-     247.5
+     199.7,
+     254.7
     ],
     [
-     "Arlington_g37_0 (H 3.8)",
-     259.5,
-     286.9
+     "Arlington_g37_0 (H 4.0)",
+     265.4,
+     292.8
     ],
     [
-     "Arlington_g37_1 (H 4.0, back x1.25)",
-     295.9,
-     327.8
+     "Arlington_g37_1 (H 4.2)",
+     303.5,
+     331.4
     ]
    ]
   }
  ],
+ "sable_tuiles": 19162,
+ "terre_zion": [
+  158,
+  136,
+  85
+ ],
  "objets": {
   "objets": {
-   "boudins FLY Racing (whoops)": 24,
-   "tuffs honda": 42,
-   "tuffs amv": 32,
-   "tuffs seong": 29,
-   "tuffs monster": 20,
-   "tuffs motul": 44,
-   "tuffs yamaha": 54,
+   "boudins FLY Racing (whoops)": 16,
+   "retirés (de travers) : boudins FLY Racing (whoops)": 10,
+   "ballots ZION (unis)": 57,
+   "retirés (de travers) : ballots ZION (unis)": 159,
    "poteaux ronds": 7,
-   "murs motoverte (haut du berm)": 8,
-   "murs honda (haut du berm)": 12,
-   "filets": 41,
-   "murs seong (haut du berm)": 14,
-   "murs five (haut du berm)": 12,
+   "tuffs de virage ZION (unis)": 67,
+   "filets": 40,
    "panneau FINISH suspendu": 1,
    "cage du drapeau": 1,
-   "boudins Thor": 6,
-   "bâche AMV (côtés de la réception)": 2,
+   "retirés (de travers) : boudins Thor": 6,
    "habillage Venum des tremplins": 4,
    "arche 50 Factory": 1,
    "grilles de départ": 1,
@@ -241,21 +250,18 @@
    "long boudin noir FLY / RBT / SX TOUR (dans le U)": 2,
    "camions du paddock": 10
   },
-  "total": 383,
-  "amv_pied_ft": {
-   "-1": 22.3,
-   "1": 22.3
-  },
+  "total": 223,
+  "amv_pied_ft": {},
   "arche": {
-   "crete_ft": 2.6,
+   "crete_ft": 3.8,
    "sol_pieds_ft": [
     0.0,
     0.02
    ],
-   "libre_sous_poutre_ft": 21.9
+   "libre_sous_poutre_ft": 20.7
   },
   "finish": {
-   "crete_ft": 9.7
+   "crete_ft": 8.26
   },
   "logos_redessines": [
    "minerva",
@@ -268,22 +274,22 @@
  "public": 7631,
  "export": {
   "hmin": -0.5,
-  "hmax": 24.74998369830412,
-  "statues_relevees": 26,
-  "decals": 9164,
+  "hmax": 24.74999994913279,
+  "statues_relevees": 30,
+  "decals": 9171,
   "decals_terre": 4529
  },
  "lap_ft": 2590.7,
  "start": {
   "gate": [
    683.5099504,
-   548.28
+   543.28
   ],
   "merge": [
    336.3649504,
    675.79375
   ],
-  "length": 465.4
+  "length": 470.4
  },
  "checks": [
   {
@@ -319,7 +325,7 @@
   {
    "name": "ligne de départ plate (grilles)",
    "ok": true,
-   "detail": "max 0.00 ft"
+   "detail": "max 0.01 ft"
   }
  ],
  "gates": {
@@ -327,7 +333,6 @@
   "first": [
    25,
    26,
-   8,
    9,
    10,
    11,

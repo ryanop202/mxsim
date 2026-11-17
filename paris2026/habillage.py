@@ -53,7 +53,16 @@ def build(out, folder, H, S, path, start, combos, finish_s_fn):
     ref = lambda f: '@%s/%s/%s' % (folder, SUB, f) if f else 'null'
     st = []; cnt = {}
 
-    def put(kind, x, z, yaw, model, tex, shp=None, y=0.0):
+    def slope_deg(x, z, d=1.5):
+        f = lambda xx, zz: float(H[int(np.clip(round(zz / S), 0, H.shape[0] - 1)), int(np.clip(round(xx / S), 0, H.shape[1] - 1))])
+        return float(np.degrees(np.arctan(np.hypot(f(x + d, z) - f(x - d, z), f(x, z + d) - f(x, z - d)) / (2 * d))))
+
+    def put(kind, x, z, yaw, model, tex, shp=None, y=0.0, tilt_ok=False):
+        # v10 (« tous les trucs de travers, enlève-les, on les remettra avec un plan définitif ») : le jeu penche une statue selon
+        # le sol sous son origine -> un objet posé sur une pente de plus de 3° n'est pas posé (sauf ceux faits pour : tuffs de virage)
+        if not tilt_ok and slope_deg(x, z) > 3.0:
+            cnt['retirés (de travers) : ' + kind] = cnt.get('retirés (de travers) : ' + kind, 0) + 1
+            return
         st.append('[%.6f %.6f %.6f] %.6f %s %s %s' % (x, y, z, yaw, ref(model), ref(tex), ref(shp)))
         cnt[kind] = cnt.get(kind, 0) + 1
 
@@ -70,6 +79,13 @@ def build(out, folder, H, S, path, start, combos, finish_s_fn):
         return d >= rw[j] / 2 + extra
 
     # ---- modèles
+    # v10 : ballots et tuffs de virage de ZION 2025 (formes de son archive), unis pour l'instant (blanc cassé, sans logo)
+    ZS_ = os.path.join(ROOT, "paris2026", "refs", "zion25_full", "ZION.2025.SupercrossParis", "statue")
+    for f in ('bale.jm', 'tuff-bent.jm', 'tuff-bent.shp'):
+        shutil.copy(os.path.join(ZS_, f), os.path.join(D, f))
+    from PIL import Image as _Im
+    for f, col in (('bale_uni.png', (222, 222, 218)), ('tuff_uni.png', (214, 214, 210))):
+        _Im.new('RGB', (256, 256), col).save(os.path.join(D, f))
     HO2.tuff_arc(D); HO.boudins(D); HO2.mur(D); HO.filet(D); HO2.minerva(D); HO.depart(D); HO.canette(D); HO2.semi(D)
     HO.pylones(D, os.path.join(SGM, "statue"))
     for f in ('boudin_logo.jm', 'boudin_logo.shp', 'boudin_logo3.jm', 'boudin_logo3.shp'):                # boudins de Saint-Georges
@@ -134,7 +150,7 @@ def build(out, folder, H, S, path, start, combos, finish_s_fn):
                 near = [q for q in tree.query_ball_point(p, 13.0) if abs(smp['s'][q] - (g['s0'] + u)) > 40]
                 if near:                                                             # un autre couloir passe là
                     continue
-                put('tuffs ' + skin, p[0], p[1], ang(*(nrm * side)), 'tuff_arc.jm', 'tuff_arc_%s.png' % skin, 'tuff_arc.shp')
+                put('ballots ZION (unis)', p[0], p[1], ang(*(nrm * side)), 'bale.jm', 'bale_uni.png')
 
     # ---- 3. virages : mur bâché + bandeau du sponsor au dos du berm, filet derrière les grands virages, poteau rond à l'intérieur
     skins_py = ['pylone_monster.png', 'pylone_honda.png', 'pylone_venum.png']; n_py = 0
@@ -168,8 +184,15 @@ def build(out, folder, H, S, path, start, combos, finish_s_fn):
         # le filet ne couvre que le milieu du virage (60 % de la longueur du mur)
         # v9 (Ryan : « pas réalistes, tout carrés, beaucoup trop, ils flottent en l'air, mal posés ») : ballots ronds bâchés
         # (photo 12) sur 70 % du virage, abaissés à la hauteur la plus basse sous leur emprise (jupe de 3 ft) -> jamais en l'air
-        for kind, rad, model, tex, shp_, step, k_span in (('murs ' + sk[0] + ' (haut du berm)', crest_r + 1.0, 'mur.jm', 'mur_%s.png' % sk[0], 'mur.shp', 8.0, MUR_SPAN),
-                                                          ('filets', flat_r + 2.0, 'filet.jm', 'filet_%s.png' % sk[1], None, 8.0, 0.6)):
+        # v10 : tuffs de virage de ZION (tuff-bent) sur le haut du berm, tous les 6,2 ft, à 90° de la direction du centre comme ZION
+        nb_ = max(2, int(round(2 * span * 0.8 * crest_r / 6.2)))
+        for a in (mid + (np.arange(nb_) - (nb_ - 1) / 2) * (6.2 / crest_r)):
+            x, z = g['cx'] + crest_r * np.cos(a), g['cz'] + crest_r * np.sin(a)
+            near = [q for q in tree.query_ball_point((x, z), 12.0) if abs(smp['s'][q] - (g['s0'] + g['L'] / 2)) > g['L'] / 2 + 30]
+            if near or not libre((x, z), lap=12.0, extra=1.0):
+                continue
+            put('tuffs de virage ZION (unis)', x, z, ang(-np.cos(a), -np.sin(a)) + np.pi / 2, 'tuff-bent.jm', 'tuff_uni.png', 'tuff-bent.shp', tilt_ok=True)
+        for kind, rad, model, tex, shp_, step, k_span in (('filets', flat_r + 2.0, 'filet.jm', 'filet_%s.png' % sk[1], None, 8.0, 0.6),):
             if tex.endswith('None.png'):
                 continue
             n = max(2, int(round(2 * span * k_span * rad / step)))
@@ -189,7 +212,15 @@ def build(out, folder, H, S, path, start, combos, finish_s_fn):
     sF, _ = finish_s_fn
     i = int(np.argmin(np.abs(smp['s'] - sF))); fx, fz, th = smp['x'][i], smp['z'][i], smp['th'][i]
     d = np.array([np.cos(th), np.sin(th)]); hF = hgt(fx, fz)
-    HO.finish(D, drop=hF); put('panneau FINISH suspendu', fx, fz, ang(*d), 'finish.jm', 'finish.png')
+    # v10 : origine du panneau sur le sol plat juste avant le pied de l'appel (le jeu penche une statue selon le sol sous son
+    # origine : sur la crête de l'appel il partait de travers), modèle avancé d'autant -> toujours suspendu au-dessus de la ligne
+    du_ = next(u for u in np.arange(0.0, 120.0, 0.5) if hgt(fx - d[0] * u, fz - d[1] * u) < 0.03 and slope_deg(fx - d[0] * u, fz - d[1] * u) < 0.5) + 2.0
+    HO.finish(D, drop=0.0)
+    fj = os.path.join(D, 'finish.jm'); Lj = open(fj).read().split(chr(10)); nv_ = int(Lj[2].split()[0])
+    for k_ in range(3, 3 + nv_):
+        v_ = Lj[k_].split(); v_[2] = '%.6f' % (float(v_[2]) + du_); Lj[k_] = ' '.join(v_)
+    open(fj, 'w', newline=chr(10)).write(chr(10).join(Lj))
+    put('panneau FINISH suspendu', fx - d[0] * du_, fz - d[1] * du_, ang(*d), 'finish.jm', 'finish.png')
     # (Ryan, v6 : « saut d'arrivée enlève ce truc ») : plus de rampe acier + coins Honda sur l'appel
     n_ = np.array([-d[1], d[0]])
     side_ = min((-1, 1), key=lambda sd: -tree.query(np.array([fx, fz]) + n_ * sd * 30.0)[0]); n_ = n_ * side_
@@ -214,7 +245,7 @@ def build(out, folder, H, S, path, start, combos, finish_s_fn):
     # v9 (Ryan : « les plaques sur le bord du saut du milieu, ça va pas, elles sont buggées ») : bâche dessinée sur le bord RÉEL
     # du saut (hauteur relevée dans le terrain à 2 ft à l'intérieur du pied), posée verticale au pied, des deux côtés
     amv = {}
-    for sd in (-1, 1):
+    for sd in ():                                    # v10 (« de travers, enlève-les ») : plus de bâche AMV
         vv = np.arange(8.0, 60.0, 0.25); hv = np.array([hgt(*(pc + nrm * sd * v)) for v in vv])
         ve = float(vv[np.nonzero(hv >= 0.97 * hv.max())[0][-1]])             # bord du dessus (flancs presque verticaux)
         vf = ve + 1.3; p = pc + nrm * sd * vf; y_b = -hgt(*p)                  # bâche contre le flanc ; y : bas de la bâche au sol

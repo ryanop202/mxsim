@@ -26,7 +26,7 @@ erode_limit 0.75 0.7 1.7
 erode_limit 1.5 0.3 0.75
 erode_limit 2.5 0.3 0.3
 erode_lateral_scale 0.025
-texture @USLAND2026SupercrossParis/ext/USLAND2026SX1/tiles/dirt.ppm
+texture @USLAND2026SupercrossParis/tiles/zion_dirt.png
 roost texture=@splash.png count=4 slip_threshold=2.0 slow_speed=0.0 fast_speed=64.0 slow_angle=1.07 fast_angle=0.196 size=0.80 grow=2.3 drag=1.90 vscale=1.0 randomize=5.0 r=123 g=73 b=52 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=1024
 roost texture=@USLAND2026SupercrossParis/ext/USLAND2026SX1/roost/redroost.png count=8 dig=0.0 slip_threshold=2.0 slow_speed=0.0 fast_speed=64.0 slow_angle=1.07 fast_angle=0.196 size=1.5 grow=4.0 drag=2.0 vscale=1.0 randomize=5.0 r=255 g=255 b=255 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=1024
 treadmark texture=@USLAND2026SupercrossParis/ext/USLAND2026SX1/treads/dirt2x4.png size=4 aspect=0.5 spacing=3 speed_threshold=-20
@@ -62,7 +62,7 @@ erode_limit 0.95 0.80 4.00
 erode_limit 1.5 0.35 3.35
 erode_limit 2.25 0.25 3.25
 erode_limit 3.25 0.05 2.05
-texture @USLAND2026SupercrossParis/ext/USLAND2026SX1/tiles/dirt.ppm
+texture @USLAND2026SupercrossParis/tiles/zion_dirt.png
 roost texture=@splash.png count=4 slip_threshold=2.0 slow_speed=0.0 fast_speed=64.0 slow_angle=1.07 fast_angle=0.196 size=0.80 grow=2.3 drag=1.90 vscale=1.0 randomize=5.0 r=123 g=73 b=52 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=1024
 roost texture=@USLAND2026SupercrossParis/ext/USLAND2026SX1/roost/redroost.png count=8 dig=0.0 slip_threshold=2.0 slow_speed=0.0 fast_speed=64.0 slow_angle=1.07 fast_angle=0.196 size=1.5 grow=4.0 drag=2.0 vscale=1.0 randomize=5.0 r=255 g=255 b=255 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=1024
 treadmark texture=@USLAND2026SupercrossParis/ext/USLAND2026SX1/treads/dirt2x4.png size=4 aspect=0.5 spacing=3 speed_threshold=-20
@@ -98,7 +98,7 @@ erode_limit 1.5 1.05 1.05
 erode_limit 2.00 0.5 0.75
 erode_limit 3.00 0.05 0.05
 erode_lateral_scale 1.75
-texture @USLAND2026SupercrossParis/ext/USLAND2026SX1/tiles/dirt.ppm
+texture @USLAND2026SupercrossParis/tiles/zion_dirt.png
 roost texture=@splash.png count=4 slip_threshold=2.0 slow_speed=0.0 fast_speed=64.0 slow_angle=1.07 fast_angle=0.196 size=0.80 grow=2.3 drag=1.90 vscale=1.0 randomize=5.0 r=123 g=73 b=52 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=1024
 roost texture=@USLAND2026SupercrossParis/ext/USLAND2026SX1/roost/redroost.png count=8 dig=0.0 slip_threshold=2.0 slow_speed=0.0 fast_speed=64.0 slow_angle=1.07 fast_angle=0.196 size=1.5 grow=4.0 drag=2.0 vscale=1.0 randomize=5.0 r=255 g=255 b=255 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=1024
 treadmark texture=@USLAND2026SupercrossParis/ext/USLAND2026SX1/treads/dirt2x4.png size=4 aspect=0.5 spacing=3 speed_threshold=-20
@@ -135,7 +135,7 @@ erode_limit 1.5 0.05 1.35
 erode_limit 2.25 0.05 0.75
 erode_limit 3.25 0.05 0.05
 erode_lateral_scale 1.5
-texture @USLAND2026SupercrossParis/ext/USLAND2026SX1/tiles/dirt.ppm
+texture @USLAND2026SupercrossParis/tiles/zion_dirt.png
 roost texture=@splash.png count=4 slip_threshold=2.0 slow_speed=0.0 fast_speed=64.0 slow_angle=1.07 fast_angle=0.196 size=0.80 grow=2.3 drag=1.90 vscale=1.0 randomize=5.0 r=123 g=73 b=52 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=1024
 roost texture=@USLAND2026SupercrossParis/ext/USLAND2026SX1/roost/redroost.png count=8 dig=0.0 slip_threshold=2.0 slow_speed=0.0 fast_speed=64.0 slow_angle=1.07 fast_angle=0.196 size=1.5 grow=4.0 drag=2.0 vscale=1.0 randomize=5.0 r=255 g=255 b=255 a=255 fade_r=0 fade_g=0 fade_b=0 fade_a=1024
 treadmark texture=@USLAND2026SupercrossParis/ext/USLAND2026SX1/treads/dirt2x4.png size=4 aspect=0.5 spacing=3 speed_threshold=-20

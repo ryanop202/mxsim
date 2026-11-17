@@ -35,6 +35,7 @@ MATERIALS = {
     "signage":       dict(tex="signage.png", jm=(20, 1, .2, .2, .2), alpha=True),
     # habillage USLAND Supercross Paris 2026 (branding.py) : écrans allumés, enseigne, bandeau LED du sol
     "signage_int":   dict(tex="signage_usland.png", unlit=True, alpha=True, emit=1.0),
+    "signage_roof":  dict(tex="signage_roof.png", unlit=True, alpha=True, emit=1.0),   # v10 : « plenitude arena » sur le toit
     "screen_main":   dict(tex="poster_main.png", unlit=True, emit=1.0),
     "screen_side":   dict(tex="poster_side.png", unlit=True, emit=1.0),
     "led_board":     dict(tex="led_board-hrepeat.png", unlit=True, emit=1.0),

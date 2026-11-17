@@ -49,6 +49,23 @@ def arena_dims():
     return dims
 
 
+def zion_look(OUT):
+    """v10 (« mets la texture ZION, la couleur de la texture ZION ») : la terre de ZION 2025 (tile/2.png de son archive) sur les
+    tuiles de terre, et les décals de terre de Saint-Thibéry recolorés à sa teinte moyenne (motif et transparence gardés)."""
+    zt = os.path.join(ROOT, "paris2026", "refs", "zion25_full", "ZION.2025.SupercrossParis", "tile", "2.png")
+    os.makedirs(os.path.join(OUT, "tiles"), exist_ok=True); shutil.copy(zt, os.path.join(OUT, "tiles", "zion_dirt.png"))
+    ti = os.path.join(OUT, "tileinfo"); s = open(ti).read()
+    s = s.replace("@%s/ext/USLAND2026SX1/tiles/dirt.ppm" % FOLDER, "@%s/tiles/zion_dirt.png" % FOLDER)
+    open(ti, "w", newline=chr(10)).write(s)
+    zm = np.asarray(Image.open(zt).convert("RGB"), float).reshape(-1, 3).mean(0)
+    dd = os.path.join(OUT, "ext", "USLAND2026SX1", "decal")
+    for n in ("track", "180", "90", "single", "table", "tripleface", "whoops"):
+        f = os.path.join(dd, n + ".png"); a = np.asarray(Image.open(f).convert("RGBA"), float); m = a[..., 3] > 10
+        k = zm / a[..., :3][m].mean(0); a[..., :3] = np.clip(a[..., :3] * k, 0, 255)
+        Image.fromarray(a.astype(np.uint8), "RGBA").save(f)
+    REPORT['terre_zion'] = [round(float(v)) for v in zm]
+
+
 def mx_poly(P):
     x, z = LP.arena_to_mx(P[:, 0], P[:, 1])
     return np.c_[x, z]
@@ -169,6 +186,7 @@ def export(H, tiles, gates_txt, floor_mx, inside_mx):
     # sol, textures, ciel et éclairage de Saint-Thibéry à l'identique (stt_look.py)
     import stt_look as SL
     SL.copy_assets(OUT, FOLDER)
+    zion_look(OUT)
     sh = SL.shading(H, S, floor_mx)
     ppm(os.path.join(OUT, "shading.ppm"), sh)
     ppm(os.path.join(OUT, "shadingx2.ppm"), (sh // 2).astype(np.uint8))
@@ -338,6 +356,17 @@ def main():
     tiles[t(floor_full)] = T_MAIN
     tiles[t(jumps) > 0.05] = T_JUMP; tiles[t(fmx) > 0.05] = T_JUMP
     tiles[t(whoops) > 0.05] = T_WHOOP; tiles[t(berms) > 0.05] = T_BERM
+    # v10 (« c'est du sable, le virage après l'arrivée ; mets une partie sable après ») : tuiles sable de Saint-Thibéry / SX1
+    # (4 Sand Straight, 5 Sand Bump Straight, 6 Sand Exit) sur les 2 virages après l'arrivée et les 70 premiers ft de LD
+    from scipy.spatial import cKDTree
+    smp_ = path.samples(1.0); tags_ = [path.segs[int(k)]['tag'] for k in smp_['seg']]
+    s_ld = next(g['s0'] for g in path.segs if g['tag'].startswith('LD'))
+    sel_ = [i for i, tg in enumerate(tags_) if tg.startswith('T_L5') or (tg.startswith('LD') and smp_['s'][i] < s_ld + 70.0)]
+    TJ, TI = np.meshgrid(np.arange(TN) * 2 * S, np.arange(TN) * 2 * S)
+    dq, _ = cKDTree(np.c_[smp_['x'][sel_], smp_['z'][sel_]]).query(np.c_[TJ.ravel(), TI.ravel()], distance_upper_bound=20.0)
+    sand = (dq < 17.0).reshape(TN, TN)
+    tiles[sand & (tiles == T_BERM)] = 6; tiles[sand & (tiles == T_JUMP)] = 5; tiles[sand & (tiles == T_MAIN)] = 4
+    REPORT['sable_tuiles'] = int(sand.sum())
     # portes de chrono (timing.py des pistes SX)
     import layouts_sx as LS
     pass                                   # sections déjà dans LS.COMBOS (layout_paris.paris)

@@ -134,7 +134,8 @@ FINISH_SEC = 'PAR-L5 petit double, triple d arrivee (ZION 2025)'
 # L6 : rythmique serrée (on peut faire double / quadruple, mais la 1re bosse est petite : pas de « 4 d'entrée »), table,
 # puis un double derrière la table (« sur table, derrière double »). Formes = bosses Arlington déjà utilisées ici.
 SMALL_DBL = [('scale', SA[0], 3.4), ('gap', 8.0), ('stretch', SA[1], 4.0, 1.25)]
-PRE_FINISH = [('scale', ROLLER, 2.2)]   # v9 (Ryan : « le double est chiant ») : un seul roller bas avant le triple d'arrivée
+PRE_FINISH = SMALL_DBL                  # v10 : « avant le triple il manque une bosse, ça fait un double » (v9 : un seul roller) ;
+#   la ligne d'arrivée (item 2) retombe ainsi sur l'APPEL du triple (avec le roller, l'item 2 était la réception -> FINISH mal placé)
 TABLE_L1 = ('stretch', TABLE_B, 6.6, 0.85)
 L6_RHYTHM = [('scale', SA[0], 2.6), ('gap', 3.0), ('scale', SA[2], 4.2), ('gap', 3.0), ('scale', SA[1], 4.4), ('gap', 3.0),
              ('scale', SA[3], 4.5), ('gap', 3.0), ('scale', SA[2], 4.4), ('gap', 3.0), ('scale', SA[1], 4.2), ('gap', 4.0),
@@ -150,6 +151,31 @@ P22_TRIPLE = ('raw', 'triple d arrivee ZION Paris 22 (3,3 / 2,2 / appel 10,9)', 
 P22_APPEL = ('raw', 'appel ZION Paris 22 (10,9)', np.array(_P22['appel']), 'T')
 P22_BUTTE = ('raw', 'butte gros saut rond ZION Paris 22 (21,2)', np.array(_P22['butte']), 'X')
 P22_GAP = _P22['ecart_appel_butte']
+
+
+def even(blocks, lane_len, u0, end):
+    """v10 : même écart entre toutes les bosses (comme Saint-Thibéry / Saint-Georges), 1re à u0 ft du virage, dernière à end ft."""
+    g = (lane_len - u0 - end - sum(tlen(b) for b in blocks)) / max(1, len(blocks) - 1)
+    out = []
+    for k, b in enumerate(blocks):
+        out.append(b)
+        if k < len(blocks) - 1:
+            out.append(('gap', round(g, 1)))
+    return out
+
+
+def whoops_paris(n=11, k=1.25, first=0.55, sx=0.93, sm=1.0, base=0.45):
+    """v10 (« un peu plus hauts et plus ronds, plus de terre, un peu plus durs ; 11 = la petite bosse + 10 whoops ») : whoops
+    Custom_0 x1,25 (3,7 ft), pas x0,93 (18,6 ft), la 1re à 55 %, crêtes arrondies (gaussienne 1 ft), creux remontés à 0,45 ft."""
+    import compose
+    from scipy.ndimage import gaussian_filter1d
+    p = compose.whoops('Custom_0', n) * k
+    p = np.interp(np.linspace(0, len(p) - 1, int(len(p) * sx)), np.arange(len(p)), p)
+    w = len(p) / n; p[:int(w)] *= first
+    q = gaussian_filter1d(p, sm / 0.1); q *= p.max() / q.max()
+    t = np.arange(len(q)) / len(q); env = np.clip(np.minimum(t * n - 0.5, (1 - t) * n - 0.5), 0, 1)
+    q = np.maximum(q, base * env * env * (3 - 2 * env)); q[0] = q[-1] = 0.0
+    return ('raw', 'whoops Custom_0 x%d (x%.2f, ronds, creux %.2f)' % (n, k, base), q, 'W')
 
 
 def resample(p, k_len=1.0, H=None):
@@ -212,7 +238,9 @@ Z25_TRIPLE = [t if t[0] != 'raw' else ('raw', t[1].replace('(10,0)', '(8,7)').re
                                        np.asarray(t[2], float)[np.round(np.linspace(0, len(t[2]) - 1, int(round(len(t[2]) * FINISH_KL)))).astype(int)] * FINISH_KH, t[3])
               for t in Z25_TRIPLE]
 Z25_MILIEU = _split_after_first(_P25['milieu'], 'appel gros saut ZION 2025 (10,0)', 'butte gros saut rond ZION 2025 (24,2)', 'X')
-Z25_BUTTE_W = (44.0, 46.0)               # v5 (Ryan) : réception CARRÉE (dessus 42 ft, flancs presque verticaux) pour la bâche AMV ; était (68, 90)
+# v10 (« fais le plus large sur les côtés, l'appel légèrement plus raide ») : réception plus large, appel 15 % plus court (même hauteur)
+Z25_BUTTE_W = (60.0, 66.0)               # v5 : (44, 46) réception carrée pour la bâche AMV (retirée en v10)
+Z25_MILIEU[0] = ('raw', Z25_MILIEU[0][1] + ' raidi', resample(Z25_MILIEU[0][2], 0.85), 'T')
 Z25_BUTTE_W_ZION = (_P25['largeur_butte_mi_hauteur'], 90.0)   # 68 ft à mi-hauteur comme ZION ; pied 90 ft au lieu de 110 :
 #   entre les singles (L2) et la ligne de départ il n'y a que ~98 ft -> flancs un peu plus raides que ZION
 
@@ -278,7 +306,7 @@ def lane_sec(name, toks, u0, finish=False, **kw):
 def paris():
     """Le tour (sens de course), départ du tour au début de L5 (sortie de T_C)."""
     LS.COMBOS.clear(); LS.SPLITS.clear()
-    zL5, zLD, zL3, zL2 = px_z(481.0), px_z(370.0), px_z(226.5), px_z(130.0)
+    zL5, zLD, zL3, zL2 = px_z(481.0), px_z(370.0) - LD_SHIFT, px_z(226.5), px_z(130.0)
     zL1, zL6 = zL2 + 2 * RB, zL5 - 2 * RB            # 180° JGSX : couloirs voisins à 43 ft
     xW = px_x(312.0)                                   # virages Ouest (T1, T_C) : x des sorties de 180°
     xLR, xC, xT5 = px_x(860.0), px_x(778.0), px_x(785.0)
@@ -312,26 +340,37 @@ def paris():
     # v9 (Ryan : « t'as fait un espace, nan, c'est le même espace entre chaque saut ; le but c'est que ça fasse 3 d'entrée et le 4
     # après dur, limite à passer que pour les bons ; là ça fait encore 4 d'entrée ») : 7 bosses identiques (celles du quad v7,
     # Arlington x1,35), même écart partout (L2_GAP), la 1re collée à la sortie du 180 (pas d'élan : pas de 4 d'entrée)
-    B7 = up([SA[1], SA[2], SA[1], SA[2], SA[1], SA[2], SA[1]], 1.35)
-    toks = [B7[0]]
-    for b_ in B7[1:]:
-        toks += [('gap', L2_GAP), b_]
+    # v10 (« le but c'est triple, triple et pas plus, ou triple 4 si très bon ; pas de 4 d'entrée ; comme Saint-Thibéry ») :
+    # 7 bosses de la taille de Saint-Thibéry L2 (4,0 - 5,0 ft), même écart partout = toute la ligne (~12,5 ft au sol, ~40 ft de
+    # crête à crête comme STT L2 « long triple, triple »), la 1re plus basse à 3 ft de la sortie du 180, la dernière à 8 ft du virage
+    B7 = [('scale', SA[1], 4.0), ('scale', SA[2], 4.6), ('scale', SA[0], 5.0), ('scale', SA[1], 4.8), ('scale', SA[2], 5.0),
+          ('scale', SA[1], 4.6), ('scale', SA[2], 4.8)]
+    toks = even(B7, xW - x_end3, L2_U0, 8.0)
     u0 = L2_U0
-    p.straight(xW - x_end3, [lane_sec('PAR-L2 7 bosses au meme ecart', toks, u0)], tag='L2 singles')
+    p.straight(xW - x_end3, [lane_sec('PAR-L2 triple, triple (7 bosses, meme ecart)', toks, u0)], tag='L2 singles')
     p.turn(-180, RB, BIG2, tag='T1 180 droite (berm)')
-    toks, u0 = from_render('L1', xW, 'x', -1, {1: [whoops_up(10, 1.15)], 2: TABLE_L1, 3: ('scale', SA[1], 4.0), 4: ('scale', SA[0], 3.6)},   # v5 : la 2e bosse remise
-                           lane_len=xW - (xLR + RB), min_gaps={0: 22.0})   # Ryan : la table plus loin des whoops et plus grosse
+    # v10 : 11 whoops (une petite + 10) plus hautes, plus rondes, plus de terre ; la table + 2 bosses gardées (« pas mal »)
+    lL1 = xW - (xLR + RB)
+    toks = [whoops_paris(), ('gap', 15.0), TABLE_L1, ('gap', 1.5), ('scale', SA[1], 4.0), ('gap', 1.5), ('scale', SA[0], 3.6)]
+    u0 = lL1 - 8.0 - tlen(toks); assert u0 >= 0.5, u0
     p.straight(xW - (xLR + RB), [LS.sec('PAR-L1 whoops, table, bosse', toks, u0)], tag='L1 whoops')
     p.turn(-90, RB, BIG, tag='T_TR 90 droite (berm)')
     # v7 (Ryan, son tracé rouge : montée, long plateau, puis des bosses) : roller, table (plateau, pas d'ondulations), 3 bosses
     # v9 (Ryan : « là tu as enlevé l'appel, on peut plus faire [le saut] d'entrée ; remets comme avant, cet enchaînement est bien ») :
     # retour à la v6 (roller, longue bosse, 2 bosses)
-    toks, u0 = from_render('LR', zL1 - RB, 'z', -1, {1: ('scale', ROLLER, 1.8), (2, 3): long_bump(), 4: ('scale', SA[1], 4.0), 5: ('scale', SA[0], 3.6)},
-                           lane_len=(zL1 - RB) - (zL6 + RB))
-    p.straight((zL1 - RB) - (zL6 + RB), [lane_sec('PAR-LR roller, longue bosse, 2 bosses', toks, u0)], tag='LR tribune Est')
+    # v10 (« le saut en sortant du virage, une ligne droite, puis bosse, table, bosse, bosse, bosse ; la 1re plus basse pour aller
+    # sur la table, pas de quadruple ») : single à 3 ft de la sortie, plat, puis l'enchaînement (écarts 7,5 ft comme STT L1), 8 ft du virage
+    lLR = (zL1 - RB) - (zL6 + RB)
+    rh = [('scale', SA[0], 3.0), ('gap', 7.5), TABLE, ('gap', 7.5), ('scale', SA[1], 4.2), ('gap', 7.5), ('scale', SA[2], 4.2), ('gap', 7.5), ('scale', SA[1], 4.0)]
+    kick = [('scale', SA[1], 4.0)]
+    toks = kick + [('gap', round(lLR - 3.0 - 8.0 - tlen(kick) - tlen(rh), 1))] + rh; u0 = 3.0
+    p.straight((zL1 - RB) - (zL6 + RB), [lane_sec('PAR-LR saut de sortie, bosse, table, 3 bosses', toks, u0)], tag='LR tribune Est')
     p.turn(-90, RB, BIG, tag='T_E 90 droite (berm)')
-    toks, u0 = L6_RHYTHM, 4.0
-    p.straight(xW - (xLR + RB), [lane_sec('PAR-L6 8 bosses dont une table', toks, u0)], tag='L6 tribune Sud')
+    # v10 (« triple : 3 bosses, 2 bosses, une table, 2 bosses ») : bosses de Saint-Thibéry, même écart partout, 8 ft du virage
+    L6B = [('scale', SA[0], 3.8), ('scale', SA[2], 4.4), ('scale', SA[1], 4.6), ('scale', SA[3], 4.4), ('scale', SA[2], 4.6), TABLE,
+           ('scale', SA[0], 4.0), ('scale', SA[1], 4.2)]
+    toks, u0 = even(L6B, xW - (xLR + RB), 4.0, 8.0), 4.0
+    p.straight(xW - (xLR + RB), [lane_sec('PAR-L6 triple, double, table, double', toks, u0)], tag='L6 tribune Sud')
     p.turn(-180, RB, BIG, tag='T_C 180 droite (berm)')
     p.lanes = dict(x_end3=x_end3, R3=R3, zL5=zL5, zLD=zLD, zL3=zL3, zL2=zL2, zL1=zL1, zL6=zL6, xW=xW, xLR=xLR, xC=xC, xT5=xT5, xTB=xTB)
     return p
@@ -340,6 +379,8 @@ def paris():
 # ---------------------------------------------------------------- départ (22 grilles, comme JGSX)
 N_GATES, GATE_PITCH = 22, 4.0
 X_APEX_SHIFT, L3_ADVANCE = 6.0, 8.0     # v9 : sommet du 180 après le saut du milieu / avance du saut (ft)
+LD_SHIFT = 5.0                          # v10 : ligne de départ 5 ft plus loin du saut du milieu (place pour les tremplins FMX ;
+#                                         plus loin, le bout des 22 grilles monte sur le pied du berm T_C : grilles plus plates)
 L2_GAP, L2_U0 = 5.0, 3.0                # v9 : écart identique entre les 7 bosses de L2 ; 1re bosse à 3 ft de la sortie du 180
 
 
@@ -371,7 +412,8 @@ def fmx_ramps(path=None):
     P = lambda u, v: np.array([g['x0'] + u * c, g['z0'] + u * s_]) + n_ * v
     tgt = P(uc, 0.0)
     out = []
-    for du, v in ((-30.0, 30.0), (-14.0, 40.0), (-22.0, -25.0), (-40.0, -31.0)):   # v < 0 = nord (L2 à 64 ft seulement)
+    # v10 (« les rampes plus collées, pas au milieu de la ligne droite de départ ») : plus près de l'appel (v 22 - 28 ft au lieu de 25 - 40)
+    for du, v in ((-30.0, 22.0), (-16.0, 28.0), (-22.0, -22.0), (-38.0, -28.0)):   # v < 0 = nord (L2 à 64 ft seulement)
         lip = P(ub + du, v); d = tgt - lip
         out.append(dict(lip=(float(lip[0]), float(lip[1])), heading=float(np.arctan2(d[1], d[0]))))
     return out
