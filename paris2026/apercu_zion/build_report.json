@@ -4,7 +4,7 @@
    "lane": "L5 arrivée",
    "name": "PAR-L5 petit double, triple d arrivee (ZION 2025)",
    "u0": 7.0,
-   "L": 332.9,
+   "L": 312.9,
    "H": 11.15,
    "items": [
     [
@@ -14,18 +14,18 @@
     ],
     [
      "double USLAND",
-     32.9,
-     70.4
+     45.9,
+     83.4
     ],
     [
      "appel arrivee ZION 2025 (10,0)",
-     164.5,
-     209.9
+     144.5,
+     189.9
     ],
     [
      "triple arrivee ZION 2025 (6,0 / 11,2)",
-     209.9,
-     332.8
+     189.9,
+     312.8
     ]
    ]
   },
@@ -159,53 +159,53 @@
    "lane": "L6 tribune Sud",
    "name": "PAR-L6 triple, double, table, double",
    "u0": 10.0,
-   "L": 389.5,
+   "L": 388.9,
    "H": 7.26,
    "items": [
     [
-     "bosse ZION 4.1 ft",
+     "bosse ZION 4.6 ft",
      0.0,
-     29.2
+     30.9
     ],
     [
      "bosse ZION 5.2 ft",
-     42.2,
-     74.9
+     46.2,
+     78.9
     ],
     [
      "bosse ZION 5.4 ft",
-     87.9,
-     121.2
+     94.2,
+     127.5
     ],
     [
      "bosse ZION 5.2 ft",
-     134.2,
-     166.9
+     142.8,
+     175.5
     ],
     [
      "bosse ZION 5.4 ft",
-     179.9,
-     213.2
+     190.8,
+     224.1
     ],
     [
-     "table ZION 7.3 ft",
-     232.2,
-     294.1
+     "table ZION 7.3 ft raccourcie",
+     242.4,
+     296.9
     ],
     [
      "bosse ZION 4.7 ft",
-     313.1,
-     344.4
+     310.2,
+     341.5
     ],
     [
      "bosse ZION 5.0 ft",
-     357.4,
-     389.4
+     356.8,
+     388.8
     ]
    ]
   }
  ],
- "sable_tuiles": 19162,
+ "sable_tuiles": 12071,
  "tuiles_zion": [
   "texture @USLAND2026SupercrossParisZion/ztile/2.png",
   "roost texture=@USLAND2026SupercrossParisZion/ztile/roost.png count=0.1 slow_angle=1.0 vscale=0.2 size=.2 r=150 g=150 b=150 fade_a=0",
@@ -218,7 +218,7 @@
  "objets": {
   "objets": {
    "retirés (v13) : boudins FLY Racing (whoops)": 26,
-   "retirés (v13) : ballots ZION (unis)": 266,
+   "retirés (v13) : ballots ZION (unis)": 268,
    "retirés (v13) : poteaux ronds": 7,
    "retirés (v13) : tuffs de virage ZION (unis)": 74,
    "retirés (v13) : filets": 44,
@@ -238,12 +238,12 @@
   "total": 13,
   "amv_pied_ft": {},
   "arche": {
-   "crete_ft": 4.12,
+   "crete_ft": 4.62,
    "sol_pieds_ft": [
-    0.0,
-    0.0
+    0.11,
+    0.08
    ],
-   "libre_sous_poutre_ft": 20.4
+   "libre_sous_poutre_ft": 19.9
   },
   "finish": {
    "crete_ft": 9.51
@@ -260,7 +260,7 @@
  "export": {
   "hmin": -0.5,
   "hmax": 24.74999994800642,
-  "statues_relevees": 26,
+  "statues_relevees": 34,
   "decals": 85,
   "decals_terre": 0
  },
@@ -276,14 +276,14 @@
    777
   ],
   "dalles_tuiles": 137550,
-  "overlay": 543,
+  "overlay": 589,
   "decals_gardes": 0,
   "start": [
    671.5,
    543.3,
    150.2
   ],
-  "toit_finish": 146.0,
+  "toit_finish": 146.5,
   "grilles": 22
  },
  "boudins_whoops": 22,
@@ -334,14 +334,14 @@
   {
    "name": "ligne de départ plate (grilles)",
    "ok": true,
-   "detail": "max 0.00 ft"
+   "detail": "max 0.01 ft"
   }
  ],
  "gates": {
-  "n_checkpoints": 31,
+  "n_checkpoints": 30,
   "first": [
+   28,
    29,
-   30,
    11,
    12,
    13,
@@ -358,8 +358,7 @@
    24,
    25,
    26,
-   27,
-   28
+   27
   ],
   "normal": [
    0,
@@ -389,8 +388,7 @@
    24,
    25,
    26,
-   27,
-   28
+   27
   ]
  }
 }

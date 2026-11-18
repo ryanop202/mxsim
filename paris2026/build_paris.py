@@ -33,6 +33,8 @@ AP = os.path.join(HERE, "apercu")
 G = Grid(11, 0.28975); N = G.N; S = G.s
 TW = LIB['sx_lateral']['top_width']
 T_MAIN, T_JUMP, T_WHOOP, T_BERM, T_ROAD = 0, 1, 2, 3, 8      # indices de export_sx.TILES
+SAND_LD = 70.0                 # sable sur les 70 premiers ft de la ligne de départ (v10) ; version Zion v19d : 0 (« que le virage »)
+SAND_SMP = None
 REPORT = {}
 
 
@@ -518,7 +520,8 @@ def main():
     from scipy.spatial import cKDTree
     smp_ = path.samples(1.0); tags_ = [path.segs[int(k)]['tag'] for k in smp_['seg']]
     s_ld = next(g['s0'] for g in path.segs if g['tag'].startswith('LD'))
-    sel_ = [i for i, tg in enumerate(tags_) if tg.startswith('T_L5') or (tg.startswith('LD') and smp_['s'][i] < s_ld + 70.0)]
+    sel_ = [i for i, tg in enumerate(tags_) if tg.startswith('T_L5') or (tg.startswith('LD') and smp_['s'][i] < s_ld + SAND_LD)]
+    global SAND_SMP; SAND_SMP = np.c_[smp_['x'][sel_], smp_['z'][sel_]]
     TJ, TI = np.meshgrid(np.arange(TN) * 2 * S, np.arange(TN) * 2 * S)
     dq, _ = cKDTree(np.c_[smp_['x'][sel_], smp_['z'][sel_]]).query(np.c_[TJ.ravel(), TI.ravel()], distance_upper_bound=20.0)
     sand = (dq < 17.0).reshape(TN, TN)

@@ -26,10 +26,12 @@ BP.FOLDER = "USLAND2026SupercrossParisZion"
 BP.DESC = "USLAND: Supercross Paris 2026 (version Zion)"
 BP.OUT = os.path.join(BP.ROOT, "tracks", BP.FOLDER)
 BP.AP = os.path.join(HERE, "apercu_zion")
+BP.SAND_LD = 0.0                   # v19d (« le virage après le saut d'arrivée en sable, que le virage ») : pas sur la ligne de départ
 ZD = BP.ZD
 ZF = np.load(os.path.join(HERE, "data", "zion_formes.npz"))
 LAT = dict(T=(35.1, 5.2), W=(40.0, 2.2))      # dessus plat, flanc (ft) : obstacles, whoops
 ZION_R = 28.3
+TERRE_RGB = (166, 113, 68)                  # v19d : terre plus orange-marron (ZION : 158 136 85)
 G, N, S = BP.G, BP.N, BP.S
 
 
@@ -88,6 +90,23 @@ def render_zion(path, st):
             sl = render_berm_stamp(G, tmp, g['berm'], g['cx'], g['cz'], turn_mid_angle(gb),
                                    ang_scale=berm_ang_scale(g['berm'], gb['ang']), r_shift=max(0.0, g['r'] - LP.RB))
             berms[sl] = np.maximum(berms[sl], tmp[sl] * gain)
+    # v19d (capture en jeu : « regarde, il y a encore le trait gradient ») : (1) les croissants JGSX gardent un fond de 0,02 - 0,1 ft
+    # coupé net -> petites marches droites au bout des virages : le bas des berms est fondu à zéro ; (2) pieds des bosses arrondis
+    # comme la version USLAND (SOFT_FEET) : plus de pli au pied de chaque bosse
+    from scipy.ndimage import gaussian_filter
+    t_ = np.clip((berms - 0.12) / 0.5, 0, 1); berms *= t_ * t_ * (3 - 2 * t_)
+    sf = LP.SOFT_FEET
+    for A_ in (jumps, whoops):                                # (pas les berms : leur pied s'étalait sous les grilles)
+        t_ = np.clip(A_ / sf['h'], 0, 1); w_ = t_ * t_ * (3 - 2 * t_)
+        A_[:] = A_ * w_ + gaussian_filter(A_, sf['sigma'] / S) * (1 - w_)
+    # rangée des grilles toujours à plat (le pied arrondi d'une bosse de L5 arrivait à 4 ft de la dernière grille) : fondu sur 3 ft
+    G0 = np.array(st['gate']); h0 = np.radians(st['heading']); f0 = np.array([np.cos(h0), np.sin(h0)]); n0 = np.array([-f0[1], f0[0]])
+    half = LP.N_GATES * LP.GATE_PITCH / 2 + 2.0; R_ = half + 8.0
+    sl, X, Z = G.window(G0[0] - R_, G0[0] + R_, G0[1] - R_, G0[1] + R_)
+    du, dv = (X - G0[0]) * f0[0] + (Z - G0[1]) * f0[1], (X - G0[0]) * n0[0] + (Z - G0[1]) * n0[1]
+    d = np.hypot(np.maximum(np.abs(du) - 5.0, 0), np.maximum(np.abs(dv) - half, 0)); w = np.clip(d / 3.0, 0, 1); w = w * w * (3 - 2 * w)
+    for A_ in (jumps, whoops, berms):
+        A_[sl] *= w
     BP.REPORT['sections'] = secs
     return jumps, whoops, berms, fmx
 
@@ -101,8 +120,12 @@ def zion_ground(OUT, FOLDER):
     ours = open(os.path.join(OUT, "tileinfo")).read().split("addtile")
     pick = [b for b in ours if re.search(r"name (Road|Grass)", b)]
     zb = [b for b in zt.split("addtile") if b.strip()]
+    # v19d (« en sable, texture sable et tout ») : les tuiles sable de ZION (viraplasable, turnsable) avec la texture sable de ZION
+    zb = [re.sub(r"texture @\S+/ztile/2\.png", "texture @%s/ztile/sand.ppm" % FOLDER, b) if re.search(r"name (viraplasable|turnsable)", b) else b for b in zb]
     open(os.path.join(OUT, "tileinfo"), "w", newline=chr(10)).write("addtile".join(zb + pick) + "addtile" + chr(10))
     shutil.copytree(os.path.join(ZD, "tile"), os.path.join(OUT, "ztile"), dirs_exist_ok=True)
+    # v19d (« essaie de faire la terre un peu plus orange marron ») : la tuile de terre ZION (couleur unie 158 136 85) -> TERRE_RGB
+    t2 = os.path.join(OUT, "ztile", "2.png"); Image.new("RGB", Image.open(t2).size, TERRE_RGB).save(t2)
     tm = np.fromfile(os.path.join(OUT, "tilemap"), np.uint8)
     remap = np.array([0, 0, 0, 3, 4, 4, 5, 4, 6, 7] + [6] * 246, np.uint8)
     remap[tm.max() + 1:] = 6
@@ -161,11 +184,25 @@ def zion_extras(OUT, FOLDER):
     tile_col = np.asarray(_I.open(os.path.join(OUT, "ztile", "2.png")).convert("RGB"), float).reshape(-1, 3).mean(0)
     tz, tsize = TZ.make(os.path.join(OUT, "zdecal"), os.path.join(ZD, "decal"), base=tile_col)
     dl = []; ov = []; rng = np.random.default_rng(19)
+    # v19d : sable du virage après l'arrivée = décals sable de RF Anaheim 1 (sand2 / sand3, 18 ft, comme leur section sable), le grain
+    # de terre s'arrête autour (34 ft)
+    from scipy.spatial import cKDTree as _KD
+    sand_t = _KD(BP.SAND_SMP); sd_ = os.path.join(OUT, "rfsand"); os.makedirs(sd_, exist_ok=True)
+    RFT = os.path.join(os.path.dirname(BP.ROOT), "rf_ext", "sx2026r01anaheim1", "textures")
+    for f_ in ("sand2.png", "sand2_tnorm.png", "sand3.png"):
+        shutil.copy(os.path.join(RFT, f_), os.path.join(sd_, f_))
+    sx0, sz0 = BP.SAND_SMP.min(0) - 30; sx1, sz1 = BP.SAND_SMP.max(0) + 30; sand = []
+    for xx in np.arange(sx0, sx1, 8.0):
+        for zz in np.arange(sz0, sz1, 8.0):
+            x_, z_ = xx + rng.uniform(-2, 2), zz + rng.uniform(-2, 2)
+            if sand_t.query([x_, z_])[0] < 18.0:
+                sand.append("[%.6f %.6f] %.6f 18.000000 1.000000 @%s/rfsand/%s" % (x_, z_, rng.uniform(-np.pi, np.pi), FOLDER, "sand2.png" if rng.random() < 0.45 else "sand3.png"))
     for xx in np.arange(fl[:, 0].min(), fl[:, 0].max() + 1, 22.0):
         for zz in np.arange(fl[:, 1].min(), fl[:, 1].max() + 1, 22.0):
             x_, z_ = xx + rng.uniform(-6, 6), zz + rng.uniform(-6, 6)
-            if inside(np.array([[x_, z_]]), fl)[0] and not (x0 <= x_ <= x1 and z0 <= z_ <= z1):
+            if inside(np.array([[x_, z_]]), fl)[0] and not (x0 <= x_ <= x1 and z0 <= z_ <= z1) and sand_t.query([x_, z_])[0] > 34.0:
                 ov.append("[%.6f %.6f] %.6f %.6f 1.000000 @%s/zdecal/%s" % (x_, z_, rng.uniform(-np.pi, np.pi), tsize, FOLDER, tz))
+    ov = ov + sand
     open(os.path.join(OUT, "decals"), "w", newline=chr(10)).write(chr(10).join(ov + dl) + chr(10))
     # v19 (« le saut d'arrivée, il va pas ; il faut faire les câbles comme sur mon track, avec le finish ») : plus d'arche ZION, le panneau
     # FINISH suspendu (élingues jusqu'au toit) de la version USLAND reste

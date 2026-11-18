@@ -143,7 +143,9 @@ FINISH_SEC = 'PAR-L5 petit double, triple d arrivee (ZION 2025)'
 # puis un double derrière la table (« sur table, derrière double »). Formes = bosses Arlington déjà utilisées ici.
 SMALL_DBL = [('scale', SA[0], 3.4), ('gap', 8.0), ('stretch', SA[1], 4.0, 1.25)]
 PRE_FINISH = [('scale', SA[0], 3.4), ('gap', 16.0), ('stretch', SA[1], 4.0, 1.25)]   # v13 : double plus long (était SMALL_DBL)
-PRE_FINISH_Z = [('stretch', SA[0], 4.8, 0.9), ('gap', 7.0), ('stretch', SA[1], 5.2, 1.6)]   # v19 (Zion) : vrai petit double, appel pointu
+PRE_FINISH_Z = [('stretch', SA[0], 4.8, 0.9), ('gap', 20.0), ('stretch', SA[1], 5.2, 1.6)]   # v19 (Zion) : vrai petit double, appel pointu ;
+#   v19d (« la bosse entourée, mets-la 4 mètres plus loin ») : réception 13 ft plus loin (7 -> 20 ft)
+TRIPLE_EARLY = 20.0
 # v10 (ancien commentaire) : « avant le triple il manque une bosse, ça fait un double » (v9 : un seul roller) ;
 #   la ligne d'arrivée (item 2) retombe ainsi sur l'APPEL du triple (avec le roller, l'item 2 était la réception -> FINISH mal placé)
 TABLE_L1 = ('stretch', TABLE_B, 6.6, 0.85)
@@ -382,7 +384,8 @@ def paris():
         pre = [t if t[0] == 'gap' else ('raw', 'double USLAND', np.asarray(LS.L('tmp', [t]), float), 'T') for t in PRE_FINISH_Z]; ue = 7.0
         # v19 (« plus d'espace entre le petit double et le triple d'arrivée, moins de ligne droite après le triple ») : le triple finit
         # à 8 ft du virage
-        u_app = (xW - (xT5 + RB)) - 8.0 - tlen(toks[i_t:])
+        u_app = (xW - (xT5 + RB)) - 8.0 - tlen(toks[i_t:]) - TRIPLE_EARLY   # v19d (« la pointe de l'appel du triple au trait orange,
+        #   là il est un peu trop dans le virage ») : 20 ft plus tôt
     toks = pre + [('gap', round(u_app - ue - tlen(pre), 1))] + toks[i_t:]; u0 = ue
     p.straight(xW - (xT5 + RB), [lane_sec(FINISH_SEC, toks, u0, finish=True)], tag='L5 arrivée')
     p.turn(90, RB, BIG, tag='T_L5a 90 gauche (berm)')
@@ -456,15 +459,18 @@ def paris():
     L6B = [('stretch', SA[0], 4.2, 0.85), ('stretch', SA[2], 4.7, 1.15), ('stretch', SA[1], 4.9, 1.15), ('stretch', SA[3], 4.7, 1.15),
            ('stretch', SA[2], 4.9, 1.15), TABLE, ('stretch', SA[0], 4.3, 1.15), ('stretch', SA[1], 4.5, 1.15)]
     toks, u0 = even(L6B, xW - (xLR + RB), EXIT_U0, 8.0), EXIT_U0
-    if ZION:   # v19 (« baisse la bosse en sortie de virage, elle est trop haute ; la table, éloigne-la un peu, mets-la bien entre les deux
-        #          bosses ») : 1re bosse 4,2 -> 3,4 ft ; 6 ft de plus avant ET après la table (même écart des deux côtés)
-        B_ = [('stretch', SA[0], 3.75, 0.85)] + L6B[1:]; it_ = B_.index(TABLE); extra = 6.0   # v19c (« trop petite, un peu basse ») : 3,4 -> 3,75 (4,1 ft en ZION)
-        g_ = (xW - (xLR + RB) - EXIT_U0 - 8.0 - sum(tlen(b) for b in B_) - 2 * extra) / (len(B_) - 1)
+    if ZION:   # v19 (« la table, éloigne-la un peu, mets-la bien entre les deux bosses ») : 6 ft de plus avant ET après la table
+        B_ = list(L6B); it_ = B_.index(TABLE)   # v19d (« elle n'a jamais été trop haute, remets la taille d'origine ») : 4,2 (4,6 ft en ZION)
+        # v19d (« la table raccourcie un peu ; la bosse après la table est trop loin, rapproche ; la bosse avant légèrement ; surtout la
+        # réception ») : table ZION à 88 % de sa longueur, +3 ft avant (était +6), -2 ft après (était +6)
+        tb_ = ztable(TABLE[2]); B_[it_] = ('raw', tb_[1] + ' raccourcie', resample(tb_[2], 0.88), 'T')
+        eb_, ea_ = 3.0, -2.0
+        g_ = (xW - (xLR + RB) - EXIT_U0 - 8.0 - sum(tlen(b) for b in B_) - eb_ - ea_) / (len(B_) - 1)
         toks = []
         for k, b in enumerate(B_):
             toks.append(b)
             if k < len(B_) - 1:
-                toks.append(('gap', round(g_ + (extra if k in (it_ - 1, it_) else 0.0), 1)))
+                toks.append(('gap', round(g_ + (eb_ if k == it_ - 1 else ea_ if k == it_ else 0.0), 1)))
     p.straight(xW - (xLR + RB), [lane_sec('PAR-L6 triple, double, table, double', toks, u0)], tag='L6 tribune Sud')
     p.turn(-180, R180, BIG, tag='T_C 180 droite (berm)')
     p.lanes = dict(x_end3=x_end3, R3=R3, zL5=zL5, zLD=zLD, zL3=zL3, zL2=zL2, zL1=zL1, zL6=zL6, xW=xW, xLR=xLR, xC=xC, xT5=xT5, xTB=xTB)
