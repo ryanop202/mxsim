@@ -299,7 +299,7 @@ def zion_extras(OUT, FOLDER):
 
 
 START_Y = 15.0
-BALES_PER_TURN = {90: 3, 180: 5}
+BALE_V, BALE_STEP, BALE_GAP = 15.5, 9.6, 25.0   # v21c : ballots comme RF Anaheim 1 (|v| 15-16 ft, pas 9,6 ft)
 
 
 def deco_v21(OUT, FOLDER, combos):
@@ -321,14 +321,35 @@ def deco_v21(OUT, FOLDER, combos):
         assert max(abs(gx).max(), abs(gy).max()) < 0.02, ("origine du mur pas à plat", g['tag'])
         for jm, png, shp_ in w['files']:
             lines.append(line(g['cx'], g['cz'], 0.0, jm, png, shp_))
-        # ballots en U noirs à l'intérieur du virage, axe le long de la trajectoire
-        n_ = BALES_PER_TURN[180 if abs(g['ang']) > 120 else 90]; sg = 1.0 if g['ang'] > 0 else -1.0
-        th_in = g['t0'] + sg * np.pi / 2; ang = np.radians(g['ang'])
-        for f in (np.arange(n_) + 0.5) / n_:
-            th = th_in - ang * f; r_ = g['r'] - 8.0; x_, z_ = g['cx'] + np.cos(th) * r_, g['cz'] + np.sin(th) * r_
-            if Hf(x_, z_)[0] > 0.05:
+    # v21c (« place les bottes de paille comme les tracks RF le font ; dans les enchaînements uniquement, pas les virages ; et pas les
+    # whoops puisqu'on a déjà mis ») : mesuré sur RF Anaheim 1 (608 bottes) : une rangée de chaque côté du couloir à 15-16 ft de l'axe
+    # (bord du dessus des bosses), 9,6 ft de centre à centre, dans le sens de la piste. Ici : nos ballots en U noirs, le long de chaque
+    # enchaînement (blocs d'au moins 2 obstacles à moins de BALE_GAP ft l'un de l'autre), ni whoops, ni saut du freestyle, ni virages.
+    nb_ = 0
+    for g in BP.PATH.segs:
+        if g['kind'] != 'S' or not g.get('sections'):
+            continue
+        c, s2 = np.cos(g['t']), np.sin(g['t']); nrm = np.array([-s2, c]); yaw = float(np.arctan2(-s2, c))
+        for prof, u0, name in g['sections']:
+            if name == LP.L3_SEC or 'roller' in name:
                 continue
-            tx, tz = -np.sin(th), np.cos(th); lines.append(line(x_, z_, float(np.arctan2(-tz, tx)), bj, bp, bs)); rep_['ballots'] += 1
+            its = [(u0 + it_[1], u0 + it_[2]) for it_ in combos[name]['items'] if not it_[0].startswith('whoops')]
+            blocks, cur = [], []
+            for a_, b_ in its:
+                if cur and a_ - cur[-1][1] > BALE_GAP:
+                    blocks.append(cur); cur = []
+                cur.append((a_, b_))
+            if cur:
+                blocks.append(cur)
+            for bl in blocks:
+                if len(bl) < 2:
+                    continue
+                ua, ub = max(bl[0][0], 4.0), min(bl[-1][1], g['L'] - 4.0)
+                for u in np.arange(ua + (ub - ua - BALE_STEP * int((ub - ua) / BALE_STEP)) / 2, ub + 1e-6, BALE_STEP):
+                    for side_ in (-1, 1):
+                        p_ = np.array([g['x0'] + u * c, g['z0'] + u * s2]) + nrm * side_ * BALE_V
+                        lines.append(line(p_[0], p_[1], yaw, bj, bp, bs)); nb_ += 1
+    rep_['ballots'] = nb_
     # arche 50 Factory : couloir Est (LR), milieu du plat entre le saut de sortie et la table à double étage
     aj, ap, as_ = DV.arche_50f(sd)
     gL = next(g for g in BP.PATH.segs if g['kind'] == 'S' and g['tag'].startswith('LR'))
