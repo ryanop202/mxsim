@@ -458,7 +458,7 @@ def paris():
     toks, u0 = even(L6B, xW - (xLR + RB), EXIT_U0, 8.0), EXIT_U0
     if ZION:   # v19 (« baisse la bosse en sortie de virage, elle est trop haute ; la table, éloigne-la un peu, mets-la bien entre les deux
         #          bosses ») : 1re bosse 4,2 -> 3,4 ft ; 6 ft de plus avant ET après la table (même écart des deux côtés)
-        B_ = [('stretch', SA[0], 3.4, 0.85)] + L6B[1:]; it_ = B_.index(TABLE); extra = 6.0
+        B_ = [('stretch', SA[0], 3.75, 0.85)] + L6B[1:]; it_ = B_.index(TABLE); extra = 6.0   # v19c (« trop petite, un peu basse ») : 3,4 -> 3,75 (4,1 ft en ZION)
         g_ = (xW - (xLR + RB) - EXIT_U0 - 8.0 - sum(tlen(b) for b in B_) - 2 * extra) / (len(B_) - 1)
         toks = []
         for k, b in enumerate(B_):

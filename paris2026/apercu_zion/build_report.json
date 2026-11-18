@@ -163,39 +163,39 @@
    "H": 7.26,
    "items": [
     [
-     "bosse ZION 3.7 ft",
+     "bosse ZION 4.1 ft",
      0.0,
-     27.8
+     29.2
     ],
     [
      "bosse ZION 5.2 ft",
-     41.0,
-     73.7
+     42.2,
+     74.9
     ],
     [
      "bosse ZION 5.4 ft",
-     86.9,
-     120.2
+     87.9,
+     121.2
     ],
     [
      "bosse ZION 5.2 ft",
-     133.4,
-     166.1
+     134.2,
+     166.9
     ],
     [
      "bosse ZION 5.4 ft",
-     179.3,
-     212.6
+     179.9,
+     213.2
     ],
     [
      "table ZION 7.3 ft",
-     231.8,
-     293.7
+     232.2,
+     294.1
     ],
     [
      "bosse ZION 4.7 ft",
-     312.9,
-     344.2
+     313.1,
+     344.4
     ],
     [
      "bosse ZION 5.0 ft",
@@ -238,12 +238,12 @@
   "total": 13,
   "amv_pied_ft": {},
   "arche": {
-   "crete_ft": 3.74,
+   "crete_ft": 4.12,
    "sol_pieds_ft": [
     0.0,
     0.0
    ],
-   "libre_sous_poutre_ft": 20.8
+   "libre_sous_poutre_ft": 20.4
   },
   "finish": {
    "crete_ft": 9.51
@@ -276,8 +276,8 @@
    777
   ],
   "dalles_tuiles": 137550,
-  "overlay": 20,
-  "decals_gardes": 10,
+  "overlay": 543,
+  "decals_gardes": 0,
   "start": [
    671.5,
    543.3,

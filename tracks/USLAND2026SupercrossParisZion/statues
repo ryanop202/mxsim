@@ -261,7 +261,7 @@
 [156.6115 0.0000 240.2520] 0.000000 @USLAND2026SupercrossParisZion/statue/roof_structure__steel_black__03_0.jm @USLAND2026SupercrossParisZion/tex/steel_black-repeat.png null
 [389.1575 0.0000 956.7874] 0.000000 @USLAND2026SupercrossParisZion/statue/roof_structure__steel_black__04_0.jm @USLAND2026SupercrossParisZion/tex/steel_black-repeat.png null
 [390.0270 0.0000 757.1050] 0.000000 @USLAND2026SupercrossParisZion/statue/roof_structure__steel_black__05_0.jm @USLAND2026SupercrossParisZion/tex/steel_black-repeat.png null
-[388.2690 0.0000 435.1990] 0.000000 @USLAND2026SupercrossParisZion/statue/roof_structure__steel_black__06_0.jm @USLAND2026SupercrossParisZion/tex/steel_black-repeat.png null
+[390.2690 0.0000 435.1990] 0.000000 @USLAND2026SupercrossParisZion/statue/roof_structure__steel_black__06_0.jm @USLAND2026SupercrossParisZion/tex/steel_black-repeat.png null
 [389.1575 0.0000 230.2126] 0.000000 @USLAND2026SupercrossParisZion/statue/roof_structure__steel_black__07_0.jm @USLAND2026SupercrossParisZion/tex/steel_black-repeat.png null
 [740.7979 0.0000 956.7874] 0.000000 @USLAND2026SupercrossParisZion/statue/roof_structure__steel_black__08_0.jm @USLAND2026SupercrossParisZion/tex/steel_black-repeat.png null
 [707.0709 0.0000 751.7349] 0.000000 @USLAND2026SupercrossParisZion/statue/roof_structure__steel_black__09_0.jm @USLAND2026SupercrossParisZion/tex/steel_black-repeat.png null
@@ -421,7 +421,6 @@
 [535.406165 0.000000 686.044930] 1.220560 @USLAND2026SupercrossParisZion/statue/ramp_50.jm @USLAND2026SupercrossParisZion/statue/ramp_50.png @USLAND2026SupercrossParisZion/statue/ramp_50.shp
 [551.395522 0.000000 692.073989] 1.218884 @USLAND2026SupercrossParisZion/statue/ramp_50.jm @USLAND2026SupercrossParisZion/statue/ramp_50.png @USLAND2026SupercrossParisZion/statue/ramp_50.shp
 [539.280337 0.000000 474.465000] -1.570796 @USLAND2026SupercrossParisZion/statue/paris/finish.jm @USLAND2026SupercrossParisZion/statue/paris/finish.png null
-[528.780337 0.000000 500.465000] -3.141593 @USLAND2026SupercrossParisZion/statue/paris/flag_cage.jm @USLAND2026SupercrossParisZion/statue/paris/flag_cage.png null
 [868.141218 0.000000 422.000000] 1.570796 @USLAND2026SupercrossParisZion/statue/paris/semi_jgsx.jm @USLAND2026SupercrossParisZion/statue/paris/semi_jgsx_ktm.png null
 [868.141218 0.000000 455.000000] 1.570796 @USLAND2026SupercrossParisZion/statue/paris/semi_jgsx.jm @USLAND2026SupercrossParisZion/statue/paris/semi_jgsx_kawasaki.png null
 [868.141218 0.000000 488.000000] 1.570796 @USLAND2026SupercrossParisZion/statue/paris/semi_jgsx.jm @USLAND2026SupercrossParisZion/statue/paris/semi_jgsx_yamaha.png null

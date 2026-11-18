@@ -151,20 +151,21 @@ def zion_extras(OUT, FOLDER):
     drop_ = ("/overlay.png", "/single.png", "/Table.png", "/triplemiddle.png", "/Straight.png", "/startgate.png")
     dl = [l for l in open(os.path.join(OUT, "decals")).read().splitlines() if l.strip() and not any(k in l for k in drop_)]
     fl = BP.mx_poly(BP.arena_dims().floor_outline(1.0)); from geo_tools import inside
-    # v19b (capture en jeu : « bug de texture, mets partout ») : overlay.png de ZION = UNE décal pour toute la piste, opaque et sombre
-    # sur ses bords ; répétée en dalles (v17) ses bords faisaient une grille de bandes grises. Dalle faite ici : le milieu de l'overlay
-    # (terre claire translucide, sans les bords), en miroir 2 x 2 (raccords invisibles), posée bord à bord (160 ft, pas de 160 ft)
-    # sur tout le sol (hors paddock)
+    # v19c (captures en jeu : « il n'y a plus la texture, c'est tout lisse ; remets la texture de base ; on voit les gradients entre
+    # chaque bosse, les lignes ») : la tuile de terre ZION est une couleur unie, la terre « rayée » vue en jeu vient de ses décals de
+    # virage (couleur + relief _tnorm), dont les bords droits faisaient les lignes. Plus aucune décal ZION entière ; à la place des
+    # pastilles de grain (terre_zion.py : rayures + relief de 180.png, à la couleur de la tuile, bord fondu), 56 ft, tous les 22 ft,
+    # tournées au hasard, partout sur le sol hors paddock : la texture partout, sans bord ni ligne.
+    import terre_zion as TZ
     from PIL import Image as _I
-    ovs = np.asarray(_I.open(os.path.join(ZD, "decal", "overlay.png")).convert("RGBA"))[200:712, 200:712]
-    til = np.vstack([np.hstack([ovs, ovs[:, ::-1]]), np.hstack([ovs[::-1], ovs[::-1, ::-1]])])
-    _I.fromarray(til, "RGBA").save(os.path.join(OUT, "zdecal", "overlay_tile.png"))
-    ov = []; T_ = 160.0
-    for xx in np.arange(fl[:, 0].min() + T_ / 2 - 20.0, fl[:, 0].max() + T_ / 2, T_):
-        for zz in np.arange(fl[:, 1].min() + T_ / 2 - 20.0, fl[:, 1].max() + T_ / 2, T_):
-            cs = np.array([[xx + dx_, zz + dz_] for dx_ in (-T_ / 2, 0, T_ / 2) for dz_ in (-T_ / 2, 0, T_ / 2)])
-            if inside(cs, fl).any() and not (x0 <= xx <= x1 and z0 <= zz <= z1):
-                ov.append("[%.6f %.6f] 0.000000 %.6f 1.000000 @%s/zdecal/overlay_tile.png" % (xx, zz, T_, FOLDER))
+    tile_col = np.asarray(_I.open(os.path.join(OUT, "ztile", "2.png")).convert("RGB"), float).reshape(-1, 3).mean(0)
+    tz, tsize = TZ.make(os.path.join(OUT, "zdecal"), os.path.join(ZD, "decal"), base=tile_col)
+    dl = []; ov = []; rng = np.random.default_rng(19)
+    for xx in np.arange(fl[:, 0].min(), fl[:, 0].max() + 1, 22.0):
+        for zz in np.arange(fl[:, 1].min(), fl[:, 1].max() + 1, 22.0):
+            x_, z_ = xx + rng.uniform(-6, 6), zz + rng.uniform(-6, 6)
+            if inside(np.array([[x_, z_]]), fl)[0] and not (x0 <= x_ <= x1 and z0 <= z_ <= z1):
+                ov.append("[%.6f %.6f] %.6f %.6f 1.000000 @%s/zdecal/%s" % (x_, z_, rng.uniform(-np.pi, np.pi), tsize, FOLDER, tz))
     open(os.path.join(OUT, "decals"), "w", newline=chr(10)).write(chr(10).join(ov + dl) + chr(10))
     # v19 (« le saut d'arrivée, il va pas ; il faut faire les câbles comme sur mon track, avec le finish ») : plus d'arche ZION, le panneau
     # FINISH suspendu (élingues jusqu'au toit) de la version USLAND reste
@@ -188,7 +189,7 @@ def zion_extras(OUT, FOLDER):
     open(fj, "w", newline=chr(10)).write(chr(10).join(Lj))
     sline = "[%.6f 0.000000 %.6f] %.6f @%s/statue/paris/start_banner.jm @%s/statue/paris/start_banner.png null" % (q[0], q[1], float(np.arctan2(f0[0], f0[1])), FOLDER, FOLDER)
     for f in ["statues"] + ["variants/" + v for v in os.listdir(os.path.join(OUT, "variants")) if v.startswith("statues")]:
-        p = os.path.join(OUT, f); L = [l for l in open(p).read().splitlines() if "/start_grids.jm" not in l]
+        p = os.path.join(OUT, f); L = [l for l in open(p).read().splitlines() if "/start_grids.jm" not in l and "/flag_cage.jm" not in l]   # v19c : « la cabane, faut pas la mettre pour l'instant »
         open(p, "w", newline=chr(10)).write(chr(10).join(L + [sline]) + chr(10))
     # v19 (« des grilles noires, presque un peu pleines, comme les grilles USLAND, logo Monster Energy ») : modèle des grilles qui tombent
     import gate_monster as GM
