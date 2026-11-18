@@ -431,21 +431,22 @@ def depart(out, width=96.0):
 
 
 # ---------------------------------------------------------------- panneau FINISH suspendu
-def finish(out, drop=0.0, y_bas=34.0, roof=118.0):
+def finish(out, drop=0.0, y_bas=34.0, roof=118.0, word='finish', fname='finish'):
+    """v19 : word / fname -> le même panneau pour le départ (« comme le finish, mais tu remplaces finish par start »)."""
     W, H = 1024, 256; im = Image.new('RGB', (W, H), (8, 8, 9)); d = ImageDraw.Draw(im)
     fb = (0, 0, 1024, 200)                                                    # 26 x 5,1 ft, façon écran LED
-    fin = K.tint(logo('finish'), (235, 255, 235))
+    fin = K.tint(logo(word), (235, 255, 235))
     for k, x in enumerate((60, 110, 160)):
         d.polygon([(x, 150), (x + 26, 150), (x + 76, 40), (x + 50, 40)], fill=(120, 230, 60))
         d.polygon([(1024 - x, 150), (1024 - x - 26, 150), (1024 - x - 76, 40), (1024 - x - 50, 40)], fill=(120, 230, 60))
     fit(im, fin, (250, 30, 774, 150), 0.02); fit(im, logo('venum'), (400, 152, 624, 196), 0.05)
     a = np.asarray(im, float); a[:200:4, :, :] *= 0.55; a[:200, ::4, :] *= 0.75   # trame de LED
-    im = Image.fromarray(np.clip(a, 0, 255).astype(np.uint8)); _save(im, os.path.join(out, 'finish.png'))
+    im = Image.fromarray(np.clip(a, 0, 255).astype(np.uint8)); _save(im, os.path.join(out, fname + '.png'))
     m = Mesh(); y0 = y_bas - drop; rf = R(fb, W, H); blk = R((20, 215, 200, 245), W, H)
     m.box((-13, y0, -0.6), (13, y0 + 5.1, 0.6), blk, 'xXzZYy', {'Z': rf, 'z': rf})
     for x in (-11, 11):                                                       # élingues jusqu'au toit
         m.tube((x, y0 + 5.1, 0), (x, roof - drop, 0), 0.08, blk, 5, caps=False)
-    m.write(os.path.join(out, 'finish.jm'), MAT_MAT)
+    m.write(os.path.join(out, fname + '.jm'), MAT_MAT)
 
 
 # ---------------------------------------------------------------- canette Monster géante

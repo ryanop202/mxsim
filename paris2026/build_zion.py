@@ -124,18 +124,18 @@ def paddock_rect(OUT):
     """v17 : zone des camions (derrière le départ) d'après leurs statues, + 25 ft."""
     import re
     P = [tuple(map(float, re.match(r"\[([-\d.]+) [-\d.]+ ([-\d.]+)\]", l).groups())) for l in open(os.path.join(OUT, "statues")) if "/semi.jm" in l]
-    P = np.array(P); return (P[:, 0].min() - 45.0, P[:, 0].max() + 30.0, P[:, 1].min() - 25.0, P[:, 1].max() + 25.0)
+    P = np.array(P); return (P[:, 0].min() - 92.0, P[:, 0].max() + 30.0, P[:, 1].min() - 25.0, P[:, 1].max() + 25.0)
 
 
 def zion_extras(OUT, FOLDER):
     """v17 : dalles grises sous les camions (tuile Road), voile de terre ZION (overlay) en dalles sur tout le sol de terre (pas
-    seulement sur le tracé), arche d'arrivée de ZION (finishbanner) sur la ligne d'arrivée à la place du panneau suspendu."""
+    seulement sur le tracé) ; v19 : décals d'obstacles retirés, panneau START suspendu, grilles noires Monster, plus de start_grids."""
     import re
     x0, x1, z0, z1 = paddock_rect(OUT)
     # tuiles : la zone des camions en dalles (Road), sauf à moins de 25 ft du tour / du départ
     from scipy.spatial import cKDTree
     import layouts_sx as LS
-    from starts import StartRoute, finish_s
+    from starts import StartRoute
     path, st = BP.PATH, BP.START
     smp = path.samples(2.0); rs = StartRoute(st, LP.N_GATES, LP.GATE_PITCH).samples(2.0)
     tr = cKDTree(np.r_[np.c_[smp['x'], smp['z']], np.c_[rs['x'], rs['z']]])
@@ -145,7 +145,11 @@ def zion_extras(OUT, FOLDER):
     d, _ = tr.query(np.c_[TJ[box], TI[box]]); sel = np.zeros_like(box); sel[box] = d > 25.0
     tm[sel & (tm == 0)] = 6; tm.astype(np.uint8).tofile(os.path.join(OUT, "tilemap"))
     # décals : l'overlay ZION en dalles de 160 ft sur tout le sol de terre (hors paddock)
-    dl = [l for l in open(os.path.join(OUT, "decals")).read().splitlines() if l.strip() and "/overlay.png" not in l]
+    # v19 (« sur chaque bosse, enlève les gradients ; il y a des lignes qu'il faut que tu fondes entre chaque bosse ») : plus de décals
+    # d'obstacle (single / Table / triplemiddle) ni de bandes Straight (leurs bords faisaient des lignes) ; v19 (« enlève les grilles de
+    # Zion en dessous ») : plus de décals startgate sous les grilles
+    drop_ = ("/overlay.png", "/single.png", "/Table.png", "/triplemiddle.png", "/Straight.png", "/startgate.png")
+    dl = [l for l in open(os.path.join(OUT, "decals")).read().splitlines() if l.strip() and not any(k in l for k in drop_)]
     fl = BP.mx_poly(BP.arena_dims().floor_outline(1.0)); from geo_tools import inside
     ov = []
     for xx in np.arange(fl[:, 0].min(), fl[:, 0].max() + 1, 140.0):
@@ -153,20 +157,46 @@ def zion_extras(OUT, FOLDER):
             if inside(np.array([[xx, zz]]), fl)[0] and not (x0 <= xx <= x1 and z0 <= zz <= z1):
                 ov.append("[%.6f %.6f] 0.000000 160.000000 1.000000 @%s/zdecal/overlay.png" % (xx, zz, FOLDER))
     open(os.path.join(OUT, "decals"), "w", newline=chr(10)).write(chr(10).join(ov + dl) + chr(10))
-    # arche d'arrivée ZION : origine sur la crête de l'appel (comme ZION, y 5), face aux pilotes (yaw = cap + pi comme ZION)
-    zd = os.path.join(OUT, "statue", "zfinish"); os.makedirs(zd, exist_ok=True)
-    for f in ("finishbanner.jm.gz", "finishbanner.shp", "finishbanner-repeat.png", "finishbanner_norm-repeat.png"):
-        shutil.copy(os.path.join(ZD, "statue", "sxsrc", f), os.path.join(zd, f))
-    sF = finish_s(path, st, LS.COMBOS)[0]; sm = path.samples(0.5); i = int(np.argmin(np.abs(sm['s'] - sF)))
-    fx, fz, th = sm['x'][i], sm['z'][i], sm['th'][i]; yaw = float(np.arctan2(np.cos(th), np.sin(th))) + np.pi
-    line = "[%.6f 5.000000 %.6f] %.6f @%s/statue/zfinish/finishbanner.jm @%s/statue/zfinish/finishbanner-repeat.png null" % (fx, fz, yaw, FOLDER, FOLDER)
+    # v19 (« le saut d'arrivée, il va pas ; il faut faire les câbles comme sur mon track, avec le finish ») : plus d'arche ZION, le panneau
+    # FINISH suspendu (élingues jusqu'au toit) de la version USLAND reste
+    # v19 (« enlève ma grille pourrie avec la poutre, elle n'existe pas ; garde nos grilles ») : plus de grilles de Saint-Georges
+    # (start_grids, 88 ft avec la poutre) ; « des cordes qui descendent du plafond au-dessus du start, fond noir, START en blanc, comme le
+    # finish, à peu près à la même hauteur » : panneau START (hab_objets.finish, mot START) 12 ft devant les grilles, face aux pilotes
+    import hab_objets as HO
+    assert not BP.REPORT.get('long_tuff_apres_depart'), "nofrills.js référence des rangs de statues"
+    sd = os.path.join(OUT, "statue", "paris"); G0 = np.array(st['gate']); h0 = np.radians(st['heading']); f0 = np.array([np.cos(h0), np.sin(h0)])
+    q = G0 + f0 * 12.0; rf_ = roof_ft(*q)
+    HO.finish(sd, drop=0.0, roof=rf_, word='start', fname='start_banner')
+    # v19 : les élingues du FINISH montaient à 118 ft, le toit est à ~146 ft au-dessus de l'arrivée (elles s'arrêtaient dans le vide) :
+    # le haut des élingues remonté jusqu'au toit
+    import re
+    fx_, fz_ = next(tuple(map(float, re.match(r"\[(\S+) \S+ (\S+)\]", l).groups())) for l in open(os.path.join(OUT, "statues")) if "/finish.jm " in l)
+    fj = os.path.join(sd, "finish.jm"); Lj = open(fj).read().split(chr(10)); nv_ = int(Lj[2].split()[0]); rfin = roof_ft(fx_, fz_)
+    for k_ in range(3, 3 + nv_):
+        v_ = Lj[k_].split()
+        if abs(float(v_[1]) - 118.0) < 0.01:
+            v_[1] = "%.6f" % rfin; Lj[k_] = " ".join(v_)
+    open(fj, "w", newline=chr(10)).write(chr(10).join(Lj))
+    sline = "[%.6f 0.000000 %.6f] %.6f @%s/statue/paris/start_banner.jm @%s/statue/paris/start_banner.png null" % (q[0], q[1], float(np.arctan2(f0[0], f0[1])), FOLDER, FOLDER)
     for f in ["statues"] + ["variants/" + v for v in os.listdir(os.path.join(OUT, "variants")) if v.startswith("statues")]:
-        p = os.path.join(OUT, f); L = open(p).read().splitlines(); n = 0
-        for k, l in enumerate(L):
-            if "/finish.jm " in l:
-                L[k] = line; n += 1
-        open(p, "w", newline=chr(10)).write(chr(10).join(L) + chr(10))
-    BP.REPORT['zion_v17'] = dict(paddock=[round(v) for v in (x0, x1, z0, z1)], dalles_tuiles=int(sel.sum()), overlay=len(ov), arche=(round(fx, 1), round(fz, 1)))
+        p = os.path.join(OUT, f); L = [l for l in open(p).read().splitlines() if "/start_grids.jm" not in l]
+        open(p, "w", newline=chr(10)).write(chr(10).join(L + [sline]) + chr(10))
+    # v19 (« des grilles noires, presque un peu pleines, comme les grilles USLAND, logo Monster Energy ») : modèle des grilles qui tombent
+    import gate_monster as GM
+    jm, png = GM.make(sd); tg = os.path.join(OUT, "timing_gates"); t_ = open(tg).read()
+    t_ = t_.replace("statue/paris/start_gate_frame.jm", "statue/paris/" + jm).replace("statue/paris/start_gate_frame.png", "statue/paris/" + png)
+    open(tg, "w", newline=chr(10)).write(t_)
+    BP.REPORT['zion_v19'] = dict(paddock=[round(v) for v in (x0, x1, z0, z1)], dalles_tuiles=int(sel.sum()), overlay=len(ov), decals_gardes=len(dl),
+                                 start=(round(q[0], 1), round(q[1], 1), round(rf_, 1)), toit_finish=round(rfin, 1), grilles=t_.count(jm))
+
+
+def roof_ft(x, z):
+    """hauteur du toit (ft) au-dessus d'un point du jeu (champ lissé de stade_paris, plan agrandi x PLAN_K)."""
+    sys.path.insert(0, os.path.join(BP.ROOT, "stade_paris", "src"))
+    from arena import roof
+    f = roof.field(); X = (x - LP.OX) / LP.FT / LP.PLAN_K; Y = (LP.OZ - z) / LP.FT / LP.PLAN_K
+    i = int(np.clip(round((X - f.xs[0]) / (f.xs[1] - f.xs[0])), 0, len(f.xs) - 1)); j = int(np.clip(round((Y - f.ys[0]) / (f.ys[1] - f.ys[0])), 0, len(f.ys) - 1))
+    return float(f.h[i, j]) * LP.FT
 
 
 _export0 = BP.export
@@ -178,6 +208,25 @@ def export_zion(*a, **k):
     zion_extras(BP.OUT, BP.FOLDER)
     import layouts_sx as LS
     BP.whoops_boudins(BP.OUT, BP.FOLDER, BP.PATH, LS.COMBOS)          # v18 : boudins SX TOUR sur les murets
+    semis_jgsx(BP.OUT, BP.FOLDER)                                      # v19 : semi-remorques JGSX aux couleurs des équipes
+
+
+def semis_jgsx(OUT, FOLDER):
+    """v19 (« les camions des stands, reprends les semi-remorques d'un track et change les sponsors ») : semi_jgsx.py."""
+    import re
+    import semi_jgsx as SJ
+    sd = os.path.join(OUT, "statue", "paris"); jm, tex = SJ.make(sd); n = 0
+    for f in ["statues"] + ["variants/" + v for v in os.listdir(os.path.join(OUT, "variants")) if v.startswith("statues")]:
+        p = os.path.join(OUT, f); L = open(p).read().splitlines()
+        for k, l in enumerate(L):
+            m = re.search(r"/statue/paris/semi\.jm @\S+/statue/paris/semi_(\w+)\.png", l)
+            if m:
+                L[k] = l.replace("/statue/paris/semi.jm", "/statue/paris/" + jm).replace("/semi_%s.png" % m.group(1), "/" + tex[m.group(1)]); n += f == "statues"
+        open(p, "w", newline=chr(10)).write(chr(10).join(L) + chr(10))
+    for f in ["semi.jm"] + ["semi_%s.png" % t for t in tex]:
+        if os.path.exists(os.path.join(sd, f)):
+            os.remove(os.path.join(sd, f))
+    BP.REPORT['semis_jgsx'] = n
 
 
 BP.render = render_zion

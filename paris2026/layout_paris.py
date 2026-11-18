@@ -33,6 +33,11 @@ RB = 21.5
 ZION = os.environ.get('PARIS_ZION') == '1'      # v15 : « version Zion » (paris2026/build_zion.py)
 # v16 (« on garde pas les virages de ZION, ça fait un bug ») : virages USLAND (rayon 21,5 ft, berms JGSX) aussi en version Zion
 XW_SHIFT = 55.0 if ZION else 0.0  # v15 : couloirs allongés vers l'est (place libre du sol agrandi) pour les écarts ZION
+# v19 (version Zion, « élargir un peu entre les pistes ; les enchaînements sont assez proches du public ; les whoops et l'enchaînement
+# à côté sont collés ») : 180 L2 -> L1 et L6 -> L5 de rayon 27,5 ft (couloirs voisins à 55 ft au lieu de 43, berm JGSX décalé),
+# couloir Est 10 ft plus à l'ouest (L1 / L6 plus longues, plus près de la tribune Ouest)
+R180 = 27.5 if ZION else RB
+XLR_SHIFT = 10.0 if ZION else 0.0
 TOP_W = 30.4                      # largeur du dessus des obstacles (JGSX)
 
 
@@ -138,6 +143,7 @@ FINISH_SEC = 'PAR-L5 petit double, triple d arrivee (ZION 2025)'
 # puis un double derrière la table (« sur table, derrière double »). Formes = bosses Arlington déjà utilisées ici.
 SMALL_DBL = [('scale', SA[0], 3.4), ('gap', 8.0), ('stretch', SA[1], 4.0, 1.25)]
 PRE_FINISH = [('scale', SA[0], 3.4), ('gap', 16.0), ('stretch', SA[1], 4.0, 1.25)]   # v13 : double plus long (était SMALL_DBL)
+PRE_FINISH_Z = [('stretch', SA[0], 4.8, 0.9), ('gap', 7.0), ('stretch', SA[1], 5.2, 1.6)]   # v19 (Zion) : vrai petit double, appel pointu
 # v10 (ancien commentaire) : « avant le triple il manque une bosse, ça fait un double » (v9 : un seul roller) ;
 #   la ligne d'arrivée (item 2) retombe ainsi sur l'APPEL du triple (avec le roller, l'item 2 était la réception -> FINISH mal placé)
 TABLE_L1 = ('stretch', TABLE_B, 6.6, 0.85)
@@ -357,9 +363,9 @@ def paris():
     """Le tour (sens de course), départ du tour au début de L5 (sortie de T_C)."""
     LS.COMBOS.clear(); LS.SPLITS.clear()
     zL5, zLD, zL3, zL2 = px_z(481.0), px_z(370.0) - LD_SHIFT, px_z(226.5) + L3_SHIFT, px_z(130.0) + L3_SHIFT + L2_SHIFT
-    zL1, zL6 = zL2 + 2 * RB, zL5 - 2 * RB            # 180° JGSX : couloirs voisins à 43 ft
+    zL1, zL6 = zL2 + 2 * R180, zL5 - 2 * R180        # 180° JGSX : couloirs voisins à 43 ft (v19 Zion : 55 ft)
     xW = px_x(312.0) + XW_SHIFT                        # virages Ouest (T1, T_C) : x des sorties de 180°
-    xLR, xC, xT5 = px_x(860.0), px_x(778.0), px_x(785.0)
+    xLR, xC, xT5 = px_x(860.0) - XLR_SHIFT, px_x(778.0), px_x(785.0)
     xTB = px_x(315.0)
     R3 = (zL2 - zL3) / 2
     p = Path(xW, zL5, 180.0, 'PARIS')
@@ -371,7 +377,12 @@ def paris():
     i_t = next(i for i, t in enumerate(toks) if t[0] == 'raw'); u_app = u0 + tlen(toks[:i_t]) - XW_SHIFT
     pre, ue = PRE_FINISH, EXIT_U0
     if ZION:                    # v16 (« garde le double qu'on avait fait nous, pas celui de ZION ; rapproche-le du virage »)
-        pre = [t if t[0] == 'gap' else ('raw', 'double USLAND', np.asarray(LS.L('tmp', [t]), float), 'T') for t in PRE_FINISH]; ue = 7.0
+        # v19 (« le petit double avant l'arrivée, plus raide, un peu plus haut ; là on dirait deux vagues ; un vrai double avec un appel
+        # un peu pointu, comme à Saint-Georges, qui décolle pas trop, qui va pas loin ») : appel étroit 4,8 ft, réception 5,2 ft, 7 ft
+        pre = [t if t[0] == 'gap' else ('raw', 'double USLAND', np.asarray(LS.L('tmp', [t]), float), 'T') for t in PRE_FINISH_Z]; ue = 7.0
+        # v19 (« plus d'espace entre le petit double et le triple d'arrivée, moins de ligne droite après le triple ») : le triple finit
+        # à 8 ft du virage
+        u_app = (xW - (xT5 + RB)) - 8.0 - tlen(toks[i_t:])
     toks = pre + [('gap', round(u_app - ue - tlen(pre), 1))] + toks[i_t:]; u0 = ue
     p.straight(xW - (xT5 + RB), [lane_sec(FINISH_SEC, toks, u0, finish=True)], tag='L5 arrivée')
     p.turn(90, RB, BIG, tag='T_L5a 90 gauche (berm)')
@@ -411,12 +422,14 @@ def paris():
         u0z = (xW - x_end3) - 8.0 - tlen(toks)
     u0 = u0z if ZION else L2_U0                            # v18 (RF) : même écart partout comme la version USLAND (~8,5 ft, A1 : 8 - 13)
     p.straight(xW - x_end3, [lane_sec('PAR-L2 triple, triple (7 bosses, meme ecart)', toks, u0)], tag='L2 singles')
-    p.turn(-180, RB, BIG2, tag='T1 180 droite (berm)')
+    p.turn(-180, R180, BIG2, tag='T1 180 droite (berm)')
     # v10 : 11 whoops (une petite + 10) plus hautes, plus rondes, plus de terre ; la table + 2 bosses gardées (« pas mal »)
     lL1 = xW - (xLR + RB)
     toks = [whoops_paris(), ('gap', 15.0), TABLE_L1, ('gap', 1.5), ('scale', SA[1], 4.0), ('gap', 1.5), ('scale', SA[0], 3.6)]
     if ZION:   # v16 : nos whoops comme Saint-Georges (lancement normal) ; table + 2 bosses ZION plus grosses, écarts ZION (8 ft)
-        toks = [whoops_up(11, 1.15), ('gap', 15.0), ('scale', TABLE_B, 7.0), ('gap', 8.0), ('scale', SA[1], 4.3), ('gap', 8.0), ('scale', SA[0], 4.1)]
+        # v19 (« plus d'espace entre la dernière whoops et la table, quitte à sacrifier un peu entre la table et la 1re bosse ») : 15 -> 22 ft,
+        # table -> bosse 8 -> 6 ft, bosse -> bosse 8 -> 6,5 ft
+        toks = [whoops_up(11, 1.15), ('gap', 22.0), ('scale', TABLE_B, 7.0), ('gap', 6.0), ('scale', SA[1], 4.3), ('gap', 6.5), ('scale', SA[0], 4.1)]
     if RF:     # v18 : « garde nos whoops dans la version RF » : celles de la version Zion, 9 (11 : 39 ft de trop) ; table + 2 bosses RF
         toks = [whoops_up(9, 1.15), ('gap', 15.0), ('scale', TABLE_B, 6.6), ('gap', RF_GAP), ('scale', SA[1], 4.0), ('gap', RF_GAP), ('scale', SA[0], 3.6)]
     u0 = lL1 - 8.0 - tlen(toks); assert u0 >= 0.5, u0
@@ -443,8 +456,17 @@ def paris():
     L6B = [('stretch', SA[0], 4.2, 0.85), ('stretch', SA[2], 4.7, 1.15), ('stretch', SA[1], 4.9, 1.15), ('stretch', SA[3], 4.7, 1.15),
            ('stretch', SA[2], 4.9, 1.15), TABLE, ('stretch', SA[0], 4.3, 1.15), ('stretch', SA[1], 4.5, 1.15)]
     toks, u0 = even(L6B, xW - (xLR + RB), EXIT_U0, 8.0), EXIT_U0
+    if ZION:   # v19 (« baisse la bosse en sortie de virage, elle est trop haute ; la table, éloigne-la un peu, mets-la bien entre les deux
+        #          bosses ») : 1re bosse 4,2 -> 3,4 ft ; 6 ft de plus avant ET après la table (même écart des deux côtés)
+        B_ = [('stretch', SA[0], 3.4, 0.85)] + L6B[1:]; it_ = B_.index(TABLE); extra = 6.0
+        g_ = (xW - (xLR + RB) - EXIT_U0 - 8.0 - sum(tlen(b) for b in B_) - 2 * extra) / (len(B_) - 1)
+        toks = []
+        for k, b in enumerate(B_):
+            toks.append(b)
+            if k < len(B_) - 1:
+                toks.append(('gap', round(g_ + (extra if k in (it_ - 1, it_) else 0.0), 1)))
     p.straight(xW - (xLR + RB), [lane_sec('PAR-L6 triple, double, table, double', toks, u0)], tag='L6 tribune Sud')
-    p.turn(-180, RB, BIG, tag='T_C 180 droite (berm)')
+    p.turn(-180, R180, BIG, tag='T_C 180 droite (berm)')
     p.lanes = dict(x_end3=x_end3, R3=R3, zL5=zL5, zLD=zLD, zL3=zL3, zL2=zL2, zL1=zL1, zL6=zL6, xW=xW, xLR=xLR, xC=xC, xT5=xT5, xTB=xTB)
     return p
 

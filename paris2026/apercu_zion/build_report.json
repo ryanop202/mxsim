@@ -4,28 +4,28 @@
    "lane": "L5 arrivée",
    "name": "PAR-L5 petit double, triple d arrivee (ZION 2025)",
    "u0": 7.0,
-   "L": 262.3,
+   "L": 332.9,
    "H": 11.15,
    "items": [
     [
      "double USLAND",
      0.0,
-     27.5
+     25.9
     ],
     [
      "double USLAND",
-     43.5,
-     75.5
+     32.9,
+     70.4
     ],
     [
      "appel arrivee ZION 2025 (10,0)",
-     93.9,
-     139.3
+     164.5,
+     209.9
     ],
     [
      "triple arrivee ZION 2025 (6,0 / 11,2)",
-     139.3,
-     262.2
+     209.9,
+     332.8
     ]
    ]
   },
@@ -95,8 +95,8 @@
   {
    "lane": "L1 whoops",
    "name": "PAR-L1 whoops, table, bosse",
-   "u0": 10.8,
-   "L": 379.1,
+   "u0": 17.3,
+   "L": 382.6,
    "H": 7.7,
    "items": [
     [
@@ -106,18 +106,18 @@
     ],
     [
      "table ZION 7.7 ft",
-     239.2,
-     301.1
+     246.2,
+     308.1
     ],
     [
      "bosse ZION 4.7 ft",
-     309.1,
-     340.4
+     314.1,
+     345.4
     ],
     [
      "bosse ZION 4.5 ft",
-     348.4,
-     379.0
+     351.9,
+     382.5
     ]
    ]
   },
@@ -125,7 +125,7 @@
    "lane": "LR tribune Est",
    "name": "PAR-LR saut de sortie, bosse, table, 3 bosses",
    "u0": 10.0,
-   "L": 280.3,
+   "L": 304.3,
    "H": 7.62,
    "items": [
     [
@@ -135,23 +135,23 @@
     ],
     [
      "table double etage RF A1 7.6 ft",
-     78.9,
-     165.7
+     102.9,
+     189.7
     ],
     [
      "bosse ZION 4.6 ft",
-     173.2,
-     204.1
+     197.2,
+     228.1
     ],
     [
      "bosse ZION 4.6 ft",
-     211.6,
-     242.5
+     235.6,
+     266.5
     ],
     [
      "bosse ZION 4.4 ft",
-     250.0,
-     280.2
+     274.0,
+     304.2
     ]
    ]
   },
@@ -159,48 +159,48 @@
    "lane": "L6 tribune Sud",
    "name": "PAR-L6 triple, double, table, double",
    "u0": 10.0,
-   "L": 379.2,
+   "L": 389.5,
    "H": 7.26,
    "items": [
     [
-     "bosse ZION 4.6 ft",
+     "bosse ZION 3.7 ft",
      0.0,
-     30.9
+     27.8
     ],
     [
      "bosse ZION 5.2 ft",
-     43.9,
-     76.6
+     41.0,
+     73.7
     ],
     [
      "bosse ZION 5.4 ft",
-     89.6,
-     122.9
+     86.9,
+     120.2
     ],
     [
      "bosse ZION 5.2 ft",
-     135.9,
-     168.6
+     133.4,
+     166.1
     ],
     [
      "bosse ZION 5.4 ft",
-     181.6,
-     214.9
+     179.3,
+     212.6
     ],
     [
      "table ZION 7.3 ft",
-     227.9,
-     289.8
+     231.8,
+     293.7
     ],
     [
      "bosse ZION 4.7 ft",
-     302.8,
-     334.1
+     312.9,
+     344.2
     ],
     [
      "bosse ZION 5.0 ft",
-     347.1,
-     379.1
+     357.4,
+     389.4
     ]
    ]
   }
@@ -218,10 +218,10 @@
  "objets": {
   "objets": {
    "retirés (v13) : boudins FLY Racing (whoops)": 26,
-   "retirés (v13) : ballots ZION (unis)": 240,
+   "retirés (v13) : ballots ZION (unis)": 266,
    "retirés (v13) : poteaux ronds": 7,
-   "retirés (v13) : tuffs de virage ZION (unis)": 68,
-   "retirés (v13) : filets": 41,
+   "retirés (v13) : tuffs de virage ZION (unis)": 74,
+   "retirés (v13) : filets": 44,
    "panneau FINISH suspendu": 1,
    "cage du drapeau": 1,
    "retirés (v13) : boudins Thor": 6,
@@ -238,15 +238,15 @@
   "total": 13,
   "amv_pied_ft": {},
   "arche": {
-   "crete_ft": 4.62,
+   "crete_ft": 3.74,
    "sol_pieds_ft": [
     0.0,
-    2.46
+    0.0
    ],
-   "libre_sous_poutre_ft": 19.9
+   "libre_sous_poutre_ft": 20.8
   },
   "finish": {
-   "crete_ft": 9.52
+   "crete_ft": 9.51
   },
   "logos_redessines": [
    "minerva",
@@ -260,7 +260,7 @@
  "export": {
   "hmin": -0.5,
   "hmax": 24.74999994800642,
-  "statues_relevees": 36,
+  "statues_relevees": 26,
   "decals": 85,
   "decals_terre": 0
  },
@@ -268,22 +268,27 @@
   "tuiles": 8,
   "ombrage_plat": 228
  },
- "zion_v17": {
+ "zion_v19": {
   "paddock": [
-   823,
+   776,
    898,
    397,
    777
   ],
-  "dalles_tuiles": 84495,
-  "overlay": 14,
-  "arche": [
-   586.9,
-   474.5
-  ]
+  "dalles_tuiles": 137550,
+  "overlay": 11,
+  "decals_gardes": 10,
+  "start": [
+   671.5,
+   543.3,
+   150.2
+  ],
+  "toit_finish": 146.0,
+  "grilles": 22
  },
  "boudins_whoops": 22,
- "lap_ft": 2850.4,
+ "semis_jgsx": 10,
+ "lap_ft": 2932.1,
  "start": {
   "gate": [
    683.5099504,
@@ -337,6 +342,7 @@
   "first": [
    29,
    30,
+   11,
    12,
    13,
    14,

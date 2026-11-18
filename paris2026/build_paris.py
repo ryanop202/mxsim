@@ -163,10 +163,11 @@ def render_mid(out, g, prof, u0, name):
     out[:] = np.maximum(out, lay)
 
 
-WALL_TOP, WALL_RAMP = (17.0, 20.0), 12.0     # murets des whoops (versions Zion et RF) : dessus plat entre |v| 17 et 20 ft
+WALL_TOP, WALL_RAMP = (17.0, 19.4), 12.0     # murets des whoops (versions Zion et RF) : dessus plat entre |v| 17 et 19,4 ft
+WALL_SLOPE = 2.5                             # v19 (« légèrement moins larges, pile la largeur d'un boudin ») : dessus 3 -> 2,4 ft, pentes 3 -> 2,5 ft
 
 
-def whoops_walls(out, g, prof, u0, it, top=WALL_TOP, slope=3.0, ramp=WALL_RAMP):
+def whoops_walls(out, g, prof, u0, it, top=WALL_TOP, slope=WALL_SLOPE, ramp=WALL_RAMP):
     """v16 (« mets des murs sur les côtés, mais mieux que ça ») : muret ARRONDI de chaque côté des whoops (coupe en cosinus centrée à
     vc ft de l'axe, demi-largeur hw, sommet à la hauteur des crêtes), whoops pleine largeur jusqu'au sommet du muret, rampes
     douces de ramp ft aux deux bouts ; pas de dessus plat ni de face raide (v14)."""
