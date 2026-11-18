@@ -31,8 +31,7 @@ Z0 = OZ
 BIG, BIG2 = 'big_det_a', 'big_cle'
 RB = 21.5
 ZION = os.environ.get('PARIS_ZION') == '1'      # v15 : « version Zion » (paris2026/build_zion.py)
-if ZION:
-    RB = 28.3                     # rayon des 180 de ZION 2025 (couloirs à 56,6 ft)
+# v16 (« on garde pas les virages de ZION, ça fait un bug ») : virages USLAND (rayon 21,5 ft, berms JGSX) aussi en version Zion
 XW_SHIFT = 55.0 if ZION else 0.0  # v15 : couloirs allongés vers l'est (place libre du sol agrandi) pour les écarts ZION
 TOP_W = 30.4                      # largeur du dessus des obstacles (JGSX)
 
@@ -204,6 +203,17 @@ def whoops_paris_v13(n=11, k=1.25, first=0.85, sx=0.93, sm=1.0, base=0.45):   # 
     return ('raw', 'whoops Custom_0 x%d (x%.2f, ronds, creux %.2f)' % (n, k, base), q, 'W')
 
 
+def table_double(H=7.6, up1=10.0, tier=13.0, up2=9.0, top=24.0, rise=0.25, down=17.0, sm=0.6):
+    """v16 (dessin de l'utilisateur : « une petite table en premier, à peu près à mi-hauteur, et après la table au-dessus ;
+    fais un truc droit ») : table à double étage, faces droites, arêtes juste arrondies (gaussienne sm ft). FORME CRÉÉE."""
+    from scipy.ndimage import gaussian_filter1d
+    xs = [0.0, up1, up1 + tier, up1 + tier + up2, up1 + tier + up2 + top, up1 + tier + up2 + top + down]
+    hs = [0.0, H / 2, H / 2, H - rise, H, 0.0]
+    x = np.arange(0.0, xs[-1] + 0.05, 0.1); p = np.interp(x, xs, hs)
+    p = np.r_[np.zeros(20), p, np.zeros(20)]; p = gaussian_filter1d(p, sm / 0.1); p = np.maximum(p - p[0], 0.0); p[0] = p[-1] = 0.0
+    return ('raw', 'table double etage %.1f ft' % H, p, 'T')
+
+
 def resample(p, k_len=1.0, H=None):
     """profil 0,1 ft rééchantillonné (longueur x k_len), hauteur ramenée à H."""
     p = np.asarray(p, float); n = max(2, int(round(len(p) * k_len)))
@@ -346,7 +356,10 @@ def paris():
     # v13 (« le double plus en sortie de virage et un peu plus long ; le triple est bien ») : le triple reste où il est, le double
     # commence à EXIT_U0 de la sortie du virage, plus long (écart 8 -> 16 ft)
     i_t = next(i for i, t in enumerate(toks) if t[0] == 'raw'); u_app = u0 + tlen(toks[:i_t]) - XW_SHIFT
-    toks = PRE_FINISH + [('gap', round(u_app - EXIT_U0 - tlen(PRE_FINISH), 1))] + toks[i_t:]; u0 = EXIT_U0
+    pre, ue = PRE_FINISH, EXIT_U0
+    if ZION:                    # v16 (« garde le double qu'on avait fait nous, pas celui de ZION ; rapproche-le du virage »)
+        pre = [t if t[0] == 'gap' else ('raw', 'double USLAND', np.asarray(LS.L('tmp', [t]), float), 'T') for t in PRE_FINISH]; ue = 7.0
+    toks = pre + [('gap', round(u_app - ue - tlen(pre), 1))] + toks[i_t:]; u0 = ue
     p.straight(xW - (xT5 + RB), [lane_sec(FINISH_SEC, toks, u0, finish=True)], tag='L5 arrivée')
     p.turn(90, RB, BIG, tag='T_L5a 90 gauche (berm)')
     p.straight(zLD - zL5 - 2 * RB, tag='T_L5 milieu')
@@ -388,7 +401,9 @@ def paris():
     p.turn(-180, RB, BIG2, tag='T1 180 droite (berm)')
     # v10 : 11 whoops (une petite + 10) plus hautes, plus rondes, plus de terre ; la table + 2 bosses gardées (« pas mal »)
     lL1 = xW - (xLR + RB)
-    toks = [whoops_paris(), ('gap', 8.0 if ZION else 15.0), TABLE_L1, ('gap', 1.5), ('scale', SA[1], 4.0), ('gap', 1.5), ('scale', SA[0], 3.6)]
+    toks = [whoops_paris(), ('gap', 15.0), TABLE_L1, ('gap', 1.5), ('scale', SA[1], 4.0), ('gap', 1.5), ('scale', SA[0], 3.6)]
+    if ZION:   # v16 : nos whoops comme Saint-Georges (lancement normal) ; table + 2 bosses ZION plus grosses, écarts ZION (8 ft)
+        toks = [whoops_up(11, 1.15), ('gap', 15.0), ('scale', TABLE_B, 7.0), ('gap', 8.0), ('scale', SA[1], 4.3), ('gap', 8.0), ('scale', SA[0], 4.1)]
     u0 = lL1 - 8.0 - tlen(toks); assert u0 >= 0.5, u0
     p.straight(xW - (xLR + RB), [LS.sec('PAR-L1 whoops, table, bosse', toks, u0)], tag='L1 whoops')
     p.turn(-90, RB, BIG, tag='T_TR 90 droite (berm)')
@@ -400,6 +415,8 @@ def paris():
     lLR = (zL1 - RB) - (zL6 + RB)
     GR_ = 10.0 if ZION else 7.5                            # v15 : écart ZION (~10 ft) dans la version Zion
     rh = [('scale', SA[0], 3.0), ('gap', GR_), TABLE, ('gap', GR_), ('scale', SA[1], 4.2), ('gap', GR_), ('scale', SA[2], 4.2), ('gap', GR_), ('scale', SA[1], 4.0)]
+    if ZION:   # v16 (dessin de l'utilisateur) : la bosse + la table remplacées par une table à double étage
+        rh = [table_double()] + rh[3:]
     kick = [('scale', SA[1], 4.0)]
     u0 = EXIT_U0                                           # v13 : plus collé au berm (marque entre l'appui et la bosse)
     toks = kick + [('gap', round(lLR - u0 - 8.0 - tlen(kick) - tlen(rh), 1))] + rh
@@ -477,11 +494,14 @@ if ZION:
     Z25_BUTTE_W = Z25_BUTTE_W_ZION
     ZW_H = [2.58] + [3.14] * 7 + [2.87, 2.34, 1.17]          # 11 whoops sur le modèle des 10 de ZION (lancement, pleines, sortie)
 
+    ZH = 1.10                                                  # v16 (« légèrement plus hautes, même forme »)
+
     def zsingle(h):
-        p = ZF['single'] * (h / ZF['single'].max()); k = float(np.clip(np.sqrt(h / ZF['single'].max()), 0.85, 1.12))
+        h = h * ZH; p = ZF['single'] * (h / ZF['single'].max()); k = float(np.clip(np.sqrt(h / ZF['single'].max()), 0.85, 1.12))
         return ('raw', 'bosse ZION %.1f ft' % h, np.interp(np.linspace(0, len(p) - 1, int(len(p) * k)), np.arange(len(p)), p), 'T')
 
     def ztable(h):
+        h = h * ZH
         return ('raw', 'table ZION %.1f ft' % h, ZF['table'] * (h / ZF['table'].max()), 'T')
 
     def zwhoops():
@@ -500,8 +520,8 @@ if ZION:
                 out.append(zsingle(4.0)); continue
             if t[0] in ('scale', 'stretch'):
                 out.append(ztable(t[2]) if t[1] == TABLE_B else zsingle(t[2]))
-            elif t[0] == 'raw' and t[1].startswith('whoops'):
-                out.append(zwhoops())
+            elif t[0] == 'raw' and t[1].startswith('whoops 25 Paris'):   # v16 : nos whoops (Saint-Georges), pas celles de ZION
+                out.append(whoops_up(11, 1.15))
             else:
                 out.append(t)
         return out

@@ -43,6 +43,22 @@ def lane_zion(out, g, prof, u0, top, side):
     out[sl] = np.maximum(out[sl], pu * lat)
 
 
+def whoops_walls(out, g, prof, u0, it, vc=18.0, hw=4.0, ramp=12.0):
+    """v16 (« mets des murs sur les côtés, mais mieux que ça ») : muret ARRONDI de chaque côté des whoops (coupe en cosinus centrée à
+    vc ft de l'axe, demi-largeur hw, sommet à la hauteur des crêtes), whoops pleine largeur jusqu'au sommet du muret, rampes
+    douces de ramp ft aux deux bouts ; pas de dessus plat ni de face raide (v14)."""
+    i0, i1 = int(it[1] / 0.1), int(it[2] / 0.1); Hw = float(np.max(prof[i0:i1]))
+    ua, ub = u0 + it[1], u0 + it[2]; c, s_ = np.cos(g['t']), np.sin(g['t']); half = vc + hw + 1.0
+    pts = np.array([(g['x0'] + uu * c - vv * s_, g['z0'] + uu * s_ + vv * c) for uu in (ua, ub) for vv in (-half, half)])
+    sl, X, Z = G.window(pts[:, 0].min(), pts[:, 0].max(), pts[:, 1].min(), pts[:, 1].max())
+    dx, dz = X - g['x0'], Z - g['z0']; u = dx * c + dz * s_; v = np.abs(-dx * s_ + dz * c)
+    ss = lambda t: np.clip(t, 0, 1) ** 2 * (3 - 2 * np.clip(t, 0, 1))
+    lat = 0.5 * (1 + np.cos(np.pi * np.clip((v - vc) / hw, -1, 1)))
+    lon = ss((u - ua) / ramp) * ss((ub - u) / ramp)
+    wu = np.interp((u - u0) / 0.1, np.arange(len(prof)), prof, left=0, right=0) * (u >= ua) * (u <= ub) * (v <= vc)
+    out[sl] = np.maximum(out[sl], np.maximum(Hw * lat * lon, wu))
+
+
 def berm_zion(out, g):
     """croissant d'un 180 de ZION (carte polaire r, angle relatif) reposé sur le virage g."""
     from engine import turn_mid_angle
@@ -64,19 +80,28 @@ def render_zion(path, st):
         if g['kind'] == 'S':
             for prof, u0, name in g['sections']:
                 lay = whoops if 'whoops' in name else jumps
-                lane_zion(lay, g, prof, u0, *LAT['T'])
-                for it in LS.COMBOS[name]['items']:
+                for it in LS.COMBOS[name]['items']:            # v16 : obstacles ZION (coupe ZION), whoops USLAND (coupe USLAND + murets)
+                    i0, i1 = int(it[1] / 0.1), min(int(it[2] / 0.1) + 1, len(prof))
                     if it[0].startswith('whoops'):
-                        i0, i1 = int(it[1] / 0.1), int(it[2] / 0.1)
-                        lane_zion(whoops, g, prof[i0:i1], u0 + it[1], *LAT['W'])
+                        BP.render_lane_block(G, whoops, g, prof[i0:i1], u0 + it[1], BP.TW)
+                        whoops_walls(whoops, g, prof, u0, it)
+                    else:
+                        lane_zion(lay, g, prof[i0:i1], u0 + it[1], *LAT['T'])
                 if name == LP.L3_SEC:                           # butte ZION : sa largeur mesurée
                     it = [i for i in LS.COMBOS[name]['items'] if 'butte' in i[0]][0]
                     i0, i1 = int(it[1] / 0.1), int(it[2] / 0.1)
                     BP.render_wide(jumps, g, prof[i0:i1], u0 + it[1], *LP.Z25_BUTTE_W)
                 secs.append(dict(lane=g['tag'], name=name, u0=round(u0, 1), L=round(len(prof) * 0.1, 1), H=round(float(prof.max()), 2),
                                  items=[(i[0], round(i[1], 1), round(i[2], 1)) for i in LS.COMBOS[name]['items']]))
-        elif g.get('berm'):
-            berm_zion(berms, g)
+        elif g.get('berm'):                                  # v16 : virages USLAND (berms JGSX, comme la version USLAND)
+            from engine import render_berm_stamp, turn_mid_angle, berm_ang_scale
+            gb = BP.berm_seg(g)
+            gain = LP.BERM90_GAIN if abs(abs(gb['ang']) - 90) < 1 else LP.BERM180_GAIN
+            gain = LP.BERM_GAIN_TAG.get(g['tag'][:4], gain)
+            tmp = np.zeros((N, N))
+            sl = render_berm_stamp(G, tmp, g['berm'], g['cx'], g['cz'], turn_mid_angle(gb),
+                                   ang_scale=berm_ang_scale(g['berm'], gb['ang']), r_shift=max(0.0, g['r'] - LP.RB))
+            berms[sl] = np.maximum(berms[sl], tmp[sl] * gain)
     BP.REPORT['sections'] = secs
     return jumps, whoops, berms, fmx
 
