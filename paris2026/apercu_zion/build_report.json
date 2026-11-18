@@ -95,29 +95,29 @@
   {
    "lane": "L1 whoops",
    "name": "PAR-L1 whoops, table, bosse",
-   "u0": 17.3,
-   "L": 382.6,
+   "u0": 10.3,
+   "L": 389.6,
    "H": 7.7,
    "items": [
     [
-     "whoops Custom_0 x11 (x1.15)",
+     "whoops x11 (lancement 0.60 m, pas 6.30 m)",
      0.0,
-     224.2
+     231.2
     ],
     [
      "table ZION 7.7 ft",
-     246.2,
-     308.1
+     253.2,
+     315.1
     ],
     [
      "bosse ZION 4.7 ft",
-     314.1,
-     345.4
+     321.1,
+     352.4
     ],
     [
      "bosse ZION 4.5 ft",
-     351.9,
-     382.5
+     358.9,
+     389.5
     ]
    ]
   },
@@ -217,7 +217,7 @@
  ],
  "objets": {
   "objets": {
-   "retirés (v13) : boudins FLY Racing (whoops)": 26,
+   "retirés (v13) : boudins FLY Racing (whoops)": 28,
    "retirés (v13) : ballots ZION (unis)": 268,
    "retirés (v13) : poteaux ronds": 7,
    "retirés (v13) : tuffs de virage ZION (unis)": 74,

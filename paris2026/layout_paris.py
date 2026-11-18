@@ -180,6 +180,21 @@ P25_WHOOPS = json.load(open(os.path.join(HERE, "data", "p25_whoops.json"), encod
 RAIL = dict(top=(15.5, 19.0), inner=1.0, outer=3.5, ramp=6.0)    # v14 : bord des whoops de 25 Paris SX (muret de chaque côté)
 
 
+def whoops_zion(n=11, k=1.15, launch_m=0.60, pitch_m=6.30):
+    """v19e (« baisse la bosse de lancement, mets-la à 0,60 m » ; puis « mets 6,3 [m] alors pour les whoops ») : les whoops de la
+    version Zion (whoops_up(n, k), Saint-Georges) avec la 1re bosse ramenée à launch_m de haut (forme gardée, mise à l'échelle) et
+    du sol plat ajouté dans chaque creux pour un pas crête à crête moyen de pitch_m (20,0 ft -> 6,30 m ; whoops inchangées)."""
+    from scipy.signal import find_peaks
+    p = np.asarray(whoops_up(n, k)[2], float); pk, _ = find_peaks(p, prominence=0.8, distance=60)
+    lows = [pk[i] + int(np.argmin(p[pk[i]:pk[i + 1]])) for i in range(len(pk) - 1)]
+    p[:lows[0]] *= (launch_m / 0.3048) / p[pk[0]]
+    add = max(0, int(round((pitch_m / 0.3048 - np.mean(np.diff(pk)) * 0.1) / 0.1))); parts, a = [], 0
+    for lo in lows:
+        parts += [p[a:lo + 1], np.full(add, p[lo])]; a = lo + 1
+    parts.append(p[a:])
+    return ('raw', f'whoops x{n} (lancement {launch_m:.2f} m, pas {pitch_m:.2f} m)', np.concatenate(parts), 'W')
+
+
 def whoops_paris(n=11, H=3.6, first=0.6, pitch=18.6):
     """v14 (« regarde les whoops de 25 Paris SX, smooth à l'intérieur, bien rondes, et fais pareil ») : la forme MESURÉE d'une whoop de
     25 Paris SX (20 ft, crête ronde, creux remplis à 0,2 ft / 2,8 ft), mise à notre hauteur H (v11 : « un peu plus hautes ») et au pas
@@ -432,7 +447,7 @@ def paris():
     if ZION:   # v16 : nos whoops comme Saint-Georges (lancement normal) ; table + 2 bosses ZION plus grosses, écarts ZION (8 ft)
         # v19 (« plus d'espace entre la dernière whoops et la table, quitte à sacrifier un peu entre la table et la 1re bosse ») : 15 -> 22 ft,
         # table -> bosse 8 -> 6 ft, bosse -> bosse 8 -> 6,5 ft
-        toks = [whoops_up(11, 1.15), ('gap', 22.0), ('scale', TABLE_B, 7.0), ('gap', 6.0), ('scale', SA[1], 4.3), ('gap', 6.5), ('scale', SA[0], 4.1)]
+        toks = [whoops_zion(), ('gap', 22.0), ('scale', TABLE_B, 7.0), ('gap', 6.0), ('scale', SA[1], 4.3), ('gap', 6.5), ('scale', SA[0], 4.1)]
     if RF:     # v18 : « garde nos whoops dans la version RF » : celles de la version Zion, 9 (11 : 39 ft de trop) ; table + 2 bosses RF
         toks = [whoops_up(9, 1.15), ('gap', 15.0), ('scale', TABLE_B, 6.6), ('gap', RF_GAP), ('scale', SA[1], 4.0), ('gap', RF_GAP), ('scale', SA[0], 3.6)]
     u0 = lL1 - 8.0 - tlen(toks); assert u0 >= 0.5, u0
@@ -565,7 +580,7 @@ if ZION:
             if t[0] in ('scale', 'stretch'):
                 out.append(ztable(t[2]) if t[1] == TABLE_B else zsingle(t[2]))
             elif t[0] == 'raw' and t[1].startswith('whoops 25 Paris'):   # v16 : nos whoops (Saint-Georges), pas celles de ZION
-                out.append(whoops_up(11, 1.15))
+                out.append(whoops_zion())
             else:
                 out.append(t)
         return out
