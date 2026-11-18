@@ -49,6 +49,20 @@
    ]
   },
   {
+   "lane": "L3 grande table",
+   "name": "PAR-L3 roller",
+   "u0": 10.0,
+   "L": 27.1,
+   "H": 1.88,
+   "items": [
+    [
+     "roller Saint-Georges",
+     0.0,
+     27.0
+    ]
+   ]
+  },
+  {
    "lane": "L2 singles",
    "name": "PAR-L2 triple, triple (7 bosses, meme ecart)",
    "u0": 5.9,
@@ -261,7 +275,7 @@
   "hmin": -0.5,
   "hmax": 24.74999994800642,
   "statues_relevees": 42,
-  "decals": 83,
+  "decals": 84,
   "decals_terre": 0
  },
  "sol_zion": {
@@ -286,7 +300,7 @@
   "toit_finish": 146.5,
   "grilles": 22
  },
- "boudins_whoops": 20,
+ "boudins_whoops": 18,
  "semis_jgsx": 10,
  "lap_ft": 2773.3,
  "start": {

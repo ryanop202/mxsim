@@ -425,7 +425,13 @@ def paris():
     x_end3 = xC - X_APEX_SHIFT + R3
     toks, u0 = from_render('L3', x3, 'x', -1, {(1, 2): Z25_MILIEU}, lane_len=x3 - x_end3)
     u0 -= L3_ADVANCE
-    p.straight(x3 - x_end3, [LS.sec(L3_SEC, toks, u0)], tag='L3 grande table')
+    secs3 = [LS.sec(L3_SEC, toks, u0)]
+    if ZION:   # v20c (« ajoute un roller en sortie de virage avant le saut de freestyle ») : le roller de Saint-Georges (Custom1_g30_1,
+        #   1,9 ft) à EXIT_U0 de la sortie de T_Bb, ~50 ft de plat avant l'appel
+        rl_ = [('raw', 'roller Saint-Georges', np.asarray(LS.L('tmp', [ROLLER]), float), 'T')]
+        assert EXIT_U0 + tlen(rl_) + 30.0 < u0, u0
+        secs3.append(LS.sec('PAR-L3 roller', rl_, EXIT_U0))
+    p.straight(x3 - x_end3, secs3, tag='L3 grande table')
     p.turn(180, R3, BIG, tag='T_D 180 gauche (berm 2e moitié)'); p.segs[-1]['berm_from'] = 0.5
     # v7 (Ryan : « ça fait 4 d'entrée, ça doit faire 3, 4 et le 4 dur où faut pousser ») : les 7 bosses du visuel = un triple
     # serré (écarts 3 ft, bosses Arlington x1,2) puis un quad dur (écarts 7 ft, bosses x1,35), 20 ft entre les deux ;
@@ -512,6 +518,8 @@ L3_SHIFT, L2_SHIFT = 12.0, 10.0          # v13 (« plus d'espace entre chaque en
 #                                         -> couloir Est 22 ft plus long, 180 L3 -> L2 de rayon 37 ft
 EXIT_U0 = 10.0                           # v13 : 1re bosse à 10 ft de la sortie des virages (plus de marque berm / appel)
 L2_U0_V13 = 10.0
+BERM_END_FADE = {'T_D ': (8.0, 35.0)}     # v20c (« le virage à gauche avant l'enchaînement finit dans la bosse, il y a un trait ; le faire
+#   finir un peu plus tôt, en restant doux, limite moins haut ») : berm à zéro 8° avant la sortie, fondu sur les 35° d'avant
 BERM_GAIN_TAG = {'T_D ': 0.95}            # v13 : appui après le saut du milieu un peu moins haut (était 1,15)
 LD_SHIFT = 5.0                          # v10 : ligne de départ 5 ft plus loin du saut du milieu (place pour les tremplins FMX ;
 #                                         plus loin, le bout des 22 grilles monte sur le pied du berm T_C : grilles plus plates)

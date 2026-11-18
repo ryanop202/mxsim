@@ -165,7 +165,7 @@ def render_mid(out, g, prof, u0, name):
     out[:] = np.maximum(out, lay)
 
 
-WALL_TOP, WALL_RAMP = (17.0, 19.4), 12.0     # murets des whoops (versions Zion et RF) : dessus plat entre |v| 17 et 19,4 ft
+WALL_TOP, WALL_RAMP = (17.0, 19.4), 16.0     # murets des whoops (versions Zion et RF) : dessus plat entre |v| 17 et 19,4 ft
 WALL_SLOPE = 2.5                             # v19 (« légèrement moins larges, pile la largeur d'un boudin ») : dessus 3 -> 2,4 ft, pentes 3 -> 2,5 ft
 
 
@@ -184,10 +184,13 @@ def whoops_walls(out, g, prof, u0, it, top=WALL_TOP, slope=WALL_SLOPE, ramp=WALL
     # v20b (« le petit truc sur les côtés déborde dans les whoops, on peut monter dessus et pas prendre les whoops ; il faut que ce soit
     # vraiment droit », trait rouge au bord des boudins) : plus de pente intérieure de 2,5 ft ; face intérieure droite (0,3 ft) au bord
     # intérieur des boudins (|v| = 17 ft), les whoops gardent leur forme jusque-là
-    INNER = 0.3
+    # v20c (« ça fait des formes étirées sur le mur ; la même texture que le terrain, un truc lisse, normal ») : une face presque verticale
+    # étire la texture du sol ; face de 1,5 ft (66° en moyenne, toujours impossible à rouler) ; (« l'entrée des whoops, le début du talus
+    # sur les côtés est un peu bizarre ») : aux bouts, la face s'élargit avec la rampe (+5 ft) : un bout arrondi au lieu d'un coin
+    lon = ss((u - ua) / ramp) * ss((ub - u) / ramp)
+    INNER = 1.5 + 5.0 * (1.0 - lon)
     lat = np.where(v < a_, 0.5 * (1 - np.cos(np.pi * np.clip((v - (a_ - INNER)) / INNER, 0, 1))),
                    np.where(v <= b_, 1.0, 0.5 * (1 + np.cos(np.pi * np.clip((v - b_) / slope, 0, 1)))))
-    lon = ss((u - ua) / ramp) * ss((ub - u) / ramp)
     wu = np.interp((u - u0) / 0.1, np.arange(len(prof)), prof, left=0, right=0) * (u >= ua) * (u <= ub) * (v <= vc)
     out[sl] = np.maximum(out[sl], np.maximum(Hw * lat * lon, wu) if with_whoops else Hw * lat * lon)
 
