@@ -160,10 +160,16 @@ def zion_ground(OUT, FOLDER):
     zb = [b for b in zt.split("addtile") if b.strip()]
     # v19d (« en sable, texture sable et tout ») : les tuiles sable de ZION (viraplasable, turnsable) avec la texture sable de ZION
     zb = [re.sub(r"texture @\S+/ztile/2\.png", "texture @%s/ztile/sand.ppm" % FOLDER, b) if re.search(r"name (viraplasable|turnsable)", b) else b for b in zb]
-    open(os.path.join(OUT, "tileinfo"), "w", newline=chr(10)).write("addtile".join(zb + pick) + "addtile" + chr(10))
+    # v21d (« le sol derrière le terrain, là où il y a les camions, de la tribune à l'autre côté : des dalles noires un peu de plastique,
+    # noir gris ») : une tuile de plus, « Paddock » (index PADDOCK_TILE), réglages de la tuile Road, texture dalles_noires.png
+    road = next(b for b in pick if re.search(r"name Road", b))
+    pad = re.sub(r"name Road", "name Paddock", road); pad = re.sub(r"texture @\S+", "texture @%s/ztile/dalles_noires.png" % FOLDER, pad, count=1)
+    assert len(zb) + len(pick) == PADDOCK_TILE
+    open(os.path.join(OUT, "tileinfo"), "w", newline=chr(10)).write("addtile".join(zb + pick + [pad]) + "addtile" + chr(10))
     shutil.copytree(os.path.join(ZD, "tile"), os.path.join(OUT, "ztile"), dirs_exist_ok=True)
     # v19d (« essaie de faire la terre un peu plus orange marron ») : la tuile de terre ZION (couleur unie 158 136 85) -> TERRE_RGB
     t2 = os.path.join(OUT, "ztile", "2.png"); Image.new("RGB", Image.open(t2).size, TERRE_RGB).save(t2)
+    dalles_texture(os.path.join(OUT, "ztile", "dalles_noires.png"))
     tm = np.fromfile(os.path.join(OUT, "tilemap"), np.uint8)
     remap = np.array([0, 0, 0, 3, 4, 4, 5, 4, 6, 7] + [6] * 246, np.uint8)
     remap[tm.max() + 1:] = 6
@@ -179,6 +185,23 @@ def zion_ground(OUT, FOLDER):
     lam, _ = lambert_shadow(H, s, list(sun), shadow=False); sh = np.clip(294.2 * lam + 41.3, 0, 255).astype(np.uint8)
     BP.ppm(os.path.join(OUT, "shading.ppm"), sh); BP.ppm(os.path.join(OUT, "shadingx2.ppm"), (sh // 2).astype(np.uint8))
     BP.REPORT['sol_zion'] = dict(tuiles=len(zb) + len(pick), ombrage_plat=int(np.median(sh)))
+
+
+PADDOCK_TILE = 8
+PADDOCK_MARGIN = 35.0                      # ft au-delà de la ligne de course des virages Ouest (dos des berms compris)
+FINISH_DOWN = 5.0                          # v21d (« baisse le truc de finish, il est légèrement trop haut ») : 34 -> 29 ft
+N_SEMIS = 7                                # v21d (« en mettre moins, t'en enlèves 3 ; pas tous dans le même sens »)
+
+
+def dalles_texture(path):
+    """dalles de plastique noir-gris (2 x 2 par carreau de texture), joints un peu plus sombres, petit grain antidérapant."""
+    from scipy.ndimage import gaussian_filter
+    n = 512; rng = np.random.default_rng(8); a = np.full((n, n), 46.0)
+    a += gaussian_filter(rng.normal(0, 1, (n, n)), 1.0, mode='wrap') * 2.2 + gaussian_filter(rng.normal(0, 1, (n, n)), 40, mode='wrap') * 25
+    yy, xx = np.mgrid[0:n, 0:n]; a[((xx % 16) < 3) & ((yy % 16) < 3)] += 5                # plots antidérapants
+    for k in (0, n // 2):
+        a[k:k + 3, :] = 30; a[:, k:k + 3] = 30                                           # joints
+    g = np.clip(np.dstack([a, a + 1, a + 4]), 0, 255).astype(np.uint8); Image.fromarray(g).save(path)
 
 
 def paddock_rect(OUT):
@@ -202,9 +225,10 @@ def zion_extras(OUT, FOLDER):
     tr = cKDTree(np.r_[np.c_[smp['x'], smp['z']], np.c_[rs['x'], rs['z']]])
     tm = np.fromfile(os.path.join(OUT, "tilemap"), np.uint8); TN = int(np.sqrt(tm.size)); tm = tm.reshape(TN, TN)
     TJ, TI = np.meshgrid(np.arange(TN) * 2 * S, np.arange(TN) * 2 * S)
-    box = (TJ >= x0) & (TJ <= x1) & (TI >= z0) & (TI <= z1)
-    d, _ = tr.query(np.c_[TJ[box], TI[box]]); sel = np.zeros_like(box); sel[box] = d > 25.0
-    tm[sel & (tm == 0)] = 6; tm.astype(np.uint8).tofile(os.path.join(OUT, "tilemap"))
+    # v21d : toute la bande derrière les virages Ouest, d'une tribune à l'autre, en dalles noires (tuile Paddock) ; plus de dalles grises
+    XPAD = float(smp['x'].max()) + PADDOCK_MARGIN; fl_ = BP.mx_poly(BP.arena_dims().floor_outline(1.0)); from geo_tools import inside as _in
+    box = TJ >= XPAD; ii_ = np.nonzero(box & (tm == 0)); inn = _in(np.c_[TJ[ii_], TI[ii_]], fl_)
+    tm[ii_[0][inn], ii_[1][inn]] = PADDOCK_TILE; tm.astype(np.uint8).tofile(os.path.join(OUT, "tilemap"))
     # décals : l'overlay ZION en dalles de 160 ft sur tout le sol de terre (hors paddock)
     # v19 (« sur chaque bosse, enlève les gradients ; il y a des lignes qu'il faut que tu fondes entre chaque bosse ») : plus de décals
     # d'obstacle (single / Table / triplemiddle) ni de bandes Straight (leurs bords faisaient des lignes) ; v19 (« enlève les grilles de
@@ -260,7 +284,7 @@ def zion_extras(OUT, FOLDER):
     for xx in np.arange(fl[:, 0].min(), fl[:, 0].max() + 1, 11.0):
         for zz in np.arange(fl[:, 1].min(), fl[:, 1].max() + 1, 11.0):
             x_, z_ = xx + rng.uniform(-2.5, 2.5), zz + rng.uniform(-2.5, 2.5)
-            if inside(np.array([[x_, z_]]), fl)[0] and not (x0 <= x_ <= x1 and z0 <= z_ <= z1) and sand_t.query([x_, z_])[0] > 34.0                     and ride_t.query([x_, z_])[0] > 12.0:
+            if inside(np.array([[x_, z_]]), fl)[0] and x_ < XPAD - 4.0 and sand_t.query([x_, z_])[0] > 34.0                     and ride_t.query([x_, z_])[0] > 12.0:
                 put_(x_, z_)
     ov = ov + sand
     open(os.path.join(OUT, "decals"), "w", newline=chr(10)).write(chr(10).join(ov + dl) + chr(10))
@@ -284,6 +308,8 @@ def zion_extras(OUT, FOLDER):
         v_ = Lj[k_].split()
         if abs(float(v_[1]) - 118.0) < 0.01:
             v_[1] = "%.6f" % rfin; Lj[k_] = " ".join(v_)
+        elif float(v_[1]) < 100.0:                                       # v21d : panneau (et bas des élingues) FINISH_DOWN ft plus bas
+            v_[1] = "%.6f" % (float(v_[1]) - FINISH_DOWN); Lj[k_] = " ".join(v_)
     open(fj, "w", newline=chr(10)).write(chr(10).join(Lj))
     sline = "[%.6f 0.000000 %.6f] %.6f @%s/statue/paris/start_banner.jm @%s/statue/paris/start_banner.png null" % (q[0], q[1], float(np.arctan2(f0[0], f0[1])), FOLDER, FOLDER)
     for f in ["statues"] + ["variants/" + v for v in os.listdir(os.path.join(OUT, "variants")) if v.startswith("statues")]:
@@ -294,12 +320,13 @@ def zion_extras(OUT, FOLDER):
     jm, png = GM.make(sd); tg = os.path.join(OUT, "timing_gates"); t_ = open(tg).read()
     t_ = t_.replace("statue/paris/start_gate_frame.jm", "statue/paris/" + jm).replace("statue/paris/start_gate_frame.png", "statue/paris/" + png)
     open(tg, "w", newline=chr(10)).write(t_)
-    BP.REPORT['zion_v19'] = dict(paddock=[round(v) for v in (x0, x1, z0, z1)], dalles_tuiles=int(sel.sum()), overlay=len(ov), decals_gardes=len(dl),
+    BP.REPORT['zion_v19'] = dict(paddock=[round(v) for v in (x0, x1, z0, z1)], dalles_tuiles=int(inn.sum()), x_paddock=round(XPAD, 1), overlay=len(ov), decals_gardes=len(dl),
                                  start=(round(q[0], 1), round(q[1], 1), round(rf_, 1)), toit_finish=round(rfin, 1), grilles=t_.count(jm))
 
 
 START_Y = 15.0
-BALE_V, BALE_STEP, BALE_GAP = 15.5, 9.6, 25.0   # v21c : ballots comme RF Anaheim 1 (|v| 15-16 ft, pas 9,6 ft)
+BALE_V, BALE_STEP, BALE_GAP = 15.5, 9.6, 25.0
+BALE_STEP2, BALE_SLIDE, ARCH_XC = 2 * 9.6, 4.0, 26.0     # v21d : 1 sur 2, glissement max, pieds de l'arche   # v21c : ballots comme RF Anaheim 1 (|v| 15-16 ft, pas 9,6 ft)
 
 
 def deco_v21(OUT, FOLDER, combos):
@@ -315,7 +342,7 @@ def deco_v21(OUT, FOLDER, combos):
     DV.tarp_texture(sd); ntex, rnet, rblk = DV.net_texture(sd)        # rnet = (v bas, v haut) du filet, rblk = uv du noir
     bj, bp, bs = DV.bale_u(sd, 'noir')
     for k, g in enumerate(g_ for g_ in BP.PATH.segs if g_['kind'] == 'T' and g_.get('berm')):
-        f0 = g.get('berm_from', 0.0); f1 = min(1.0, f0 + 90.0 / abs(g['ang']))
+        f0 = g.get('berm_from', 0.0); f1 = min(1.0, f0 + 90.0 / abs(g['ang'])); f0 = f0 + DV.WV['start'] * (f1 - f0)   # v21d : commence plus tard
         w = DV.turn_wall(sd, k, g, Hf, f0, f1, ntex, rnet, rblk); rep_['murs'].append((g['tag'][:5], w['r_wall'], w['arc_ft'], w['posts']))
         gy, gx = np.gradient(Hm[int(g['cz'] / s_) - 2:int(g['cz'] / s_) + 3, int(g['cx'] / s_) - 2:int(g['cx'] / s_) + 3], s_)
         assert max(abs(gx).max(), abs(gy).max()) < 0.02, ("origine du mur pas à plat", g['tag'])
@@ -345,18 +372,30 @@ def deco_v21(OUT, FOLDER, combos):
                 if len(bl) < 2:
                     continue
                 ua, ub = max(bl[0][0], 4.0), min(bl[-1][1], g['L'] - 4.0)
-                for u in np.arange(ua + (ub - ua - BALE_STEP * int((ub - ua) / BALE_STEP)) / 2, ub + 1e-6, BALE_STEP):
-                    for side_ in (-1, 1):
-                        p_ = np.array([g['x0'] + u * c, g['z0'] + u * s2]) + nrm * side_ * BALE_V
-                        lines.append(line(p_[0], p_[1], yaw, bj, bp, bs)); nb_ += 1
+                # v21d (« mets-en 1 sur 2 ; évite d'en mettre sur les angles en haut des bosses, décale légèrement ») : un pas sur deux
+                # (19,2 ft) ; chaque ballot glisse de +-BALE_SLIDE ft vers l'endroit le plus plat de sa rangée (pente + courbure)
+                for side_ in (-1, 1):
+                    uu = np.arange(ua, ub + 0.01, 0.25); P_ = np.c_[g['x0'] + uu * c, g['z0'] + uu * s2] + nrm * side_ * BALE_V
+                    hh = Hf(P_[:, 0], P_[:, 1]); sl_ = np.abs(np.gradient(hh, 0.25)); cv_ = np.abs(np.gradient(np.gradient(hh, 0.25), 0.25))
+                    from scipy.ndimage import maximum_filter1d
+                    bad = maximum_filter1d(0.25 * sl_ + 4.0 * cv_, int(1.6 / 0.25))        # surtout les arêtes (courbure) ; le pied entier compte
+                    t_ = ua + (ub - ua - BALE_STEP2 * int((ub - ua) / BALE_STEP2)) / 2
+                    while t_ <= ub + 1e-6:
+                        w_ = np.nonzero(np.abs(uu - t_) <= BALE_SLIDE)[0]; k_ = w_[int(np.argmin(bad[w_]))]
+                        if bad[k_] < 0.5:
+                            lines.append(line(P_[k_, 0], P_[k_, 1], yaw, bj, bp, bs)); nb_ += 1
+                        t_ += BALE_STEP2
     rep_['ballots'] = nb_
-    # arche 50 Factory : couloir Est (LR), milieu du plat entre le saut de sortie et la table à double étage
-    aj, ap, as_ = DV.arche_50f(sd)
+    # arche 50 Factory : couloir Est (LR) ; v21d (« tu l'as mise entre les deux bosses, mets-la à l'appel, sur la première bosse ») :
+    # origine sur la crête du saut de sortie (le modèle descend jusqu'au sol), pieds à +-ARCH_XC ft, hors des flancs de la bosse
     gL = next(g for g in BP.PATH.segs if g['kind'] == 'S' and g['tag'].startswith('LR'))
-    prof, u0, name = gL['sections'][0]; it = combos[name]['items']; ua = u0 + (it[0][2] + it[1][1]) / 2
-    c, s2 = np.cos(gL['t']), np.sin(gL['t']); pa = (gL['x0'] + ua * c, gL['z0'] + ua * s2)
-    assert float(np.max(Hf(pa[0] + np.array([-s2, s2]) * 21.5, pa[1] + np.array([c, -c]) * 21.5))) < 0.05, "pieds de l'arche pas à plat"
-    lines.append(line(pa[0], pa[1], float(np.arctan2(c, s2)), aj, ap, as_)); rep_['arche'] = (round(pa[0], 1), round(pa[1], 1))
+    prof, u0, name = gL['sections'][0]; it = combos[name]['items'][0]; i0_, i1_ = int(it[1] / 0.1), int(it[2] / 0.1)
+    ua = u0 + it[1] + float(np.argmax(prof[i0_:i1_])) * 0.1
+    c, s2 = np.cos(gL['t']), np.sin(gL['t']); pa = (gL['x0'] + ua * c, gL['z0'] + ua * s2); ha = float(Hf(*pa)[0])
+    feet = Hf(pa[0] + np.array([-s2, s2]) * ARCH_XC, pa[1] + np.array([c, -c]) * ARCH_XC)
+    assert float(np.max(feet)) < 0.05, ("pieds de l'arche pas à plat", feet)
+    aj, ap, as_ = DV.arche_50f(sd, drop=ha, xc=ARCH_XC)
+    lines.append(line(pa[0], pa[1], float(np.arctan2(c, s2)), aj, ap, as_)); rep_['arche'] = (round(pa[0], 1), round(pa[1], 1), round(ha, 2))
     for f in ["statues"] + ["variants/" + v for v in os.listdir(os.path.join(OUT, "variants")) if v.startswith("statues")]:
         p = os.path.join(OUT, f); s0 = open(p).read().rstrip(chr(10)) + chr(10)
         open(p, "w", newline=chr(10)).write(s0 + chr(10).join(lines) + chr(10))
@@ -396,6 +435,28 @@ def semis_jgsx(OUT, FOLDER):
             m = re.search(r"/statue/paris/semi\.jm @\S+/statue/paris/semi_(\w+)\.png", l)
             if m:
                 L[k] = l.replace("/statue/paris/semi.jm", "/statue/paris/" + jm).replace("/semi_%s.png" % m.group(1), "/" + tex[m.group(1)]); n += f == "statues"
+        open(p, "w", newline=chr(10)).write(chr(10).join(L) + chr(10))
+    # v21d (« pas tous dans le même sens, en mettre un peu dans les deux sens ; en mettre moins, t'en enlèves 3 ») : N_SEMIS camions (on
+    # enlève d'abord les équipes en double), espacés régulièrement sur la même longueur, un sur deux tourné de 180° (même emprise)
+    V_ = [l.split() for l in open(os.path.join(sd, jm)).read().splitlines()[1:] if len(l.split()) == 8]
+    zmn, zmx = min(float(v[2]) for v in V_), max(float(v[2]) for v in V_)
+    for f in ["statues"] + ["variants/" + v for v in os.listdir(os.path.join(OUT, "variants")) if v.startswith("statues")]:
+        p = os.path.join(OUT, f); L = open(p).read().splitlines(); ks = [k for k, l in enumerate(L) if "/statue/paris/%s " % jm in l]
+        if not ks:
+            continue
+        rows = [(k, re.match(r"\[(\S+) (\S+) (\S+)\] (\S+) (.*)", L[k]).groups()) for k in ks]
+        first, dup = [], []
+        for k, g_ in rows:
+            team = re.search(r"semi_jgsx_(\w+)\.png", g_[4]).group(1)
+            (dup if any(team == t for t, _ in first) else first).append((team, (k, g_)))
+        keep = sorted([kg for _, kg in first + dup][:N_SEMIS], key=lambda kg: float(kg[1][2]))
+        zs_ = [float(g_[2]) for _, g_ in rows]; zz = np.linspace(min(zs_), max(zs_), len(keep)); new = []
+        for i, ((k, g_), z_) in enumerate(zip(keep, zz)):
+            x_, yaw = float(g_[0]), float(g_[3])
+            if i % 2:
+                x_ = x_ + (zmn + zmx) * np.sin(yaw); yaw = yaw + np.pi
+            new.append("[%.6f %s %.6f] %.6f %s" % (x_, g_[1], z_, yaw, g_[4]))
+        L = [l for k, l in enumerate(L) if k not in ks] + new
         open(p, "w", newline=chr(10)).write(chr(10).join(L) + chr(10))
     for f in ["semi.jm"] + ["semi_%s.png" % t for t in tex]:
         if os.path.exists(os.path.join(sd, f)):

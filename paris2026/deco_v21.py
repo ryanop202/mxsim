@@ -45,7 +45,8 @@ def _face(m, P, UV, N):
 
 
 # ================================================================ (2) ballot creux en U
-BU = dict(L=4.2, a=1.15, hs=0.7, t=0.10, tb=0.22, lip=0.15)    # v21b (« la bâche qui fait l'arc est plus fine ; un peu plus longues ») : 0,28 -> 0,10 ft, 3,6 -> 4,2 ft
+BU = dict(L=3.0, a=0.72, hs=0.36, t=0.08, tb=0.14, lip=0.10)   # v21d (« bien trop gros, trop hauts ; même forme, juste plus petits »)
+BU_V21B = dict(L=4.2, a=1.15, hs=0.7, t=0.10, tb=0.22, lip=0.15)    # v21b (« la bâche qui fait l'arc est plus fine ; un peu plus longues ») : 0,28 -> 0,10 ft, 3,6 -> 4,2 ft
 SPONSORS = dict(noir=(BLACK, None, None), honda=((204, 8, 18), 'honda', None), yamaha=((22, 50, 140), 'yamaha', None),
                 seong=((0, 160, 172), 'seong', (10, 10, 10)), cinquante=((249, 229, 42), '50factory', None), monster=((16, 16, 18), 'monster', None))
 
@@ -71,9 +72,9 @@ def bale_u(out, key='noir'):
     band = int(0.025 * W); d.rectangle([0, 0, band, rows], fill=BLACK); d.rectangle([W - band, 0, W, rows], fill=BLACK)   # bord noir
     if lg:
         lo = K.logo(lg) if ink is None else K.tint(K.logo(lg), ink)
-        sc = int(1.05 * kpx); hb = int(0.42 * kpx)
+        fl_ = hs + np.pi * a / 2; sc = int(0.55 * fl_ * kpx); hb = int(0.26 * fl_ * kpx)          # logo au milieu du flanc
         fit(im, lo.rotate(180, expand=True), (band + 40, sc - hb, W - band - 40, sc + hb), 0.04)      # flanc -z : vu de dehors, à l'endroit
-        sc2 = int((stot - 1.05) * kpx); fit(im, lo, (band + 40, sc2 - hb, W - band - 40, sc2 + hb), 0.04)  # flanc +z
+        sc2 = int((stot - 0.55 * fl_) * kpx); fit(im, lo, (band + 40, sc2 - hb, W - band - 40, sc2 + hb), 0.04)  # flanc +z
     inn = tuple(int(c * 0.42) for c in body) if key != 'noir' else (12, 12, 13)
     d.rectangle([0, 1440, W, 1700], fill=inn); d.rectangle([0, 1720, W, 1800], fill=BLACK)
     im = K.grain(im, 1.5); _save(im, os.path.join(out, 'bale_u_%s.png' % key))
@@ -92,7 +93,8 @@ def bale_u(out, key='noir'):
                       (sx * L / 2, pi_[i][1], pi_[i][0])], [blk[:2]] * 4, [(sx, 0, 0)] * 4)
     m.box((-L / 2 - lip, 0, -a - lip), (L / 2 + lip, tb, a + lip), blk, 'xXzZY')    # socle noir
     m.write(os.path.join(out, 'bale_u.jm'), MAT_BACHE)
-    K.shp(os.path.join(out, 'bale_u.shp'), [(-1.1, 1.0, 0), (0, 1.0, 0), (1.1, 1.0, 0)], 1.1)
+    # v21d (« pas de physique, ou très peu : presque que ça t'arrête pas, juste une petite réaction ») : 2 petites boules molles
+    K.shp(os.path.join(out, 'bale_u.shp'), [(-0.7, 0.55, 0), (0.7, 0.55, 0)], 0.5, par=(0.2, 12, 0.6))
     return 'bale_u.jm', 'bale_u_%s.png' % key, 'bale_u.shp'
 
 
@@ -100,9 +102,9 @@ def bale_u(out, key='noir'):
 AR = dict(xc=20.0, B=7.0, Ht=6.0, T=2.5, cw=1.6, ct=0.6, Hb=12.5, bh=3.5)
 
 
-def arche_50f(out):
+def arche_50f(out, drop=0.0, xc=None):
     """repère : +z = sens de la piste ; pieds à x = +-xc ; triangles dans le plan (z, y), vus depuis le côté de la piste."""
-    xc, B, Ht, T, cw, ct, Hb, bh = (AR[k] for k in ('xc', 'B', 'Ht', 'T', 'cw', 'ct', 'Hb', 'bh'))
+    xc_, B, Ht, T, cw, ct, Hb, bh = (AR[k] for k in ('xc', 'B', 'Ht', 'T', 'cw', 'ct', 'Hb', 'bh')); xc = xc or xc_
     Y = (249, 222, 30); W, H = 2048, 1024; im = Image.new('RGB', (W, H), Y); d = ImageDraw.Draw(im); L50 = logo('50factory'); ol = 14
     tri = (0, 0, 700, 600)                                                              # triangle : 100 px / ft ; contour noir
     d.rectangle(tri, fill=BLACK); poly = [(0, 600), (700, 600), (350, 0)]
@@ -134,15 +136,21 @@ def arche_50f(out):
         xm = sx * xc                                                                    # colonne de carton, logo vers le ciel des 2 côtés
         m.box((xm - ct / 2, Ht - 0.8, -cw / 2), (xm + ct / 2, Hb, cw / 2), ry, 'xXzZ', {'x': rc, 'X': rc})
     m.box((-bw / 2, Hb, -0.6), (bw / 2, Hb + bh, 0.6), rk, 'xXzZYy', {'z': rb, 'Z': rb})
+    if drop:                                                                            # v21d : origine sur la crête de la bosse
+        m.V = [[v[0], v[1] - drop] + list(v[2:]) for v in m.V]
     m.write(os.path.join(out, 'arche_50f.jm'), MAT_MAT)
-    sph = [(sx * xc, 1.3, dz) for sx in (-1, 1) for dz in (-2.2, 0.0, 2.2)] + [(sx * xc, 3.4, 0) for sx in (-1, 1)]
+    sph = [(sx * xc, 1.3 - drop, dz) for sx in (-1, 1) for dz in (-2.2, 0.0, 2.2)] + [(sx * xc, 3.4 - drop, 0) for sx in (-1, 1)]
     K.shp(os.path.join(out, 'arche_50f.shp'), sph, 1.3)
     return 'arche_50f.jm', 'arche_50f.png', 'arche_50f.shp'
 
 
 # ================================================================ (1) boudins triangulaires bâchés + filets rouges
-WV = dict(rb=1.3, sink=0.5, vis=3.0, taper=3.0, back=2.0, post=8.0, net_h=4.6, net_low=1.6, net_off=0.55, post_off=0.28,
-          post_up=0.3, guy=4.0, tile=4.0)
+WV = dict(rb=0.95, sink=0.5, vis=1.6, taper=3.0, back=1.4, post=8.0, net_h=7.2, net_low=1.2, net_off=0.4, post_off=2.6,
+          post_up=0.5, tile=4.0, start=0.45)
+# v21d (« trop haut, trop gros, ça prend trop de place dans les virages ; ils commencent trop tôt, presque à la moitié ; les filets plus
+# hauts ; une petite ficelle accrochée au filet qui se tend vers les poteaux ») : 3 cylindres de 0,95 ft (3,8 x 3,5 ft, était 5,2 x 4,9),
+# 1,6 ft au-dessus de la crête (était 3), début à 45 % du quart de tour ; filet de 7,2 ft (était 4,6) ; poteaux 2,6 ft derrière, 2 ficelles
+# du filet (haut et milieu) à chaque poteau ; plus de ficelle au sol
 NET_RED = ((120, 8, 12, 255), (196, 22, 28, 255), (150, 12, 18, 255), (236, 74, 70, 255), (226, 62, 60, 255))
 
 
@@ -243,11 +251,14 @@ def turn_wall(out, k, g, Hf, f0, f1, net_tex, vnet, uv_blk):
     for s_ in sv[::2]:
         f = np.interp(s_, sv, fv); x_, z_ = P2(f, rn); sph += [(x_, np.interp(s_, sv, bot) + h_, z_) for h_ in (2.0, 3.4, 4.8)]
     npst = max(2, int(round((s1_ - s0_) / WV['post'])) + 1)
-    for s_ in np.linspace(s0_, s1_, npst):                                              # poteaux noirs derrière le filet + ficelle
-        f = np.interp(s_, sv, fv); x_, z_ = P2(f, rp); yb_ = np.interp(s_, sarc, base) - h0; yt_ = np.interp(s_, sv, upp) + WV['post_up']
-        n2.tube((x_, yb_, z_), (x_, yt_, z_), 0.11, (uv_blk[0], uv_blk[1], uv_blk[0] + 0.001, uv_blk[1] + 0.001), 8)
-        gx, gz = P2(f, rp + WV['guy']); gy = H1(gx + cx, gz + cz) - h0 - 0.2
-        n2.tube((x_, yt_ - 0.2, z_), (gx, gy, gz), 0.025, (uv_blk[0], uv_blk[1], uv_blk[0] + 0.001, uv_blk[1] + 0.001), 4, caps=False)
+    blk_ = (uv_blk[0], uv_blk[1], uv_blk[0] + 0.001, uv_blk[1] + 0.001)
+    for s_ in np.linspace(s0_, s1_, npst):                                              # poteaux noirs derrière, ficelles filet -> poteau
+        f = np.interp(s_, sv, fv); x_, z_ = P2(f, rp); yb_ = H1(x_ + cx, z_ + cz) - h0 - 0.4
+        yn_t, yn_b = np.interp(s_, sv, upp), np.interp(s_, sv, bot); yt_ = yn_t + WV['post_up']
+        n2.tube((x_, yb_, z_), (x_, yt_, z_), 0.11, blk_, 8)
+        nx_, nz_ = P2(f, rn)
+        for yy in (yn_t - 0.15, (yn_t + yn_b) / 2 + 1.0):
+            n2.tube((nx_, yy, nz_), (x_, yy + 0.25, z_), 0.022, blk_, 4, caps=False)
     n2.write(os.path.join(out, 'filet_virage_%d.jm' % k), MAT_MAT)
     K.shp(os.path.join(out, 'filet_virage_%d.shp' % k), sph, 0.9, par=(1.0, 85, 4))
     return dict(origin=(cx, cz), r_wall=round(rc, 1), arc_ft=round(L_arc, 1), posts=npst, h0=round(h0, 2),

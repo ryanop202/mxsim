@@ -165,7 +165,7 @@ def render_mid(out, g, prof, u0, name):
     out[:] = np.maximum(out, lay)
 
 
-WALL_TOP, WALL_RAMP = (17.0, 19.4), 16.0     # murets des whoops (versions Zion et RF) : dessus plat entre |v| 17 et 19,4 ft
+WALL_TOP, WALL_RAMP = (17.0, 19.4), 3.0      # v21d : 16 -> 3 ft (boudins dès l'entrée des whoops)     # murets des whoops (versions Zion et RF) : dessus plat entre |v| 17 et 19,4 ft
 WALL_SLOPE = 2.5                             # v19 (« légèrement moins larges, pile la largeur d'un boudin ») : dessus 3 -> 2,4 ft, pentes 3 -> 2,5 ft
 
 
@@ -213,7 +213,8 @@ def whoops_boudins(OUT, FOLDER, path, combos):
             for it in combos[name]['items']:
                 if not it[0].startswith('whoops'):
                     continue
-                ua, ub = u0 + it[1] + WALL_RAMP, u0 + it[2] - WALL_RAMP; n_b = int((ub - ua) // 18.0); us = (ua + ub) / 2 - 9.0 * n_b
+                # v21d (« les boudins SX Tour des whoops : fais-les commencer dès l'entrée des whoops, là ils sont un peu en décalé »)
+                ua, ub = u0 + it[1], u0 + it[2]; n_b = int((ub - ua) // 18.0); us = ua
                 for side in (-1, 1):
                     for k in range(n_b):
                         u = us + 9.0 + 18.0 * k; p = np.array([g['x0'] + u * c, g['z0'] + u * s_]) + nrm * side * vc

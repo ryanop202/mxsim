@@ -148,7 +148,14 @@ PRE_FINISH = [('scale', SA[0], 3.4), ('gap', 16.0), ('stretch', SA[1], 4.0, 1.25
 PRE_FINISH_Z = [('stretch', SA[0], 4.8, 1.15), ('gap', 22.7), ('stretch', SA[1], 5.8, 1.6)]   # v20d (« l'appel du double plus plat, même
 #   hauteur, moins raide, que ça envoie moins loin ; la réception plus haute, un peu plus de terre, un peu plus loin : rallonge le saut de
 #   2 mètres ») : appel 0,9 -> 1,15 de long (30 -> 24°), réception 5,2 -> 5,8 ft, crête à crête +2 m (14,1 -> 16,1 m) ; avant :
-PRE_FINISH_Z_V19D = [('stretch', SA[0], 4.8, 0.9), ('gap', 20.0), ('stretch', SA[1], 5.2, 1.6)]   # v19 (Zion) : vrai petit double, appel pointu ;
+PRE_FINISH_Z_V19D = [('stretch', SA[0], 4.8, 0.9), ('gap', 20.0), ('stretch', SA[1], 5.2, 1.6)]
+# v21d (« l'appel est bien trop raide, trop haut ; plus bas et moins raide ; là ça saute facilement derrière l'appel du triple ; la récep
+# est bien ») : appel 4,8 -> 4,0 ft, montée 40 % plus longue (30 -> ~20°) ; la réception ne bouge pas (l'écart reprend l'allongement)
+_APP_OLD = ('stretch', SA[0], 4.8, 1.15)
+_q = np.asarray(LS.L('tmp', [_APP_OLD]), float); _k = int(np.argmax(_q))
+_q = np.r_[np.interp(np.linspace(0, _k, int(round(_k * 1.4)) + 1), np.arange(_k + 1), _q[:_k + 1]), _q[_k + 1:]] * (4.0 / _q.max())
+_APP_NEW = ('raw', 'appel du petit double adouci 4,0 ft', _q, 'T')
+PRE_FINISH_Z = [_APP_NEW, ('gap', round(22.7 - (len(LS.L('tmp', [_APP_NEW])) - len(LS.L('tmp', [_APP_OLD]))) * 0.1, 1)), ('stretch', SA[1], 5.8, 1.6)]   # v19 (Zion) : vrai petit double, appel pointu ;
 #   v19d (« la bosse entourée, mets-la 4 mètres plus loin ») : réception 13 ft plus loin (7 -> 20 ft)
 TRIPLE_EARLY = 20.0
 TABLE_PLUS = 3.3                  # v20d : table de L6 +50 cm de chaque côté
