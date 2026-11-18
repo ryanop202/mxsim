@@ -126,7 +126,7 @@
    "name": "PAR-LR saut de sortie, bosse, table, 3 bosses",
    "u0": 10.0,
    "L": 280.3,
-   "H": 7.59,
+   "H": 6.36,
    "items": [
     [
      "bosse ZION 4.4 ft",
@@ -134,19 +134,19 @@
      30.2
     ],
     [
-     "table double etage 7.6 ft",
-     81.1,
-     158.2
+     "table double etage RF 6.4 ft",
+     70.2,
+     165.7
     ],
     [
      "bosse ZION 4.6 ft",
-     168.2,
-     199.1
+     173.2,
+     204.1
     ],
     [
      "bosse ZION 4.6 ft",
-     209.1,
-     240.0
+     211.6,
+     242.5
     ],
     [
      "bosse ZION 4.4 ft",
@@ -218,7 +218,7 @@
  "objets": {
   "objets": {
    "retirés (v13) : boudins FLY Racing (whoops)": 26,
-   "retirés (v13) : ballots ZION (unis)": 244,
+   "retirés (v13) : ballots ZION (unis)": 240,
    "retirés (v13) : poteaux ronds": 7,
    "retirés (v13) : tuffs de virage ZION (unis)": 68,
    "retirés (v13) : filets": 41,
@@ -267,6 +267,20 @@
  "sol_zion": {
   "tuiles": 8,
   "ombrage_plat": 228
+ },
+ "zion_v17": {
+  "paddock": [
+   823,
+   898,
+   397,
+   777
+  ],
+  "dalles_tuiles": 84495,
+  "overlay": 14,
+  "arche": [
+   586.9,
+   474.5
+  ]
  },
  "lap_ft": 2850.4,
  "start": {

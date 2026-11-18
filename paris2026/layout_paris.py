@@ -214,6 +214,15 @@ def table_double(H=7.6, up1=10.0, tier=13.0, up2=9.0, top=24.0, rise=0.25, down=
     return ('raw', 'table double etage %.1f ft' % H, p, 'T')
 
 
+def table_double_rf(k=1.10):
+    """v17 (« je sais qu'il y a des terrains RF qui ont des doubles tables, reprends celle de la RF ») : table à double étage MESURÉE
+    sur RF Anaheim 1 2026 (paris2026/data/rf_table_double.*) : étage à 2,8 ft, petit creux, dessus à 5,8 ft, 103 ft ; hauteur x k
+    comme les bosses ZION de la version Zion."""
+    p = np.load(os.path.join(HERE, "data", "rf_table_double.npy")).astype(float)
+    i = max(0, int(np.nonzero(p > 0.3)[0][0]) - 10); p = p[i:] * k; p[0] = p[-1] = 0.0
+    return ('raw', 'table double etage RF %.1f ft' % p.max(), p, 'T')
+
+
 def resample(p, k_len=1.0, H=None):
     """profil 0,1 ft rééchantillonné (longueur x k_len), hauteur ramenée à H."""
     p = np.asarray(p, float); n = max(2, int(round(len(p) * k_len)))
@@ -415,8 +424,8 @@ def paris():
     lLR = (zL1 - RB) - (zL6 + RB)
     GR_ = 10.0 if ZION else 7.5                            # v15 : écart ZION (~10 ft) dans la version Zion
     rh = [('scale', SA[0], 3.0), ('gap', GR_), TABLE, ('gap', GR_), ('scale', SA[1], 4.2), ('gap', GR_), ('scale', SA[2], 4.2), ('gap', GR_), ('scale', SA[1], 4.0)]
-    if ZION:   # v16 (dessin de l'utilisateur) : la bosse + la table remplacées par une table à double étage
-        rh = [table_double()] + rh[3:]
+    if ZION:   # v16 (dessin de l'utilisateur) : la bosse + la table remplacées par une table à double étage ; v17 : celle de la RF
+        rh = [table_double_rf()] + [t if t[0] != 'gap' else ('gap', 7.5) for t in rh[3:]]
     kick = [('scale', SA[1], 4.0)]
     u0 = EXIT_U0                                           # v13 : plus collé au berm (marque entre l'appui et la bosse)
     toks = kick + [('gap', round(lLR - u0 - 8.0 - tlen(kick) - tlen(rh), 1))] + rh
@@ -500,9 +509,9 @@ if ZION:
         h = h * ZH; p = ZF['single'] * (h / ZF['single'].max()); k = float(np.clip(np.sqrt(h / ZF['single'].max()), 0.85, 1.12))
         return ('raw', 'bosse ZION %.1f ft' % h, np.interp(np.linspace(0, len(p) - 1, int(len(p) * k)), np.arange(len(p)), p), 'T')
 
-    def ztable(h):
+    def ztable(h):   # v17 (« les tables sont à l'envers ») : profil ZION retourné (sens de course inverse de ma mesure)
         h = h * ZH
-        return ('raw', 'table ZION %.1f ft' % h, ZF['table'] * (h / ZF['table'].max()), 'T')
+        return ('raw', 'table ZION %.1f ft' % h, (ZF['table'] * (h / ZF['table'].max()))[::-1].copy(), 'T')
 
     def zwhoops():
         w = ZF['whoop'] / ZF['whoop'].max(); flat = np.zeros(int(round((22.6 - len(w) * 0.1) / 0.1)))
