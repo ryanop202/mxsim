@@ -45,7 +45,7 @@ def _face(m, P, UV, N):
 
 
 # ================================================================ (2) ballot creux en U
-BU = dict(L=3.6, a=1.15, hs=0.7, t=0.28, tb=0.22, lip=0.15)
+BU = dict(L=4.2, a=1.15, hs=0.7, t=0.10, tb=0.22, lip=0.15)    # v21b (« la bâche qui fait l'arc est plus fine ; un peu plus longues ») : 0,28 -> 0,10 ft, 3,6 -> 4,2 ft
 SPONSORS = dict(noir=(BLACK, None, None), honda=((204, 8, 18), 'honda', None), yamaha=((22, 50, 140), 'yamaha', None),
                 seong=((0, 160, 172), 'seong', (10, 10, 10)), cinquante=((249, 229, 42), '50factory', None), monster=((16, 16, 18), 'monster', None))
 
@@ -68,7 +68,7 @@ def bale_u(out, key='noir'):
     a_ = np.asarray(im, float); y_ = np.arange(H)[:, None]                           # ombre cuite : pieds plus sombres que le dessus
     sh = 0.78 + 0.22 * np.sin(np.pi * np.clip(y_ / rows, 0, 1)); a_[:rows] *= sh[:rows, :, None]; im = Image.fromarray(np.clip(a_, 0, 255).astype(np.uint8))
     d = ImageDraw.Draw(im)
-    band = int(0.07 * W); d.rectangle([0, 0, band, rows], fill=BLACK); d.rectangle([W - band, 0, W, rows], fill=BLACK)   # bord noir
+    band = int(0.025 * W); d.rectangle([0, 0, band, rows], fill=BLACK); d.rectangle([W - band, 0, W, rows], fill=BLACK)   # bord noir
     if lg:
         lo = K.logo(lg) if ink is None else K.tint(K.logo(lg), ink)
         sc = int(1.05 * kpx); hb = int(0.42 * kpx)
@@ -109,6 +109,7 @@ def arche_50f(out):
     d.polygon(poly, fill=BLACK); d.polygon([(ol * 1.9, 600 - ol), (700 - ol * 1.9, 600 - ol), (350, ol * 2.2)], fill=Y)
     fit(im, L50, (350 - 205, 395, 350 + 205, 565), 0.02)                               # logo centré dans le bas du triangle
     slope = (720, 0, 970, 700); d.rectangle(slope, fill=Y); d.rectangle([720, 0, 720 + ol, 700], fill=BLACK); d.rectangle([970 - ol, 0, 970, 700], fill=BLACK)
+    fit(im, L50.rotate(90, expand=True), (720 + ol + 12, 60, 970 - ol - 12, 640), 0.02)    # v21b : le logo monte le long de la pente
     ch = Hb - (Ht - 0.8); col = (1000, 0, 1160, int(ch * 100))                         # colonne : 100 px / ft
     d.rectangle(col, fill=BLACK); d.rectangle([col[0] + 8, col[1] + 8, col[2] - 8, col[3] - 8], fill=Y)
     vis = int((Hb - (Ht + 0.4)) * 100)                                                  # partie visible au-dessus de la pointe
@@ -128,7 +129,7 @@ def arche_50f(out):
             UVt = [(rt[0] + (rt[2] - rt[0]) * fu(z), rt[1] + (rt[3] - rt[1]) * y / Ht) for z, y in ((-B / 2, 0), (B / 2, 0), (0, Ht))]
             _face(m, [(xf, 0, -B / 2), (xf, 0, B / 2), (xf, Ht, 0)], UVt, [(nx, 0, 0)] * 3)
         for zf, nz in ((-B / 2, -1.0), (B / 2, 1.0)):                                   # pentes (vers / dos aux pilotes), bords noirs
-            n = (0, B / 2, nz * Ht); lo_, hi_ = (rs[0], rs[2]) if nz < 0 else (rs[2], rs[0])
+            n = (0, B / 2, nz * Ht); lo_, hi_ = (rs[2], rs[0]) if nz < 0 else (rs[0], rs[2])   # vu de face : jamais en miroir
             _face(m, [(x0, 0, zf), (x1, 0, zf), (x1, Ht, 0), (x0, Ht, 0)], [(lo_, rs[1]), (hi_, rs[1]), (hi_, rs[3]), (lo_, rs[3])], [n] * 4)
         xm = sx * xc                                                                    # colonne de carton, logo vers le ciel des 2 côtés
         m.box((xm - ct / 2, Ht - 0.8, -cw / 2), (xm + ct / 2, Hb, cw / 2), ry, 'xXzZ', {'x': rc, 'X': rc})

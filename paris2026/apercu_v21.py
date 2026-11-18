@@ -43,7 +43,7 @@ if __name__ == "__main__":
     import deco_v21 as DV
     DV.bale_u(RO.D, 'honda')
     pair('bale_u.jm', 'bale_u_honda.png', [((5, 3.5, 7), (0, 1, 0)), ((-6, 2.5, -6), (0, 1, 0))]).save(os.path.join(AP, 'v21_ballot_u_honda.png'))
-    pair('arche_50f.jm', 'arche_50f.png', [((10, 7, -55), (0, 8, 0)), ((40, 10, 30), (0, 8, 0))]).save(os.path.join(AP, 'v21_arche_50.png'))
+    pair('arche_50f.jm', 'arche_50f.png', [((14, 6, -40), (12, 5, 0)), ((40, 10, 30), (0, 8, 0))]).save(os.path.join(AP, 'v21_arche_50.png'))
     import layout_paris as LP
     p = LP.paris(); L_ = deco_lines()
     for tag in ('T1 1', 'T_TR'):
