@@ -151,11 +151,20 @@ def zion_extras(OUT, FOLDER):
     drop_ = ("/overlay.png", "/single.png", "/Table.png", "/triplemiddle.png", "/Straight.png", "/startgate.png")
     dl = [l for l in open(os.path.join(OUT, "decals")).read().splitlines() if l.strip() and not any(k in l for k in drop_)]
     fl = BP.mx_poly(BP.arena_dims().floor_outline(1.0)); from geo_tools import inside
-    ov = []
-    for xx in np.arange(fl[:, 0].min(), fl[:, 0].max() + 1, 140.0):
-        for zz in np.arange(fl[:, 1].min(), fl[:, 1].max() + 1, 140.0):
-            if inside(np.array([[xx, zz]]), fl)[0] and not (x0 <= xx <= x1 and z0 <= zz <= z1):
-                ov.append("[%.6f %.6f] 0.000000 160.000000 1.000000 @%s/zdecal/overlay.png" % (xx, zz, FOLDER))
+    # v19b (capture en jeu : « bug de texture, mets partout ») : overlay.png de ZION = UNE décal pour toute la piste, opaque et sombre
+    # sur ses bords ; répétée en dalles (v17) ses bords faisaient une grille de bandes grises. Dalle faite ici : le milieu de l'overlay
+    # (terre claire translucide, sans les bords), en miroir 2 x 2 (raccords invisibles), posée bord à bord (160 ft, pas de 160 ft)
+    # sur tout le sol (hors paddock)
+    from PIL import Image as _I
+    ovs = np.asarray(_I.open(os.path.join(ZD, "decal", "overlay.png")).convert("RGBA"))[200:712, 200:712]
+    til = np.vstack([np.hstack([ovs, ovs[:, ::-1]]), np.hstack([ovs[::-1], ovs[::-1, ::-1]])])
+    _I.fromarray(til, "RGBA").save(os.path.join(OUT, "zdecal", "overlay_tile.png"))
+    ov = []; T_ = 160.0
+    for xx in np.arange(fl[:, 0].min() + T_ / 2 - 20.0, fl[:, 0].max() + T_ / 2, T_):
+        for zz in np.arange(fl[:, 1].min() + T_ / 2 - 20.0, fl[:, 1].max() + T_ / 2, T_):
+            cs = np.array([[xx + dx_, zz + dz_] for dx_ in (-T_ / 2, 0, T_ / 2) for dz_ in (-T_ / 2, 0, T_ / 2)])
+            if inside(cs, fl).any() and not (x0 <= xx <= x1 and z0 <= zz <= z1):
+                ov.append("[%.6f %.6f] 0.000000 %.6f 1.000000 @%s/zdecal/overlay_tile.png" % (xx, zz, T_, FOLDER))
     open(os.path.join(OUT, "decals"), "w", newline=chr(10)).write(chr(10).join(ov + dl) + chr(10))
     # v19 (« le saut d'arrivée, il va pas ; il faut faire les câbles comme sur mon track, avec le finish ») : plus d'arche ZION, le panneau
     # FINISH suspendu (élingues jusqu'au toit) de la version USLAND reste
