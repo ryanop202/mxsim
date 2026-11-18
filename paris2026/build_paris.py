@@ -150,6 +150,73 @@ def render_wide(out, g, prof, u0, w_half_h, w_foot):
     out[sl] = np.maximum(out[sl], pu * lat)
 
 
+def render_mid(out, g, prof, u0, name):
+    """v18 : le saut du milieu (appel + butte) exactement comme la version USLAND (coupe JGSX, butte élargie, pieds arrondis) ;
+    utilisé aussi par les versions Zion et RF (« le double central, garde celui qu'on a fait de base »)."""
+    import layouts_sx as LS
+    from scipy.ndimage import gaussian_filter
+    lay = np.zeros((N, N)); render_lane_block(G, lay, g, prof, u0, TW)
+    it = [i for i in LS.COMBOS[name]['items'] if 'butte' in i[0]][0]
+    render_wide(lay, g, prof[int(it[1] / 0.1):int(it[2] / 0.1)], u0 + it[1], *LP.Z25_BUTTE_W)
+    sf = LP.SOFT_FEET; t_ = np.clip(lay / sf['h'], 0, 1); w_ = t_ * t_ * (3 - 2 * t_)
+    lay = lay * w_ + gaussian_filter(lay, sf['sigma'] / S) * (1 - w_)
+    out[:] = np.maximum(out, lay)
+
+
+WALL_TOP, WALL_RAMP = (17.0, 20.0), 12.0     # murets des whoops (versions Zion et RF) : dessus plat entre |v| 17 et 20 ft
+
+
+def whoops_walls(out, g, prof, u0, it, top=WALL_TOP, slope=3.0, ramp=WALL_RAMP):
+    """v16 (« mets des murs sur les côtés, mais mieux que ça ») : muret ARRONDI de chaque côté des whoops (coupe en cosinus centrée à
+    vc ft de l'axe, demi-largeur hw, sommet à la hauteur des crêtes), whoops pleine largeur jusqu'au sommet du muret, rampes
+    douces de ramp ft aux deux bouts ; pas de dessus plat ni de face raide (v14)."""
+    i0, i1 = int(it[1] / 0.1), int(it[2] / 0.1); Hw = float(np.max(prof[i0:i1]))
+    ua, ub = u0 + it[1], u0 + it[2]; c, s_ = np.cos(g['t']), np.sin(g['t']); half = top[1] + slope + 1.0
+    pts = np.array([(g['x0'] + uu * c - vv * s_, g['z0'] + uu * s_ + vv * c) for uu in (ua, ub) for vv in (-half, half)])
+    sl, X, Z = G.window(pts[:, 0].min(), pts[:, 0].max(), pts[:, 1].min(), pts[:, 1].max())
+    dx, dz = X - g['x0'], Z - g['z0']; u = dx * c + dz * s_; v = np.abs(-dx * s_ + dz * c)
+    ss = lambda t: np.clip(t, 0, 1) ** 2 * (3 - 2 * np.clip(t, 0, 1))
+    # v17 (« plus larges pour pouvoir mettre des boudins dessus ») : dessus PLAT de 3 ft (largeur d'un boudin), pentes arrondies de 3 ft
+    a_, b_ = top; vc = a_
+    lat = np.where(v < a_, 0.5 * (1 - np.cos(np.pi * np.clip((v - (a_ - slope)) / slope, 0, 1))),
+                   np.where(v <= b_, 1.0, 0.5 * (1 + np.cos(np.pi * np.clip((v - b_) / slope, 0, 1)))))
+    lon = ss((u - ua) / ramp) * ss((ub - u) / ramp)
+    wu = np.interp((u - u0) / 0.1, np.arange(len(prof)), prof, left=0, right=0) * (u >= ua) * (u <= ub) * (v <= vc)
+    out[sl] = np.maximum(out[sl], np.maximum(Hw * lat * lon, wu))
+
+
+def whoops_boudins(OUT, FOLDER, path, combos):
+    """v18 (« mets aussi les boudins sur les whoops ») : boudins SX TOUR de 18 ft (modèle de Saint-Georges, peau assets/props/
+    boudin_sxtour3.png) BOUT À BOUT sur le dessus plat de chaque muret (au milieu, |v| = 18,5 ft), seulement là où le muret est à
+    pleine hauteur (pas sur ses rampes) : origine sur du plat, le jeu ne les penche pas. Ajoutés en fin de statues (indices gardés)."""
+    sd = os.path.join(OUT, "statue", "boudins"); os.makedirs(sd, exist_ok=True)
+    PROPS = os.path.join(ROOT, "assets", "props")
+    for f in ("boudin_logo3.jm", "boudin_logo3.shp", "boudin_sxtour3.png"):
+        shutil.copy(os.path.join(PROPS, f), os.path.join(sd, f))
+    ref = lambda f: "@%s/statue/boudins/%s" % (FOLDER, f)
+    vc = sum(WALL_TOP) / 2; lines = []
+    for g in path.segs:
+        if g['kind'] != 'S':
+            continue
+        c, s_ = np.cos(g['t']), np.sin(g['t']); nrm = np.array([-s_, c])
+        for prof, u0, name in g['sections']:
+            for it in combos[name]['items']:
+                if not it[0].startswith('whoops'):
+                    continue
+                ua, ub = u0 + it[1] + WALL_RAMP, u0 + it[2] - WALL_RAMP; n_b = int((ub - ua) // 18.0); us = (ua + ub) / 2 - 9.0 * n_b
+                for side in (-1, 1):
+                    for k in range(n_b):
+                        u = us + 9.0 + 18.0 * k; p = np.array([g['x0'] + u * c, g['z0'] + u * s_]) + nrm * side * vc
+                        f = -nrm * side
+                        lines.append("[%.6f 0.000000 %.6f] %.6f %s %s %s" % (p[0], p[1], float(np.arctan2(f[0], f[1])),
+                                                                           ref("boudin_logo3.jm"), ref("boudin_sxtour3.png"), ref("boudin_logo3.shp")))
+    for f in ["statues"] + ["variants/" + v for v in os.listdir(os.path.join(OUT, "variants")) if v.startswith("statues")]:
+        p = os.path.join(OUT, f); s = open(p).read().rstrip("\n") + "\n"
+        open(p, "w", newline="\n").write(s + "\n".join(lines) + "\n")
+    REPORT['boudins_whoops'] = len(lines)
+    return len(lines)
+
+
 def berm_seg(g):
     """partie du virage qui porte le berm (tout le virage, ou à partir de la fraction g['berm_from'])."""
     f = g.get('berm_from', 0.0)

@@ -32,19 +32,19 @@
   {
    "lane": "L3 grande table",
    "name": "PAR-L3 appel, gros saut rond du milieu (ZION 2025)",
-   "u0": 74.3,
-   "L": 165.0,
+   "u0": 85.7,
+   "L": 153.3,
    "H": 24.25,
    "items": [
     [
-     "appel gros saut ZION 2025 (10,0)",
+     "appel gros saut ZION 2025 (10,0) raidi",
      0.0,
-     58.7
+     47.0
     ],
     [
      "butte gros saut rond ZION 2025 (24,2)",
-     58.7,
-     164.9
+     47.0,
+     153.2
     ]
    ]
   },
@@ -126,7 +126,7 @@
    "name": "PAR-LR saut de sortie, bosse, table, 3 bosses",
    "u0": 10.0,
    "L": 280.3,
-   "H": 6.36,
+   "H": 7.62,
    "items": [
     [
      "bosse ZION 4.4 ft",
@@ -134,8 +134,8 @@
      30.2
     ],
     [
-     "table double etage RF 6.4 ft",
-     70.2,
+     "table double etage RF A1 7.6 ft",
+     78.9,
      165.7
     ],
     [
@@ -259,7 +259,7 @@
  "public": 7631,
  "export": {
   "hmin": -0.5,
-  "hmax": 24.749999962874497,
+  "hmax": 24.74999994800642,
   "statues_relevees": 36,
   "decals": 85,
   "decals_terre": 0
@@ -282,6 +282,7 @@
    474.5
   ]
  },
+ "boudins_whoops": 22,
  "lap_ft": 2850.4,
  "start": {
   "gate": [

@@ -214,13 +214,17 @@ def table_double(H=7.6, up1=10.0, tier=13.0, up2=9.0, top=24.0, rise=0.25, down=
     return ('raw', 'table double etage %.1f ft' % H, p, 'T')
 
 
-def table_double_rf(k=1.10):
-    """v17 (« je sais qu'il y a des terrains RF qui ont des doubles tables, reprends celle de la RF ») : table à double étage MESURÉE
-    sur RF Anaheim 1 2026 (paris2026/data/rf_table_double.*) : étage à 2,8 ft, petit creux, dessus à 5,8 ft, 103 ft ; hauteur x k
-    comme les bosses ZION de la version Zion."""
-    p = np.load(os.path.join(HERE, "data", "rf_table_double.npy")).astype(float)
-    i = max(0, int(np.nonzero(p > 0.3)[0][0]) - 10); p = p[i:] * k; p[0] = p[-1] = 0.0
-    return ('raw', 'table double etage RF %.1f ft' % p.max(), p, 'T')
+RF = os.environ.get('PARIS_RF') == '1'           # v18 : « version RF » (paris2026/build_rf.py)
+RFF = np.load(os.path.join(HERE, "data", "rf_a1_formes.npz"))   # formes mesurées sur RF Anaheim 1 2026 (mesure_rf.py)
+
+
+def table_double_rf(kl=1.15, kh=1.12):
+    """v18 (« la table à double étage, je t'ai envoyé laquelle c'est sur A1 ; un peu plus longue, un peu plus grande, là elle est en
+    sortie de virage ») : la table entourée par l'utilisateur, MESURÉE sur RF Anaheim 1 2026 (mesure_rf.py, dtab : étage 2,8 ft,
+    dessus 5,9 ft, lèvre 6,8 ft, 78 ft), longueur x kl, hauteur x kh. (v17 : mauvaise mesure, une coupe en travers de 2 couloirs.)"""
+    p = np.asarray(RFF['dtab'], float); i = max(0, int(np.nonzero(p > 0.3)[0][0]) - 10); p = p[i:]
+    p = np.interp(np.linspace(0, len(p) - 1, int(round(len(p) * kl))), np.arange(len(p)), p) * kh; p[0] = p[-1] = 0.0
+    return ('raw', 'table double etage RF A1 %.1f ft' % p.max(), p, 'T')
 
 
 def resample(p, k_len=1.0, H=None):
@@ -405,7 +409,7 @@ def paris():
         for b_ in B7[1:]:
             toks += [('gap', 15.0), b_]
         u0z = (xW - x_end3) - 8.0 - tlen(toks)
-    u0 = u0z if ZION else L2_U0
+    u0 = u0z if ZION else L2_U0                            # v18 (RF) : même écart partout comme la version USLAND (~8,5 ft, A1 : 8 - 13)
     p.straight(xW - x_end3, [lane_sec('PAR-L2 triple, triple (7 bosses, meme ecart)', toks, u0)], tag='L2 singles')
     p.turn(-180, RB, BIG2, tag='T1 180 droite (berm)')
     # v10 : 11 whoops (une petite + 10) plus hautes, plus rondes, plus de terre ; la table + 2 bosses gardées (« pas mal »)
@@ -413,6 +417,8 @@ def paris():
     toks = [whoops_paris(), ('gap', 15.0), TABLE_L1, ('gap', 1.5), ('scale', SA[1], 4.0), ('gap', 1.5), ('scale', SA[0], 3.6)]
     if ZION:   # v16 : nos whoops comme Saint-Georges (lancement normal) ; table + 2 bosses ZION plus grosses, écarts ZION (8 ft)
         toks = [whoops_up(11, 1.15), ('gap', 15.0), ('scale', TABLE_B, 7.0), ('gap', 8.0), ('scale', SA[1], 4.3), ('gap', 8.0), ('scale', SA[0], 4.1)]
+    if RF:     # v18 : « garde nos whoops dans la version RF » : celles de la version Zion, 9 (11 : 39 ft de trop) ; table + 2 bosses RF
+        toks = [whoops_up(9, 1.15), ('gap', 15.0), ('scale', TABLE_B, 6.6), ('gap', RF_GAP), ('scale', SA[1], 4.0), ('gap', RF_GAP), ('scale', SA[0], 3.6)]
     u0 = lL1 - 8.0 - tlen(toks); assert u0 >= 0.5, u0
     p.straight(xW - (xLR + RB), [LS.sec('PAR-L1 whoops, table, bosse', toks, u0)], tag='L1 whoops')
     p.turn(-90, RB, BIG, tag='T_TR 90 droite (berm)')
@@ -424,8 +430,8 @@ def paris():
     lLR = (zL1 - RB) - (zL6 + RB)
     GR_ = 10.0 if ZION else 7.5                            # v15 : écart ZION (~10 ft) dans la version Zion
     rh = [('scale', SA[0], 3.0), ('gap', GR_), TABLE, ('gap', GR_), ('scale', SA[1], 4.2), ('gap', GR_), ('scale', SA[2], 4.2), ('gap', GR_), ('scale', SA[1], 4.0)]
-    if ZION:   # v16 (dessin de l'utilisateur) : la bosse + la table remplacées par une table à double étage ; v17 : celle de la RF
-        rh = [table_double_rf()] + [t if t[0] != 'gap' else ('gap', 7.5) for t in rh[3:]]
+    if ZION or RF:   # v16 (dessin de l'utilisateur) : la bosse + la table remplacées par une table à double étage ; v18 : celle de A1
+        rh = [table_double_rf()] + [t if t[0] != 'gap' else ('gap', RF_GAP if RF else 7.5) for t in rh[3:]]
     kick = [('scale', SA[1], 4.0)]
     u0 = EXIT_U0                                           # v13 : plus collé au berm (marque entre l'appui et la bosse)
     toks = kick + [('gap', round(lLR - u0 - 8.0 - tlen(kick) - tlen(rh), 1))] + rh
@@ -496,11 +502,12 @@ def fmx_ramps(path=None):
 # Formes MESURÉES sur ZION.2025.SupercrossParis (paris2026/data/zion_formes.npz / .json) : bosse (29,8 ft, 4,27 ft), table (62 ft,
 # 7,04 ft), whoop (19,8 ft, 3,14 ft, pas 22,6 ft) ; saut central et triple d'arrivée ZION non retouchés ; les obstacles de 2026
 # (nombre, ordre, hauteurs) restent ceux de la version USLAND.
+RF_GAP = 10.5                     # v18 : écart au sol entre bosses de la RF (A1 : 8 à 13 ft)
 if ZION:
     ZF = np.load(os.path.join(HERE, "data", "zion_formes.npz"))
     Z25_TRIPLE = _split_after_first(_P25['triple_arrivee'], 'appel arrivee ZION 2025 (10,0)', 'triple arrivee ZION 2025 (6,0 / 11,2)', 'T')
-    Z25_MILIEU = _split_after_first(_P25['milieu'], 'appel gros saut ZION 2025 (10,0)', 'butte gros saut rond ZION 2025 (24,2)', 'X')
-    Z25_BUTTE_W = Z25_BUTTE_W_ZION
+    # v18 (« le double central, mets le double central du mien, du track qu'on a fait nous de base ») : saut du milieu de la version
+    # USLAND (appel raidi v13, butte élargie v10), plus celui de ZION tel quel
     ZW_H = [2.58] + [3.14] * 7 + [2.87, 2.34, 1.17]          # 11 whoops sur le modèle des 10 de ZION (lancement, pleines, sortie)
 
     ZH = 1.10                                                  # v16 (« légèrement plus hautes, même forme »)
@@ -542,6 +549,59 @@ if ZION:
     LS.sec = lambda name, toks, u0: _sec0(name, zionize(toks), u0)
 
     def lane_sec(name, toks, u0, finish=False, **kw):                 # formes ZION telles quelles (pas de rounded())
+        return LS.sec(name, toks, u0)
+
+
+# ---------------------------------------------------------------- v18 : version RF
+# « fais une troisième version avec les bosses de la RF, les virages RF aussi, tout RF ; juste le saut du freestyle, tu le gardes
+# comme on a fait de base ». Formes MESURÉES sur RF Anaheim 1 2026 (mesure_rf.py) : bosse (26 ft, 3,4 ft), table (50 ft, 5,8 ft),
+# whoop (19 ft, 3,0 ft, pas 20,6 ft), saut d'arrivée (appel 8,8 / réception 10,7 ft), table à double étage ; le saut du milieu
+# (appel + butte) et les tremplins FMX restent ceux de la version USLAND ; le nombre, l'ordre et la hauteur des obstacles de 2026 aussi.
+if RF:
+    def _len_k(p, k):
+        return np.interp(np.linspace(0, len(p) - 1, max(2, int(round(len(p) * k)))), np.arange(len(p)), p)
+
+    def rf_single(h):
+        p = np.asarray(RFF['single'], float); k = float(np.clip(np.sqrt(h / p.max()), 0.9, 1.2))
+        return ('raw', 'bosse RF %.1f ft' % h, _len_k(p, k) * (h / p.max()), 'T')
+
+    def rf_table(h):
+        p = np.asarray(RFF['table'], float); k = float(np.clip(np.sqrt(h / p.max()), 0.9, 1.15))
+        return ('raw', 'table RF %.1f ft' % h, _len_k(p, k) * (h / p.max()), 'T')
+
+    def rf_whoops(n=8, pitch=20.6):
+        """lancement RF (2,5 ft) puis n whoops RF au pas de la RF (20,6 ft de crête à crête)."""
+        w = np.asarray(RFF['whoop'], float); la = np.asarray(RFF['wlaunch'], float)
+        step = int(round(pitch / 0.1)); q = np.zeros(len(la) + step * n + len(w))
+        q[:len(la)] = la; i0 = len(la) + int(round(1.0 / 0.1))
+        for k in range(n):
+            j = i0 + k * step; q[j:j + len(w)] = np.maximum(q[j:j + len(w)], w)
+        q = np.trim_zeros(q, 'b'); q = np.r_[q, 0.0]; q[0] = 0.0
+        return ('raw', 'whoops RF x%d (lancement + %d)' % (n + 1, n), q, 'W')
+
+    Z25_TRIPLE = [('raw', 'appel arrivee RF A1 (8,8)', np.asarray(RFF['fin_app'], float), 'T'), ('gap', float(RFF['fin_gap'])),
+                  ('raw', 'reception arrivee RF A1 (10,7)', np.asarray(RFF['fin_land'], float), 'T')]
+
+    def rfize(toks):
+        out = []
+        for t in (toks if isinstance(toks, list) else [toks]):
+            if not isinstance(t, tuple):
+                out.append(rf_single(4.0)); continue
+            if t[0] in ('scale', 'stretch'):
+                out.append(rf_table(t[2]) if t[1] == TABLE_B else rf_single(t[2]))
+            elif t[0] == 'raw' and t[1].startswith('whoops 25 Paris'):
+                out.append(whoops_up(9, 1.15))
+            else:
+                out.append(t)
+        return out
+    _tlen0 = tlen
+
+    def tlen(tok):
+        return _tlen0(rfize(tok if isinstance(tok, list) else [tok]))
+    _sec0 = LS.sec
+    LS.sec = lambda name, toks, u0: _sec0(name, rfize(toks), u0)
+
+    def lane_sec(name, toks, u0, finish=False, **kw):                 # formes RF telles quelles (pas de rounded())
         return LS.sec(name, toks, u0)
 
 

@@ -43,23 +43,7 @@ def lane_zion(out, g, prof, u0, top, side):
     out[sl] = np.maximum(out[sl], pu * lat)
 
 
-def whoops_walls(out, g, prof, u0, it, top=(17.0, 20.0), slope=3.0, ramp=12.0):
-    """v16 (« mets des murs sur les côtés, mais mieux que ça ») : muret ARRONDI de chaque côté des whoops (coupe en cosinus centrée à
-    vc ft de l'axe, demi-largeur hw, sommet à la hauteur des crêtes), whoops pleine largeur jusqu'au sommet du muret, rampes
-    douces de ramp ft aux deux bouts ; pas de dessus plat ni de face raide (v14)."""
-    i0, i1 = int(it[1] / 0.1), int(it[2] / 0.1); Hw = float(np.max(prof[i0:i1]))
-    ua, ub = u0 + it[1], u0 + it[2]; c, s_ = np.cos(g['t']), np.sin(g['t']); half = top[1] + slope + 1.0
-    pts = np.array([(g['x0'] + uu * c - vv * s_, g['z0'] + uu * s_ + vv * c) for uu in (ua, ub) for vv in (-half, half)])
-    sl, X, Z = G.window(pts[:, 0].min(), pts[:, 0].max(), pts[:, 1].min(), pts[:, 1].max())
-    dx, dz = X - g['x0'], Z - g['z0']; u = dx * c + dz * s_; v = np.abs(-dx * s_ + dz * c)
-    ss = lambda t: np.clip(t, 0, 1) ** 2 * (3 - 2 * np.clip(t, 0, 1))
-    # v17 (« plus larges pour pouvoir mettre des boudins dessus ») : dessus PLAT de 3 ft (largeur d'un boudin), pentes arrondies de 3 ft
-    a_, b_ = top; vc = a_
-    lat = np.where(v < a_, 0.5 * (1 - np.cos(np.pi * np.clip((v - (a_ - slope)) / slope, 0, 1))),
-                   np.where(v <= b_, 1.0, 0.5 * (1 + np.cos(np.pi * np.clip((v - b_) / slope, 0, 1)))))
-    lon = ss((u - ua) / ramp) * ss((ub - u) / ramp)
-    wu = np.interp((u - u0) / 0.1, np.arange(len(prof)), prof, left=0, right=0) * (u >= ua) * (u <= ub) * (v <= vc)
-    out[sl] = np.maximum(out[sl], np.maximum(Hw * lat * lon, wu))
+whoops_walls = BP.whoops_walls        # v18 : déplacé dans build_paris (partagé avec la version RF)
 
 
 def berm_zion(out, g):
@@ -83,17 +67,16 @@ def render_zion(path, st):
         if g['kind'] == 'S':
             for prof, u0, name in g['sections']:
                 lay = whoops if 'whoops' in name else jumps
-                for it in LS.COMBOS[name]['items']:            # v16 : obstacles ZION (coupe ZION), whoops USLAND (coupe USLAND + murets)
-                    i0, i1 = int(it[1] / 0.1), min(int(it[2] / 0.1) + 1, len(prof))
-                    if it[0].startswith('whoops'):
-                        BP.render_lane_block(G, whoops, g, prof[i0:i1], u0 + it[1], BP.TW)
-                        whoops_walls(whoops, g, prof, u0, it)
-                    else:
-                        lane_zion(lay, g, prof[i0:i1], u0 + it[1], *LAT['T'])
-                if name == LP.L3_SEC:                           # butte ZION : sa largeur mesurée
-                    it = [i for i in LS.COMBOS[name]['items'] if 'butte' in i[0]][0]
-                    i0, i1 = int(it[1] / 0.1), int(it[2] / 0.1)
-                    BP.render_wide(jumps, g, prof[i0:i1], u0 + it[1], *LP.Z25_BUTTE_W)
+                if name == LP.L3_SEC:                           # v18 : saut du milieu de la version USLAND (« le double central du mien »)
+                    BP.render_mid(jumps, g, prof, u0, name)
+                else:
+                    for it in LS.COMBOS[name]['items']:        # v16 : obstacles ZION (coupe ZION), whoops USLAND (coupe USLAND + murets)
+                        i0, i1 = int(it[1] / 0.1), min(int(it[2] / 0.1) + 1, len(prof))
+                        if it[0].startswith('whoops'):
+                            BP.render_lane_block(G, whoops, g, prof[i0:i1], u0 + it[1], BP.TW)
+                            whoops_walls(whoops, g, prof, u0, it)
+                        else:
+                            lane_zion(lay, g, prof[i0:i1], u0 + it[1], *LAT['T'])
                 secs.append(dict(lane=g['tag'], name=name, u0=round(u0, 1), L=round(len(prof) * 0.1, 1), H=round(float(prof.max()), 2),
                                  items=[(i[0], round(i[1], 1), round(i[2], 1)) for i in LS.COMBOS[name]['items']]))
         elif g.get('berm'):                                  # v16 : virages USLAND (berms JGSX, comme la version USLAND)
@@ -193,6 +176,8 @@ def export_zion(*a, **k):
     _export0(*a, **k)
     zion_ground(BP.OUT, BP.FOLDER)
     zion_extras(BP.OUT, BP.FOLDER)
+    import layouts_sx as LS
+    BP.whoops_boudins(BP.OUT, BP.FOLDER, BP.PATH, LS.COMBOS)          # v18 : boudins SX TOUR sur les murets
 
 
 BP.render = render_zion
