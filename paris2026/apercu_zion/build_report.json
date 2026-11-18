@@ -4,7 +4,7 @@
    "lane": "L5 arrivée",
    "name": "PAR-L5 petit double, triple d arrivee (ZION 2025)",
    "u0": 7.0,
-   "L": 312.9,
+   "L": 280.9,
    "H": 11.15,
    "items": [
     [
@@ -19,13 +19,13 @@
     ],
     [
      "appel arrivee ZION 2025 (10,0)",
-     144.5,
-     189.9
+     112.5,
+     157.9
     ],
     [
      "triple arrivee ZION 2025 (6,0 / 11,2)",
-     189.9,
-     312.8
+     157.9,
+     280.8
     ]
    ]
   },
@@ -51,8 +51,8 @@
   {
    "lane": "L2 singles",
    "name": "PAR-L2 triple, triple (7 bosses, meme ecart)",
-   "u0": 7.9,
-   "L": 317.9,
+   "u0": 5.9,
+   "L": 287.9,
    "H": 5.5,
    "items": [
     [
@@ -62,33 +62,33 @@
     ],
     [
      "bosse ZION 5.1 ft",
-     45.2,
-     77.6
+     40.2,
+     72.6
     ],
     [
      "bosse ZION 5.5 ft",
-     92.6,
-     125.9
+     82.6,
+     115.9
     ],
     [
      "bosse ZION 5.3 ft",
-     140.9,
-     174.0
+     125.9,
+     159.0
     ],
     [
      "bosse ZION 5.5 ft",
-     189.0,
-     222.3
+     169.0,
+     202.3
     ],
     [
      "bosse ZION 5.1 ft",
-     237.3,
-     269.7
+     212.3,
+     244.7
     ],
     [
      "bosse ZION 5.3 ft",
-     284.7,
-     317.8
+     254.7,
+     287.8
     ]
    ]
   },
@@ -96,28 +96,28 @@
    "lane": "L1 whoops",
    "name": "PAR-L1 whoops, table, bosse",
    "u0": 10.3,
-   "L": 389.6,
-   "H": 7.7,
+   "L": 357.6,
+   "H": 7.0,
    "items": [
     [
-     "whoops x11 (lancement 0.60 m, pas 6.30 m)",
+     "whoops x10 (lancement 0.60 m, pas 6.20 m)",
      0.0,
-     231.2
+     206.5
     ],
     [
-     "table ZION 7.7 ft",
-     253.2,
-     315.1
+     "table Saint-Thibery 7.0 ft",
+     232.5,
+     287.6
     ],
     [
      "bosse ZION 4.7 ft",
-     321.1,
-     352.4
+     291.6,
+     322.9
     ],
     [
      "bosse ZION 4.5 ft",
-     358.9,
-     389.5
+     326.9,
+     357.5
     ]
    ]
   },
@@ -125,7 +125,7 @@
    "lane": "LR tribune Est",
    "name": "PAR-LR saut de sortie, bosse, table, 3 bosses",
    "u0": 10.0,
-   "L": 304.3,
+   "L": 292.3,
    "H": 7.62,
    "items": [
     [
@@ -135,23 +135,23 @@
     ],
     [
      "table double etage RF A1 7.6 ft",
-     102.9,
-     189.7
+     90.9,
+     177.7
     ],
     [
      "bosse ZION 4.6 ft",
-     197.2,
-     228.1
+     185.2,
+     216.1
     ],
     [
      "bosse ZION 4.6 ft",
-     235.6,
-     266.5
+     223.6,
+     254.5
     ],
     [
      "bosse ZION 4.4 ft",
-     274.0,
-     304.2
+     262.0,
+     292.2
     ]
    ]
   },
@@ -159,8 +159,8 @@
    "lane": "L6 tribune Sud",
    "name": "PAR-L6 triple, double, table, double",
    "u0": 10.0,
-   "L": 388.9,
-   "H": 7.26,
+   "L": 357.3,
+   "H": 7.0,
    "items": [
     [
      "bosse ZION 4.6 ft",
@@ -169,38 +169,38 @@
     ],
     [
      "bosse ZION 5.2 ft",
-     46.2,
-     78.9
+     41.6,
+     74.3
     ],
     [
      "bosse ZION 5.4 ft",
-     94.2,
-     127.5
+     85.0,
+     118.3
     ],
     [
      "bosse ZION 5.2 ft",
-     142.8,
-     175.5
+     129.0,
+     161.7
     ],
     [
      "bosse ZION 5.4 ft",
-     190.8,
-     224.1
+     172.4,
+     205.7
     ],
     [
-     "table ZION 7.3 ft raccourcie",
-     242.4,
-     296.9
+     "table Saint-Thibery 7.0 ft",
+     219.4,
+     274.5
     ],
     [
      "bosse ZION 4.7 ft",
-     310.2,
-     341.5
+     283.2,
+     314.5
     ],
     [
      "bosse ZION 5.0 ft",
-     356.8,
-     388.8
+     325.2,
+     357.2
     ]
    ]
   }
@@ -217,11 +217,11 @@
  ],
  "objets": {
   "objets": {
-   "retirés (v13) : boudins FLY Racing (whoops)": 28,
-   "retirés (v13) : ballots ZION (unis)": 268,
+   "retirés (v13) : boudins FLY Racing (whoops)": 24,
+   "retirés (v13) : ballots ZION (unis)": 234,
    "retirés (v13) : poteaux ronds": 7,
-   "retirés (v13) : tuffs de virage ZION (unis)": 74,
-   "retirés (v13) : filets": 44,
+   "retirés (v13) : tuffs de virage ZION (unis)": 71,
+   "retirés (v13) : filets": 42,
    "panneau FINISH suspendu": 1,
    "cage du drapeau": 1,
    "retirés (v13) : boudins Thor": 6,
@@ -240,8 +240,8 @@
   "arche": {
    "crete_ft": 4.62,
    "sol_pieds_ft": [
-    0.11,
-    0.08
+    0.25,
+    0.32
    ],
    "libre_sous_poutre_ft": 19.9
   },
@@ -260,8 +260,8 @@
  "export": {
   "hmin": -0.5,
   "hmax": 24.74999994800642,
-  "statues_relevees": 34,
-  "decals": 85,
+  "statues_relevees": 42,
+  "decals": 83,
   "decals_terre": 0
  },
  "sol_zion": {
@@ -276,7 +276,7 @@
    777
   ],
   "dalles_tuiles": 137550,
-  "overlay": 589,
+  "overlay": 5663,
   "decals_gardes": 0,
   "start": [
    671.5,
@@ -286,9 +286,9 @@
   "toit_finish": 146.5,
   "grilles": 22
  },
- "boudins_whoops": 22,
+ "boudins_whoops": 20,
  "semis_jgsx": 10,
- "lap_ft": 2932.1,
+ "lap_ft": 2773.3,
  "start": {
   "gate": [
    683.5099504,
@@ -334,14 +334,14 @@
   {
    "name": "ligne de départ plate (grilles)",
    "ok": true,
-   "detail": "max 0.01 ft"
+   "detail": "max 0.00 ft"
   }
  ],
  "gates": {
-  "n_checkpoints": 30,
+  "n_checkpoints": 29,
   "first": [
+   27,
    28,
-   29,
    11,
    12,
    13,
@@ -357,8 +357,7 @@
    23,
    24,
    25,
-   26,
-   27
+   26
   ],
   "normal": [
    0,
@@ -387,8 +386,7 @@
    23,
    24,
    25,
-   26,
-   27
+   26
   ]
  }
 }

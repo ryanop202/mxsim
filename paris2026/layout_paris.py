@@ -32,11 +32,13 @@ BIG, BIG2 = 'big_det_a', 'big_cle'
 RB = 21.5
 ZION = os.environ.get('PARIS_ZION') == '1'      # v15 : « version Zion » (paris2026/build_zion.py)
 # v16 (« on garde pas les virages de ZION, ça fait un bug ») : virages USLAND (rayon 21,5 ft, berms JGSX) aussi en version Zion
-XW_SHIFT = 55.0 if ZION else 0.0  # v15 : couloirs allongés vers l'est (place libre du sol agrandi) pour les écarts ZION
+XW_SHIFT = 23.0 if ZION else 0.0  # v15 : couloirs allongés vers l'est (place libre du sol agrandi) pour les écarts ZION ;
+#   v20 (« baisse l'écart entre les bosses crête à crête, pas énorme ; du coup les virages aussi, les rapprocher ») : 55 -> 23 ft
 # v19 (version Zion, « élargir un peu entre les pistes ; les enchaînements sont assez proches du public ; les whoops et l'enchaînement
 # à côté sont collés ») : 180 L2 -> L1 et L6 -> L5 de rayon 27,5 ft (couloirs voisins à 55 ft au lieu de 43, berm JGSX décalé),
 # couloir Est 10 ft plus à l'ouest (L1 / L6 plus longues, plus près de la tribune Ouest)
-R180 = 27.5 if ZION else RB
+R180 = 24.5 if ZION else RB      # v20 (« réduire la largeur de la piste : les virages tournent un peu trop large ») : 27,5 -> 24,5 ft
+#   (couloirs voisins à 49 ft comme RF Anaheim 1, ligne de course des 180 à 24,4 ft) ; L2 / L5 ne bougent pas, L1 / L6 se rapprochent
 XLR_SHIFT = 10.0 if ZION else 0.0
 TOP_W = 30.4                      # largeur du dessus des obstacles (JGSX)
 
@@ -180,7 +182,7 @@ P25_WHOOPS = json.load(open(os.path.join(HERE, "data", "p25_whoops.json"), encod
 RAIL = dict(top=(15.5, 19.0), inner=1.0, outer=3.5, ramp=6.0)    # v14 : bord des whoops de 25 Paris SX (muret de chaque côté)
 
 
-def whoops_zion(n=11, k=1.15, launch_m=0.60, pitch_m=6.30):
+def whoops_zion(n=10, k=1.15, launch_m=0.60, pitch_m=6.20):   # v20 (« minimum 10 whoops ; réduis aussi à 6,2 l'écart des whoops »)
     """v19e (« baisse la bosse de lancement, mets-la à 0,60 m » ; puis « mets 6,3 [m] alors pour les whoops ») : les whoops de la
     version Zion (whoops_up(n, k), Saint-Georges) avec la 1re bosse ramenée à launch_m de haut (forme gardée, mise à l'échelle) et
     du sol plat ajouté dans chaque creux pour un pas crête à crête moyen de pitch_m (20,0 ft -> 6,30 m ; whoops inchangées)."""
@@ -318,6 +320,11 @@ Z25_BUTTE_W_ZION = (_P25['largeur_butte_mi_hauteur'], 90.0)   # 68 ft à mi-haut
 #   entre les singles (L2) et la ligne de départ il n'y a que ~98 ft -> flancs un peu plus raides que ZION
 
 
+def table_stt(h):
+    """v20 : la table de Saint-Thibéry (Arlington_g49_2, mesurée JGSX) à h ft, en 'raw' pour que la version Zion ne la remplace pas."""
+    return ('raw', 'table Saint-Thibery %.1f ft' % h, np.asarray(LS.L('tmp', [('scale', TABLE_B, h)]), float), 'T')
+
+
 def tlen(tok):
     toks = tok if isinstance(tok, list) else [tok]
     return len(LS.L('tmp', toks)) * 0.1
@@ -436,7 +443,7 @@ def paris():
     if ZION:                                               # v15 : écart ZION (15 ft au sol, ZION 9 - 16), le reste avant la 1re bosse
         toks = [B7[0]]
         for b_ in B7[1:]:
-            toks += [('gap', 15.0), b_]
+            toks += [('gap', L2_GAP_Z), b_]
         u0z = (xW - x_end3) - 8.0 - tlen(toks)
     u0 = u0z if ZION else L2_U0                            # v18 (RF) : même écart partout comme la version USLAND (~8,5 ft, A1 : 8 - 13)
     p.straight(xW - x_end3, [lane_sec('PAR-L2 triple, triple (7 bosses, meme ecart)', toks, u0)], tag='L2 singles')
@@ -447,7 +454,10 @@ def paris():
     if ZION:   # v16 : nos whoops comme Saint-Georges (lancement normal) ; table + 2 bosses ZION plus grosses, écarts ZION (8 ft)
         # v19 (« plus d'espace entre la dernière whoops et la table, quitte à sacrifier un peu entre la table et la 1re bosse ») : 15 -> 22 ft,
         # table -> bosse 8 -> 6 ft, bosse -> bosse 8 -> 6,5 ft
-        toks = [whoops_zion(), ('gap', 22.0), ('scale', TABLE_B, 7.0), ('gap', 6.0), ('scale', SA[1], 4.3), ('gap', 6.5), ('scale', SA[0], 4.1)]
+        # v20 (« la table après les whoops : l'appel moins raide, un peu plus plat, pour que ça envoie plus loin, pas vers le haut » ;
+        # « réduis l'écart des bosses derrière la table pour pouvoir écarter entre les whoops et la table » ; « garde toujours un petit
+        # couloir entre les bosses ») : table de Saint-Thibéry (Arlington_g49_2, appel 29° au lieu de 34°) à 7 ft, bosses derrière à 4 ft
+        toks = [whoops_zion(), ('gap', 26.0), table_stt(7.0), ('gap', 4.0), ('scale', SA[1], 4.3), ('gap', 4.0), ('scale', SA[0], 4.1)]
     if RF:     # v18 : « garde nos whoops dans la version RF » : celles de la version Zion, 9 (11 : 39 ft de trop) ; table + 2 bosses RF
         toks = [whoops_up(9, 1.15), ('gap', 15.0), ('scale', TABLE_B, 6.6), ('gap', RF_GAP), ('scale', SA[1], 4.0), ('gap', RF_GAP), ('scale', SA[0], 3.6)]
     u0 = lL1 - 8.0 - tlen(toks); assert u0 >= 0.5, u0
@@ -479,6 +489,9 @@ def paris():
         # v19d (« la table raccourcie un peu ; la bosse après la table est trop loin, rapproche ; la bosse avant légèrement ; surtout la
         # réception ») : table ZION à 88 % de sa longueur, +3 ft avant (était +6), -2 ft après (était +6)
         tb_ = ztable(TABLE[2]); B_[it_] = ('raw', tb_[1] + ' raccourcie', resample(tb_[2], 0.88), 'T')
+        # v20 (« l'appel de la table est trop raide ; prends la table qu'on met d'habitude sur Saint-Thibéry, adapte un peu la hauteur ») :
+        # Arlington_g49_2 à 7,0 ft (ZION : 7,3 ft, appel 36°)
+        B_[it_] = table_stt(7.0)
         eb_, ea_ = 3.0, -2.0
         g_ = (xW - (xLR + RB) - EXIT_U0 - 8.0 - sum(tlen(b) for b in B_) - eb_ - ea_) / (len(B_) - 1)
         toks = []
@@ -545,6 +558,7 @@ def fmx_ramps(path=None):
 # Formes MESURÉES sur ZION.2025.SupercrossParis (paris2026/data/zion_formes.npz / .json) : bosse (29,8 ft, 4,27 ft), table (62 ft,
 # 7,04 ft), whoop (19,8 ft, 3,14 ft, pas 22,6 ft) ; saut central et triple d'arrivée ZION non retouchés ; les obstacles de 2026
 # (nombre, ordre, hauteurs) restent ceux de la version USLAND.
+L2_GAP_Z = 10.0                   # v20 (« l'enchaînement après le saut du freestyle : moins d'écart ») : 15 -> 10 ft au sol (13 m crête à crête)
 RF_GAP = 10.5                     # v18 : écart au sol entre bosses de la RF (A1 : 8 à 13 ft)
 if ZION:
     ZF = np.load(os.path.join(HERE, "data", "zion_formes.npz"))

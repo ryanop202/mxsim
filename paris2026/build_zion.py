@@ -29,7 +29,8 @@ BP.AP = os.path.join(HERE, "apercu_zion")
 BP.SAND_LD = 0.0                   # v19d (« le virage après le saut d'arrivée en sable, que le virage ») : pas sur la ligne de départ
 ZD = BP.ZD
 ZF = np.load(os.path.join(HERE, "data", "zion_formes.npz"))
-LAT = dict(T=(35.1, 5.2), W=(40.0, 2.2))      # dessus plat, flanc (ft) : obstacles, whoops
+LAT = dict(T=(34.0, 7.0), W=(40.0, 2.2))      # dessus plat, flanc (ft) : obstacles, whoops ; v20 (« la coupe RF, celle d'Anaheim, en
+#   gardant la forme des bosses ») : obstacles à la coupe mesurée sur RF Anaheim 1 (dessus 34 ft, flancs 7 ft ; était 35,1 / 5,2)
 ZION_R = 28.3
 TERRE_RGB = (166, 113, 68)                  # v19d : terre plus orange-marron (ZION : 158 136 85)
 G, N, S = BP.G, BP.N, BP.S
@@ -60,6 +61,29 @@ def berm_zion(out, g):
     val = map_coordinates(B, [(r - rr[0]) / (rr[1] - rr[0]), (th - tt[0]) / (tt[1] - tt[0])], order=1, cval=0.0)
     w = np.clip((88.0 - np.abs(th)) / 10.0, 0, 1); w = w * w * (3 - 2 * w)        # au-delà : un bloc voisin dans ZION
     out[sl] = np.maximum(out[sl], val * w)
+
+
+def fill_berm_dips(berms, path):
+    """v20 (« en bas de chaque virage tu as mis une genre de petite ornière bizarre, gênante, retire-la ») : le croissant JGSX décalé
+    vers l'extérieur (180 plus larges que 21,5 ft) puis fondu en bas laissait un creux de 0,2 - 0,4 ft au pied de la face du berm, à
+    l'intérieur. Dans chaque virage à berm, le profil radial (du centre vers la crête) ne redescend plus : chaque creux est rempli au
+    niveau d'avant (jamais rien d'enlevé, rien ne bouge au-delà de la crête)."""
+    for g in path.segs:
+        if g['kind'] != 'T' or not g.get('berm'):
+            continue
+        Rm = g['r'] + 45.0; rr = np.arange(0.0, Rm, 0.5); aa = np.radians(np.arange(0.0, 360.0, 0.5))
+        X = g['cx'] + np.outer(np.cos(aa), rr); Z = g['cz'] + np.outer(np.sin(aa), rr)
+        P = map_coordinates(berms, [Z / S, X / S], order=1, cval=0.0)
+        Pin = np.where(rr[None, :] < g['r'] + 22.0, P, 0.0)          # la crête de CE virage (pas un berm voisin plus loin)
+        k = np.argmax(Pin, axis=1); ok = Pin.max(axis=1) > 1.5
+        M = np.maximum.accumulate(P, axis=1); D = np.where((np.arange(len(rr))[None, :] < k[:, None]) & ok[:, None], M - P, 0.0)
+        if D.max() < 0.01:
+            continue
+        sl, Xw, Zw = G.window(g['cx'] - Rm, g['cx'] + Rm, g['cz'] - Rm, g['cz'] + Rm)
+        r_ = np.hypot(Xw - g['cx'], Zw - g['cz']); a_ = np.degrees(np.arctan2(Zw - g['cz'], Xw - g['cx'])) % 360.0
+        add = map_coordinates(np.r_[D, D[:1]], [a_ / 0.5, r_ / 0.5], order=1, mode='nearest')     # dernière ligne = 360° (= 0°)
+        add = np.where(r_ < Rm - 1.0, add, 0.0)
+        berms[sl] += add
 
 
 def render_zion(path, st):
@@ -95,6 +119,7 @@ def render_zion(path, st):
     # comme la version USLAND (SOFT_FEET) : plus de pli au pied de chaque bosse
     from scipy.ndimage import gaussian_filter
     t_ = np.clip((berms - 0.12) / 0.5, 0, 1); berms *= t_ * t_ * (3 - 2 * t_)
+    fill_berm_dips(berms, path)
     sf = LP.SOFT_FEET
     for A_ in (jumps, whoops):                                # (pas les berms : leur pied s'étalait sous les grilles)
         t_ = np.clip(A_ / sf['h'], 0, 1); w_ = t_ * t_ * (3 - 2 * t_)
@@ -179,10 +204,21 @@ def zion_extras(OUT, FOLDER):
     # virage (couleur + relief _tnorm), dont les bords droits faisaient les lignes. Plus aucune décal ZION entière ; à la place des
     # pastilles de grain (terre_zion.py : rayures + relief de 180.png, à la couleur de la tuile, bord fondu), 56 ft, tous les 22 ft,
     # tournées au hasard, partout sur le sol hors paddock : la texture partout, sans bord ni ligne.
-    import terre_zion as TZ
+    # v20 (capture en jeu : « la texture, faut pas qu'il y ait de traces en travers du terrain, faut que ce soit comme la texture de
+    # Saint-Thibéry, en gardant cette couleur ») : plus de pastilles de grain ZION (leurs rayures venaient du décal de virage 180.png) ;
+    # à la place la terre de Saint-Thibéry : track.png (USLAND2026SX1, 26 ft, tournée au hasard) teintée à la couleur de la tuile, posée
+    # comme à Saint-Thibéry (dress_sx : 5 en travers tous les 3,9 ft sur le tour et le départ, grille de 11 ft sur le reste du sol)
     from PIL import Image as _I
     tile_col = np.asarray(_I.open(os.path.join(OUT, "ztile", "2.png")).convert("RGB"), float).reshape(-1, 3).mean(0)
-    tz, tsize = TZ.make(os.path.join(OUT, "zdecal"), os.path.join(ZD, "decal"), base=tile_col)
+    src_ = os.path.join(BP.ROOT, "tracks", "USLAND2026SaintThiberybyBazo", "ext", "USLAND2026SX1", "decal")
+    a_ = np.asarray(_I.open(os.path.join(src_, "track.png")).convert("RGBA"), float); m_ = a_[..., 3] > 10
+    a_[..., :3] = np.clip(a_[..., :3] * (tile_col / a_[..., :3][m_].mean(0)), 0, 255)
+    _I.fromarray(a_.astype(np.uint8), "RGBA").save(os.path.join(OUT, "zdecal", "terre_stt.png"), optimize=True)
+    shutil.copy(os.path.join(src_, "track_tnorm.png"), os.path.join(OUT, "zdecal", "terre_stt_tnorm.png"))
+    for f_ in ("terre.png", "terre_tnorm.png"):                          # anciennes pastilles de grain (v19c)
+        if os.path.exists(os.path.join(OUT, "zdecal", f_)):
+            os.remove(os.path.join(OUT, "zdecal", f_))
+    tz, tsize = "terre_stt.png", 26.0
     dl = []; ov = []; rng = np.random.default_rng(19)
     # v19d : sable du virage après l'arrivée = décals sable de RF Anaheim 1 (sand2 / sand3, 18 ft, comme leur section sable), le grain
     # de terre s'arrête autour (34 ft)
@@ -197,11 +233,22 @@ def zion_extras(OUT, FOLDER):
             x_, z_ = xx + rng.uniform(-2, 2), zz + rng.uniform(-2, 2)
             if sand_t.query([x_, z_])[0] < 18.0:
                 sand.append("[%.6f %.6f] %.6f 18.000000 1.000000 @%s/rfsand/%s" % (x_, z_, rng.uniform(-np.pi, np.pi), FOLDER, "sand2.png" if rng.random() < 0.45 else "sand3.png"))
-    for xx in np.arange(fl[:, 0].min(), fl[:, 0].max() + 1, 22.0):
-        for zz in np.arange(fl[:, 1].min(), fl[:, 1].max() + 1, 22.0):
-            x_, z_ = xx + rng.uniform(-6, 6), zz + rng.uniform(-6, 6)
-            if inside(np.array([[x_, z_]]), fl)[0] and not (x0 <= x_ <= x1 and z0 <= z_ <= z1) and sand_t.query([x_, z_])[0] > 34.0:
-                ov.append("[%.6f %.6f] %.6f %.6f 1.000000 @%s/zdecal/%s" % (x_, z_, rng.uniform(-np.pi, np.pi), tsize, FOLDER, tz))
+    def put_(x_, z_):
+        ov.append("[%.6f %.6f] %.6f %.6f 1.000000 @%s/zdecal/%s" % (x_, z_, rng.uniform(-np.pi, np.pi), tsize, FOLDER, tz))
+    ride_ = []
+    for sm_ in (path.samples(3.9), StartRoute(st, LP.N_GATES, LP.GATE_PITCH).samples(3.9)):
+        for x, z, th in zip(sm_['x'], sm_['z'], sm_['th']):
+            nx, nz = -np.sin(th), np.cos(th); ride_.append((x, z))
+            for v in (-10.4, -5.2, 0.0, 5.2, 10.4):
+                j = rng.normal(0, 0.8, 2); x_, z_ = x + nx * v + j[0], z + nz * v + j[1]
+                if sand_t.query([x_, z_])[0] > 18.0:
+                    put_(x_, z_)
+    ride_t = _KD(np.array(ride_))
+    for xx in np.arange(fl[:, 0].min(), fl[:, 0].max() + 1, 11.0):
+        for zz in np.arange(fl[:, 1].min(), fl[:, 1].max() + 1, 11.0):
+            x_, z_ = xx + rng.uniform(-2.5, 2.5), zz + rng.uniform(-2.5, 2.5)
+            if inside(np.array([[x_, z_]]), fl)[0] and not (x0 <= x_ <= x1 and z0 <= z_ <= z1) and sand_t.query([x_, z_])[0] > 34.0                     and ride_t.query([x_, z_])[0] > 12.0:
+                put_(x_, z_)
     ov = ov + sand
     open(os.path.join(OUT, "decals"), "w", newline=chr(10)).write(chr(10).join(ov + dl) + chr(10))
     # v19 (« le saut d'arrivée, il va pas ; il faut faire les câbles comme sur mon track, avec le finish ») : plus d'arche ZION, le panneau
