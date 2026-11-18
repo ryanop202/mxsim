@@ -89,6 +89,7 @@ def fill_berm_dips(berms, path):
 def render_zion(path, st):
     import layouts_sx as LS
     jumps = np.zeros((N, N)); whoops = np.zeros((N, N)); berms = np.zeros((N, N)); fmx = np.zeros((N, N)); secs = []
+    walls = np.zeros((N, N))      # v20b : murets à part (le pied arrondi des whoops les étalait dans chaque creux = un rebord)
     for g in path.segs:
         if g['kind'] == 'S':
             for prof, u0, name in g['sections']:
@@ -99,8 +100,9 @@ def render_zion(path, st):
                     for it in LS.COMBOS[name]['items']:        # v16 : obstacles ZION (coupe ZION), whoops USLAND (coupe USLAND + murets)
                         i0, i1 = int(it[1] / 0.1), min(int(it[2] / 0.1) + 1, len(prof))
                         if it[0].startswith('whoops'):
-                            BP.render_lane_block(G, whoops, g, prof[i0:i1], u0 + it[1], BP.TW)
-                            whoops_walls(whoops, g, prof, u0, it)
+                            # v20b : whoops pleine forme jusqu'au pied droit des murets (|v| = 17 ft), murets seuls dans leur couche
+                            BP.render_lane_block(G, whoops, g, prof[i0:i1], u0 + it[1], 2 * BP.WALL_TOP[0])
+                            whoops_walls(walls, g, prof, u0, it, with_whoops=False)
                         else:
                             lane_zion(lay, g, prof[i0:i1], u0 + it[1], *LAT['T'])
                 secs.append(dict(lane=g['tag'], name=name, u0=round(u0, 1), L=round(len(prof) * 0.1, 1), H=round(float(prof.max()), 2),
@@ -118,12 +120,16 @@ def render_zion(path, st):
     # coupé net -> petites marches droites au bout des virages : le bas des berms est fondu à zéro ; (2) pieds des bosses arrondis
     # comme la version USLAND (SOFT_FEET) : plus de pli au pied de chaque bosse
     from scipy.ndimage import gaussian_filter
-    t_ = np.clip((berms - 0.12) / 0.5, 0, 1); berms *= t_ * t_ * (3 - 2 * t_)
+    # v20b (« il y a toujours une petite berme au pied du virage, dans tous les virages ») : le fondu v19d (seuil 0,12 - 0,62 ft) cassait
+    # le pied de chaque berm (pente 0 -> 17° en 2 ft = un pli). Fondu doux à la place : h - 0,15 tanh(h / 0,15) (pente continue, le fond
+    # de 0,02 - 0,1 ft tombe sous 0,013 ft, le berm ne baisse que de 0,15 ft)
+    berms[:] = berms - 0.15 * np.tanh(berms / 0.15)
     fill_berm_dips(berms, path)
     sf = LP.SOFT_FEET
     for A_ in (jumps, whoops):                                # (pas les berms : leur pied s'étalait sous les grilles)
         t_ = np.clip(A_ / sf['h'], 0, 1); w_ = t_ * t_ * (3 - 2 * t_)
         A_[:] = A_ * w_ + gaussian_filter(A_, sf['sigma'] / S) * (1 - w_)
+    np.maximum(whoops, walls, out=whoops)                     # murets après l'arrondi : face droite, rien dans les creux
     # rangée des grilles toujours à plat (le pied arrondi d'une bosse de L5 arrivait à 4 ft de la dernière grille) : fondu sur 3 ft
     G0 = np.array(st['gate']); h0 = np.radians(st['heading']); f0 = np.array([np.cos(h0), np.sin(h0)]); n0 = np.array([-f0[1], f0[0]])
     half = LP.N_GATES * LP.GATE_PITCH / 2 + 2.0; R_ = half + 8.0
