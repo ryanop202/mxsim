@@ -273,7 +273,8 @@ def zion_extras(OUT, FOLDER):
     assert not BP.REPORT.get('long_tuff_apres_depart'), "nofrills.js référence des rangs de statues"
     sd = os.path.join(OUT, "statue", "paris"); G0 = np.array(st['gate']); h0 = np.radians(st['heading']); f0 = np.array([np.cos(h0), np.sin(h0)])
     q = G0 + f0 * 12.0; rf_ = roof_ft(*q)
-    HO.finish(sd, drop=0.0, roof=rf_, word='start', fname='start_banner')
+    # v21 (« les câbles du départ, ils descendent bien plus bas pour le truc du start ») : bas du panneau à START_Y ft (était 34)
+    HO.finish(sd, drop=0.0, roof=rf_, word='start', fname='start_banner', y_bas=START_Y)
     # v19 : les élingues du FINISH montaient à 118 ft, le toit est à ~146 ft au-dessus de l'arrivée (elles s'arrêtaient dans le vide) :
     # le haut des élingues remonté jusqu'au toit
     import re
@@ -297,6 +298,50 @@ def zion_extras(OUT, FOLDER):
                                  start=(round(q[0], 1), round(q[1], 1), round(rf_, 1)), toit_finish=round(rfin, 1), grilles=t_.count(jm))
 
 
+START_Y = 15.0
+BALES_PER_TURN = {90: 3, 180: 5}
+
+
+def deco_v21(OUT, FOLDER, combos):
+    """v21 (photos de Paris 2025) : deco_v21.py ; boudins triangulaires bâchés + filets rouges sur le 1er quart de tour (90°) de chaque virage à berm, ballots
+    en U noirs à l'intérieur de ces virages, arche 50 Factory au milieu du plat du couloir Est (entre le saut de sortie et la table)."""
+    import deco_v21 as DV
+    sd = os.path.join(OUT, "statue", "deco"); os.makedirs(sd, exist_ok=True); ref = lambda f: "@%s/statue/deco/%s" % (FOLDER, f)
+    t = open(os.path.join(OUT, "terrain.hf")).read().split(); s_, lo_, hi_ = float(t[1]), float(t[2]), float(t[3])
+    Hm = np.asarray(Image.open(os.path.join(OUT, "terrain.png")), float) / 65535 * (hi_ - lo_) + lo_
+    Hf = lambda x, z: map_coordinates(Hm, [np.atleast_1d(z) / s_, np.atleast_1d(x) / s_], order=1)
+    line = lambda x, z, yaw, jm, png, shp_: "[%.6f 0.000000 %.6f] %.6f %s %s %s" % (x, z, yaw, ref(jm), ref(png), ref(shp_) if shp_ else "null")
+    lines = []; rep_ = dict(murs=[], ballots=0)
+    DV.tarp_texture(sd); ntex, rnet, rblk = DV.net_texture(sd)        # rnet = (v bas, v haut) du filet, rblk = uv du noir
+    bj, bp, bs = DV.bale_u(sd, 'noir')
+    for k, g in enumerate(g_ for g_ in BP.PATH.segs if g_['kind'] == 'T' and g_.get('berm')):
+        f0 = g.get('berm_from', 0.0); f1 = min(1.0, f0 + 90.0 / abs(g['ang']))
+        w = DV.turn_wall(sd, k, g, Hf, f0, f1, ntex, rnet, rblk); rep_['murs'].append((g['tag'][:5], w['r_wall'], w['arc_ft'], w['posts']))
+        gy, gx = np.gradient(Hm[int(g['cz'] / s_) - 2:int(g['cz'] / s_) + 3, int(g['cx'] / s_) - 2:int(g['cx'] / s_) + 3], s_)
+        assert max(abs(gx).max(), abs(gy).max()) < 0.02, ("origine du mur pas à plat", g['tag'])
+        for jm, png, shp_ in w['files']:
+            lines.append(line(g['cx'], g['cz'], 0.0, jm, png, shp_))
+        # ballots en U noirs à l'intérieur du virage, axe le long de la trajectoire
+        n_ = BALES_PER_TURN[180 if abs(g['ang']) > 120 else 90]; sg = 1.0 if g['ang'] > 0 else -1.0
+        th_in = g['t0'] + sg * np.pi / 2; ang = np.radians(g['ang'])
+        for f in (np.arange(n_) + 0.5) / n_:
+            th = th_in - ang * f; r_ = g['r'] - 8.0; x_, z_ = g['cx'] + np.cos(th) * r_, g['cz'] + np.sin(th) * r_
+            if Hf(x_, z_)[0] > 0.05:
+                continue
+            tx, tz = -np.sin(th), np.cos(th); lines.append(line(x_, z_, float(np.arctan2(-tz, tx)), bj, bp, bs)); rep_['ballots'] += 1
+    # arche 50 Factory : couloir Est (LR), milieu du plat entre le saut de sortie et la table à double étage
+    aj, ap, as_ = DV.arche_50f(sd)
+    gL = next(g for g in BP.PATH.segs if g['kind'] == 'S' and g['tag'].startswith('LR'))
+    prof, u0, name = gL['sections'][0]; it = combos[name]['items']; ua = u0 + (it[0][2] + it[1][1]) / 2
+    c, s2 = np.cos(gL['t']), np.sin(gL['t']); pa = (gL['x0'] + ua * c, gL['z0'] + ua * s2)
+    assert float(np.max(Hf(pa[0] + np.array([-s2, s2]) * 21.5, pa[1] + np.array([c, -c]) * 21.5))) < 0.05, "pieds de l'arche pas à plat"
+    lines.append(line(pa[0], pa[1], float(np.arctan2(c, s2)), aj, ap, as_)); rep_['arche'] = (round(pa[0], 1), round(pa[1], 1))
+    for f in ["statues"] + ["variants/" + v for v in os.listdir(os.path.join(OUT, "variants")) if v.startswith("statues")]:
+        p = os.path.join(OUT, f); s0 = open(p).read().rstrip(chr(10)) + chr(10)
+        open(p, "w", newline=chr(10)).write(s0 + chr(10).join(lines) + chr(10))
+    BP.REPORT['deco_v21'] = rep_
+
+
 def roof_ft(x, z):
     """hauteur du toit (ft) au-dessus d'un point du jeu (champ lissé de stade_paris, plan agrandi x PLAN_K)."""
     sys.path.insert(0, os.path.join(BP.ROOT, "stade_paris", "src"))
@@ -316,6 +361,7 @@ def export_zion(*a, **k):
     import layouts_sx as LS
     BP.whoops_boudins(BP.OUT, BP.FOLDER, BP.PATH, LS.COMBOS)          # v18 : boudins SX TOUR sur les murets
     semis_jgsx(BP.OUT, BP.FOLDER)                                      # v19 : semi-remorques JGSX aux couleurs des équipes
+    deco_v21(BP.OUT, BP.FOLDER, LS.COMBOS)                             # v21 : murs bâchés + filets, ballots en U, arche 50 Factory
 
 
 def semis_jgsx(OUT, FOLDER):

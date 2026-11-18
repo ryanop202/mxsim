@@ -145,9 +145,13 @@ FINISH_SEC = 'PAR-L5 petit double, triple d arrivee (ZION 2025)'
 # puis un double derrière la table (« sur table, derrière double »). Formes = bosses Arlington déjà utilisées ici.
 SMALL_DBL = [('scale', SA[0], 3.4), ('gap', 8.0), ('stretch', SA[1], 4.0, 1.25)]
 PRE_FINISH = [('scale', SA[0], 3.4), ('gap', 16.0), ('stretch', SA[1], 4.0, 1.25)]   # v13 : double plus long (était SMALL_DBL)
-PRE_FINISH_Z = [('stretch', SA[0], 4.8, 0.9), ('gap', 20.0), ('stretch', SA[1], 5.2, 1.6)]   # v19 (Zion) : vrai petit double, appel pointu ;
+PRE_FINISH_Z = [('stretch', SA[0], 4.8, 1.15), ('gap', 22.7), ('stretch', SA[1], 5.8, 1.6)]   # v20d (« l'appel du double plus plat, même
+#   hauteur, moins raide, que ça envoie moins loin ; la réception plus haute, un peu plus de terre, un peu plus loin : rallonge le saut de
+#   2 mètres ») : appel 0,9 -> 1,15 de long (30 -> 24°), réception 5,2 -> 5,8 ft, crête à crête +2 m (14,1 -> 16,1 m) ; avant :
+PRE_FINISH_Z_V19D = [('stretch', SA[0], 4.8, 0.9), ('gap', 20.0), ('stretch', SA[1], 5.2, 1.6)]   # v19 (Zion) : vrai petit double, appel pointu ;
 #   v19d (« la bosse entourée, mets-la 4 mètres plus loin ») : réception 13 ft plus loin (7 -> 20 ft)
 TRIPLE_EARLY = 20.0
+TABLE_PLUS = 3.3                  # v20d : table de L6 +50 cm de chaque côté
 # v10 (ancien commentaire) : « avant le triple il manque une bosse, ça fait un double » (v9 : un seul roller) ;
 #   la ligne d'arrivée (item 2) retombe ainsi sur l'APPEL du triple (avec le roller, l'item 2 était la réception -> FINISH mal placé)
 TABLE_L1 = ('stretch', TABLE_B, 6.6, 0.85)
@@ -320,9 +324,13 @@ Z25_BUTTE_W_ZION = (_P25['largeur_butte_mi_hauteur'], 90.0)   # 68 ft à mi-haut
 #   entre les singles (L2) et la ligne de départ il n'y a que ~98 ft -> flancs un peu plus raides que ZION
 
 
-def table_stt(h):
-    """v20 : la table de Saint-Thibéry (Arlington_g49_2, mesurée JGSX) à h ft, en 'raw' pour que la version Zion ne la remplace pas."""
-    return ('raw', 'table Saint-Thibery %.1f ft' % h, np.asarray(LS.L('tmp', [('scale', TABLE_B, h)]), float), 'T')
+def table_stt(h, extra=0.0):
+    """v20 : la table de Saint-Thibéry (Arlington_g49_2, mesurée JGSX) à h ft, en 'raw' pour que la version Zion ne la remplace pas ;
+    v20d : extra ft de plateau en plus (inséré au milieu du dessus)."""
+    p = np.asarray(LS.L('tmp', [('scale', TABLE_B, h)]), float)
+    if extra > 0:
+        top = np.nonzero(p > p.max() - 0.25)[0]; m = int((top[0] + top[-1]) // 2); p = np.r_[p[:m], np.full(int(round(extra / 0.1)), p[m]), p[m:]]
+    return ('raw', 'table Saint-Thibery %.1f ft%s' % (h, ' +%.1f ft' % extra if extra else ''), p, 'T')
 
 
 def tlen(tok):
@@ -499,12 +507,21 @@ def paris():
         # Arlington_g49_2 à 7,0 ft (ZION : 7,3 ft, appel 36°)
         B_[it_] = table_stt(7.0)
         eb_, ea_ = 3.0, -2.0
-        g_ = (xW - (xLR + RB) - EXIT_U0 - 8.0 - sum(tlen(b) for b in B_) - eb_ - ea_) / (len(B_) - 1)
+        # v20d (capture, bosse entourée = 2e avant la table : « un tout petit peu plus basse, qu'elle kick moins, un peu moins raide en bas,
+        # que ça envoie moins vers la hauteur et plus sur la longueur ; petite correction ») : montée 20 % plus longue, hauteur x0,96
+        # (pente max 42 -> 36°) ; sa crête ne bouge pas (la montée prend sur l'espace d'avant). « La table, rallonge-la de 50 cm de chaque
+        # côté » : plateau +3,3 ft, pris sur l'espace avant et après la table (les autres bosses ne bougent pas)
+        ib_ = it_ - 2; q_ = np.asarray(zionize([B_[ib_]])[0][2], float); kq = int(np.argmax(q_))
+        q2 = np.r_[resample(q_[:kq + 1], 1.2), q_[kq + 1:]] * 0.96; d_b = (len(q2) - len(q_)) * 0.1
+        B_[ib_] = ('raw', 'bosse ZION adoucie %.1f ft' % q2.max(), q2, 'T')
+        B_[it_] = table_stt(7.0, extra=TABLE_PLUS)
+        adj_ = {ib_ - 1: -d_b, it_ - 1: eb_ - TABLE_PLUS / 2, it_: ea_ - TABLE_PLUS / 2}
+        g_ = (xW - (xLR + RB) - EXIT_U0 - 8.0 - sum(tlen(b) for b in B_) - sum(adj_.values())) / (len(B_) - 1)
         toks = []
         for k, b in enumerate(B_):
             toks.append(b)
             if k < len(B_) - 1:
-                toks.append(('gap', round(g_ + (eb_ if k == it_ - 1 else ea_ if k == it_ else 0.0), 1)))
+                toks.append(('gap', round(g_ + adj_.get(k, 0.0), 1)))
     p.straight(xW - (xLR + RB), [lane_sec('PAR-L6 triple, double, table, double', toks, u0)], tag='L6 tribune Sud')
     p.turn(-180, R180, BIG, tag='T_C 180 droite (berm)')
     p.lanes = dict(x_end3=x_end3, R3=R3, zL5=zL5, zLD=zLD, zL3=zL3, zL2=zL2, zL1=zL1, zL6=zL6, xW=xW, xLR=xLR, xC=xC, xT5=xT5, xTB=xTB)

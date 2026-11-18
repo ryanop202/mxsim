@@ -10,12 +10,12 @@
     [
      "double USLAND",
      0.0,
-     25.9
+     29.8
     ],
     [
      "double USLAND",
-     45.9,
-     83.4
+     52.5,
+     90.0
     ],
     [
      "appel arrivee ZION 2025 (10,0)",
@@ -173,7 +173,7 @@
    "lane": "L6 tribune Sud",
    "name": "PAR-L6 triple, double, table, double",
    "u0": 10.0,
-   "L": 357.3,
+   "L": 357.2,
    "H": 7.0,
    "items": [
     [
@@ -192,8 +192,8 @@
      118.3
     ],
     [
-     "bosse ZION 5.2 ft",
-     129.0,
+     "bosse ZION adoucie 5.0 ft",
+     126.0,
      161.7
     ],
     [
@@ -202,19 +202,19 @@
      205.7
     ],
     [
-     "table Saint-Thibery 7.0 ft",
-     219.4,
-     274.5
+     "table Saint-Thibery 7.0 ft +3.3 ft",
+     217.7,
+     276.1
     ],
     [
      "bosse ZION 4.7 ft",
-     283.2,
-     314.5
+     283.1,
+     314.4
     ],
     [
      "bosse ZION 5.0 ft",
-     325.2,
-     357.2
+     325.1,
+     357.1
     ]
    ]
   }
@@ -232,7 +232,7 @@
  "objets": {
   "objets": {
    "retirés (v13) : boudins FLY Racing (whoops)": 24,
-   "retirés (v13) : ballots ZION (unis)": 234,
+   "retirés (v13) : ballots ZION (unis)": 232,
    "retirés (v13) : poteaux ronds": 7,
    "retirés (v13) : tuffs de virage ZION (unis)": 71,
    "retirés (v13) : filets": 42,
@@ -302,6 +302,57 @@
  },
  "boudins_whoops": 18,
  "semis_jgsx": 10,
+ "deco_v21": {
+  "murs": [
+   [
+    "T_L5a",
+    43.5,
+    68.3,
+    9
+   ],
+   [
+    "T_Bb ",
+    43.5,
+    68.3,
+    9
+   ],
+   [
+    "T_D 1",
+    59.1,
+    92.8,
+    12
+   ],
+   [
+    "T1 18",
+    44.0,
+    69.1,
+    9
+   ],
+   [
+    "T_TR ",
+    43.5,
+    68.3,
+    9
+   ],
+   [
+    "T_E 9",
+    43.5,
+    68.3,
+    9
+   ],
+   [
+    "T_C 1",
+    45.0,
+    70.7,
+    9
+   ]
+  ],
+  "ballots": 27,
+  "arche": [
+   277.8,
+   686.8
+  ]
+ },
  "lap_ft": 2773.3,
  "start": {
   "gate": [
