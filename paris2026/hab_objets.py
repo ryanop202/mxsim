@@ -432,20 +432,44 @@ def depart(out, width=96.0):
 
 # ---------------------------------------------------------------- panneau FINISH suspendu
 def finish(out, drop=0.0, y_bas=34.0, roof=118.0, word='finish', fname='finish'):
-    """v19 : word / fname -> le même panneau pour le départ (« comme le finish, mais tu remplaces finish par start »)."""
-    W, H = 1024, 256; im = Image.new('RGB', (W, H), (8, 8, 9)); d = ImageDraw.Draw(im)
-    fb = (0, 0, 1024, 200)                                                    # 26 x 5,1 ft, façon écran LED
-    fin = K.tint(logo(word), (235, 255, 235))
-    for k, x in enumerate((60, 110, 160)):
-        d.polygon([(x, 150), (x + 26, 150), (x + 76, 40), (x + 50, 40)], fill=(120, 230, 60))
-        d.polygon([(1024 - x, 150), (1024 - x - 26, 150), (1024 - x - 76, 40), (1024 - x - 50, 40)], fill=(120, 230, 60))
-    fit(im, fin, (250, 30, 774, 150), 0.02); fit(im, logo('venum'), (400, 152, 624, 196), 0.05)
-    a = np.asarray(im, float); a[:200:4, :, :] *= 0.55; a[:200, ::4, :] *= 0.75   # trame de LED
-    im = Image.fromarray(np.clip(a, 0, 255).astype(np.uint8)); _save(im, os.path.join(out, fname + '.png'))
-    m = Mesh(); y0 = y_bas - drop; rf = R(fb, W, H); blk = R((20, 215, 200, 245), W, H)
-    m.box((-13, y0, -0.6), (13, y0 + 5.1, 0.6), blk, 'xXzZYy', {'Z': rf, 'z': rf})
-    for x in (-11, 11):                                                       # élingues jusqu'au toit
-        m.tube((x, y0 + 5.1, 0), (x, roof - drop, 0), 0.08, blk, 5, caps=False)
+    """v19 : word / fname -> le même panneau pour le départ (« comme le finish, mais tu remplaces finish par start »).
+    v23 (photos START / FINISH de Paris : « regarde comment c'est fait ») : treillis carré en acier foncé (1,2 x 1,2 ft) au-dessus d'une
+    longue bannière (32 x 3,4 ft) : Venum | griffe Monster + MONSTER ENERGY | START / FINISH | Monster | Venum ; fond noir (START) ou
+    gris à rayures claires (FINISH) ; 2 élingues jusqu'au toit (haut des élingues à y = roof, convention reprise par build_zion)."""
+    L, Hb, T = 32.0, 3.4, 1.2
+    W, H = 2048, 256; bh = int(round(W * Hb / L)); fb = (0, 0, W, bh)
+    bg = (10, 10, 11) if word == 'start' else (78, 80, 84)
+    im = Image.new('RGB', (W, H), bg); d = ImageDraw.Draw(im)
+    if word != 'start':                                                        # FINISH : bâche grise, grandes rayures claires
+        for x in range(-200, W, 260):
+            d.polygon([(x, bh), (x + 90, bh), (x + 190, 0), (x + 100, 0)], fill=tuple(int(c * 1.18) for c in bg))
+    fx = lambda a: int(a * W)
+    for side in (0, 1):
+        def bx(a, b):
+            return (fx(a), 18, fx(b), bh - 18) if side == 0 else (fx(1 - b), 18, fx(1 - a), bh - 18)
+        fit(im, logo('venum'), bx(0.02, 0.16), 0.08)
+        fit(im, logo('monster_claw'), bx(0.195, 0.235) if side == 0 else bx(0.255, 0.295), 0.04)
+        fit(im, logo('monster_text'), bx(0.24, 0.33) if side == 0 else bx(0.165, 0.255), 0.12)   # même taille des 2 côtés
+    fit(im, K.tint(logo(word), (245, 245, 245)), (fx(0.35), 14, fx(0.65), bh - 14), 0.04)
+    d.rectangle([0, 0, W, 5], fill=(40, 40, 42)); d.rectangle([0, bh - 5, W, bh], fill=(40, 40, 42))
+    d.rectangle([20, 228, 60, 250], fill=(52, 54, 58)); d.rectangle([80, 228, 120, 250], fill=(14, 14, 15))
+    im = K.grain(im, 1.2); _save(im, os.path.join(out, fname + '.png'))
+    m = Mesh(); y0 = y_bas - drop; rf = R(fb, W, H); st = R((20, 228, 60, 250), W, H); blk = R((80, 228, 120, 250), W, H)
+    m.box((-L / 2, y0, -0.08), (L / 2, y0 + Hb, 0.08), blk, 'xXzZYy', {'Z': rf, 'z': rf})
+    yt0, yt1 = y0 + Hb + 0.05, y0 + Hb + 0.05 + T; zz = (-T / 2, T / 2); r_ = 0.07
+    for z_ in zz:                                                              # treillis : 4 membrures, montants et diagonales
+        for y_ in (yt0, yt1):
+            m.tube((-L / 2, y_, z_), (L / 2, y_, z_), r_, st, 6)
+        xs = np.arange(-L / 2, L / 2 + 0.01, 2.0)
+        for k, x in enumerate(xs):
+            m.tube((x, yt0, z_), (x, yt1, z_), r_ * 0.7, st, 5, caps=False)
+            if k < len(xs) - 1:
+                a, b = ((x, yt0, z_), (xs[k + 1], yt1, z_)) if k % 2 == 0 else ((x, yt1, z_), (xs[k + 1], yt0, z_))
+                m.tube(a, b, r_ * 0.6, st, 5, caps=False)
+    for x in np.arange(-L / 2, L / 2 + 0.01, 4.0):                             # traverses
+        m.tube((x, yt1, zz[0]), (x, yt1, zz[1]), r_ * 0.6, st, 5, caps=False); m.tube((x, yt0, zz[0]), (x, yt0, zz[1]), r_ * 0.6, st, 5, caps=False)
+    for x in (-L / 2 + 3.0, L / 2 - 3.0):                                      # élingues jusqu'au toit
+        m.tube((x, yt1, 0), (x, roof - drop, 0), 0.06, blk, 5, caps=False)
     m.write(os.path.join(out, fname + '.jm'), MAT_MAT)
 
 

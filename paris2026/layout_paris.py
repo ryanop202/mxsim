@@ -247,8 +247,13 @@ POST_FIN_V22D = dict(b1=[(23.8, 0), (27, 0.35), (31, 1.5), (33.8, 1.9), (36.5, 1
                 out_k=0.12)
 # v23 (« la 1re bosse normale, celle de la 2e actuelle un peu plus raide ; la 2e un peu plus grosse et plus espacée ; le plateau plus
 # haut : tu agrandis tout ») : bosse 1 pleine largeur 2,6 ft, bosse 2 3,3 ft (crêtes 20 ft d'écart), plateau 2,05 ft
-POST_FIN = dict(b1=[(26, 0), (29, 0.8), (32, 2.2), (34, 2.6), (36.5, 2.0), (39.5, 0.5), (42, 0)],
-                b23=[(44, 0), (47, 0.8), (51, 2.8), (54, 3.3), (57, 2.8), (60, 2.1), (64, 2.05), (88, 2.05), (94, 1.2), (100, 0.3), (104, 0)],
+POST_FIN_V23 = dict(b1=[(26, 0), (29, 0.8), (32, 2.2), (34, 2.6), (36.5, 2.0), (39.5, 0.5), (42, 0)],
+                    b23=[(44, 0), (47, 0.8), (51, 2.8), (54, 3.3), (57, 2.8), (60, 2.1), (64, 2.05), (88, 2.05), (94, 1.2), (100, 0.3), (104, 0)],
+                    out_k=1.0)
+# v23b (dessin sur la vue en jeu : « la 1re a la taille d'un roller, un peu plus haut ; la 2e un peu plus espacée, presque la taille d'une
+# bosse d'enchaînement ; et après le plateau, tac, qui tourne ») : 2,2 ft ; 4,0 ft (crêtes 24 ft d'écart) ; plateau 2,6 ft dès sa descente
+POST_FIN = dict(b1=[(25, 0), (28.5, 0.7), (31.5, 1.9), (33.5, 2.2), (35.5, 1.9), (38.5, 0.6), (41, 0)],
+                b23=[(43, 0), (47, 0.8), (52, 2.9), (56, 3.9), (58, 4.0), (60, 3.7), (63, 2.9), (66, 2.6), (88, 2.6), (94, 1.6), (100, 0.4), (105, 0)],
                 out_k=1.0)
 CAMEL_V22D = CAMEL
 # v23 (« un peu plus haut ; la face beaucoup plus raide, le bas toujours smooth ; un petit creux avant, que ça redescende presque au sol du stade
