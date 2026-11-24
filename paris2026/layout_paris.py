@@ -226,11 +226,28 @@ TABLE_CREUSEE = pts_prof([(0, 0), (1.0, 0.1), (4.6, 3.6), (6.2, 3.55), (9, 2.85)
                           (23.5, 4.0), (27.5, 2.2), (31, 0.5), (33, 0)], 0.7)
 # v22 (dessin sur LR + photos du saut Milwaukee) : « un mur, genre un camel, un appel très raide, une table très haute » ; dessinée à
 # ~21 ft mais les rollers du même dessin sont ~2x plus hauts que dans le message (« un quart de la bosse ») : hauteur des photos, ~10,6 ft
-CAMEL = pts_prof([(0, 0), (3, 0.5), (9, 3.3), (14, 7.3), (17.5, 9.8), (20, 10.5), (22, 10.6), (40, 10.65), (43, 10.2), (50, 7.0),
-                  (58, 3.2), (64, 0.8), (68, 0)], 1.2)   # appel ~40°
+CAMEL_V22B = pts_prof([(0, 0), (3, 0.5), (9, 3.3), (14, 7.3), (17.5, 9.8), (20, 10.5), (22, 10.6), (40, 10.65), (43, 10.2), (50, 7.0),
+                       (58, 3.2), (64, 0.8), (68, 0)], 1.2)   # appel ~40°
+# v22c (« plus dans ce style la bosse », dessin sur le profil v22b) : appel creusé qui se redresse en haut (kick), plateau court (~6 ft),
+# dos raide ; hauteur gardée à 10,6 ft (le dessin monte à ~15 ft : forme du dessin x0,69) ; commence vers 118 ft du virage
+CAMEL = pts_prof([(0, 0), (5, 0.7), (8, 2.8), (10.5, 6.4), (12, 7.0), (14, 10.3), (15, 10.6), (21, 10.6), (22, 10.3), (26, 4.8),
+                  (28.5, 1.4), (32, 0)], 0.7)
+CAMEL_U = 118.0
 # v22 (dessin sur L1) : « après les whoops, comme une whoops en plus, sauf que ça fait une table plate d'à peu près la longueur d'une
 # table normale ; ça redescend »
 TABLE_PLATE_L1 = pts_prof([(0, 0), (3, 1.0), (6, 2.9), (8.5, 3.5), (30, 3.6), (33, 2.9), (38, 0.7), (41, 0)], 0.8)
+
+
+def fuse_raw(t, bottom=0.6):
+    """v22c : fusion des 2 bosses d'un profil (comme le 'fuse' de Saint-Georges / Saint-Thibéry) : le creux entre la 1re crête et la
+    dernière est remonté à bottom x la 1re crête (descente et remontée en cosinus), les faces extérieures ne bougent pas."""
+    from scipy.signal import find_peaks
+    p = np.asarray(t[2], float).copy(); pk, _ = find_peaks(p, prominence=0.8); i1, i2 = int(pk[0]), int(pk[-1])
+    im = i1 + int(np.argmin(p[i1:i2 + 1])); H1, H2 = p[i1], p[i2]; bo = bottom * H1
+    e1 = bo + (H1 - bo) * (1 + np.cos(np.linspace(0, np.pi, im - i1 + 1))) / 2
+    e2 = bo + (H2 - bo) * (1 - np.cos(np.linspace(0, np.pi, i2 - im + 1))) / 2
+    p[i1:i2 + 1] = np.maximum(p[i1:i2 + 1], np.r_[e1, e2[1:]])
+    return ('raw', t[1] + ' fusionne', p, t[3])
 
 
 def whoops_paris(n=11, H=3.6, first=0.6, pitch=18.6):
@@ -449,6 +466,8 @@ def paris():
         u_app = (xW - (xT5 + RB)) - 8.0 - tlen(toks[i_t:]) - TRIPLE_EARLY   # v19d (« la pointe de l'appel du triple au trait orange,
         #   là il est un peu trop dans le virage ») : 20 ft plus tôt
     toks = pre + [('gap', round(u_app - ue - tlen(pre), 1))] + toks[i_t:]; u0 = ue
+    if ZION:   # v22c (« le triple du saut d'arrivée comme à Saint-Georges : la bosse du milieu et la réception, une fusion entre les deux »)
+        toks = [fuse_raw(t) if t[0] == 'raw' and t[1].startswith('triple arrivee') else t for t in toks]
     p.straight(xW - (xT5 + RB), [lane_sec(FINISH_SEC, toks, u0, finish=True)], tag='L5 arrivée')
     p.turn(90, RB, BIG, tag='T_L5a 90 gauche (berm)')
     p.straight(zLD - zL5 - 2 * RB, tag='T_L5 milieu')
@@ -541,7 +560,8 @@ def paris():
         r1 = ('raw', 'roller sable 1,1 ft', pts_prof([(0, 0), (5, 0.55), (10, 1.1), (15, 0.55), (20, 0)], 1.5), 'T')
         r2 = ('raw', 'roller sable 1,3 ft', pts_prof([(0, 0), (8, 0.7), (16, 1.3), (24, 0.7), (32, 0)], 2.0), 'T')
         cam = ('raw', 'saut Milwaukee 10,6 ft', CAMEL, 'T'); tri_ = rh[2:]
-        free = lLR - u0 - 8.0 - tlen([r1]) - tlen([r2]) - tlen([cam]) - tlen(tri_); creux = 3.0; g1 = round(free - creux - 18.0, 1)   # 18 ft avant le triple
+        free = lLR - u0 - 8.0 - tlen([r1]) - tlen([r2]) - tlen([cam]) - tlen(tri_); creux = 3.0
+        g1 = round(CAMEL_U - u0 - tlen([r1]) - tlen([r2]) - creux, 1)   # v22c : le saut commence à CAMEL_U ft du virage
         assert g1 > 15.0, free
         toks = [r1, ('gap', g1), r2, ('gap', creux), cam, ('gap', round(free - creux - g1, 1))] + tri_
         SAND_LR = (0.0, u0 + tlen([r1]) + g1 + tlen([r2]) + creux + 2.0)

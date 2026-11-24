@@ -36,6 +36,12 @@ FAIT en v22b (non testé en jeu) : 1, 2 (saut Milwaukee à 10,6 ft d'après les 
 - Intérieur des virages : boudins surélevés sur de la terre, logo du sponsor de la zone.
 - Appel du triple : cabane toute noire fermée + bonhomme qui tend le drapeau vers la piste.
 
+## v22c (fait, non testé en jeu)
+- saut Milwaukee refait d'après le dessin (appel creusé qui se redresse, plateau court ~6 ft, dos raide), 10,6 ft, vers 118 ft du virage.
+- sable jaune (tuile sable + décals sable).
+- triple d'arrivée : bosse du milieu et réception fusionnées (creux remonté à 60 % de la bosse du milieu).
+- whoops : talus gauche (côté public) enlevé complètement ; boudins FLY (au sol à gauche, sur le muret à droite).
+
 ## Photos IRL (Supercross de Paris, refs/photos_irl/)
 - virage_apres_arrivee.png : « gauche, une bosse, une autre bosse, un plat qui tourne, et ça redescend » ; ballots bleus (Yamaha).
 - whoops_motoverte.png (vue depuis la sortie des whoops) : côté public (gauche du pilote) pas de talus, longs boudins posés au sol ;

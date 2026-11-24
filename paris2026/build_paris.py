@@ -166,10 +166,11 @@ def render_mid(out, g, prof, u0, name):
 
 
 WALL_TOP, WALL_RAMP = (17.0, 19.4), 3.0      # v21d : 16 -> 3 ft (boudins dès l'entrée des whoops)     # murets des whoops (versions Zion et RF) : dessus plat entre |v| 17 et 19,4 ft
+WHOOPS_LEFT_GROUND = False                    # v22c (version Zion) : pas de talus à gauche des whoops, boudins FLY au sol
 WALL_SLOPE = 2.5                             # v19 (« légèrement moins larges, pile la largeur d'un boudin ») : dessus 3 -> 2,4 ft, pentes 3 -> 2,5 ft
 
 
-def whoops_walls(out, g, prof, u0, it, top=WALL_TOP, slope=WALL_SLOPE, ramp=WALL_RAMP, with_whoops=True):
+def whoops_walls(out, g, prof, u0, it, top=WALL_TOP, slope=WALL_SLOPE, ramp=WALL_RAMP, with_whoops=True, left=True):
     """v16 (« mets des murs sur les côtés, mais mieux que ça ») : muret ARRONDI de chaque côté des whoops (coupe en cosinus centrée à
     vc ft de l'axe, demi-largeur hw, sommet à la hauteur des crêtes), whoops pleine largeur jusqu'au sommet du muret, rampes
     douces de ramp ft aux deux bouts ; pas de dessus plat ni de face raide (v14)."""
@@ -177,7 +178,7 @@ def whoops_walls(out, g, prof, u0, it, top=WALL_TOP, slope=WALL_SLOPE, ramp=WALL
     ua, ub = u0 + it[1], u0 + it[2]; c, s_ = np.cos(g['t']), np.sin(g['t']); half = top[1] + slope + 1.0
     pts = np.array([(g['x0'] + uu * c - vv * s_, g['z0'] + uu * s_ + vv * c) for uu in (ua, ub) for vv in (-half, half)])
     sl, X, Z = G.window(pts[:, 0].min(), pts[:, 0].max(), pts[:, 1].min(), pts[:, 1].max())
-    dx, dz = X - g['x0'], Z - g['z0']; u = dx * c + dz * s_; v = np.abs(-dx * s_ + dz * c)
+    dx, dz = X - g['x0'], Z - g['z0']; u = dx * c + dz * s_; vs_ = -dx * s_ + dz * c; v = np.abs(vs_)
     ss = lambda t: np.clip(t, 0, 1) ** 2 * (3 - 2 * np.clip(t, 0, 1))
     # v17 (« plus larges pour pouvoir mettre des boudins dessus ») : dessus PLAT de 3 ft (largeur d'un boudin), pentes arrondies de 3 ft
     a_, b_ = top; vc = a_
@@ -192,6 +193,8 @@ def whoops_walls(out, g, prof, u0, it, top=WALL_TOP, slope=WALL_SLOPE, ramp=WALL
     lat = np.where(v < a_, 0.5 * (1 - np.cos(np.pi * np.clip((v - (a_ - INNER)) / INNER, 0, 1))),
                    np.where(v <= b_, 1.0, 0.5 * (1 + np.cos(np.pi * np.clip((v - b_) / slope, 0, 1)))))
     wu = np.interp((u - u0) / 0.1, np.arange(len(prof)), prof, left=0, right=0) * (u >= ua) * (u <= ub) * (v <= vc)
+    if not left:                       # v22c (« le talus à gauche des whoops, côté public : enlève-le, complet ») : pas de muret à gauche
+        lat = np.where(vs_ < 0, 0.0, lat)
     out[sl] = np.maximum(out[sl], np.maximum(Hw * lat * lon, wu) if with_whoops else Hw * lat * lon)
 
 
@@ -201,7 +204,7 @@ def whoops_boudins(OUT, FOLDER, path, combos):
     pleine hauteur (pas sur ses rampes) : origine sur du plat, le jeu ne les penche pas. Ajoutés en fin de statues (indices gardés)."""
     sd = os.path.join(OUT, "statue", "boudins"); os.makedirs(sd, exist_ok=True)
     PROPS = os.path.join(ROOT, "assets", "props")
-    for f in ("boudin_logo3.jm", "boudin_logo3.shp", "boudin_sxtour3.png"):
+    for f in ("boudin_logo3.jm", "boudin_logo3.shp", "boudin_sxtour3.png", "boudin_fly3.png"):
         shutil.copy(os.path.join(PROPS, f), os.path.join(sd, f))
     ref = lambda f: "@%s/statue/boudins/%s" % (FOLDER, f)
     vc = sum(WALL_TOP) / 2; lines = []
@@ -216,11 +219,13 @@ def whoops_boudins(OUT, FOLDER, path, combos):
                 # v21d (« les boudins SX Tour des whoops : fais-les commencer dès l'entrée des whoops, là ils sont un peu en décalé »)
                 ua, ub = u0 + it[1], u0 + it[2]; n_b = int((ub - ua) // 18.0); us = ua
                 for side in (-1, 1):
+                    # v22c (Zion) : boudins FLY ; à gauche (côté public, plus de talus) posés au sol au pied des whoops (|v| = 24 ft)
+                    vv_ = (24.0 if side < 0 else vc) if WHOOPS_LEFT_GROUND else vc; skin = "boudin_fly3.png" if WHOOPS_LEFT_GROUND else "boudin_sxtour3.png"
                     for k in range(n_b):
-                        u = us + 9.0 + 18.0 * k; p = np.array([g['x0'] + u * c, g['z0'] + u * s_]) + nrm * side * vc
+                        u = us + 9.0 + 18.0 * k; p = np.array([g['x0'] + u * c, g['z0'] + u * s_]) + nrm * side * vv_
                         f = -nrm * side
                         lines.append("[%.6f 0.000000 %.6f] %.6f %s %s %s" % (p[0], p[1], float(np.arctan2(f[0], f[1])),
-                                                                           ref("boudin_logo3.jm"), ref("boudin_sxtour3.png"), ref("boudin_logo3.shp")))
+                                                                           ref("boudin_logo3.jm"), ref(skin), ref("boudin_logo3.shp")))
     for f in ["statues"] + ["variants/" + v for v in os.listdir(os.path.join(OUT, "variants")) if v.startswith("statues")]:
         p = os.path.join(OUT, f); s = open(p).read().rstrip("\n") + "\n"
         open(p, "w", newline="\n").write(s + "\n".join(lines) + "\n")

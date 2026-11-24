@@ -105,7 +105,7 @@ def render_zion(path, st):
                         if it[0].startswith('whoops'):
                             # v20b : whoops pleine forme jusqu'au pied droit des murets (|v| = 17 ft), murets seuls dans leur couche
                             BP.render_lane_block(G, whoops, g, prof[i0:i1], u0 + it[1], 2 * BP.WALL_TOP[0])
-                            whoops_walls(walls, g, prof, u0, it, with_whoops=False)
+                            whoops_walls(walls, g, prof, u0, it, with_whoops=False, left=False)   # v22c : pas de talus à gauche
                         else:
                             sp_ = [q for q in LP.SPLIT_Z.get(name, []) if q[0] - 0.5 <= it[1] and it[2] <= q[1] + 0.5]   # v22
                             kk_ = sp_[0][2:] if sp_ else (1.0, 1.0)
@@ -154,6 +154,18 @@ def render_zion(path, st):
     return jumps, whoops, berms, fmx
 
 
+SABLE_JAUNE = (226, 196, 118)
+
+
+def jaunir(path, target=SABLE_JAUNE):
+    """v22c (« fais le sable jaune ») : même grain, couleur moyenne ramenée à un sable jaune (garde l'alpha s'il y en a)."""
+    im = Image.open(path); has_a = im.mode in ('RGBA', 'LA'); a = np.asarray(im.convert('RGBA'), float)
+    rgb = a[..., :3]; m = rgb.reshape(-1, 3).mean(0); lum = rgb.mean(-1, keepdims=True) / max(m.mean(), 1.0)
+    out = np.clip(lum * np.array(target, float), 0, 255)
+    res = np.concatenate([out, a[..., 3:]], -1) if has_a else out
+    Image.fromarray(res.astype(np.uint8), 'RGBA' if has_a else 'RGB').save(path)
+
+
 def zion_ground(OUT, FOLDER):
     """après l'export : tileinfo ZION (6 tuiles) + Road / Grass de la version USLAND, tilemap renuméroté, éclairage + ciel ZION,
     ombrage recalculé avec le soleil ZION et sa formule."""
@@ -174,6 +186,7 @@ def zion_ground(OUT, FOLDER):
     shutil.copytree(os.path.join(ZD, "tile"), os.path.join(OUT, "ztile"), dirs_exist_ok=True)
     # v19d (« essaie de faire la terre un peu plus orange marron ») : la tuile de terre ZION (couleur unie 158 136 85) -> TERRE_RGB
     t2 = os.path.join(OUT, "ztile", "2.png"); Image.new("RGB", Image.open(t2).size, TERRE_RGB).save(t2)
+    jaunir(os.path.join(OUT, "ztile", "sand.ppm"))                     # v22c (« fais le sable jaune »)
     dalles_texture(os.path.join(OUT, "ztile", "dalles_noires.png"))
     tm = np.fromfile(os.path.join(OUT, "tilemap"), np.uint8)
     remap = np.array([0, 0, 0, 3, 4, 4, 5, 4, 6, 7] + [6] * 246, np.uint8)
@@ -269,6 +282,8 @@ def zion_extras(OUT, FOLDER):
     RFT = os.path.join(os.path.dirname(BP.ROOT), "rf_ext", "sx2026r01anaheim1", "textures")
     for f_ in ("sand2.png", "sand2_tnorm.png", "sand3.png"):
         shutil.copy(os.path.join(RFT, f_), os.path.join(sd_, f_))
+    for f_ in ("sand2.png", "sand3.png"):                                # v22c (« fais le sable jaune »)
+        jaunir(os.path.join(sd_, f_))
     sx0, sz0 = BP.SAND_SMP.min(0) - 30; sx1, sz1 = BP.SAND_SMP.max(0) + 30; sand = []
     for xx in np.arange(sx0, sx1, 8.0):
         for zz in np.arange(sz0, sz1, 8.0):
@@ -425,6 +440,7 @@ def export_zion(*a, **k):
     zion_ground(BP.OUT, BP.FOLDER)
     zion_extras(BP.OUT, BP.FOLDER)
     import layouts_sx as LS
+    BP.WHOOPS_LEFT_GROUND = True                                       # v22c : boudins FLY, au sol à gauche (plus de talus)
     BP.whoops_boudins(BP.OUT, BP.FOLDER, BP.PATH, LS.COMBOS)          # v18 : boudins SX TOUR sur les murets
     semis_jgsx(BP.OUT, BP.FOLDER)                                      # v19 : semi-remorques JGSX aux couleurs des équipes
     deco_v21(BP.OUT, BP.FOLDER, LS.COMBOS)                             # v21 : murs bâchés + filets, ballots en U, arche 50 Factory
