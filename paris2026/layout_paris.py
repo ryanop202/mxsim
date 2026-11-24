@@ -232,7 +232,11 @@ CAMEL_V22B = pts_prof([(0, 0), (3, 0.5), (9, 3.3), (14, 7.3), (17.5, 9.8), (20, 
 # dos raide ; hauteur gardée à 10,6 ft (le dessin monte à ~15 ft : forme du dessin x0,69) ; commence vers 118 ft du virage
 CAMEL = pts_prof([(0, 0), (5, 0.7), (8, 2.8), (10.5, 6.4), (12, 7.0), (14, 10.3), (15, 10.6), (21, 10.6), (22, 10.3), (26, 4.8),
                   (28.5, 1.4), (32, 0)], 0.7)
-CAMEL_U = 118.0
+# v22d : virage après l'arrivée (s en ft depuis l'entrée de T_L5a ; T_L5a 33,8 ft, ligne droite 25,8, T_L5b 33,8 -> e3 = 93,4)
+POST_FIN = dict(b1=[(23.8, 0), (27, 0.35), (31, 1.5), (33.8, 1.9), (36.5, 1.5), (39.5, 0.3), (41.5, 0)],
+                b23=[(40.0, 0), (43, 0.6), (47, 2.2), (49.5, 2.8), (52, 2.4), (54.5, 1.5), (60, 1.45), (88, 1.45), (93, 0.9), (99, 0.2), (103, 0)],
+                out_k=0.12)
+CAMEL_U = 142.0   # v22d (« mets le saut Milwaukee plus centré vers mon trait », trait à ~158 ft) : centre du saut à 158 ft (était 118 -> 134)
 # v22 (dessin sur L1) : « après les whoops, comme une whoops en plus, sauf que ça fait une table plate d'à peu près la longueur d'une
 # table normale ; ça redescend »
 TABLE_PLATE_L1 = pts_prof([(0, 0), (3, 1.0), (6, 2.9), (8.5, 3.5), (30, 3.6), (33, 2.9), (38, 0.7), (41, 0)], 0.8)

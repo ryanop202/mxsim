@@ -10,7 +10,7 @@ HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(HERE);
 os.environ['PARIS_ZION'] = '1'
 import rendu_objets as RO      # noqa: E402
 
-T = os.path.join(ROOT, "tracks", "USLAND2026SupercrossParisZion"); RO.T = T; RO.D = os.path.join(T, "statue", "deco")
+T = os.path.join(ROOT, "tracks", "USLANDParis"); RO.T = T; RO.D = os.path.join(T, "statue", "deco")
 AP = os.path.join(HERE, "apercu_zion")
 
 

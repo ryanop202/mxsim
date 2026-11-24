@@ -22,8 +22,8 @@ import layout_paris as LP         # noqa: E402
 from PIL import Image             # noqa: E402
 from scipy.ndimage import map_coordinates   # noqa: E402
 
-BP.FOLDER = "USLAND2026SupercrossParisZion"
-BP.DESC = "USLAND: Supercross Paris 2026 (version Zion)"
+BP.FOLDER = "USLANDParis"                     # v22d (« renomme-la usland paris ») ; était USLAND2026SupercrossParisZion
+BP.DESC = "USLAND Paris"                        # v22d (« renomme-la usland paris »)
 BP.OUT = os.path.join(BP.ROOT, "tracks", BP.FOLDER)
 BP.AP = os.path.join(HERE, "apercu_zion")
 BP.SAND_LD = 0.0                   # v19d (« le virage après le saut d'arrivée en sable, que le virage ») : pas sur la ligne de départ
@@ -89,6 +89,37 @@ def fill_berm_dips(berms, path):
         berms[sl] += add
 
 
+def post_finish(out, path, sm=1.2):
+    """v22d (photo IRL + croquis validé « fais plutôt la 1re ... ») : après l'arrivée (T_L5a 90° gauche, petite ligne droite, T_L5b 90° gauche) :
+    (1) bosse basse à moitié dans le virage : à l'intérieur (gauche) 1,9 ft, presque rien à l'extérieur (« le virage sort encore un peu
+    dans la bosse »), passage doux ; (2) bosse 2,8 ft dans la petite ligne droite ; (3) fusionnée : on coupe la descente de la 2 à
+    mi-hauteur et le plateau (1,5 ft) part direct, sans creux, tourne avec le 2e 90°, puis redescend sur la ligne du bas.
+    h(s, v) lu sur la trajectoire (s depuis l'entrée de T_L5a, v > 0 = droite du sens de course = extérieur), lissé (pas de trait)."""
+    from scipy.spatial import cKDTree
+    from scipy.ndimage import gaussian_filter
+    ga = next(g for g in path.segs if g['tag'].startswith('T_L5a')); gb = next(g for g in path.segs if g['tag'].startswith('T_L5b'))
+    e1 = ga['L']; e3 = gb['s0'] + gb['L'] - ga['s0']
+    smp = path.samples(0.25); sr = smp['s'] - ga['s0']; keep = (sr > -15) & (sr < e3 + 30)
+    sx, sz, st_, th = smp['x'][keep], smp['z'][keep], sr[keep], smp['th'][keep]
+    P1 = LP.pts_prof(LP.POST_FIN['b1'], 1.0); P23 = LP.pts_prof(LP.POST_FIN['b23'], 1.0)
+    R = 40.0; sl, X, Z = G.window(sx.min() - R, sx.max() + R, sz.min() - R, sz.max() + R)
+    tree = cKDTree(np.c_[sx, sz]); d_, i_ = tree.query(np.c_[X.ravel(), Z.ravel()]); i_ = i_.reshape(X.shape)
+    dx, dz = X - sx[i_], Z - sz[i_]; v = -dx * np.sin(th[i_]) + dz * np.cos(th[i_]); s_ = st_[i_]
+    u0_ = 0.0                                                   # les points de POST_FIN sont déjà en s absolu
+    h1 = np.interp((s_ - u0_) / 0.1, np.arange(len(P1)), P1, left=0, right=0)
+    u2_ = 0.0
+    h23 = np.interp((s_ - u2_) / 0.1, np.arange(len(P23)), P23, left=0, right=0)
+    tw = LP.TOP_W; ss = lambda t: (lambda t_: t_ * t_ * (3 - 2 * t_))(np.clip(t, 0, 1))
+    side = LP.POST_FIN['out_k'] + (1 - LP.POST_FIN['out_k']) * ss((tw / 2 - v) / tw)          # intérieur (v < 0) 1 -> extérieur out_k
+    lat = ss((tw / 2 + 4.0 - np.abs(v)) / 4.0)                # bord sur 4 ft (le centre du virage, origine du mur, reste à plat)
+    h = (h1 * side + h23) * lat * (d_.reshape(X.shape) < R)
+    for g_ in (ga, gb):                                       # centre des virages (origine des murs) : disque plat de 4 ft, fondu sur 4 ft
+        h = h * ss((np.hypot(X - g_['cx'], Z - g_['cz']) - 4.0) / 4.0)
+    h = gaussian_filter(h, sm / S)
+    out[sl] = np.maximum(out[sl], h)
+    BP.REPORT['apres_arrivee'] = dict(b1=round(float(P1.max()), 2), b23=round(float(P23.max()), 2), plateau=LP.POST_FIN['b23'][3][1])
+
+
 def render_zion(path, st):
     import layouts_sx as LS
     jumps = np.zeros((N, N)); whoops = np.zeros((N, N)); berms = np.zeros((N, N)); fmx = np.zeros((N, N)); secs = []
@@ -132,6 +163,7 @@ def render_zion(path, st):
     # coupé net -> petites marches droites au bout des virages : le bas des berms est fondu à zéro ; (2) pieds des bosses arrondis
     # comme la version USLAND (SOFT_FEET) : plus de pli au pied de chaque bosse
     from scipy.ndimage import gaussian_filter
+    post_finish(jumps, path)                                  # v22d : bosses + plateau du virage après l'arrivée
     # v20b (« il y a toujours une petite berme au pied du virage, dans tous les virages ») : le fondu v19d (seuil 0,12 - 0,62 ft) cassait
     # le pied de chaque berm (pente 0 -> 17° en 2 ft = un pli). Fondu doux à la place : h - 0,15 tanh(h / 0,15) (pente continue, le fond
     # de 0,02 - 0,1 ft tombe sous 0,013 ft, le berm ne baisse que de 0,15 ft)

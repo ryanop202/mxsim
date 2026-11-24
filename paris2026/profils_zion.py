@@ -12,7 +12,7 @@ sys.path.insert(0, HERE); sys.path.insert(0, os.path.join(ROOT, "scripts"))
 os.environ['PARIS_ZION'] = '1'
 import layout_paris as LP   # noqa: E402
 
-T = os.path.join(ROOT, "tracks", "USLAND2026SupercrossParisZion")
+T = os.path.join(ROOT, "tracks", "USLANDParis")
 OUT = os.path.join(HERE, "apercu_zion", "profils_v21d"); os.makedirs(OUT, exist_ok=True)
 n, s, hmin, hmax = open(os.path.join(T, "terrain.hf")).read().split(); s, hmin, hmax = float(s), float(hmin), float(hmax)
 H = np.asarray(Image.open(os.path.join(T, "terrain.png")), np.float64) / 65535 * (hmax - hmin) + hmin
