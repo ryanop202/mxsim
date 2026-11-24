@@ -171,7 +171,7 @@ erode_limit 1.5 0.05 1.35
 erode_limit 2.25 0.05 0.75
 erode_limit 3.25 0.05 0.05
 erode_lateral_scale 1.5
-texture @USLANDParis/ztile/sand.ppm
+texture @USLANDParis/ext/USLAND2026SX1/tiles/sand.ppm
 roost texture=@USLANDParis/ztile/roost.png count=1 size=0.5 grow=5.0 drag=5 slow_speed=0.0 fast_speed=64.0 slow_angle=0.2 fast_angle=0.3 r=179 g=151 b=119 a=170 fade_r=20 fade_g=0 fade_b=0 fade_a=-128
 roost texture=@USLANDParis/ztile/roost.png count=2 size=0.5 grow=3.0 drag=5 slow_speed=0.0 fast_speed=64.0 slow_angle=0.2 fast_angle=0.3 r=179 g=151 b=119 a=170 fade_r=20 fade_g=0 fade_b=0 fade_a=-128
 roost texture=@USLANDParis/ztile/roost.png count=1 size=0.3 grow=3.0 drag=5 slow_speed=0.0 fast_speed=64.0 slow_angle=0.2 fast_angle=0.2 r=179 g=151 b=119 a=170 fade_r=20 fade_g=0 fade_b=0 fade_a=128
@@ -210,7 +210,7 @@ erode_limit 1.5 0.05 1.35
 erode_limit 2.25 0.05 0.75
 erode_limit 2.75 0.05 0.05
 erode_lateral_scale 1.5
-texture @USLANDParis/ztile/sand.ppm
+texture @USLANDParis/ext/USLAND2026SX1/tiles/sand.ppm
 roost texture=@USLANDParis/ztile/roost.png count=1 size=0.5 grow=5.0 drag=5 slow_speed=0.0 fast_speed=64.0 slow_angle=0.2 fast_angle=0.3 r=179 g=151 b=119 a=170 fade_r=20 fade_g=0 fade_b=0 fade_a=-128
 roost texture=@USLANDParis/ztile/roost.png count=2 size=0.5 grow=3.0 drag=5 slow_speed=0.0 fast_speed=64.0 slow_angle=0.2 fast_angle=0.3 r=179 g=151 b=119 a=170 fade_r=20 fade_g=0 fade_b=0 fade_a=-128
 roost texture=@USLANDParis/ztile/roost.png count=1 size=0.3 grow=3.0 drag=5 slow_speed=0.0 fast_speed=64.0 slow_angle=0.2 fast_angle=0.2 r=179 g=151 b=119 a=170 fade_r=20 fade_g=0 fade_b=0 fade_a=128

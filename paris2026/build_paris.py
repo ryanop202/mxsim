@@ -35,6 +35,8 @@ TW = LIB['sx_lateral']['top_width']
 T_MAIN, T_JUMP, T_WHOOP, T_BERM, T_ROAD = 0, 1, 2, 3, 8      # indices de export_sx.TILES
 SAND_LD = 70.0                 # sable sur les 70 premiers ft de la ligne de départ (v10) ; version Zion v19d : 0 (« que le virage »)
 SAND_SMP = None
+SAND_TL5 = True                # v23 : version Zion : plus de sable dans le virage après l'arrivée
+SAND_RUTS = True               # v23 : version Zion : plus d'ornières (« le sable, t'as fait des traces dans tous les sens, enlève-les »)
 REPORT = {}
 
 
@@ -165,7 +167,7 @@ def render_mid(out, g, prof, u0, name):
     out[:] = np.maximum(out, lay)
 
 
-WALL_TOP, WALL_RAMP = (17.0, 19.4), 3.0      # v21d : 16 -> 3 ft (boudins dès l'entrée des whoops)     # murets des whoops (versions Zion et RF) : dessus plat entre |v| 17 et 19,4 ft
+WALL_TOP, WALL_RAMP = (17.0, 19.4), 12.0   # v23 (« le talus doit commencer progressivement comme l'ancien, pas raide ») : 3 -> 12 ft ;     # v21d : 16 -> 3 ft (boudins dès l'entrée des whoops)     # murets des whoops (versions Zion et RF) : dessus plat entre |v| 17 et 19,4 ft
 WHOOPS_LEFT_GROUND = False                    # v22c (version Zion) : pas de talus à gauche des whoops, boudins FLY au sol
 WALL_SLOPE = 2.5                             # v19 (« légèrement moins larges, pile la largeur d'un boudin ») : dessus 3 -> 2,4 ft, pentes 3 -> 2,5 ft
 
@@ -204,7 +206,7 @@ def whoops_boudins(OUT, FOLDER, path, combos):
     pleine hauteur (pas sur ses rampes) : origine sur du plat, le jeu ne les penche pas. Ajoutés en fin de statues (indices gardés)."""
     sd = os.path.join(OUT, "statue", "boudins"); os.makedirs(sd, exist_ok=True)
     PROPS = os.path.join(ROOT, "assets", "props")
-    for f in ("boudin_logo3.jm", "boudin_logo3.shp", "boudin_sxtour3.png", "boudin_fly3.png"):
+    for f in ("boudin_logo3.jm", "boudin_logo3.shp", "boudin_sxtour3.png", "boudin_fly3.png", "boudin_flyrouge3.png"):
         shutil.copy(os.path.join(PROPS, f), os.path.join(sd, f))
     ref = lambda f: "@%s/statue/boudins/%s" % (FOLDER, f)
     vc = sum(WALL_TOP) / 2; lines = []
@@ -218,9 +220,11 @@ def whoops_boudins(OUT, FOLDER, path, combos):
                     continue
                 # v21d (« les boudins SX Tour des whoops : fais-les commencer dès l'entrée des whoops, là ils sont un peu en décalé »)
                 ua, ub = u0 + it[1], u0 + it[2]; n_b = int((ub - ua) // 18.0); us = ua
+                if WHOOPS_LEFT_GROUND:   # v23 : rien qui dépasse au début du talus (rampe de WALL_RAMP ft) : 1er boudin à mi-rampe
+                    us = ua + WALL_RAMP / 2; n_b = int((ub - WALL_RAMP / 2 - us) // 18.0)
                 for side in (-1, 1):
                     # v22c (Zion) : boudins FLY ; à gauche (côté public, plus de talus) posés au sol au pied des whoops (|v| = 24 ft)
-                    vv_ = (24.0 if side < 0 else vc) if WHOOPS_LEFT_GROUND else vc; skin = "boudin_fly3.png" if WHOOPS_LEFT_GROUND else "boudin_sxtour3.png"
+                    vv_ = (24.0 if side < 0 else vc) if WHOOPS_LEFT_GROUND else vc; skin = "boudin_flyrouge3.png" if WHOOPS_LEFT_GROUND else "boudin_sxtour3.png"   # v23 : rouge, FLY blanc
                     for k in range(n_b):
                         u = us + 9.0 + 18.0 * k; p = np.array([g['x0'] + u * c, g['z0'] + u * s_]) + nrm * side * vv_
                         f = -nrm * side
@@ -279,7 +283,7 @@ def split_blend(out, seg, split, u0, top_width, band=10.0):
 def sand_ruts(H, path):
     """v22 (« des rollers en sable, avec pas mal d'ornières dans le sable ») : couche de sable de 0,35 ft sur la partie sable de LR,
     creusée d'ornières dans le sens de la course (largeur ~1,3 ft, 0,1 à 0,3 ft de creux, qui ondulent), bords et bouts adoucis."""
-    if not LP.SAND_LR:
+    if not LP.SAND_LR or not SAND_RUTS:
         return H
     g = next(g for g in path.segs if g['tag'].startswith('LR')); ua, ub = LP.SAND_LR; c, s_ = np.cos(g['t']), np.sin(g['t'])
     half = TW / 2 + 6.0
@@ -296,6 +300,25 @@ def sand_ruts(H, path):
         rut = np.maximum(rut, d * np.exp(-((v - vc) / (w / 2)) ** 2) * on)
     H = H.copy(); H[sl] = H[sl] + (0.35 - rut) * lon * lat
     REPORT['sable_LR'] = (round(ua, 1), round(ub, 1))
+    return H
+
+
+ARCH_CUT = None                # v23 (version Zion) : demi-écart des pieds de l'arche 50 Factory ; le terrain est mis à plat sous les pieds
+
+
+def arch_cut(H, path):
+    """v23 (« l'arche beaucoup trop large, faut qu'elle soit sur les bords de la piste, quitte à couper droit sur les bords ») : sol à 0
+    sous chaque pied (rectangle de 14 x 7 ft, bord adouci sur 1,5 ft), sur la crête du 1er obstacle de LR."""
+    if not ARCH_CUT:
+        return H
+    import layouts_sx as LS
+    g = next(g for g in path.segs if g['tag'].startswith('LR')); prof, u0, name = g['sections'][0]; it = LS.COMBOS[name]['items'][0]
+    i0, i1 = int(it[1] / 0.1), int(it[2] / 0.1); ua = u0 + it[1] + float(np.argmax(prof[i0:i1])) * 0.1
+    c, s_ = np.cos(g['t']), np.sin(g['t']); R = ARCH_CUT + 12.0; cx, cz = g['x0'] + ua * c, g['z0'] + ua * s_
+    sl, X, Z = G.window(cx - R, cx + R, cz - R, cz + R); dx, dz = X - g['x0'], Z - g['z0']; u = dx * c + dz * s_ - ua; v = -dx * s_ + dz * c
+    ss = lambda t: (lambda t_: t_ * t_ * (3 - 2 * t_))(np.clip(t, 0, 1))
+    m = ss((7.0 - np.abs(u)) / 1.5) * ss((3.5 - np.abs(np.abs(v) - ARCH_CUT)) / 1.5)
+    H = H.copy(); H[sl] = H[sl] * (1 - m); REPORT['arche_pieds'] = (round(cx, 1), round(cz, 1), ARCH_CUT)
     return H
 
 
@@ -560,6 +583,7 @@ def main():
     jumps, whoops, berms, fmx = render(path, st)
     H = np.maximum.reduce([jumps, whoops, berms, fmx])
     H = sand_ruts(H, path)                                             # v22 : ornières du sable de LR (version Zion)
+    H = arch_cut(H, path)                                              # v23 : sol plat sous les pieds de l'arche (version Zion)
     from geo_tools import inside
     jj, ii = np.meshgrid(np.arange(N) * S, np.arange(N) * S)
     pts = np.c_[jj.ravel(), ii.ravel()]
@@ -577,7 +601,7 @@ def main():
     smp_ = path.samples(1.0); tags_ = [path.segs[int(k)]['tag'] for k in smp_['seg']]
     s_ld = next(g['s0'] for g in path.segs if g['tag'].startswith('LD'))
     s_lr = next(g['s0'] for g in path.segs if g['tag'].startswith('LR'))
-    sel_ = [i for i, tg in enumerate(tags_) if tg.startswith('T_L5') or (tg.startswith('LD') and smp_['s'][i] < s_ld + SAND_LD)
+    sel_ = [i for i, tg in enumerate(tags_) if (SAND_TL5 and tg.startswith('T_L5')) or (tg.startswith('LD') and smp_['s'][i] < s_ld + SAND_LD)
             or (LP.SAND_LR and tg.startswith('LR') and smp_['s'][i] - s_lr <= LP.SAND_LR[1])]   # v22 : sable de LR
     global SAND_SMP; SAND_SMP = np.c_[smp_['x'][sel_], smp_['z'][sel_]]
     TJ, TI = np.meshgrid(np.arange(TN) * 2 * S, np.arange(TN) * 2 * S)

@@ -26,6 +26,7 @@ BP.FOLDER = "USLANDParis"                     # v22d (« renomme-la usland paris
 BP.DESC = "USLAND Paris"                        # v22d (« renomme-la usland paris »)
 BP.OUT = os.path.join(BP.ROOT, "tracks", BP.FOLDER)
 BP.AP = os.path.join(HERE, "apercu_zion")
+BP.SAND_TL5 = False; BP.SAND_RUTS = False   # v23 : virage après l'arrivée en terre ; sable sans ornières
 BP.SAND_LD = 0.0                   # v19d (« le virage après le saut d'arrivée en sable, que le virage ») : pas sur la ligne de départ
 ZD = BP.ZD
 ZF = np.load(os.path.join(HERE, "data", "zion_formes.npz"))
@@ -187,6 +188,7 @@ def render_zion(path, st):
 
 
 SABLE_JAUNE = (226, 196, 118)
+RF_SAND_DECALS = False
 
 
 def jaunir(path, target=SABLE_JAUNE):
@@ -208,7 +210,8 @@ def zion_ground(OUT, FOLDER):
     pick = [b for b in ours if re.search(r"name (Road|Grass)", b)]
     zb = [b for b in zt.split("addtile") if b.strip()]
     # v19d (« en sable, texture sable et tout ») : les tuiles sable de ZION (viraplasable, turnsable) avec la texture sable de ZION
-    zb = [re.sub(r"texture @\S+/ztile/2\.png", "texture @%s/ztile/sand.ppm" % FOLDER, b) if re.search(r"name (viraplasable|turnsable)", b) else b for b in zb]
+    # v23 : sable USLAND (SX1)
+    zb = [re.sub(r"texture @\S+/ztile/2\.png", "texture @%s/ext/USLAND2026SX1/tiles/sand.ppm" % FOLDER, b) if re.search(r"name (viraplasable|turnsable)", b) else b for b in zb]
     # v21d (« le sol derrière le terrain, là où il y a les camions, de la tribune à l'autre côté : des dalles noires un peu de plastique,
     # noir gris ») : une tuile de plus, « Paddock » (index PADDOCK_TILE), réglages de la tuile Road, texture dalles_noires.png
     road = next(b for b in pick if re.search(r"name Road", b))
@@ -218,7 +221,6 @@ def zion_ground(OUT, FOLDER):
     shutil.copytree(os.path.join(ZD, "tile"), os.path.join(OUT, "ztile"), dirs_exist_ok=True)
     # v19d (« essaie de faire la terre un peu plus orange marron ») : la tuile de terre ZION (couleur unie 158 136 85) -> TERRE_RGB
     t2 = os.path.join(OUT, "ztile", "2.png"); Image.new("RGB", Image.open(t2).size, TERRE_RGB).save(t2)
-    jaunir(os.path.join(OUT, "ztile", "sand.ppm"))                     # v22c (« fais le sable jaune »)
     dalles_texture(os.path.join(OUT, "ztile", "dalles_noires.png"))
     tm = np.fromfile(os.path.join(OUT, "tilemap"), np.uint8)
     remap = np.array([0, 0, 0, 3, 4, 4, 5, 4, 6, 7] + [6] * 246, np.uint8)
@@ -338,7 +340,7 @@ def zion_extras(OUT, FOLDER):
             x_, z_ = xx + rng.uniform(-2.5, 2.5), zz + rng.uniform(-2.5, 2.5)
             if inside(np.array([[x_, z_]]), fl)[0] and x_ < XPAD - 4.0 and sand_t.query([x_, z_])[0] > 34.0                     and ride_t.query([x_, z_])[0] > 12.0:
                 put_(x_, z_)
-    ov = ov + sand
+    ov = ov + (sand if RF_SAND_DECALS else [])           # v23 (« pas un sable blanc avec des taches ») : plus de décals sable RF
     open(os.path.join(OUT, "decals"), "w", newline=chr(10)).write(chr(10).join(ov + dl) + chr(10))
     # v19 (« le saut d'arrivée, il va pas ; il faut faire les câbles comme sur mon track, avec le finish ») : plus d'arche ZION, le panneau
     # FINISH suspendu (élingues jusqu'au toit) de la version USLAND reste
@@ -378,7 +380,9 @@ def zion_extras(OUT, FOLDER):
 
 START_Y = 15.0
 BALE_V, BALE_STEP, BALE_GAP = 15.5, 9.6, 25.0
-BALE_STEP2, BALE_SLIDE, ARCH_XC = 2 * 9.6, 4.0, 26.0     # v21d : 1 sur 2, glissement max, pieds de l'arche   # v21c : ballots comme RF Anaheim 1 (|v| 15-16 ft, pas 9,6 ft)
+BALE_STEP2, BALE_SLIDE, ARCH_XC = 2 * 9.6, 4.0, 18.0   # v23 : pieds au bord de la piste (était 26)
+BP.ARCH_CUT = ARCH_XC
+    # v21d : 1 sur 2, glissement max, pieds de l'arche   # v21c : ballots comme RF Anaheim 1 (|v| 15-16 ft, pas 9,6 ft)
 
 
 def deco_v21(OUT, FOLDER, combos):
@@ -396,7 +400,8 @@ def deco_v21(OUT, FOLDER, combos):
     bj, bp, bs = DV.bale_u(sd, 'noir')
     for k, g in enumerate(g_ for g_ in BP.PATH.segs if g_['kind'] == 'T' and g_.get('berm')):
         f0 = g.get('berm_from', 0.0); f1 = min(1.0, f0 + 90.0 / abs(g['ang'])); f0 = f0 + DV.WV['start'] * (f1 - f0)   # v21d : commence plus tard
-        w = D22.turn_wall(sd, k, g, Hf, f0, f1, AT, NT); rep_['murs'].append((g['tag'][:5], w['r_wall'], w['arc_ft'], w['modules']))
+        sp_ = next((v for k_, v in D22.TURN_SPONSOR.items() if g['tag'].startswith(k_)), None)       # v23 : logo du sponsor du virage
+        w = D22.turn_wall(sd, k, g, Hf, f0, f1, D22.bundle_texture(sd, sp_), NT); rep_['murs'].append((g['tag'][:5], sp_, w['arc_ft'], w['modules']))
         gy, gx = np.gradient(Hm[int(g['cz'] / s_) - 2:int(g['cz'] / s_) + 3, int(g['cx'] / s_) - 2:int(g['cx'] / s_) + 3], s_)
         assert max(abs(gx).max(), abs(gy).max()) < 0.02, ("origine du mur pas à plat", g['tag'])
         for jm, png, shp_ in w['files']:
@@ -449,6 +454,14 @@ def deco_v21(OUT, FOLDER, combos):
     assert float(np.max(feet)) < 0.05, ("pieds de l'arche pas à plat", feet)
     aj, ap, as_ = D22.arche_50f(sd, drop=ha, xc=ARCH_XC)
     lines.append(line(pa[0], pa[1], float(np.arctan2(c, s2)), aj, ap, as_)); rep_['arche'] = (round(pa[0], 1), round(pa[1], 1), round(ha, 2))
+    # v23 (« à l'intérieur, mets un truc pour pas que ça puisse couper ») : un boudin noir de 18 ft entre les centres des 2 virages après l'arrivée
+    ga_ = next(g for g in BP.PATH.segs if g['tag'].startswith('T_L5a')); gb_ = next(g for g in BP.PATH.segs if g['tag'].startswith('T_L5b'))
+    for f_ in ("boudin_logo3.jm", "boudin_logo3.shp"):
+        shutil.copy(os.path.join(BP.ROOT, "assets", "props", f_), os.path.join(sd, f_))
+    bk_ = np.asarray(Image.open(os.path.join(BP.ROOT, "assets", "props", "boudin_fly3.png")).convert('RGB')).copy(); hb_ = int(bk_.shape[0] * 0.915)
+    bk_[:hb_] = (22, 22, 24); Image.fromarray(bk_).save(os.path.join(sd, "boudin_noir3.png"))
+    d_ = np.array([gb_['cx'] - ga_['cx'], gb_['cz'] - ga_['cz']]); d_ /= np.linalg.norm(d_)
+    lines.append(line((ga_['cx'] + gb_['cx']) / 2, (ga_['cz'] + gb_['cz']) / 2, float(np.arctan2(d_[1], -d_[0])), "boudin_logo3.jm", "boudin_noir3.png", "boudin_logo3.shp"))
     for f in ["statues"] + ["variants/" + v for v in os.listdir(os.path.join(OUT, "variants")) if v.startswith("statues")]:
         p = os.path.join(OUT, f); s0 = open(p).read().rstrip(chr(10)) + chr(10)
         open(p, "w", newline=chr(10)).write(s0 + chr(10).join(lines) + chr(10))

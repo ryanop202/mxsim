@@ -47,3 +47,31 @@ FAIT en v22b (non testé en jeu) : 1, 2 (saut Milwaukee à 10,6 ft d'après les 
 - whoops_motoverte.png (vue depuis la sortie des whoops) : côté public (gauche du pilote) pas de talus, longs boudins posés au sol ;
   autre côté : talus avec les boudins dessus ; ballots en U blancs à logo MV rouge, bouts noirs, en quinconce à la sortie des whoops ;
   colonne gonflable motoverte au virage.
+
+## Review en jeu de la v22d (2026-11-24) -> v23
+Tracé
+- Virage après l'arrivée : appui extérieur bien mais redescend un peu tôt ; bosse 1 = bosse normale (celle de la 2 actuelle, un peu plus
+  raide) ; bosse 2 un peu plus grosse et plus espacée ; plateau plus haut (« tu agrandis tout ») ; à l'intérieur un truc pour ne pas
+  couper ; bosses un peu plus « de travers » (dessin à suivre). Plus de sable dans ce virage (texture normale).
+- Virage à droite avant le freestyle (T_Bb) : entrée de l'appui un peu plus haute.
+- Petite table creusée (L3) : un peu moins raide, appel un peu plus haut, longueur x2,25.
+- Saut freestyle : réception légèrement plus basse.
+- Virage à gauche (T_D) : appui qui commence plus tôt, plus haut.
+- L2 : 1re bosse : moins d'écart entre droite (haute) et gauche (basse) : droite plus basse, moins raide, vrai double par-dessus.
+- PARTOUT : moins d'élan sortie de virage -> 1re bosse ; moins d'espace dernière bosse -> virage.
+- Whoops : boudins rouges, FLY en blanc ; talus qui commence progressivement (comme avant), rien qui dépasse sur la piste.
+- Après les whoops : table un tout petit peu plus loin, un peu plus longue, fin relevée (en montée) ; les 2 bosses beaucoup plus basses
+  (dernière presque un roller, 1re un peu plus basse que la 2e actuelle).
+- Arche 50 Factory : triangles beaucoup plus gros ; arche bien moins large, pieds au bord de la piste (couper droit les bords).
+- Sable : pas de traces, pas de taches blanches : sable USLAND (texture et couleur) ; enlever la petite marche à l'entrée.
+- Saut Milwaukee : un peu plus haut, face beaucoup plus raide (bas toujours smooth), petit creux avant la face, réception moins raide ;
+  plus de cran au milieu de la face. Côtés en bâche Milwaukee.
+- Triple après le Milwaukee : plus petit, bosses plus serrées, facile ; virage rapproché.
+- L6 : 1re bosse : relever le côté intérieur (droite), double possible de l'intérieur ; 4e bosse = bosse normale (garder l'écart) ;
+  table : enlever la marche / bande claire sur le dessus.
+- L5 : double en sortie de virage : appel plus raide, comme le double de Saint-Georges.
+Décor
+- Murs : boudins NOIRS ; 3 boudins (2 en bas + 1 dessus), un peu plus petits, bâche autour, logo du sponsor sur la bâche (selon le
+  sponsor de la zone, pas FIVE partout) ; enterrer plus ; filets : modules de taille fixe (3 ou 4 selon la longueur), à placer sur les
+  traits rouges des captures (plus près du sommet du virage), virages non montrés : ne pas toucher.
+- Ballots par sponsor ; boudins surélevés à l'intérieur des virages selon le tracé final.

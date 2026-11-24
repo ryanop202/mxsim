@@ -21,10 +21,12 @@ from PIL import Image, ImageDraw
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
 import hab_kit as K                       # noqa: E402
 from hab_kit import Mesh, R, logo, fit    # noqa: E402
-from deco_v21 import _face, _save, BLACK, MAT_MAT, MAT_BACHE, NET_RED   # noqa: E402
+from deco_v21 import _face, _save, BLACK, MAT_MAT, MAT_BACHE, NET_RED, _tri_section   # noqa: E402
 
-BLK = dict(W=4.6, H=3.4, rnd=0.35, flare=0.35, back=0.9, sink=0.3)   # bloc de paille bâché (ft) ; back = écart crête -> face avant
-AIRF = dict(ra=0.95, mod=10.0, gap=0.45, end=0.7, squash=0.9)      # boudins AIR : rayon, module, jour entre modules, bout arrondi
+BLK = dict(W=4.6, H=3.4, rnd=0.35, flare=0.35, back=0.3, sink=1.0)   # v23 (« enterre plus ; plus près du sommet du virage ») : sink 0,3 -> 1,0, back 0,9 -> 0,3   # bloc de paille bâché (ft) ; back = écart crête -> face avant
+AIRF = dict(ra=0.95, mod=10.0, gap=0.45, end=0.7, squash=0.9, rb=0.72, nmin=3, nmax=4)   # v23 : fagot de 3 boudins (rb), modules fixes de 10 ft (3 ou 4)
+# v23 (« les trucs FIVE : tout noir, pas FIVE partout, en fonction du sponsor ») : sponsor du mur de chaque virage (code couleur de l'utilisateur)
+TURN_SPONSOR = {'T_L5a': 'minerva', 'T_Bb': None, 'T_D ': 'automoto', 'T1 1': 'honda', 'T_TR': 'motoverte', 'T_E ': 'yamaha', 'T_C ': 'five'}      # boudins AIR : rayon, module, jour entre modules, bout arrondi
 NETV = dict(above=8.0, pole_r=0.10, cap=0.35, pad_r=0.32, pad_h=4.5, epad=(1.5, 0.9), epad_h=5.5, off=0.25)
 RED_AIR = (200, 18, 26); YELLOW_CAP = (250, 200, 30); RED_POLE = (190, 20, 24)
 BANNERS = ('five', 'five_rouge')
@@ -75,6 +77,22 @@ def air_texture(out):
                 ban_ratio=2048 / 230)
 
 
+def bundle_texture(out, key, Lm=9.55):
+    """v23 : bâche NOIRE autour du fagot de 3 boudins, logo du sponsor (key) sur la face côté piste (v de 0,10 à 0,44 du tour : pied
+    intérieur -> dessus), centré sur le module ; logo pré-étiré pour ne pas être déformé (u = Lm ft, v = tour de la section)."""
+    from scipy.ndimage import gaussian_filter
+    P = float(np.sum(np.hypot(*np.diff(_tri_section(AIRF['rb'])[:, :2], axis=0).T))); W = H = 2048
+    rng = np.random.default_rng(7); n = gaussian_filter(rng.normal(0, 1, (H, W)), (40, 6)); n /= n.std()
+    a = np.full((H, W, 3), 24.0) + (n * 4)[..., None]; im = Image.fromarray(np.clip(a, 0, 255).astype(np.uint8))
+    if key:
+        lg = logo(key) if key != 'five' else K.tint(logo('five'), (236, 236, 236))
+        if key in ('automoto', 'honda', 'minerva', 'motoverte', 'yamaha'):
+            pass
+        lg = lg.resize((lg.size[0], max(1, int(lg.size[1] * Lm / P))), Image.LANCZOS)        # pré-étiré : pas déformé une fois posé
+        y0, y1 = int(H * (1 - 0.44)), int(H * (1 - 0.10)); fit(im, lg, (int(W * 0.12), y0, int(W * 0.88), y1), 0.05)
+    _save(im, os.path.join(out, 'fagot_%s.png' % (key or 'noir'))); return 'fagot_%s.png' % (key or 'noir')
+
+
 def net_texture(out):
     """filet rouge maillé de la v21 (stt_props) ; dans la zone opaque du bas : noir (mousses), rouge (poteaux), jaune (bouchons)."""
     sys.path.insert(0, os.path.join(os.path.dirname(HERE), "scripts"))
@@ -122,6 +140,9 @@ def turn_wall(out, k, g, Hf, f0, f1, AT, NT):
     tm = th((f0 + f1) / 2); rr = np.arange(g['r'], g['r'] + 40, 0.5)
     r_crest = float(rr[int(np.argmax(Hf(cx + np.cos(tm) * rr, cz + np.sin(tm) * rr)))])
     W, Hb = BLK['W'], BLK['H']; rc = r_crest + BLK['back'] + W / 2
+    # v23 (« ne change pas la taille : plus court 3, plus long 4 ») : 3 ou 4 modules de 10 ft, centrés sur le même milieu
+    nmod_ = int(np.clip(round(abs(ang * (f1 - f0)) * rc / AIRF['mod']), AIRF['nmin'], AIRF['nmax'])); fm_ = (f0 + f1) / 2
+    hf_ = nmod_ * AIRF['mod'] / (2 * abs(ang) * rc); f0, f1 = fm_ - hf_, fm_ + hf_
     L_arc = abs(ang * (f1 - f0)) * rc; ns = max(8, int(L_arc / 1.2)); fs = np.linspace(f0, f1, ns + 1); sarc = np.linspace(0, L_arc, ns + 1)
     yf = np.empty(len(fs)); yb = np.empty(len(fs))
     for i, f in enumerate(fs):
@@ -151,57 +172,35 @@ def turn_wall(out, k, g, Hf, f0, f1, AT, NT):
     K.shp(os.path.join(out, 'mur_virage_%d.shp' % k),
           [(np.cos(th(f)) * rc, yf[i] + 1.6 - h0, np.sin(th(f)) * rc) for i, f in enumerate(fs) if i % 2 == 0], 2.2)
     ytop = lambda s: float(np.interp(s, sarc, yt)); fof = lambda s: float(np.interp(s, sarc, fs))
-    # --- boudins AIR : modules de AIRF['mod'] ft, 2 tubes, bannière côté piste
-    ra, sq = AIRF['ra'], AIRF['squash']; nmod = max(1, int(round(L_arc / AIRF['mod']))); edges = np.linspace(0, L_arc, nmod + 1)
-    a2 = Mesh(); ub = AT['body']; uc = AT['cap']; nseg = 18
-    dcs = (-W / 2 + ra + 0.12, -W / 2 + 3 * ra + 0.12)
+    # --- v23 : fagots de 3 boudins (2 en bas + 1 dessus) sous une bâche noire, logo du sponsor côté piste ; modules de 10 ft fixes
+    nmod = max(1, int(round(L_arc / AIRF['mod']))); edges = np.linspace(0, L_arc, nmod + 1); a2 = Mesh()
+    sec = _tri_section(AIRF['rb'], 30); dcen = -W / 2 + 2 * AIRF['rb'] + 0.15; ra = AIRF['rb']
     for q in range(nmod):
         sa, sb = edges[q] + AIRF['gap'] / 2, edges[q + 1] - AIRF['gap'] / 2; Lm = sb - sa
-        ss = np.linspace(sa, sb, max(6, int(Lm / 0.8)) + 1); ss = np.unique(np.r_[ss, sa + np.linspace(0, AIRF['end'], 5), sb - np.linspace(0, AIRF['end'], 5)])
-        for dc in dcs:
-            rings = []
-            for s in ss:
-                x_ = min(s - sa, sb - s); kk = np.sqrt(np.clip(x_ / AIRF['end'], 0, 1) * (2 - np.clip(x_ / AIRF['end'], 0, 1)))
-                kk = 0.25 + 0.75 * kk; f = fof(s); e = E(f); yc = ytop(s) + ra * sq - 0.08 - h0; row = []
-                for t in range(nseg + 1):
-                    phi = 2 * np.pi * t / nseg; dn, yn = np.cos(phi), np.sin(phi)
-                    p = (e[0] * (rc + dc + ra * kk * dn), yc + ra * sq * kk * yn, e[1] * (rc + dc + ra * kk * dn))
-                    row.append((p, (e[0] * dn, yn, e[1] * dn), (ub[0] + (ub[2] - ub[0]) * (s - sa) / Lm, ub[1] + (ub[3] - ub[1]) * t / nseg)))
-                rings.append(row)
-            for i in range(len(rings) - 1):
-                for t in range(nseg):
-                    A, B, C, D = rings[i][t], rings[i + 1][t], rings[i + 1][t + 1], rings[i][t + 1]
-                    _face(a2, [A[0], B[0], C[0], D[0]], [A[2], B[2], C[2], D[2]], [A[1], B[1], C[1], D[1]])
-            for i, sgn in ((0, -1), (len(rings) - 1, 1)):                                 # bouts blancs (valve)
-                f = fof(ss[i]); tdir = np.array([-np.sin(th(f)), np.cos(th(f))]) * np.sign(-ang) * sgn; nrm = (tdir[0], 0, tdir[1])
-                pts = [r_[0] for r_ in rings[i]]; cen = np.mean(pts[:-1], axis=0); cu = ((uc[0] + uc[2]) / 2, (uc[1] + uc[3]) / 2)
-                for t in range(nseg):
-                    pu = lambda tt: (cu[0] + 0.45 * (uc[2] - uc[0]) * np.cos(2 * np.pi * tt / nseg), cu[1] + 0.45 * (uc[3] - uc[1]) * np.sin(2 * np.pi * tt / nseg))
-                    _face(a2, [cen, pts[t], pts[t + 1]], [cu, pu(t), pu(t + 1)], [nrm] * 3)
-        # bannière : sur le tube avant, du haut (un peu vers l'arrière) jusqu'au bas de la face côté piste
-        key = BANNERS[(q + k) % len(BANNERS)]; rb_ = AT['ban'][key]; ph0, ph1 = np.radians(80), np.radians(245)
-        Rb = ra + 0.05; hb = Rb * (ph1 - ph0) * (0.5 * (1 + sq)); lb = min(Lm - 2 * AIRF['end'], hb * AT['ban_ratio']); sm = (sa + sb) / 2
-        sb_ = np.linspace(sm - lb / 2, sm + lb / 2, max(4, int(lb / 0.8)) + 1); npp = 10; rows = []
-        for s in sb_:
-            f = fof(s); e = E(f); yc = ytop(s) + ra * sq - 0.08 - h0; fu = (s - sb_[0]) / lb; fu = 1 - fu if ang > 0 else fu
-            row = []
-            for t in range(npp + 1):
-                phi = ph0 + (ph1 - ph0) * t / npp; dn, yn = np.cos(phi), np.sin(phi)
-                p = (e[0] * (rc + dcs[0] + Rb * dn), yc + Rb * sq * yn, e[1] * (rc + dcs[0] + Rb * dn))
-                row.append((p, (e[0] * dn, yn, e[1] * dn), (rb_[0] + (rb_[2] - rb_[0]) * fu, rb_[3] - (rb_[3] - rb_[1]) * t / npp)))
-            rows.append(row)
+        ss = np.unique(np.r_[np.linspace(sa, sb, max(6, int(Lm / 0.8)) + 1), sa + np.linspace(0, AIRF['end'], 5), sb - np.linspace(0, AIRF['end'], 5)])
+        rows = []
+        for s_ in ss:
+            x_ = min(s_ - sa, sb - s_); kk = np.sqrt(np.clip(x_ / AIRF['end'], 0, 1) * (2 - np.clip(x_ / AIRF['end'], 0, 1))); kk = 0.3 + 0.7 * kk
+            f = fof(s_); e = E(f); y0 = ytop(s_) - 0.12 - h0; fu = (s_ - sa) / Lm; fu = 1 - fu if ang > 0 else fu
+            rows.append([((e[0] * (rc + dcen + d * kk), y0 + y * kk, e[1] * (rc + dcen + d * kk)), (e[0] * nd, ny, e[1] * nd), (fu, j / (len(sec) - 1)))
+                         for j, (d, y, nd, ny) in enumerate(sec)])
         for i in range(len(rows) - 1):
-            for t in range(npp):
-                A, B, C, D = rows[i][t], rows[i + 1][t], rows[i + 1][t + 1], rows[i][t + 1]
+            for j in range(len(sec) - 1):
+                A, B, C, D = rows[i][j], rows[i + 1][j], rows[i + 1][j + 1], rows[i][j + 1]
                 _face(a2, [A[0], B[0], C[0], D[0]], [A[2], B[2], C[2], D[2]], [A[1], B[1], C[1], D[1]])
+        for i, sgn in ((0, -1), (len(rows) - 1, 1)):
+            f = fof(ss[i]); tdir = np.array([-np.sin(th(f)), np.cos(th(f))]) * np.sign(-ang) * sgn; nrm = (tdir[0], 0, tdir[1])
+            pts = [r_[0] for r_ in rows[i]]; cen = np.mean(pts, axis=0)
+            for j in range(len(pts) - 1):
+                _face(a2, [cen, pts[j], pts[j + 1]], [(0.02, 0.98)] * 3, [nrm] * 3)
     a2.write(os.path.join(out, 'air_virage_%d.jm' % k), MAT_BACHE)
     K.shp(os.path.join(out, 'air_virage_%d.shp' % k),
-          [(np.cos(th(fof(s))) * (rc - W / 2 + 2 * ra), ytop(s) + ra - h0, np.sin(th(fof(s))) * (rc - W / 2 + 2 * ra)) for s in np.arange(0.5, L_arc, 2.0)],
+          [(np.cos(th(fof(s))) * (rc + dcen), ytop(s) + ra - h0, np.sin(th(fof(s))) * (rc + dcen)) for s in np.arange(0.5, L_arc, 2.0)],
           1.2, par=(0.6, 150, 8))
     # --- filet sur le bord arrière du bloc + poteaux rouges (bouchon jaune) + mousses noires
     rn = rc + W / 2 - NETV['off']; n2 = Mesh(); Vb, Vt = NT['v']; TL = 4.0; sph = []
     sv = np.linspace(0, L_arc, max(2, int(L_arc / 1.0) + 1)); bot = np.array([ytop(s) for s in sv]) - 0.2 - h0
-    upp = bot + 0.2 + 2 * ra * sq + NETV['above']
+    upp = bot + 0.2 + ra * (2 + np.sqrt(3)) + NETV['above']
     P2 = lambda f, r_: (np.cos(th(f)) * r_, np.sin(th(f)) * r_)
     for i in range(len(sv) - 1):
         cuts = [sv[i]] + [q * TL for q in range(int(sv[i] // TL) + 1, int(sv[i + 1] // TL) + 1) if sv[i] < q * TL < sv[i + 1]] + [sv[i + 1]]
@@ -230,12 +229,12 @@ def turn_wall(out, k, g, Hf, f0, f1, AT, NT):
     K.shp(os.path.join(out, 'filet_virage_%d.shp' % k), sph, 0.9, par=(1.0, 85, 4))
     return dict(origin=(cx, cz), r_wall=round(rc, 1), arc_ft=round(L_arc, 1), modules=nmod, h0=round(h0, 2),
                 files=(('mur_virage_%d.jm' % k, 'bache_paille.png', 'mur_virage_%d.shp' % k),
-                       ('air_virage_%d.jm' % k, AT['png'], 'air_virage_%d.shp' % k),
+                       ('air_virage_%d.jm' % k, AT, 'air_virage_%d.shp' % k),
                        ('filet_virage_%d.jm' % k, NT['png'], 'filet_virage_%d.shp' % k)))
 
 
 # ---------------------------------------------------------------- arche 50 Factory (photo arche_50factory.jpg)
-AR = dict(xc=20.0, B=7.5, Ht=5.0, T=2.2, cw=3.0, ct=1.6, top=19.0, bh=5.0, bd=1.2, skirt=0.5)   # poutre haute comme sur la photo
+AR = dict(xc=20.0, B=10.0, Ht=7.0, T=3.0, cw=3.0, ct=1.6, top=19.0, bh=5.0, bd=1.2, skirt=0.5)   # v23 : triangles beaucoup plus gros (7,5 x 5 -> 10 x 7 ft)   # poutre haute comme sur la photo
 
 
 def _fabric(im, box, amp=10, seed=1):
@@ -256,22 +255,22 @@ def arche_50f(out, drop=0.0, xc=None):
     tri = (0, 0, int(B * S), int(Ht * S)); d.rectangle(tri, fill=BLACK)
     d.polygon([(ol * 1.9, tri[3] - ol), (tri[2] - ol * 1.9, tri[3] - ol), (tri[2] / 2, ol * 2.2)], fill=Y)
     fit(im, L50, (tri[2] * 0.2, tri[3] * 0.60, tri[2] * 0.8, tri[3] * 0.90), 0.02)          # logo horizontal, bas du triangle
-    sl = float(np.hypot(B / 2, Ht)); slope = (800, 0, 800 + int(T * S), int(sl * S))
+    sl = float(np.hypot(B / 2, Ht)); slope = (1020, 0, 1020 + int(T * S), int(sl * S))
     d.rectangle(slope, fill=Y); d.rectangle([slope[0], 0, slope[0] + ol, slope[3]], fill=BLACK); d.rectangle([slope[2] - ol, 0, slope[2], slope[3]], fill=BLACK)
     fit(im, L50.rotate(90, expand=True), (slope[0] + ol + 10, 40, slope[2] - ol - 10, slope[3] - 40), 0.02)   # le long de la pente
-    ch = top - Ht + 0.3; cs = (1100, 0, 1100 + int(cw * S), int(ch * S))                       # colonne, faces de côté (larges)
+    ch = top - Ht + 0.3; cs = (1340, 0, 1340 + int(cw * S), int(ch * S))                       # colonne, faces de côté (larges)
     d.rectangle(cs, fill=BLACK); d.rectangle([cs[0] + ol, cs[1] + ol, cs[2] - ol, cs[3] - ol], fill=Y)
     fit(im, L50.rotate(90, expand=True), (cs[0] + ol + 12, cs[1] + 30, cs[2] - ol - 12, cs[3] - 30), 0.02)
-    cf = (1400, 0, 1400 + int(ct * S), int(ch * S)); d.rectangle(cf, fill=BLACK); d.rectangle([cf[0] + ol, cf[1] + ol, cf[2] - ol, cf[3] - ol], fill=Y)
+    cf = (1660, 0, 1660 + int(ct * S), int(ch * S)); d.rectangle(cf, fill=BLACK); d.rectangle([cf[0] + ol, cf[1] + ol, cf[2] - ol, cf[3] - ol], fill=Y)
     bw = 2 * xc - ct; ban = (0, 1520, 2048, 1520 + int(round(bh * 2048 / bw)))                 # poutre : même échelle en u et en v
     d.rectangle(ban, fill=BLACK); d.rectangle([ban[0] + 8, ban[1] + 8, ban[2] - 8, ban[3] - 8], fill=Y)
     fit(im, L50, (ban[0] + 200, ban[1] + 6, ban[2] - 200, ban[3] - 6), 0.03)
-    d.rectangle([1700, 100, 1750, 150], fill=Y); d.rectangle([1760, 100, 1810, 150], fill=BLACK); d.rectangle([1820, 100, 1870, 150], fill=(40, 40, 44))
+    d.rectangle([1850, 100, 1900, 150], fill=Y); d.rectangle([1905, 100, 1955, 150], fill=BLACK); d.rectangle([1960, 100, 2010, 150], fill=(40, 40, 44))
     for bx in (tri, slope, cs, cf, ban):
         im = _fabric(im, bx, 9, seed=bx[0] + bx[1])
     im = K.shade_v(im, tri, 1.0, 0.86); im = K.grain(im, 1.0); _save(im, os.path.join(out, 'arche_50f.png'))
     m = Mesh(); rt, rs, rcs, rcf, rb = (R(b, W, H) for b in (tri, slope, cs, cf, ban))
-    ry = R((1700, 100, 1750, 150), W, H); rk = R((1760, 100, 1810, 150), W, H); rsk = R((1820, 100, 1870, 150), W, H)
+    ry = R((1850, 100, 1900, 150), W, H); rk = R((1905, 100, 1955, 150), W, H); rsk = R((1960, 100, 2010, 150), W, H)
     for sx in (-1, 1):
         x0, x1 = sx * xc - T / 2, sx * xc + T / 2
         for xf, nx in ((x0, -1.0), (x1, 1.0)):                                                  # triangles, jamais en miroir
