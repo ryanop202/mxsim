@@ -35,3 +35,9 @@ FAIT en v22b (non testé en jeu) : 1, 2 (saut Milwaukee à 10,6 ft d'après les 
 - Blanc = FIVE : alterner ballot logo FIVE / ballot juste « 5 ».
 - Intérieur des virages : boudins surélevés sur de la terre, logo du sponsor de la zone.
 - Appel du triple : cabane toute noire fermée + bonhomme qui tend le drapeau vers la piste.
+
+## Photos IRL (Supercross de Paris, refs/photos_irl/)
+- virage_apres_arrivee.png : « gauche, une bosse, une autre bosse, un plat qui tourne, et ça redescend » ; ballots bleus (Yamaha).
+- whoops_motoverte.png (vue depuis la sortie des whoops) : côté public (gauche du pilote) pas de talus, longs boudins posés au sol ;
+  autre côté : talus avec les boudins dessus ; ballots en U blancs à logo MV rouge, bouts noirs, en quinconce à la sortie des whoops ;
+  colonne gonflable motoverte au virage.
