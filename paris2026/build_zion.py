@@ -339,11 +339,12 @@ def deco_v21(OUT, FOLDER, combos):
     Hf = lambda x, z: map_coordinates(Hm, [np.atleast_1d(z) / s_, np.atleast_1d(x) / s_], order=1)
     line = lambda x, z, yaw, jm, png, shp_: "[%.6f 0.000000 %.6f] %.6f %s %s %s" % (x, z, yaw, ref(jm), ref(png), ref(shp_) if shp_ else "null")
     lines = []; rep_ = dict(murs=[], ballots=0)
-    DV.tarp_texture(sd); ntex, rnet, rblk = DV.net_texture(sd)        # rnet = (v bas, v haut) du filet, rblk = uv du noir
+    import deco_v22 as D22                                            # v22 : murs + arche refaits d'après les vraies photos (deco_v22.py)
+    D22.tarp_texture(sd); AT = D22.air_texture(sd); NT = D22.net_texture(sd)
     bj, bp, bs = DV.bale_u(sd, 'noir')
     for k, g in enumerate(g_ for g_ in BP.PATH.segs if g_['kind'] == 'T' and g_.get('berm')):
         f0 = g.get('berm_from', 0.0); f1 = min(1.0, f0 + 90.0 / abs(g['ang'])); f0 = f0 + DV.WV['start'] * (f1 - f0)   # v21d : commence plus tard
-        w = DV.turn_wall(sd, k, g, Hf, f0, f1, ntex, rnet, rblk); rep_['murs'].append((g['tag'][:5], w['r_wall'], w['arc_ft'], w['posts']))
+        w = D22.turn_wall(sd, k, g, Hf, f0, f1, AT, NT); rep_['murs'].append((g['tag'][:5], w['r_wall'], w['arc_ft'], w['modules']))
         gy, gx = np.gradient(Hm[int(g['cz'] / s_) - 2:int(g['cz'] / s_) + 3, int(g['cx'] / s_) - 2:int(g['cx'] / s_) + 3], s_)
         assert max(abs(gx).max(), abs(gy).max()) < 0.02, ("origine du mur pas à plat", g['tag'])
         for jm, png, shp_ in w['files']:
@@ -394,7 +395,7 @@ def deco_v21(OUT, FOLDER, combos):
     c, s2 = np.cos(gL['t']), np.sin(gL['t']); pa = (gL['x0'] + ua * c, gL['z0'] + ua * s2); ha = float(Hf(*pa)[0])
     feet = Hf(pa[0] + np.array([-s2, s2]) * ARCH_XC, pa[1] + np.array([c, -c]) * ARCH_XC)
     assert float(np.max(feet)) < 0.05, ("pieds de l'arche pas à plat", feet)
-    aj, ap, as_ = DV.arche_50f(sd, drop=ha, xc=ARCH_XC)
+    aj, ap, as_ = D22.arche_50f(sd, drop=ha, xc=ARCH_XC)
     lines.append(line(pa[0], pa[1], float(np.arctan2(c, s2)), aj, ap, as_)); rep_['arche'] = (round(pa[0], 1), round(pa[1], 1), round(ha, 2))
     for f in ["statues"] + ["variants/" + v for v in os.listdir(os.path.join(OUT, "variants")) if v.startswith("statues")]:
         p = os.path.join(OUT, f); s0 = open(p).read().rstrip(chr(10)) + chr(10)

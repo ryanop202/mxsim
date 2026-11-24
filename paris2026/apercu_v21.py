@@ -38,7 +38,7 @@ def deco_lines():
     return out
 
 
-if __name__ == "__main__":
+if __name__ == "__main__" and len(sys.argv) == 1:
     pair('bale_u.jm', 'bale_u_noir.png', [((5, 3.5, 7), (0, 1, 0)), ((-7, 2.0, -3), (0, 1, 0))]).save(os.path.join(AP, 'v21_ballot_u.png'))
     import deco_v21 as DV
     DV.bale_u(RO.D, 'honda')
@@ -60,3 +60,34 @@ if __name__ == "__main__":
         out = Image.new('RGB', (1400, 460)); out.paste(ims[0], (0, 0)); out.paste(ims[1], (700, 0))
         out.save(os.path.join(AP, 'v21_virage_%s.png' % tag.strip().replace(' ', '')))
         print(tag)
+
+
+def v22():
+    """aperçus v22 : mur de près (comme les photos 1 à 3) et arche (comme la photo 4)."""
+    import layout_paris as LP
+    p = LP.paris(); L_ = deco_lines(); outs = []
+    for tag in ('T1 1', 'T_TR'):
+        g = next(g for g in p.segs if g['tag'].startswith(tag)); sg = 1.0 if g['ang'] > 0 else -1.0; th_in = g['t0'] + sg * np.pi / 2
+        sc = RO.Scene(); h = RO.terrain_patch(sc, g['cx'] - 75, g['cx'] + 75, g['cz'] - 75, g['cz'] + 75, 1.0)
+        for x, z, a, mdl, tex in L_:
+            if abs(x - g['cx']) < 75 and abs(z - g['cz']) < 75:
+                sc.add_jm(mdl, tex, x, 0.0, z, a, ground=h(x, z))
+        w = next((x for x in L_ if x[3].startswith('mur_virage') and abs(x[0] - g['cx']) < 1 and abs(x[1] - g['cz']) < 1), None)
+        f0 = 0.45 * 90 / abs(g['ang']) + 0.55 * (90 / abs(g['ang'])) * 0.5 if abs(g['ang']) > 100 else 0.75
+        ims = []
+        for f_eye, r_eye, dy, f_tgt in ((f0 - 0.02, -8, 3.5, f0 + 0.02), (f0 - 0.12, -2, 5, f0), (f0 + 0.1, 10, 4, f0 + 0.1)):
+            te, tt = th_in - np.radians(g['ang']) * f_eye, th_in - np.radians(g['ang']) * f_tgt
+            rr = np.arange(g['r'], g['r'] + 40, 0.5); hh = [h(g['cx'] + np.cos(tt) * r_, g['cz'] + np.sin(tt) * r_) for r_ in rr]; rcr = rr[int(np.argmax(hh))]
+            e = (g['cx'] + np.cos(te) * (rcr + r_eye), g['cz'] + np.sin(te) * (rcr + r_eye)); t = (g['cx'] + np.cos(tt) * (rcr + 4), g['cz'] + np.sin(tt) * (rcr + 4))
+            ims.append(sc.render((e[0], h(*e) + dy, e[1]), (t[0], h(*t) + 4.5, t[1]), 620, 620))
+        out = Image.new('RGB', (1860, 620))
+        for i, im in enumerate(ims):
+            out.paste(im, (620 * i, 0))
+        fn = os.path.join(AP, 'v22_mur_%s.png' % tag.strip().replace(' ', '')); out.save(fn); outs.append(fn)
+    fn = os.path.join(AP, 'v22_arche_50.png')
+    pair('arche_50f.jm', 'arche_50f.png', [((-30, 3, -14), (-8, 7, 0)), ((10, 9, -45), (0, 9, 0))], W=700, H=620).save(fn); outs.append(fn)
+    print(outs)
+
+
+if __name__ == "__main__" and sys.argv[1:] == ["v22"]:
+    v22()
