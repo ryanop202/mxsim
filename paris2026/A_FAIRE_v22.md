@@ -5,6 +5,7 @@ poteaux rouges à bouchon jaune, mousses noires) et arche 50 Factory (poutre hau
 `refs/photos_murs_v22/`. Placement des murs : celui de la v21d, en attendant où les placer.
 
 ## Tracé
+FAIT en v22b (non testé en jeu) : 1, 2 (saut Milwaukee à 10,6 ft d'après les photos, sans la bâche), 3, 5, 6 ; 4 : seulement l'appui (moins long, plus bas), pas encore plus serré (lié au nouveau départ, 8).
 1. L3, avant le saut freestyle : remplacer le roller (1,9 ft) par une petite table creusée, un peu plus longue qu'une table de base :
    appel un peu raide (~3,5 ft), léger creux, plat, puis le bout de la table (~4,5 ft), redescend vers 40 ft. Saut freestyle : ne pas toucher.
 2. LR (après le virage T_TR) : du 1er trait jaune (sortie du virage, où est l'arche) au 2e trait jaune = SABLE : 2 rollers en sable très

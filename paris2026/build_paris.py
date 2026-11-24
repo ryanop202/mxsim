@@ -257,6 +257,43 @@ def whoops_rails(out, g, prof, u0, it):
     out[sl] = new * (1 - wgt) + gaussian_filter(new, 1.2 / S) * wgt
 
 
+def split_blend(out, seg, split, u0, top_width, band=10.0):
+    """v22 (repris de Saint-Thibéry, build_stt.render_split_blend) : obstacle d'une hauteur à gauche et d'une autre à droite du sens
+    de course, passage doux au milieu (bande de band ft)."""
+    from engine import sx_wall
+    st, pl, pr = split; prof = np.maximum(pl, pr); L = len(prof) * 0.1; c, s_ = np.cos(seg['t']), np.sin(seg['t'])
+    half = top_width / 2 + 8.0; u0 = u0 + st
+    pts = np.array([(seg['x0'] + uu * c - vv * s_, seg['z0'] + uu * s_ + vv * c) for uu in (u0, u0 + L) for vv in (-half, half)])
+    sl, X, Z = G.window(pts[:, 0].min(), pts[:, 0].max(), pts[:, 1].min(), pts[:, 1].max())
+    dx, dz = X - seg['x0'], Z - seg['z0']; u = dx * c + dz * s_ - u0; v = -dx * s_ + dz * c
+    a = np.interp(u / 0.1, np.arange(len(pl)), pl, left=0, right=0); b = np.interp(u / 0.1, np.arange(len(pr)), pr, left=0, right=0)
+    w = np.clip(v / band + 0.5, 0, 1); w = w * w * (3 - 2 * w)                       # v > 0 = droite du sens de course
+    out[sl] = np.maximum(out[sl], (a * (1 - w) + b * w) * sx_wall(np.abs(v) - top_width / 2))
+
+
+def sand_ruts(H, path):
+    """v22 (« des rollers en sable, avec pas mal d'ornières dans le sable ») : couche de sable de 0,35 ft sur la partie sable de LR,
+    creusée d'ornières dans le sens de la course (largeur ~1,3 ft, 0,1 à 0,3 ft de creux, qui ondulent), bords et bouts adoucis."""
+    if not LP.SAND_LR:
+        return H
+    g = next(g for g in path.segs if g['tag'].startswith('LR')); ua, ub = LP.SAND_LR; c, s_ = np.cos(g['t']), np.sin(g['t'])
+    half = TW / 2 + 6.0
+    pts = np.array([(g['x0'] + uu * c - vv * s_, g['z0'] + uu * s_ + vv * c) for uu in (ua - 2, ub + 6) for vv in (-half, half)])
+    sl, X, Z = G.window(pts[:, 0].min(), pts[:, 0].max(), pts[:, 1].min(), pts[:, 1].max())
+    dx, dz = X - g['x0'], Z - g['z0']; u = dx * c + dz * s_; v = -dx * s_ + dz * c
+    ss = lambda t: (lambda t_: t_ * t_ * (3 - 2 * t_))(np.clip(t, 0, 1))
+    lon = ss((u - ua) / 3.0) * ss((ub + 4.0 - u) / 6.0); lat = ss((TW / 2 + 2.0 - np.abs(v)) / 4.0)
+    rng = np.random.default_rng(22); rut = np.zeros_like(u)
+    for k in range(14):
+        v0 = rng.uniform(-TW / 2 + 1, TW / 2 - 1); amp, per, ph = rng.uniform(0.6, 2.2), rng.uniform(25, 60), rng.uniform(0, 6.3)
+        d = rng.uniform(0.10, 0.30); w = rng.uniform(1.0, 1.6); a0 = rng.uniform(ua, ub - 15); a1 = rng.uniform(a0 + 12, ub + 4)
+        vc = v0 + amp * np.sin(2 * np.pi * u / per + ph); on = ss((u - a0) / 3.0) * ss((a1 - u) / 3.0)
+        rut = np.maximum(rut, d * np.exp(-((v - vc) / (w / 2)) ** 2) * on)
+    H = H.copy(); H[sl] = H[sl] + (0.35 - rut) * lon * lat
+    REPORT['sable_LR'] = (round(ua, 1), round(ub, 1))
+    return H
+
+
 def render(path, st):
     jumps = np.zeros((N, N)); whoops = np.zeros((N, N)); berms = np.zeros((N, N)); fmx = np.zeros((N, N))
     import layouts_sx as LS
@@ -264,7 +301,12 @@ def render(path, st):
     for g in path.segs:
         if g['kind'] == 'S':
             for prof, u0, name in g['sections']:
-                render_lane_block(G, whoops if 'whoops' in name else jumps, g, prof, u0, TW)
+                pm_ = prof
+                for a_, b_, kl_, kr_ in LP.SPLIT_Z.get(name, []):        # v22 : 1re bosse plus basse d'un côté
+                    i0_, i1_ = int(round(a_ / 0.1)), min(len(prof), int(round(b_ / 0.1)) + 1); q_ = prof[i0_:i1_]
+                    pm_ = pm_.copy(); pm_[i0_:i1_] = 0.0
+                    split_blend(jumps, g, (i0_ * 0.1, q_ * kl_, q_ * kr_), u0, TW)
+                render_lane_block(G, whoops if 'whoops' in name else jumps, g, pm_, u0, TW)
                 for it in LS.COMBOS[name]['items']:            # v14 : bord des whoops (muret de 25 Paris SX)
                     if it[0].startswith('whoops 25 Paris'):
                         whoops_rails(whoops, g, prof, u0, it)
@@ -512,6 +554,7 @@ def main():
     path = LP.paris(); st = LP.start(path); PATH, START = path, st
     jumps, whoops, berms, fmx = render(path, st)
     H = np.maximum.reduce([jumps, whoops, berms, fmx])
+    H = sand_ruts(H, path)                                             # v22 : ornières du sable de LR (version Zion)
     from geo_tools import inside
     jj, ii = np.meshgrid(np.arange(N) * S, np.arange(N) * S)
     pts = np.c_[jj.ravel(), ii.ravel()]
@@ -528,7 +571,9 @@ def main():
     from scipy.spatial import cKDTree
     smp_ = path.samples(1.0); tags_ = [path.segs[int(k)]['tag'] for k in smp_['seg']]
     s_ld = next(g['s0'] for g in path.segs if g['tag'].startswith('LD'))
-    sel_ = [i for i, tg in enumerate(tags_) if tg.startswith('T_L5') or (tg.startswith('LD') and smp_['s'][i] < s_ld + SAND_LD)]
+    s_lr = next(g['s0'] for g in path.segs if g['tag'].startswith('LR'))
+    sel_ = [i for i, tg in enumerate(tags_) if tg.startswith('T_L5') or (tg.startswith('LD') and smp_['s'][i] < s_ld + SAND_LD)
+            or (LP.SAND_LR and tg.startswith('LR') and smp_['s'][i] - s_lr <= LP.SAND_LR[1])]   # v22 : sable de LR
     global SAND_SMP; SAND_SMP = np.c_[smp_['x'][sel_], smp_['z'][sel_]]
     TJ, TI = np.meshgrid(np.arange(TN) * 2 * S, np.arange(TN) * 2 * S)
     dq, _ = cKDTree(np.c_[smp_['x'][sel_], smp_['z'][sel_]]).query(np.c_[TJ.ravel(), TI.ravel()], distance_upper_bound=20.0)

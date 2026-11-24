@@ -36,12 +36,15 @@ TERRE_RGB = (166, 113, 68)                  # v19d : terre plus orange-marron (Z
 G, N, S = BP.G, BP.N, BP.S
 
 
-def lane_zion(out, g, prof, u0, top, side):
+def lane_zion(out, g, prof, u0, top, side, kl=1.0, kr=1.0, band=10.0):
+    """kl / kr (v22) : facteur de hauteur côté gauche / droit du sens de course, passage doux au milieu (bande de band ft)."""
     L = len(prof) * 0.1; c, s_ = np.cos(g['t']), np.sin(g['t']); half = top / 2 + side + 1.0
     pts = np.array([(g['x0'] + uu * c - vv * s_, g['z0'] + uu * s_ + vv * c) for uu in (u0, u0 + L) for vv in (-half, half)])
     sl, X, Z = G.window(pts[:, 0].min(), pts[:, 0].max(), pts[:, 1].min(), pts[:, 1].max())
-    dx, dz = X - g['x0'], Z - g['z0']; u = dx * c + dz * s_ - u0; v = np.abs(-dx * s_ + dz * c)
+    dx, dz = X - g['x0'], Z - g['z0']; u = dx * c + dz * s_ - u0; vs = -dx * s_ + dz * c; v = np.abs(vs)
     pu = np.interp(u / 0.1, np.arange(len(prof)), prof, left=0, right=0)
+    if kl != 1.0 or kr != 1.0:                                   # v > 0 = droite du sens de course
+        w = np.clip(vs / band + 0.5, 0, 1); w = w * w * (3 - 2 * w); pu = pu * (kl * (1 - w) + kr * w)
     lat = np.where(v <= top / 2, 1.0, 0.5 * (1 + np.cos(np.pi * np.clip((v - top / 2) / side, 0, 1))))
     out[sl] = np.maximum(out[sl], pu * lat)
 
@@ -104,7 +107,9 @@ def render_zion(path, st):
                             BP.render_lane_block(G, whoops, g, prof[i0:i1], u0 + it[1], 2 * BP.WALL_TOP[0])
                             whoops_walls(walls, g, prof, u0, it, with_whoops=False)
                         else:
-                            lane_zion(lay, g, prof[i0:i1], u0 + it[1], *LAT['T'])
+                            sp_ = [q for q in LP.SPLIT_Z.get(name, []) if q[0] - 0.5 <= it[1] and it[2] <= q[1] + 0.5]   # v22
+                            kk_ = sp_[0][2:] if sp_ else (1.0, 1.0)
+                            lane_zion(lay, g, prof[i0:i1], u0 + it[1], *LAT['T'], kl=kk_[0], kr=kk_[1])
                 secs.append(dict(lane=g['tag'], name=name, u0=round(u0, 1), L=round(len(prof) * 0.1, 1), H=round(float(prof.max()), 2),
                                  items=[(i[0], round(i[1], 1), round(i[2], 1)) for i in LS.COMBOS[name]['items']]))
         elif g.get('berm'):                                  # v16 : virages USLAND (berms JGSX, comme la version USLAND)

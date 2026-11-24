@@ -54,8 +54,16 @@ def draw(tag):
     i = segs.index(g); nxt = segs[(i + 1) % len(segs)]
     u, x, z, h = sample(g)
     L = g['L']
+    sides = any(LP.SPLIT_Z.get(sec[2]) for sec in g['sections'])
     fig, ax = plt.subplots(figsize=(max(14, L / 14), 4.2))
     ax.fill_between(u, -1, h, color=(0.62, 0.45, 0.30)); ax.plot(u, h, color=(0.35, 0.22, 0.12), lw=1)
+    if sides:                     # v22 : bosse plus basse d'un côté : profil à 8 ft à gauche (vert) et à droite (violet) de l'axe
+        from scipy.ndimage import map_coordinates
+        h5 = np.percentile(map_coordinates(H, [z / s, x / s], order=1), 5)
+        for vv, col, lab in ((-8.0, (0.1, 0.55, 0.2), 'gauche'), (8.0, (0.55, 0.15, 0.6), 'droite')):
+            xs_, zs_ = x - vv * np.sin(g['t']), z + vv * np.cos(g['t'])
+            ax.plot(u, map_coordinates(H, [zs_ / s, xs_ / s], order=1) - h5, color=col, lw=1.4, ls='--', label='côté ' + lab)
+        ax.legend(loc='upper right', fontsize=8)
     for a, c, b, hh, up, dn in bumps(u, h):
         ax.annotate("%.1f ft" % hh, (c, hh), xytext=(c, hh + 2.4), ha='center', fontsize=10, fontweight='bold')
         ax.text((a + c) / 2 - 1, hh * 0.45, "%.0f°" % up, ha='right', fontsize=9.5, color=(0.05, 0.25, 0.65))
