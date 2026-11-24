@@ -210,8 +210,8 @@ def zion_ground(OUT, FOLDER):
     pick = [b for b in ours if re.search(r"name (Road|Grass)", b)]
     zb = [b for b in zt.split("addtile") if b.strip()]
     # v19d (« en sable, texture sable et tout ») : les tuiles sable de ZION (viraplasable, turnsable) avec la texture sable de ZION
-    # v23 : sable USLAND (SX1)
-    zb = [re.sub(r"texture @\S+/ztile/2\.png", "texture @%s/ext/USLAND2026SX1/tiles/sand.ppm" % FOLDER, b) if re.search(r"name (viraplasable|turnsable)", b) else b for b in zb]
+    # v23 : sable USLAND (SX1) ; v23c (« la texture toute verte ») : copié dans ztile (le chemin ext/ ne se charge pas dans ces tuiles)
+    zb = [re.sub(r"texture @\S+/ztile/2\.png", "texture @%s/ztile/sand_usland.ppm" % FOLDER, b) if re.search(r"name (viraplasable|turnsable)", b) else b for b in zb]
     # v21d (« le sol derrière le terrain, là où il y a les camions, de la tribune à l'autre côté : des dalles noires un peu de plastique,
     # noir gris ») : une tuile de plus, « Paddock » (index PADDOCK_TILE), réglages de la tuile Road, texture dalles_noires.png
     road = next(b for b in pick if re.search(r"name Road", b))
@@ -221,6 +221,7 @@ def zion_ground(OUT, FOLDER):
     shutil.copytree(os.path.join(ZD, "tile"), os.path.join(OUT, "ztile"), dirs_exist_ok=True)
     # v19d (« essaie de faire la terre un peu plus orange marron ») : la tuile de terre ZION (couleur unie 158 136 85) -> TERRE_RGB
     t2 = os.path.join(OUT, "ztile", "2.png"); Image.new("RGB", Image.open(t2).size, TERRE_RGB).save(t2)
+    shutil.copy(os.path.join(BP.ROOT, "tracks", "USLAND2026SX1", "tiles", "sand.ppm"), os.path.join(OUT, "ztile", "sand_usland.ppm"))
     dalles_texture(os.path.join(OUT, "ztile", "dalles_noires.png"))
     tm = np.fromfile(os.path.join(OUT, "tilemap"), np.uint8)
     remap = np.array([0, 0, 0, 3, 4, 4, 5, 4, 6, 7] + [6] * 246, np.uint8)
@@ -381,8 +382,26 @@ def zion_extras(OUT, FOLDER):
 START_Y = 15.0
 BALE_V, BALE_STEP, BALE_GAP = 15.5, 9.6, 25.0
 BALE_STEP2, BALE_SLIDE, ARCH_XC = 2 * 9.6, 4.0, 18.0   # v23 : pieds au bord de la piste (était 26)
-BP.ARCH_CUT = ARCH_XC
+BP.ARCH_CUT = None                 # v23c : pas de découpe sous les pieds
     # v21d : 1 sur 2, glissement max, pieds de l'arche   # v21c : ballots comme RF Anaheim 1 (|v| 15-16 ft, pas 9,6 ft)
+
+
+def bale_sponsor(g, u, n):
+    """v23c : sponsor des ballots selon la zone (code couleur de l'utilisateur) ; n alterne FIVE / « 5 »."""
+    t, f = g['tag'][:2], u / g['L']; five = 'five' if n % 2 == 0 else 'five5'
+    if t == 'L5':
+        return five if f < 0.4 else 'minerva'
+    if t == 'L2':
+        return 'automoto' if f < 0.5 else 'honda'
+    if t == 'L1':
+        return 'mv'
+    if t == 'LR':
+        if LP.SAND_LR and u <= LP.SAND_LR[1]:
+            return '50factory'
+        return 'milwaukee' if u <= LP.CAMEL_U + len(LP.CAMEL) * 0.1 + 3.0 else 'yamaha'
+    if t == 'L6':
+        return 'yamaha' if f < 0.45 else five
+    return 'mxsim'
 
 
 def deco_v21(OUT, FOLDER, combos):
@@ -398,10 +417,11 @@ def deco_v21(OUT, FOLDER, combos):
     import deco_v22 as D22                                            # v22 : murs + arche refaits d'après les vraies photos (deco_v22.py)
     D22.tarp_texture(sd); AT = D22.air_texture(sd); NT = D22.net_texture(sd)
     bj, bp, bs = DV.bale_u(sd, 'noir')
+    D22.NT_.update(NT)
     for k, g in enumerate(g_ for g_ in BP.PATH.segs if g_['kind'] == 'T' and g_.get('berm')):
-        f0 = g.get('berm_from', 0.0); f1 = min(1.0, f0 + 90.0 / abs(g['ang'])); f0 = f0 + DV.WV['start'] * (f1 - f0)   # v21d : commence plus tard
         sp_ = next((v for k_, v in D22.TURN_SPONSOR.items() if g['tag'].startswith(k_)), None)       # v23 : logo du sponsor du virage
-        w = D22.turn_wall(sd, k, g, Hf, f0, f1, D22.bundle_texture(sd, sp_), NT); rep_['murs'].append((g['tag'][:5], sp_, w['arc_ft'], w['modules']))
+        # v23c : murs droits, même hauteur, à l'entrée du virage (3 modules pour un 90°, 4 pour un 180°), couleurs du sponsor
+        w = D22.turn_wall_v23(sd, k, g, Hf, sp_); rep_['murs'].append((g['tag'][:5], sp_, w['f'], w['modules'], w['top']))
         gy, gx = np.gradient(Hm[int(g['cz'] / s_) - 2:int(g['cz'] / s_) + 3, int(g['cx'] / s_) - 2:int(g['cx'] / s_) + 3], s_)
         assert max(abs(gx).max(), abs(gy).max()) < 0.02, ("origine du mur pas à plat", g['tag'])
         for jm, png, shp_ in w['files']:
@@ -410,7 +430,7 @@ def deco_v21(OUT, FOLDER, combos):
     # whoops puisqu'on a déjà mis ») : mesuré sur RF Anaheim 1 (608 bottes) : une rangée de chaque côté du couloir à 15-16 ft de l'axe
     # (bord du dessus des bosses), 9,6 ft de centre à centre, dans le sens de la piste. Ici : nos ballots en U noirs, le long de chaque
     # enchaînement (blocs d'au moins 2 obstacles à moins de BALE_GAP ft l'un de l'autre), ni whoops, ni saut du freestyle, ni virages.
-    nb_ = 0
+    nb_ = 0; bale_files = {}
     for g in BP.PATH.segs:
         if g['kind'] != 'S' or not g.get('sections'):
             continue
@@ -437,12 +457,15 @@ def deco_v21(OUT, FOLDER, combos):
                     hh = Hf(P_[:, 0], P_[:, 1]); sl_ = np.abs(np.gradient(hh, 0.25)); cv_ = np.abs(np.gradient(np.gradient(hh, 0.25), 0.25))
                     from scipy.ndimage import maximum_filter1d
                     bad = maximum_filter1d(0.25 * sl_ + 4.0 * cv_, int(1.6 / 0.25))        # surtout les arêtes (courbure) ; le pied entier compte
-                    t_ = ua + (ub - ua - BALE_STEP2 * int((ub - ua) / BALE_STEP2)) / 2
+                    t_ = ua + (ub - ua - BALE_STEP2 * int((ub - ua) / BALE_STEP2)) / 2; nk_ = 0
                     while t_ <= ub + 1e-6:
                         w_ = np.nonzero(np.abs(uu - t_) <= BALE_SLIDE)[0]; k_ = w_[int(np.argmin(bad[w_]))]
-                        if bad[k_] < 0.5:
-                            lines.append(line(P_[k_, 0], P_[k_, 1], yaw, bj, bp, bs)); nb_ += 1
-                        t_ += BALE_STEP2
+                        # v23c (« enlève les deux bottes de paille à l'intérieur ») : pas les 2 premières à droite de L6
+                        skip_ = g['tag'].startswith('L6') and side_ > 0 and bl is blocks[0] and nk_ < 2
+                        if bad[k_] < 0.5 and not skip_:
+                            key_ = bale_sponsor(g, uu[k_], nb_); fb_ = bale_files.setdefault(key_, DV.bale_u(sd, key_))
+                            lines.append(line(P_[k_, 0], P_[k_, 1], yaw, *fb_)); nb_ += 1
+                        nk_ += 1; t_ += BALE_STEP2
     rep_['ballots'] = nb_
     # arche 50 Factory : couloir Est (LR) ; v21d (« tu l'as mise entre les deux bosses, mets-la à l'appel, sur la première bosse ») :
     # origine sur la crête du saut de sortie (le modèle descend jusqu'au sol), pieds à +-ARCH_XC ft, hors des flancs de la bosse
@@ -451,7 +474,7 @@ def deco_v21(OUT, FOLDER, combos):
     ua = u0 + it[1] + float(np.argmax(prof[i0_:i1_])) * 0.1
     c, s2 = np.cos(gL['t']), np.sin(gL['t']); pa = (gL['x0'] + ua * c, gL['z0'] + ua * s2); ha = float(Hf(*pa)[0])
     feet = Hf(pa[0] + np.array([-s2, s2]) * ARCH_XC, pa[1] + np.array([c, -c]) * ARCH_XC)
-    assert float(np.max(feet)) < 0.05, ("pieds de l'arche pas à plat", feet)
+    assert float(np.max(feet)) < 1.2, ("pieds de l'arche trop enterrés", feet)   # v23c : plus de découpe carrée (« évite les carrés autour »)
     aj, ap, as_ = D22.arche_50f(sd, drop=ha, xc=ARCH_XC)
     lines.append(line(pa[0], pa[1], float(np.arctan2(c, s2)), aj, ap, as_)); rep_['arche'] = (round(pa[0], 1), round(pa[1], 1), round(ha, 2))
     # v23 (« à l'intérieur, mets un truc pour pas que ça puisse couper ») : un boudin noir de 18 ft entre les centres des 2 virages après l'arrivée
@@ -462,6 +485,42 @@ def deco_v21(OUT, FOLDER, combos):
     bk_[:hb_] = (22, 22, 24); Image.fromarray(bk_).save(os.path.join(sd, "boudin_noir3.png"))
     d_ = np.array([gb_['cx'] - ga_['cx'], gb_['cz'] - ga_['cz']]); d_ /= np.linalg.norm(d_)
     lines.append(line((ga_['cx'] + gb_['cx']) / 2, (ga_['cz'] + gb_['cz']) / 2, float(np.arctan2(d_[1], -d_[0])), "boudin_logo3.jm", "boudin_noir3.png", "boudin_logo3.shp"))
+    # v23c (« les trucs gonflables qu'on mettait aux intérieurs de virage ») : poteau rond de Saint-Georges à l'intérieur de chaque virage,
+    # aux couleurs du sponsor du virage (pas dans les 2 virages après l'arrivée : boudin anti-coupe)
+    from engine import turn_mid_angle
+    sgm_st = os.path.join(BP.ROOT, "tracks", "USLAND2026SaintGeorgesbyBazo", "statue")
+    for f_ in ("pylon_round.jm", "pylon_round.shp"):
+        shutil.copy(os.path.join(sgm_st, f_), os.path.join(sd, f_))
+    npy = 0
+    for g in BP.PATH.segs:
+        if g['kind'] != 'T' or abs(g['ang']) < 89 or g['tag'].startswith(('T_L5a', 'T_L5b')):
+            continue
+        mid = turn_mid_angle(g); r_ = max(1.5, g['r'] - 15.2 - 1.5); x_, z_ = g['cx'] + r_ * np.cos(mid), g['cz'] + r_ * np.sin(mid)
+        key_ = next((v for k_, v in D22.TURN_SPONSOR.items() if g['tag'].startswith(k_)), 'mxsim')
+        lines.append(line(x_, z_, float(np.arctan2(np.cos(mid), np.sin(mid))), "pylon_round.jm", D22.pylon_skin(sd, sgm_st, key_), "pylon_round.shp")); npy += 1
+    rep_['poteaux'] = npy
+    # v23c (« la réception du saut freestyle, AMV : 2 bottes de paille dans la descente, et sur le dessus ») : 4 ballots AMV
+    g3 = next(g for g in BP.PATH.segs if g['kind'] == 'S' and g['tag'].startswith('L3'))
+    for prof, u0, name in g3['sections']:
+        if name != LP.L3_SEC:
+            continue
+        it = [i for i in combos[name]['items'] if 'butte' in i[0]][0]; i0_, i1_ = int(it[1] / 0.1), int(it[2] / 0.1)
+        uc = u0 + it[1] + float(np.argmax(prof[i0_:i1_])) * 0.1; ue = u0 + it[2]
+        c, s2 = np.cos(g3['t']), np.sin(g3['t']); nrm = np.array([-s2, c]); yaw = float(np.arctan2(-s2, c)); fa = DV.bale_u(sd, 'amv')
+        for u_ in (uc, uc + 0.5 * (ue - uc)):
+            for side_ in (-1, 1):
+                p_ = np.array([g3['x0'] + u_ * c, g3['z0'] + u_ * s2]) + nrm * side_ * BALE_V; lines.append(line(p_[0], p_[1], yaw, *fa))
+    # v23c : bâches drapées sur les flancs : saut Milwaukee (LR) et réception du freestyle (plaque AMV)
+    gR = next(g for g in BP.PATH.segs if g['kind'] == 'S' and g['tag'].startswith('LR'))
+    for side_, nm_ in ((-1, 'bache_milwaukee_g'), (1, 'bache_milwaukee_d')):
+        O_, jm_, png_ = D22.drape_tarp(sd, nm_, Hf, gR, LP.CAMEL_U + 6.0, LP.CAMEL_U + len(LP.CAMEL) * 0.1 - 2.0, side_, 'milwaukee')
+        lines.append(line(O_[0], O_[1], 0.0, jm_, png_, None))
+    for prof, u0, name in g3['sections']:
+        if name == LP.L3_SEC:
+            it = [i for i in combos[name]['items'] if 'butte' in i[0]][0]
+            for side_, nm_ in ((-1, 'bache_amv_g'), (1, 'bache_amv_d')):
+                O_, jm_, png_ = D22.drape_tarp(sd, nm_, Hf, g3, u0 + it[1] + 8.0, u0 + it[2] - 8.0, side_, 'amv_plaque', step=0.8)
+                lines.append(line(O_[0], O_[1], 0.0, jm_, png_, None))
     for f in ["statues"] + ["variants/" + v for v in os.listdir(os.path.join(OUT, "variants")) if v.startswith("statues")]:
         p = os.path.join(OUT, f); s0 = open(p).read().rstrip(chr(10)) + chr(10)
         open(p, "w", newline=chr(10)).write(s0 + chr(10).join(lines) + chr(10))

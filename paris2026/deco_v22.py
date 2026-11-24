@@ -290,3 +290,164 @@ def arche_50f(out, drop=0.0, xc=None):
     sph = [(sx * xc, 1.2 - drop, dz) for sx in (-1, 1) for dz in (-2.3, 0.0, 2.3)] + [(sx * xc, 3.2 - drop, 0) for sx in (-1, 1)]
     K.shp(os.path.join(out, 'arche_50f.shp'), sph, 1.3)
     return 'arche_50f.jm', 'arche_50f.png', 'arche_50f.shp'
+
+
+# ================================================================ v23c : murs droits (review en jeu de la v23b)
+# « les filets sur la fin du virage, alors que c'est sur l'entrée qu'il faut les mettre » ; « jamais tordu, pas de vague : une botte de
+# foin ne fait pas de vague ; enterré sous la terre, des trucs droits, angles droits, tout à la même hauteur » ; « petits bugs de
+# triangle sur les incrustations dans la terre » (bouts mal fermés) ; « pas de bâche sur les côtés des 3 boudins : qu'on voie que ce
+# sont 3 boudins » ; « la couleur du logo que je t'ai envoyé » (fond + logo du sponsor, sponsors.py).
+# Chaque module de 10 ft = un bloc DROIT (corde de l'arc), dessus à la même hauteur sur tout le mur (VIS ft au-dessus de la plus haute
+# crête du berm), bas enterré ; fagot de 3 boudins noirs (bouts visibles) sous une bâche aux couleurs du sponsor ; filet droit par module.
+WALL23 = dict(vis=1.6, depth=1.0, n90=3, n180=4, entry=0.02)
+TURN_SPONSOR.update({'T_Bb': 'mxsim', 'T_Ba': 'mxsim'})
+
+
+def bundle_texture_v23(out, key, Lm=9.3):
+    """bâche du fagot : fond = couleur du sponsor, logo côté piste (v 0,10 - 0,44) ; bande noire en haut de l'image (v > 0,975) pour les
+    bouts des 3 boudins."""
+    import sponsors as SP
+    bg, lg = SP.panel(key); P = float(np.sum(np.hypot(*np.diff(_tri_section(AIRF['rb'])[:, :2], axis=0).T))); W = H = 2048
+    from scipy.ndimage import gaussian_filter
+    rng = np.random.default_rng(7); n = gaussian_filter(rng.normal(0, 1, (H, W)), (40, 6)); n /= n.std()
+    a = np.asarray(bg, float)[None, None, :] * (1 + 0.035 * n[..., None]); im = Image.fromarray(np.clip(a, 0, 255).astype(np.uint8))
+    if lg is not None:
+        l2 = lg.resize((lg.size[0], max(1, int(lg.size[1] * Lm / P))), Image.LANCZOS)
+        fit(im, l2, (int(W * 0.10), int(H * (1 - 0.44)), int(W * 0.90), int(H * (1 - 0.10))), 0.05)
+    ImageDraw.Draw(im).rectangle([0, 0, W, int(H * 0.02)], fill=(18, 18, 20))
+    fn = 'fagot23_%s.png' % (key or 'noir'); _save(im, os.path.join(out, fn)); return fn
+
+
+def turn_wall_v23(out, k, g, Hf, key):
+    """mur droit à l'entrée du virage g (3 modules pour un 90°, 4 pour un 180°) ; origine du modèle : centre du virage, lacet 0."""
+    sg = 1.0 if g['ang'] > 0 else -1.0; th_in = g['t0'] + sg * np.pi / 2; ang = np.radians(g['ang']); th = lambda f: th_in - ang * f
+    cx, cz = g['cx'], g['cz']; h0 = float(np.ravel(Hf(cx, cz))[0]); H1 = lambda x, z: float(np.ravel(Hf(x, z))[0])
+    f_a = g.get('berm_from', 0.0) + WALL23['entry']; nmod = WALL23['n180'] if abs(g['ang']) > 100 else WALL23['n90']
+    tm = th(f_a + 0.15); rr = np.arange(g['r'], g['r'] + 40, 0.5)
+    r_crest = float(rr[int(np.argmax(Hf(cx + np.cos(tm) * rr, cz + np.sin(tm) * rr)))])
+    W = BLK['W']; rc = r_crest + BLK['back'] + W / 2; df = AIRF['mod'] / (abs(ang) * rc)
+    f_b = min(1.0, f_a + nmod * df); f_a = f_b - nmod * df
+    P2 = lambda f, r_: np.array([np.cos(th(f)) * r_, np.sin(th(f)) * r_])
+    fs = f_a + df * np.arange(nmod + 1); hc = []
+    for f in np.linspace(f_a, f_b, 4 * nmod + 1):
+        e = np.array([np.cos(th(f)), np.sin(th(f))]); rr_ = r_crest + np.linspace(-4, 4, 9); hc.append(float(np.max(Hf(cx + e[0] * rr_, cz + e[1] * rr_))))
+    ytop = max(hc) + WALL23['vis'] - h0                                         # même hauteur sur tout le mur
+    m = Mesh(); a2 = Mesh(); n2 = Mesh(); rb = AIRF['rb']; dcen = -W / 2 + 2 * rb + 0.15; sec_b = _tri_section(rb, 30)
+    Vb, Vt = NT_['v']; TL = 4.0; sph_w, sph_a, sph_n = [], [], []; dot = lambda u: (u[0], u[1], u[0] + 0.0005, u[1] + 0.0005)
+    net_top = ytop - 0.15 + rb * (2 + np.sqrt(3)) + NETV['above']
+    for q in range(nmod):
+        A, B = P2(fs[q], rc), P2(fs[q + 1], rc); L = float(np.linalg.norm(B - A)); t = (B - A) / L; nn = np.array([-t[1], t[0]])
+        if np.dot(nn, (A + B) / 2) < 0:
+            nn = -nn                                                            # nn : vers l'extérieur du virage
+        right = np.array([-nn[1], nn[0]]); rev = np.dot(t, right) < 0          # vu de la piste (regard vers l'extérieur)
+        A = A - t * 0.04; B = B + t * 0.04; L += 0.08
+        gnd = min(H1(cx + p_[0], cz + p_[1]) for s_ in np.linspace(0, 1, 5) for w_ in (-W / 2, 0, W / 2) for p_ in [A + (B - A) * s_ + nn * w_]) - h0
+        yb = gnd - WALL23['depth']
+        # --- bloc de paille : section rectangulaire à arêtes du dessus arrondies, balayée sur la corde ; bouts fermés
+        sec = [(-W / 2, yb)] + [(-W / 2 + BLK['rnd'] - BLK['rnd'] * np.cos(a_), ytop - BLK['rnd'] + BLK['rnd'] * np.sin(a_)) for a_ in np.linspace(0, np.pi / 2, 5)]
+        sec += [(W / 2 - BLK['rnd'] + BLK['rnd'] * np.cos(a_), ytop - BLK['rnd'] + BLK['rnd'] * np.sin(a_)) for a_ in np.linspace(np.pi / 2, 0, 5)] + [(W / 2, yb)]
+        sec = np.array(sec); tg_ = np.gradient(sec, axis=0); nr = np.c_[-tg_[:, 1], tg_[:, 0]]; nr /= np.linalg.norm(nr, axis=1, keepdims=True)
+        if nr[len(sec) // 2, 1] < 0:
+            nr = -nr
+        sl_ = np.r_[0, np.cumsum(np.hypot(*np.diff(sec, axis=0).T))]
+        V3 = lambda p, d, y: (p[0] + nn[0] * d, y, p[1] + nn[1] * d)
+        for j in range(len(sec) - 1):
+            Q = [V3(A, *sec[j]), V3(B, *sec[j]), V3(B, *sec[j + 1]), V3(A, *sec[j + 1])]
+            N_ = [(nn[0] * nr[j][0], nr[j][1], nn[1] * nr[j][0])] * 2 + [(nn[0] * nr[j + 1][0], nr[j + 1][1], nn[1] * nr[j + 1][0])] * 2
+            _face(m, Q, [(0, sl_[j] / 9), (L / 8, sl_[j] / 9), (L / 8, sl_[j + 1] / 9), (0, sl_[j + 1] / 9)], N_)
+        for P_, sgn in ((A, -1), (B, 1)):                                       # bouts : polygone convexe fermé
+            pts = [V3(P_, *p) for p in sec]; cen = np.mean(pts, axis=0); nrm = (t[0] * sgn, 0.0, t[1] * sgn)
+            for j in range(len(pts)):
+                _face(m, [cen, pts[j], pts[(j + 1) % len(pts)]], [(0.3, 0.5), (0.3 + 0.01 * j, 0.1), (0.31 + 0.01 * j, 0.1)], [nrm] * 3)
+        for s_ in (0.25, 0.75):
+            c_ = A + (B - A) * s_; sph_w.append((c_[0], ytop - 1.2, c_[1]))
+        # --- fagot : bâche (sans bouts) + 3 boudins noirs dont on voit les bouts
+        yb2 = ytop - 0.15; A2, B2 = A + t * 0.45, B - t * 0.45
+        for j in range(len(sec_b) - 1):
+            (d0, y0, nd0, ny0), (d1, y1, nd1, ny1) = sec_b[j], sec_b[j + 1]; v0, v1 = 0.975 * j / (len(sec_b) - 1), 0.975 * (j + 1) / (len(sec_b) - 1)
+            u0_, u1_ = (1.0, 0.0) if rev else (0.0, 1.0)
+            Q = [V3(A2, dcen + d0, yb2 + y0), V3(B2, dcen + d0, yb2 + y0), V3(B2, dcen + d1, yb2 + y1), V3(A2, dcen + d1, yb2 + y1)]
+            N_ = [(nn[0] * nd0, ny0, nn[1] * nd0)] * 2 + [(nn[0] * nd1, ny1, nn[1] * nd1)] * 2
+            _face(a2, Q, [(u0_, v0), (u1_, v0), (u1_, v1), (u0_, v1)], N_)
+        for d_, y_ in ((-rb, rb), (rb, rb), (0.0, rb * (1 + np.sqrt(3)))):
+            a3 = V3(A + t * 0.12, dcen + d_, yb2 + y_); b3 = V3(B - t * 0.12, dcen + d_, yb2 + y_)
+            a2.tube(a3, b3, rb * 0.97, (0.02, 0.985, 0.98, 0.998), 14)
+        for s_ in np.arange(0.5, L, 2.0):
+            c_ = A + t * s_; sph_a.append((c_[0] + nn[0] * dcen, yb2 + rb * 1.3, c_[1] + nn[1] * dcen))
+        # --- filet droit sur le bord arrière du bloc, tuiles de 4 ft
+        An, Bn = A + nn * (W / 2 - NETV['off']), B + nn * (W / 2 - NETV['off']); cuts = list(np.arange(0, L, TL)) + [L]
+        for sa, sb in zip(cuts[:-1], cuts[1:]):
+            pa, pb = An + t * sa, An + t * sb; ua, ub = (sa % TL) / TL, (sa % TL + (sb - sa)) / TL
+            Q = [(pa[0], ytop - 0.2, pa[1]), (pb[0], ytop - 0.2, pb[1]), (pb[0], net_top, pb[1]), (pa[0], net_top, pa[1])]
+            UV = [(ua, Vb), (ub, Vb), (ub, Vt), (ua, Vt)]; e3 = (nn[0], 0, nn[1])
+            _face(n2, Q, UV, [tuple(-np.array(e3))] * 4); _face(n2, Q, UV, [e3] * 4)
+        for s_ in np.arange(1.0, L, 2.0):
+            c_ = An + t * s_; sph_n += [(c_[0], ytop + h_, c_[1]) for h_ in (1.5, 3.0, 4.5)]
+    for qi in range(nmod + 1):                                                  # poteaux aux raccords + mousses
+        f = fs[qi]; p_ = P2(f, rc); e_ = p_ / np.linalg.norm(p_); pp = p_ + e_ * (W / 2 - NETV['off'] + 0.12)
+        yb_ = ytop - 0.2; yt_ = net_top + 0.35
+        n2.tube((pp[0], yb_, pp[1]), (pp[0], yt_, pp[1]), NETV['pole_r'], dot(NT_['red']), 8)
+        n2.tube((pp[0], yt_, pp[1]), (pp[0], yt_ + NETV['cap'], pp[1]), NETV['pole_r'] * 1.25, dot(NT_['yel']), 8)
+        if qi in (0, nmod):
+            tg2 = np.array([-e_[1], e_[0]]); w2, d2 = NETV['epad']
+            _obox(n2, (pp[0] - e_[0] * (d2 / 2 - 0.1), pp[1] - e_[1] * (d2 / 2 - 0.1)), tg2, e_, w2, d2, ytop - 0.05, ytop + NETV['epad_h'], NT_['blk'])
+        else:
+            n2.tube((pp[0], ytop - 0.05, pp[1]), (pp[0], ytop + NETV['pad_h'], pp[1]), NETV['pad_r'], dot(NT_['blk']), 10)
+    m.write(os.path.join(out, 'mur_virage_%d.jm' % k), MAT_BACHE); K.shp(os.path.join(out, 'mur_virage_%d.shp' % k), sph_w, 2.2)
+    a2.write(os.path.join(out, 'air_virage_%d.jm' % k), MAT_BACHE); K.shp(os.path.join(out, 'air_virage_%d.shp' % k), sph_a, 1.1, par=(0.6, 150, 8))
+    n2.write(os.path.join(out, 'filet_virage_%d.jm' % k), MAT_MAT); K.shp(os.path.join(out, 'filet_virage_%d.shp' % k), sph_n, 0.9, par=(1.0, 85, 4))
+    return dict(modules=nmod, f=(round(f_a, 3), round(f_b, 3)), top=round(ytop + h0, 2),
+                files=(('mur_virage_%d.jm' % k, 'bache_paille.png', 'mur_virage_%d.shp' % k),
+                       ('air_virage_%d.jm' % k, bundle_texture_v23(out, key), 'air_virage_%d.shp' % k),
+                       ('filet_virage_%d.jm' % k, NT_['png'], 'filet_virage_%d.shp' % k)))
+
+
+NT_ = {}
+
+
+def pylon_skin(out, sgm_statue, key):
+    """v23c (« les trucs gonflables aux intérieurs de virage ») : poteau rond de Saint-Georges aux couleurs du sponsor du virage."""
+    import sponsors as SP
+    bg, lg = SP.panel(key); im = Image.open(os.path.join(sgm_statue, 'pylon_round.png')).convert('RGB'); d = ImageDraw.Draw(im)
+    d.rectangle([0, 0, 1024, 928], fill=bg)
+    if lg is not None:
+        for cx in (256, 768):
+            fit(im, lg, (cx - 90, 120, cx + 90, 820), 0.0, rot=90)
+    im = K.shade_v(im, (0, 0, 1024, 928), 1.0, 0.82); fn = 'pylone23_%s.png' % (key or 'noir'); _save(im, os.path.join(out, fn)); return fn
+
+
+def drape_tarp(out, name, Hf, g, ua, ub, side, key, step=0.6, nv=18, lift=0.3):
+    """v23c (« fais les bords de la bosse Milwaukee en Milwaukee » ; « la plaque AMV sur les bords de la réception du freestyle, un
+    rectangle comme le Milwaukee ») : bâche drapée sur le flanc d'un saut (side -1 = gauche, +1 = droite du sens de course), de u = ua à
+    ub ; elle suit le terrain construit du haut du flanc (h < 0,92 h de l'axe) au pied (h < 0,25 ft), 0,08 ft au-dessus ; jupe noire
+    en bas ; logo du sponsor projeté à plat (lisible de côté, jamais en miroir). Renvoie la ligne de statue (origine au sol à côté)."""
+    import sponsors as SP
+    c, s_ = np.cos(g['t']), np.sin(g['t']); nrm = np.array([-s_, c]) * side; H1 = lambda p: float(np.ravel(Hf(p[0], p[1]))[0])
+    base = lambda u: np.array([g['x0'] + u * c, g['z0'] + u * s_])
+    us = np.arange(ua, ub + 1e-6, step); vv = np.arange(0, 70, 0.5); cols = []
+    for u in us:
+        hs = np.array([H1(base(u) + nrm * v) for v in vv]); hc = hs[0]
+        if hc < 0.6:
+            cols.append(None); continue
+        vt = vv[int(np.argmax(hs < 0.92 * hc))]; vf = vv[int(np.argmax(hs < 0.25))]; cols.append((max(0.0, vt - 0.5), vf + 0.5))
+    ok = [i for i, cl in enumerate(cols) if cl]; us = us[ok[0]:ok[-1] + 1]; cols = cols[ok[0]:ok[-1] + 1]
+    cols = [cl if cl else cols[i - 1] for i, cl in enumerate(cols)]
+    vfm = max(cl[1] for cl in cols); um = (us[0] + us[-1]) / 2; O = base(um) + nrm * (vfm + 4.0); h_o = H1(O)
+    pts = [[(base(u) + nrm * v) for v in np.linspace(cl[0], cl[1], nv)] for u, cl in zip(us, cols)]
+    Y = [[H1(p) for p in row] for row in pts]; hmax = max(max(r) for r in Y) - h_o
+    L = us[-1] - us[0]; W, H = 2048, 512; bg, lg = SP.panel(key); im = Image.new('RGB', (W, H), bg)
+    if lg is not None:
+        l2 = lg.resize((lg.size[0], max(1, int(lg.size[1] * (H / hmax) / (W / L)))), Image.LANCZOS)
+        fit(im, l2, (int(0.18 * W), int(0.22 * H), int(0.82 * W), int(0.78 * H)), 0.02)
+    ImageDraw.Draw(im).rectangle([0, int(H * 0.90), W, H], fill=(16, 16, 18)); im = K.grain(im, 1.2); png = name + '.png'; _save(im, os.path.join(out, png))
+    m = Mesh(); fu = (lambda u: (u - us[0]) / L) if side > 0 else (lambda u: 1 - (u - us[0]) / L)
+    V = lambda i, j: (pts[i][j][0] - O[0], Y[i][j] - h_o + lift, pts[i][j][1] - O[1])
+    UV = lambda i, j: (fu(us[i]), float(np.clip((Y[i][j] - h_o) / hmax, 0, 1)))
+    for i in range(len(us) - 1):
+        for j in range(nv - 1):
+            q = [(i, j), (i + 1, j), (i + 1, j + 1), (i, j + 1)]
+            P_ = [V(*k) for k in q]; U_ = [UV(*k) for k in q]
+            m.tri([P_[0], P_[1], P_[2]], [U_[0], U_[1], U_[2]]); m.tri([P_[0], P_[2], P_[3]], [U_[0], U_[2], U_[3]])
+            m.tri([P_[0], P_[2], P_[1]], [U_[0], U_[2], U_[1]]); m.tri([P_[0], P_[3], P_[2]], [U_[0], U_[3], U_[2]])
+    m.write(os.path.join(out, name + '.jm'), MAT_BACHE)
+    return O, name + '.jm', png

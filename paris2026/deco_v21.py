@@ -62,7 +62,13 @@ def _u_curve(a, hs, y0, n=26):
 
 def bale_u(out, key='noir'):
     """tunnel en U (axe = x), socle noir ; écrit bale_u.jm / .shp (communs) et bale_u_<key>.png."""
-    body, lg, ink = SPONSORS[key]; L, a, hs, t, tb, lip = (BU[k] for k in ('L', 'a', 'hs', 't', 'tb', 'lip'))
+    lo_img = None
+    if key in SPONSORS:
+        body, lg, ink = SPONSORS[key]
+    else:                                                                             # v23c : sponsors de l'utilisateur (sponsors.py)
+        import sponsors as SP
+        body, lo_img = SP.panel(key); lg, ink = (key if lo_img is not None else None), None
+    L, a, hs, t, tb, lip = (BU[k] for k in ('L', 'a', 'hs', 't', 'tb', 'lip'))
     po, so = _u_curve(a, hs, tb); pi_, si = _u_curve(a - t, hs, tb); stot = so[-1]
     W, H = 1024, 2048; kpx = W / L; rows = int(round(stot * kpx))                     # même échelle en u et en v : logos jamais déformés
     im = Image.new('RGB', (W, H), body); d = ImageDraw.Draw(im)
@@ -71,7 +77,7 @@ def bale_u(out, key='noir'):
     d = ImageDraw.Draw(im)
     band = int(0.025 * W); d.rectangle([0, 0, band, rows], fill=BLACK); d.rectangle([W - band, 0, W, rows], fill=BLACK)   # bord noir
     if lg:
-        lo = K.logo(lg) if ink is None else K.tint(K.logo(lg), ink)
+        lo = lo_img if lo_img is not None else (K.logo(lg) if ink is None else K.tint(K.logo(lg), ink))
         fl_ = hs + np.pi * a / 2; sc = int(0.55 * fl_ * kpx); hb = int(0.26 * fl_ * kpx)          # logo au milieu du flanc
         fit(im, lo.rotate(180, expand=True), (band + 40, sc - hb, W - band - 40, sc + hb), 0.04)      # flanc -z : vu de dehors, à l'endroit
         sc2 = int((stot - 0.55 * fl_) * kpx); fit(im, lo, (band + 40, sc2 - hb, W - band - 40, sc2 + hb), 0.04)  # flanc +z

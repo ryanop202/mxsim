@@ -75,3 +75,21 @@ Décor
   sponsor de la zone, pas FIVE partout) ; enterrer plus ; filets : modules de taille fixe (3 ou 4 selon la longueur), à placer sur les
   traits rouges des captures (plus près du sommet du virage), virages non montrés : ne pas toucher.
 - Ballots par sponsor ; boudins surélevés à l'intérieur des virages selon le tracé final.
+
+## Review en jeu de la v23b (2026-11-24) -> v23c
+- Murs : à l'ENTRÉE des virages (pas à la fin) ; droits, même hauteur, enterrés, jamais en vague ; bouts fermés (plus de triangles) ;
+  3 boudins visibles (pas de bâche sur les bouts) ; bâche aux couleurs du sponsor (logos de l'utilisateur, sponsors.py) ; MX Sim Racing
+  au virage avant le freestyle.
+- Virages trop loin : couloirs L5 / L6 / L2 / L1 20 ft plus courts ; whoops en sortie de virage ; T_D plus serré (L3 12 ft plus près de L2).
+- L5 : réception du petit double plus haute, plus ronde (7 ft).
+- Après l'arrivée : même forme plus grande, creux x2, 2e bosse plus haute, plateau plus long.
+- Petite table creusée : x1,98 (le max avant l'appel du freestyle ; demandé +50 %), bout plus haut (5 ft).
+- L2 : plus d'écart entre la 2e et la 3e bosse ; creux remontés (plus smooth).
+- L1 : table un peu plus courte ; 1re bosse 3,4 ft ; 10 ft entre les 2 dernières ; roller 2,2 ft.
+- Sable : texture USLAND copiée dans ztile (le chemin ext/ donnait du vert).
+- Arche : plus de découpe carrée.
+- Milwaukee : face raide avec un petit palier au milieu ; bâche Milwaukee drapée sur les 2 flancs.
+- Triple après : 4,0 / 4,1 / 3,9, juste derrière le Milwaukee ; la place restante avant le virage.
+- Ballots aux couleurs des sponsors par zone (MV = juste le sigle ; FIVE logo / 5 rouge en alternance ; AMV = 3 lettres) ; 4 ballots
+  AMV sur la réception du freestyle + plaque AMV drapée sur ses flancs ; 2 ballots enlevés au début de L6 (côté droit).
+- Poteaux gonflables à l'intérieur des virages (sponsor du virage).

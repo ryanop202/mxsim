@@ -32,7 +32,7 @@ BIG, BIG2 = 'big_det_a', 'big_cle'
 RB = 21.5
 ZION = os.environ.get('PARIS_ZION') == '1'      # v15 : « version Zion » (paris2026/build_zion.py)
 # v16 (« on garde pas les virages de ZION, ça fait un bug ») : virages USLAND (rayon 21,5 ft, berms JGSX) aussi en version Zion
-XW_SHIFT = 23.0 if ZION else 0.0  # v15 : couloirs allongés vers l'est (place libre du sol agrandi) pour les écarts ZION ;
+XW_SHIFT = 3.0 if ZION else 0.0   # v23c (« les virages sont encore trop loin ; les whoops doivent être en sortie de virage ») : 23 -> 3 ft (L5, L6, L2, L1 20 ft plus courts) ; # v15 : couloirs allongés vers l'est (place libre du sol agrandi) pour les écarts ZION ;
 #   v20 (« baisse l'écart entre les bosses crête à crête, pas énorme ; du coup les virages aussi, les rapprocher ») : 55 -> 23 ft
 # v19 (version Zion, « élargir un peu entre les pistes ; les enchaînements sont assez proches du public ; les whoops et l'enchaînement
 # à côté sont collés ») : 180 L2 -> L1 et L6 -> L5 de rayon 27,5 ft (couloirs voisins à 55 ft au lieu de 43, berm JGSX décalé),
@@ -157,7 +157,7 @@ _q = np.r_[np.interp(np.linspace(0, _k, int(round(_k * 1.4)) + 1), np.arange(_k 
 _APP_NEW = ('raw', 'appel du petit double adouci 4,0 ft', _q, 'T')
 PRE_FINISH_Z = [_APP_NEW, ('gap', round(22.7 - (len(LS.L('tmp', [_APP_NEW])) - len(LS.L('tmp', [_APP_OLD]))) * 0.1, 1)), ('stretch', SA[1], 5.8, 1.6)]
 _APP_SGM = smooth_takeoff(4.0, 10.0, 1.8, 9.0, 0.8, pad=0.4)   # v23 (« l'appel plus raide, comme le double de Saint-Georges ») : appel du double L3 de Saint-Georges (~36°)
-PRE_FINISH_Z = [_APP_SGM, ('gap', round(22.7 - (len(LS.L('tmp', [_APP_SGM])) - len(LS.L('tmp', [_APP_OLD]))) * 0.1, 1)), ('stretch', SA[1], 5.8, 1.6)]   # v19 (Zion) : vrai petit double, appel pointu ;
+PRE_FINISH_Z = [_APP_SGM, ('gap', round(22.7 - (len(LS.L('tmp', [_APP_SGM])) - len(LS.L('tmp', [_APP_OLD]))) * 0.1, 1)), ('stretch', SA[1], 7.0, 1.9)]   # v23c : réception plus haute, plus ronde, plus de terre (5,8 -> 7,0 ft)   # v19 (Zion) : vrai petit double, appel pointu ;
 #   v19d (« la bosse entourée, mets-la 4 mètres plus loin ») : réception 13 ft plus loin (7 -> 20 ft)
 TRIPLE_EARLY = 20.0
 TABLE_PLUS = 3.3                  # v20d : table de L6 +50 cm de chaque côté
@@ -225,9 +225,9 @@ def pts_prof(pts, sig=0.8):
 
 # v22 (dessin sur le profil L3) : « pas un roller, une petite table creusée, un peu plus longue qu'une table de base ; un appel un peu
 # raide, ça se recreuse un petit peu, et hop le plat avec la table »
-def table_creusee(k=1.0):
-    """v23 : la petite table creusée allongée k fois (moins raide), appel un peu plus haut (3,6 -> 4,0 ft)."""
-    P = [(0, 0), (1.0, 0.1), (4.6, 4.0), (6.2, 3.95), (9, 3.0), (13, 2.8), (16, 3.2), (19.5, 4.3), (21.5, 4.4), (23.5, 4.0), (27.5, 2.2), (31, 0.5), (33, 0)]
+def table_creusee(k=1.0, hb=4.4):
+    """v23 : la petite table creusée allongée k fois (moins raide), appel un peu plus haut (3,6 -> 4,0 ft) ; hb = hauteur du bout."""
+    P = [(0, 0), (1.0, 0.1), (4.6, 4.0), (6.2, 3.95), (9, 3.0), (13, 2.8), (16, 3.2), (19.5, hb - 0.1), (21.5, hb), (23.5, hb - 0.4), (27.5, 2.2), (31, 0.5), (33, 0)]
     return pts_prof([(u * k, h) for u, h in P], 0.7 * k)
 
 
@@ -252,8 +252,13 @@ POST_FIN_V23 = dict(b1=[(26, 0), (29, 0.8), (32, 2.2), (34, 2.6), (36.5, 2.0), (
                     out_k=1.0)
 # v23b (dessin sur la vue en jeu : « la 1re a la taille d'un roller, un peu plus haut ; la 2e un peu plus espacée, presque la taille d'une
 # bosse d'enchaînement ; et après le plateau, tac, qui tourne ») : 2,2 ft ; 4,0 ft (crêtes 24 ft d'écart) ; plateau 2,6 ft dès sa descente
-POST_FIN = dict(b1=[(25, 0), (28.5, 0.7), (31.5, 1.9), (33.5, 2.2), (35.5, 1.9), (38.5, 0.6), (41, 0)],
-                b23=[(43, 0), (47, 0.8), (52, 2.9), (56, 3.9), (58, 4.0), (60, 3.7), (63, 2.9), (66, 2.6), (88, 2.6), (94, 1.6), (100, 0.4), (105, 0)],
+POST_FIN_V23B = dict(b1=[(25, 0), (28.5, 0.7), (31.5, 1.9), (33.5, 2.2), (35.5, 1.9), (38.5, 0.6), (41, 0)],
+                     b23=[(43, 0), (47, 0.8), (52, 2.9), (56, 3.9), (58, 4.0), (60, 3.7), (63, 2.9), (66, 2.6), (88, 2.6), (94, 1.6), (100, 0.4), (105, 0)],
+                     out_k=1.0)
+# v23c (« la même forme, plus gros : 1re bosse un peu plus haute ; x2 l'espace entre la 1re et la 2e (à peine une moto passe) ; la 2e
+# légèrement plus haute ; le truc qui tourne moins sur place, plus large ») : 2,6 ft ; creux 2x plus long ; 4,3 ft ; plateau plus long
+POST_FIN = dict(b1=[(24, 0), (27.5, 0.8), (30.5, 2.2), (32.5, 2.6), (34.5, 2.2), (37.5, 0.7), (40, 0)],
+                b23=[(48, 0), (52, 0.9), (57, 3.1), (61, 4.2), (63, 4.3), (65, 4.0), (68, 3.1), (71, 2.8), (96, 2.8), (102, 1.7), (108, 0.4), (113, 0)],
                 out_k=1.0)
 CAMEL_V22D = CAMEL
 # v23 (« un peu plus haut ; la face beaucoup plus raide, le bas toujours smooth ; un petit creux avant, que ça redescende presque au sol du stade
@@ -262,9 +267,16 @@ CAMEL_V22D = CAMEL
 CAMEL = pts_prof([(0, 0), (2, 0.35), (7, 0.4), (9.5, 0.05), (11, 0.15), (13, 0.9), (15, 2.4), (16.5, 4.3), (17.8, 6.6), (18.8, 8.8),
                   (19.6, 10.6), (20.4, 11.4), (21.5, 11.6), (27.5, 11.6), (29, 11.3), (33, 9.6), (38, 7.0), (44, 4.0), (50, 1.5), (54, 0.3),
                   (56, 0)], 0.5)
-CAMEL_U = 133.5   # v22d (« mets le saut Milwaukee plus centré vers mon trait », trait à ~158 ft) : centre du saut à 158 ft (était 118 -> 134)
+CAMEL_V23 = CAMEL
+# v23c (dessin sur la vue en jeu : « garde l'appel aussi raide, fais le petit étage qu'il a de base : raide, un petit plat, et la pente
+# reprend avec le même angle ») : face raide jusqu'à ~6,5 ft, palier de ~2,8 ft, face raide jusqu'à 11,6 ft ; dessus et réception inchangés
+CAMEL = pts_prof([(0, 0), (2, 0.35), (7, 0.4), (9.5, 0.05), (11, 0.15), (13, 0.9), (14.6, 2.6), (15.8, 4.6), (16.8, 6.0), (17.6, 6.4),
+                  (19.6, 6.6), (20.6, 7.4), (21.6, 9.4), (22.4, 11.0), (23.2, 11.5), (24.2, 11.6), (30, 11.6), (31.5, 11.3), (35.5, 9.6),
+                  (40.5, 7.0), (46.5, 4.0), (52.5, 1.5), (56.5, 0.3), (58.5, 0)], 0.45)
+CAMEL_U = 131.0   # v22d (« mets le saut Milwaukee plus centré vers mon trait », trait à ~158 ft) : centre du saut à 158 ft (était 118 -> 134)
 # v22 (dessin sur L1) : « après les whoops, comme une whoops en plus, sauf que ça fait une table plate d'à peu près la longueur d'une
 # table normale ; ça redescend »
+TABLE_PLATE_L1_V23C = pts_prof([(0, 0), (3, 1.0), (6, 2.9), (8.5, 3.4), (19, 3.6), (29, 4.25), (31.5, 4.4), (34.5, 3.6), (39, 0.9), (42, 0)], 0.8)
 TABLE_PLATE_L1_V23 = pts_prof([(0, 0), (3, 1.0), (6, 2.9), (8.5, 3.4), (22, 3.6), (33, 4.25), (35.5, 4.4), (38.5, 3.6), (43, 0.9), (46, 0)], 0.8)
 TABLE_PLATE_L1 = pts_prof([(0, 0), (3, 1.0), (6, 2.9), (8.5, 3.5), (30, 3.6), (33, 2.9), (38, 0.7), (41, 0)], 0.8)
 
@@ -476,6 +488,8 @@ def paris():
     """Le tour (sens de course), départ du tour au début de L5 (sortie de T_C)."""
     LS.COMBOS.clear(); LS.SPLITS.clear(); SPLIT_Z.clear()
     zL5, zLD, zL3, zL2 = px_z(481.0), px_z(370.0) - LD_SHIFT, px_z(226.5) + L3_SHIFT, px_z(130.0) + L3_SHIFT + L2_SHIFT
+    if ZION:   # v23c (« le virage plus tôt, rapprocher le virage de la bosse » ; déjà « plus serré ») : L3 12 ft plus près de L2 (180 de rayon -6 ft)
+        zL3 += 12.0 if zL2 > zL3 else -12.0
     zL1, zL6 = zL2 + 2 * R180, zL5 - 2 * R180        # 180° JGSX : couloirs voisins à 43 ft (v19 Zion : 55 ft)
     xW = px_x(312.0) + XW_SHIFT                        # virages Ouest (T1, T_C) : x des sorties de 180°
     xLR, xC, xT5 = px_x(860.0) - XLR_SHIFT, px_x(778.0), px_x(785.0)
@@ -518,15 +532,22 @@ def paris():
     u0 -= L3_ADVANCE
     if ZION:   # v23 (« baisse légèrement la hauteur de la réception » du saut freestyle) : butte x0,93
         toks = [('raw', t[1].replace('(24,2)', '(22,5)'), np.asarray(t[2], float) * 0.93, t[3]) if t[0] == 'raw' and 'butte' in t[1] else t for t in toks]
+        # v23c (photo de côté : « le plat sur le dessus un peu plus long, en gardant la même distance de saut ; le plat vers la pelle, mêmes
+        # angles ») : 7 ft de plat en plus devant le dessus, pris sur le creux avant la face (la descente de réception ne bouge pas)
+        def _plat_devant(t, E=7.0):
+            q = np.asarray(t[2], float); it_ = int(np.argmax(q > 0.97 * q.max())); k_ = int(round(E / 0.1))
+            return ('raw', t[1] + ' plat +7', np.r_[q[k_:it_], np.full(k_, q[it_]), q[it_:]], t[3])
+        toks = [_plat_devant(t) if t[0] == 'raw' and 'butte' in t[1] else t for t in toks]
     secs3 = [LS.sec(L3_SEC, toks, u0)]
     if ZION:   # v20c (« ajoute un roller en sortie de virage avant le saut de freestyle ») : le roller de Saint-Georges (Custom1_g30_1,
         #   1,9 ft) à EXIT_U0 de la sortie de T_Bb, ~50 ft de plat avant l'appel
         rl_ = [('raw', 'roller Saint-Georges', np.asarray(LS.L('tmp', [ROLLER]), float), 'T')]
         rl_ = [('raw', 'petite table creusee 4,4 ft', TABLE_CREUSEE, 'T')]   # v22 : à la place du roller
         # v23 (« un peu moins raide, l'appel un peu plus haut, longueur x2,25 ») : x2,25 si ça tient avant l'appel du freestyle (22 ft d'élan)
-        kL = min(2.25, (u0 - 22.0 - EXIT_U0) / tlen(rl_)); rl_ = [('raw', 'petite table creusee x%.2f' % kL, table_creusee(kL), 'T')]
+        # v23c (« rallonge-le de la moitié ; la réception un peu plus haute ») : x1,74 -> x2,6 si ça tient (14 ft d'élan avant l'appel du freestyle)
+        kL = min(2.6, (u0 - 14.0 - EXIT_U0) / tlen(rl_)); rl_ = [('raw', 'petite table creusee x%.2f' % kL, table_creusee(kL, 5.0), 'T')]
         LOG['table_creusee_k'] = round(kL, 2)
-        assert EXIT_U0 + tlen(rl_) + 21.0 < u0, u0
+        assert EXIT_U0 + tlen(rl_) + 13.0 < u0, u0
         secs3.append(LS.sec('PAR-L3 petite table creusee', rl_, EXIT_U0))
     p.straight(x3 - x_end3, secs3, tag='L3 grande table')
     p.turn(180, R3, BIG, tag='T_D 180 gauche (berm 2e moitié)'); p.segs[-1]['berm_from'] = 0.4 if ZION else 0.5   # v23 : appui qui commence plus tôt
@@ -554,13 +575,20 @@ def paris():
         B8 = [zb_(h) for h in (2.8, 4.6, 5.0, 4.8, 5.0, 4.6, 4.8, 4.6)]; u0z = 3.0
         # v23 (« moins d'écart entre la bosse haute à droite et la basse à gauche ; baisse la droite, moins raide, vrai double par-dessus »)
         B8[0] = ('raw', 'bosse ZION 2,3 ft (longue)', resample(np.asarray(zsingle(2.3 / ZH)[2], float), 1.1), 'T')
-        gz_ = ((xW - x_end3) - END_GAP - u0z - sum(tlen(b) for b in B8)) / 7; assert gz_ > 4.0, gz_
+        # v23c (« plus d'écart entre la 2e et la 3e bosse ») : +5 ft là, pris sur les autres écarts
+        gz_ = ((xW - x_end3) - END_GAP - u0z - sum(tlen(b) for b in B8) - 5.0) / 7; assert gz_ > 2.5, gz_
         toks = [B8[0]]
-        for b_ in B8[1:]:
-            toks += [('gap', round(gz_, 1)), b_]
+        for i_, b_ in enumerate(B8[1:]):
+            toks += [('gap', round(gz_ + (5.0 if i_ == 1 else 0.0), 1)), b_]
         SPLIT_Z[L2_NAME] = [(0.0, tlen(B8[0]), 1.5 / 2.3, 1.0)]
     u0 = u0z if ZION else L2_U0                            # v18 (RF) : même écart partout comme la version USLAND (~8,5 ft, A1 : 8 - 13)
-    p.straight(xW - x_end3, [lane_sec(L2_NAME if ZION else 'PAR-L2 triple, triple (7 bosses, meme ecart)', toks, u0)], tag='L2 singles')
+    sec2 = lane_sec(L2_NAME if ZION else 'PAR-L2 triple, triple (7 bosses, meme ecart)', toks, u0)
+    if ZION:   # v23c (« plus smooth : bosse, plat, bosse, plat, des trous entre les bosses ») : creux remontés en douceur entre la 1re et la dernière crête
+        from scipy.ndimage import gaussian_filter1d
+        from scipy.signal import find_peaks
+        pr_ = sec2[0]; pk_, _ = find_peaks(pr_, prominence=1.0); a_, b_ = int(pk_[0]), int(pk_[-1])
+        pr_[a_:b_] = np.maximum(pr_[a_:b_], 0.5 * gaussian_filter1d(pr_, 45)[a_:b_])
+    p.straight(xW - x_end3, [sec2], tag='L2 singles')
     p.turn(-180, R180, BIG2, tag='T1 180 droite (berm)')
     # v10 : 11 whoops (une petite + 10) plus hautes, plus rondes, plus de terre ; la table + 2 bosses gardées (« pas mal »)
     lL1 = xW - (xLR + RB)
@@ -577,6 +605,8 @@ def paris():
         toks = [whoops_zion(11), ('gap', 4.0), ('raw', 'table plate 3,6 ft', TABLE_PLATE_L1, 'T'), ('gap', 5.0), zb_(4.1), ('gap', 6.0), zb_(3.6)]
         # v23 (« table un tout petit peu plus loin, un peu plus longue, la fin relevée ; les 2 bosses beaucoup moins hautes, la dernière presque un roller »)
         toks = [whoops_zion(11), ('gap', 5.5), ('raw', 'table montante 4,4 ft', TABLE_PLATE_L1_V23, 'T'), ('gap', 5.0), zb_(3.2), ('gap', 6.0), zb_(1.7)]
+        # v23c (« table légèrement plus courte ; 1re bosse un tout petit peu plus haute ; plus d'espace entre les 2 dernières ; le roller plus haut »)
+        toks = [whoops_zion(11), ('gap', 5.5), ('raw', 'table montante 4,4 ft', TABLE_PLATE_L1_V23C, 'T'), ('gap', 5.0), zb_(3.4), ('gap', 10.0), zb_(2.2)]
     if RF:     # v18 : « garde nos whoops dans la version RF » : celles de la version Zion, 9 (11 : 39 ft de trop) ; table + 2 bosses RF
         toks = [whoops_up(9, 1.15), ('gap', 15.0), ('scale', TABLE_B, 6.6), ('gap', RF_GAP), ('scale', SA[1], 4.0), ('gap', RF_GAP), ('scale', SA[0], 3.6)]
     u0 = lL1 - END_GAP - tlen(toks); assert u0 >= 0.5, u0
@@ -603,10 +633,12 @@ def paris():
         cam = ('raw', 'saut Milwaukee 11,6 ft', CAMEL, 'T'); tri_ = rh[2:]
         zb_ = lambda h: ('raw', 'bosse ZION %.1f ft' % h, resample(np.asarray(zsingle(h / ZH)[2], float), 0.88), 'T')
         tri_ = [zb_(3.4), ('gap', 3.5), zb_(3.6), ('gap', 3.5), zb_(3.4)]   # v23 (« triple moins gros, bosses plus serrées, facile »)
+        zb2_ = lambda h: ('raw', 'bosse ZION %.1f ft' % h, resample(np.asarray(zsingle(h / ZH)[2], float), 0.94), 'T')
+        tri_ = [zb2_(4.0), ('gap', 5.5), zb2_(4.1), ('gap', 5.5), zb2_(3.9)]   # v23c : entre les deux tailles, juste derrière le Milwaukee
         free = lLR - u0 - END_GAP - tlen([r1]) - tlen([r2]) - tlen([cam]) - tlen(tri_); creux = 3.0
         g1 = round(CAMEL_U - u0 - tlen([r1]) - tlen([r2]) - creux, 1)   # v22c : le saut commence à CAMEL_U ft du virage
         assert g1 > 15.0, free
-        toks = [r1, ('gap', g1), r2, ('gap', creux), cam, ('gap', round(free - creux - g1, 1))] + tri_
+        toks = [r1, ('gap', g1), r2, ('gap', creux), cam, ('gap', 8.0)] + tri_   # v23c : le reste de la place avant le virage
         SAND_LR = (0.0, u0 + tlen([r1]) + g1 + tlen([r2]) + creux + 2.0)
     p.straight((zL1 - RB) - (zL6 + RB), [lane_sec('PAR-LR sable, saut Milwaukee, triple' if ZION else 'PAR-LR saut de sortie, bosse, table, 3 bosses', toks, u0)], tag='LR tribune Est')
     p.turn(-90, RB, BIG, tag='T_E 90 droite (berm)')
