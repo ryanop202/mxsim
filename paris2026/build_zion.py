@@ -737,7 +737,10 @@ def export_zion(*a, **k):
     import layouts_sx as LS
     BP.WHOOPS_LEFT_GROUND = True                                       # v22c : boudins FLY, au sol à gauche (plus de talus)
     BP.whoops_boudins(BP.OUT, BP.FOLDER, BP.PATH, LS.COMBOS)          # v18 : boudins SX TOUR sur les murets
-    semis_jgsx(BP.OUT, BP.FOLDER)                                      # v19 : semi-remorques JGSX aux couleurs des équipes
+    # v22 (photos du paddock de Paris 2026 de Ryan) : paddock refait (paddock26.py) à la place des 7 camions JGSX (semis_jgsx, v19-v21d),
+    # écran géant refait devant le mur de scène
+    import paddock26 as PD
+    BP.REPORT['paddock_2026'] = PD.apply(BP.OUT, BP.FOLDER)
     deco_v21(BP.OUT, BP.FOLDER, LS.COMBOS)                             # v21 : murs bâchés + filets, ballots en U, arche 50 Factory
 
 

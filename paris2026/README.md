@@ -154,3 +154,136 @@ Habillage (`hab_objets2.py`, nouveaux modèles fermés, faces vers l'extérieur)
   Encore redessinés : Venum, Minerva Oil, Thor, Five, Moto Verte.
 - Vérification : `rendu_objets.py` / `rendu_scenes.py` (rendu logiciel, l'aperçu WebGL était bloqué) -> `apercu/v9_*.png`.
 - Contrôles : 7 / 7, `validate_mx.py` 0 problème. **Non testé en jeu.**
+
+## v22 (2026-11-25, version Zion) : paddock 2026 d'après les photos de Ryan + écran géant refait
+
+Photos et logos envoyés par Ryan : `refs/paddock2026/` (photos 1-7 du paddock, Iveco KTM, semi Bud Racing, logos officiels).
+Code : `paddock26.py` (modèles + plan), appelé par `build_zion.export_zion` à la place de `semis_jgsx` ; peut aussi être appliqué
+seul à la piste déjà construite : `py -3.15 -I paris2026/paddock26.py` (idempotent).
+
+Lecture des photos (validée par Ryan) : photo 1 prise depuis le bout côté **whoops** (z grand), l'écran (mur de scène) à droite ;
+allée parallèle au mur (x 772-800 ft).
+- Rangée mur, depuis le bout whoops : 4 tentes Triumph + barrières bâchées + 3 flammes, 6 box motos (barrières Vauban) à leur
+  droite, Airstream (loueur Eden Street) devant les box, remorque Suzuki **en travers, avant vers la piste** (peau JGSX repeinte :
+  bandeau jaune S SUZUKI, MOTUL, bas vitré) + auvent, moquette bleue, 3 bannières jaunes (Charles Lefrançois, Jason Anderson 21,
+  Ken Roczen 94) et 3 motos ; zone Honda : bâtiment à étage (vitrage rouge lumineux, garde-corps HONDA) + stand moquette rouge,
+  3 murs HONDA lumineux, servantes rouges, 3 motos dont Shimoda 30 + panneau Jo Shimoda ; van noir Monster Yamaha + tente et
+  flammes YCF.
+- Rangée piste : van blanc (MAN TGE), 2 canettes Monster géantes (photo de la canette plaquée), Iveco Daily Red Bull KTM
+  **porte latérale ouverte** (servante Beta, placards, étagère) + 2 tentes KTM, panneau ACCÈS PISTE / TRACK ACCESS au passage vers
+  la piste, tente Monster, semi Bud Racing (Kawasaki, KX, filets verts) cabine vers le bout opposé.
+- Écran : 64 x 21,8 m (de 8,7 à 30,5 m de haut) + 2 écrans verticaux 9 x 16 m à 4 m de chaque côté, matériau non éclairé
+  (toujours lumineux), visuel Supercross Paris sur fond « coucher de soleil » ; ancien écran 115 m et écrans latéraux retirés.
+- **Aucune personne** (ni foule, ni photo de pilote, ni visage sur l'écran).
+- Retirés : les 7 semi-remorques JGSX de la v21d.
+- Formes CRÉÉES d'après les photos (pas des mesures), dimensions ESTIMÉES (tailles courantes : tente 3 x 3 / 3 x 4,5 / 3 x 6 m,
+  van 7,2 m, Airstream 27 ft, barrière Vauban 2 m, canette 1,8 x 4,9 m). Motos simplifiées (low-poly). Pas de collision (hors piste).
+- Pas faits (pas assez visibles / marque illisible) : gonflable Five, camion rouge, remorque noire, tente arche noire, le fond de
+  l'allée après Honda, le grand logo blanc à l'arrière du semi Bud. Entre Honda et YCF / entre ACCÈS PISTE et Monster : vide
+  (rien de visible sur les photos).
+- Aperçus (rendu logiciel, pas le jeu) : `apercu_zion/v22_paddock_*.png` (dessus annoté, points de vue des photos 1 et 2, KTM,
+  Suzuki + Airstream, Honda, depuis la piste). `validate_mx.py` : 0 problème. **Non testé en jeu.**
+
+### v22b (même jour, Ryan : « pas bien placés, très vide »)
+- Relu sur les photos : Suzuki (z 735) et Honda (z 612-700) remontés sous l'écran ; bâtiment Honda EN TRAVERS, façade et balcon
+  HONDA vers le bout whoops (vus derrière le Suzuki sur la photo 1), stand devant avec 3 murs lumineux, barrières HONDA le long de
+  l'allée et devant le stand.
+- Côté piste en 3 files comme la photo 1 : canettes contre la piste, van blanc + grande remorque noire, KTM (Iveco + 2 tentes) ;
+  tente arche noire devant ; barrière numérotée 6-8-10-12 au bout du paddock.
+- Remplissage SANS marque (accord de Ryan) : remorques noire et rouge (peau JGSX unie), tentes blanches, tables hautes, groupes
+  électrogènes, caisses, barrières. 161 objets, `validate_mx.py` 0 problème. **Non testé en jeu.**
+- Le build complet (`build_zion.py`) ne passe pas sur ce PC : il lui manque `C:\Users\ryan\rf_ext\sx2026r01anaheim1\textures`
+  (sable RF Anaheim). Le paddock s'applique seul sur la piste construite : `py -3.15 -I paris2026/paddock26.py`.
+
+### v22c (Ryan : « camion Suzuki dans le mauvais sens, motos de l'autre côté, petit passage entre les motos Suzuki et Honda »)
+- Remorque Suzuki retournée : avant vers le mur, arrière (portes + rampe) vers l'allée.
+- Stand Suzuki (auvent, moquette, bannières Lefrançois / Anderson 21 / Roczen 94, 3 motos) côté Honda ; passage libre de ~14 ft
+  entre les motos Suzuki et les barrières HONDA. Aperçu : `apercu_zion/v22_paddock_passage_suzuki_honda.png`.
+
+### v22d (Ryan : « le camion Honda est contre l'écran, dans l'autre sens ; il y a encore une petite allée entre l'écran et les camions »)
+- Bâtiment (camion à étage) Honda PARALLÈLE au mur (x 838-864, z 622-690), façade et stand vers l'allée ; barrières HONDA le long
+  de l'allée (entrée au milieu) et devant le stand (côté passage Suzuki).
+- Rangée mur arrêtée à x = 864 : ruelle de ~12 ft devant l'écran. Allée centrale resserrée (x 769-789, 20 ft), rangée piste
+  x 736-769 ; remorque noire, canettes, ACCÈS PISTE et remorque rouge recalés en conséquence. 163 objets, `validate_mx.py` 0 problème.
+
+### v22e (dessins de Ryan : `refs/paddock2026/dessin_ryan_dessus.png`, `dessin_ryan_photo1.png`)
+- Airstream dans le sens de l'allée devant le Suzuki ; 3 motos Triumph (noires) à son ancienne place.
+- Box motos : rangées droites, toutes pareilles, collées, ouvertes sur un chemin (box 13,2 x 6,6 ft, une moto en long par box) :
+  3 rangées x 4 box à droite de Triumph, 3 rangées x 3 box côté photo 2 (à la place des vans blancs).
+- Bus noir (MAN, comme la photo de Ryan) à côté du KTM, plus de remorque noire ; canettes Monster 7,3 m (plus hautes que les camions).
+- Côté photo 2, rangée mur : stand Yamaha GSM (bus bleu + tente + 2 motos), RFN (bus noir à panneau blanc + tente : couleurs du
+  logo, rien trouvé sur leur stand), Sedna (bus turquoise / noir + tente), YCF agrandi (2 tentes, bus bleu, flammes). Logos
+  envoyés par Ryan (`refs/paddock2026/logos/gsm.png`, `sedna.png`, `rfn.png`). Van noir Monster Yamaha retiré.
+- Suzuki : la moto de Lefrançois remplacée par une Roczen 94.
+- Motos : toujours nos motos simplifiées. Les livrées d'équipe du jeu (pack AMA 2026, dont Roczen) sont protégées (`.png.scram`) :
+  pas utilisables. 207 objets, `validate_mx.py` 0 problème. **Non testé en jeu.**
+
+### v22f (dessins + photos + vidéo YCF de Ryan : `refs/paddock2026/dessin_ryan_*2.png`, `p8_*`, `p9_*`, `video_ycf/planche.png`)
+- Box : 2 rangées face à face (motos face à face, chemin de 8 ft), la 3e rangée enlevée (« autre chose » à venir), aux 2 endroits.
+- Gant gonflable Five (rouge, FIVE sur l'index, logo 5 sur la paume) à côté du van blanc ; forme créée.
+- Remorque rouge -> camion Milwaukee (logo de Ryan) + tente rouge ; ensuite 2 bus Stark Varg (logo or) + 3 tentes noires STARK avec
+  une moto dessous (motos noires : la Stark Varg du jeu introuvable dans les fichiers) ; 3 motos vertes devant Bud Racing.
+- YCF d'après la vidéo : camion blanc « ENJOY YOUR RIDE » (déco bleu / rouge / noir), moquette bleue avec 18 pit bikes (échelle
+  0,72), podium noir YCF ; camion VHR Yamaha (remorque bleue, « VHR » redessiné en texte) + moto Yamaha derrière.
+- Honda : 2 camions Honda (blanc / rouge, HONDA, HRC) ; panneaux pilotes Cédric Soubeyras 85, Tom Vialle 16, Jo Shimoda 30 (sans
+  photo) avec leurs motos ; la moto de Vialle (16) devant, face à l'allée.
+- Camion vitré USLAND (`tracks/USLAND2026SX1/statue/hospitality_usland`, fait par l'équipe pour les pistes de test) à la place de RFN.
+- 202 objets, 79 modèles, `validate_mx.py` 0 problème. **Non testé en jeu.**
+
+### v22g (photo 1 recadrée + photo du bus VHR de Ryan : `refs/paddock2026/` ; consignes : « compact, tout rempli, une croix au milieu »)
+- Croix : le passage ACCÈS PISTE côté piste (z 700-714) dans l'axe du passage Suzuki / Honda.
+- Côté piste tassé après la croix : camion noir à bande rouge (marque illisible, sans marque) | Milwaukee (semi complète, avec
+  tracteur) + 2 tentes rouges | stand Monster collé derrière + jeu (moto sur podium) | Stark Varg (3 tentes noires + motos, 2 bus) |
+  Bud Racing au fond, reculé de 10 ft, 3 motos vertes.
+- Honda tourné vers le passage (photo 1) : panneaux Soubeyras 85 / Vialle 16 / Shimoda 30 avec leurs motos juste derrière les
+  barrières HONDA ; 2 minibus Honda blancs (vitres, HONDA, HRC) derrière ; murs HONDA contre le bâtiment.
+- Vans plus arrondis (Ryan : « carrés, on dirait un vieux truc »). Box carrés 13,2 x 13,2 ft, 2 rangées face à face, motos vers le
+  chemin. Bus VHR Yamaha (bleu, toit blanc, griffe Monster, VHR + Yamaha) en travers entre YCF et Sedna, arrière vers la piste.
+  YCF : pit bikes blancs numérotés (7, 4, 16, 21, 30, 56, 31, 64 : vidéo), podiums, camion, 2 tentes ; GSM, USLAND, Sedna tassés.
+- Motos : `.scram` des livrées d'équipe NON contourné (protection de l'auteur du pack). Possible : motos d'origine du jeu
+  (stockrmz450, stockcrf450, stock450sxf, stockkx450f, stockyz450f, stockfc450 : textures en clair) à assembler (pièces en pieds,
+  avant = -z, chacune dans son repère) - pas encore fait.
+- 236 objets, 88 modèles, `validate_mx.py` 0 problème. **Non testé en jeu.**
+
+### v22h : vraies motos du jeu (`motos_jeu.py`)
+- Modèles moddés installés dans MX Simulator, textures EN CLAIR seulement (les `.png.scram` du pack AMA ne sont pas utilisés), base
+  fc450v2016 : KTM USLAND (#202 #151 #16 #348 #47 #9), Honda In So Cal (#16 Vialle, #151 pour Soubeyras et Shimoda), GasGas team,
+  Husqvarna violette, DewIsland KTM, KTM USLAND EVO3, CRF of Troy, 2026 RYAN BIKE. Pièces extraites des .saf (cache hors dépôt
+  `../mx_motos`), assemblées (cadre, bras oscillant, fourche, roues du jeu), posées sur une béquille noire, une texture 2048 par moto
+  (livrée 1792 px + roues), maillage allégé (~35 000 triangles par moto au lieu de ~200 000), `.jm.gz`.
+- Posées : 24 motos des box + 3 motos des pilotes Honda. Encore simplifiées (aucune moto en clair de ces marques dans le jeu) :
+  Suzuki, Triumph, Kawasaki (Bud), Yamaha (GSM, VHR), Stark Varg, pit bikes YCF, jeu Monster.
+- Usage privé (modèles de leurs auteurs). Poids : ~540 000 triangles de modèles pour tout le paddock -> à vérifier en jeu (fluidité).
+- `validate_mx.py` 0 problème. **Non testé en jeu.**
+
+### v22i (Ryan : Honda, RBT, Stark, YCF, VHR, Bud)
+- Honda : gros camion blanc (porteur, bandeau lumineux rouge en bas, HONDA / HRC) derrière les pilotes ; les 2 bus au fond du stand
+  (bandeau rouge lumineux en bas). Forme du porteur créée.
+- Camion noir -> camion RBT (semi complète : noir dégradé, grand RBT blanc `assets/logos/rbt_wide.png`, filets rouge / blanc).
+- Stark Varg : 2 bus alignés + 5 tentes noires STARK collées, une Stark sous chacune : MODÈLE 3D de la Stark du jeu
+  (`%LOCALAPPDATA%/MX Simulator/2023 Stark Varg by Julien113.saf`, base fc450v2016), texture protégée (.scram) NON utilisée -> couleur
+  unie gris « Forest Grey ».
+- YCF : 2 moquettes imprimées (bleu, traits noirs / blancs, logos), 2 rangées serrées de pit bikes (x 0,62) face à l'allée, 4 podiums
+  avec une moto exposée, camion, 2 tentes, flammes. Moto VHR à l'arrière du bus. Motos Bud tournées vers l'allée.
+- Écriture des statues : nouvel essai si le fichier est pris par un autre programme (Errno 22 vu 2 fois).
+- 266 objets, `validate_mx.py` 0 problème. **Non testé en jeu.**
+
+### v22j (Ryan : « motos mal faites, guidon dans les roues ; pas trop lourd ; motos de Vialle etc. de face »)
+- Contrôle des 15 vraies motos de profil et de près : montage correct (guidon au-dessus de la fourche). Le « guidon dans les roues »
+  venait des motos des pilotes Honda vues de face : elles sont maintenant dans le bon sens, l'avant vers les spectateurs (passage),
+  l'arrière vers le fond.
+- Allègement plus fort : ~19 000 triangles par moto (au lieu de ~40 000), blocs vidés par l'allègement non écrits. Paddock :
+  ~300 000 triangles de modèles (au lieu de ~580 000). `validate_mx.py` 0 problème. **Non testé en jeu.**
+
+### v22k (Ryan : motos buggées, Stark, Milwaukee, RBT, USLAND, Honda)
+- Vraies motos : le « bug » venait de l'allègement (jantes étirées, fourche tordue) -> roues du jeu JAMAIS allégées, reste allégé à
+  0,16 ft (~27 000 triangles par moto). Paddock : ~400 000 triangles de modèles.
+- Stark Varg : forme du jeu + NOTRE texture peinte pièce par pièce (plastiques blancs, selle noire, cadre gris foncé, bras alu,
+  fourche noire) ; la livrée protégée n'est pas utilisée. Motos tournées vers l'allée.
+- Milwaukee : camion de vente à 2 niveaux (remorque 48 ft, comptoir côté allée avec étagères d'outils et volet relevé, terrasse
+  sur le toit avec garde-corps Milwaukee, escalier à l'arrière) + 2 tentes avec une vraie moto dessous. Forme créée.
+- RBT : une moto exposée sur un podium à côté du camion (pas de moto de Théo / RBT dans le jeu : KTM USLAND #9).
+- USLAND : retourné, entrée (escalier + tapis rouge) côté allée.
+- Honda : gros camion = semi complète comme RBT (blanc, HONDA, HRC, filets rouge / noir, bandeau lumineux rouge) le long du
+  bâtiment ; les 2 bus côte à côte juste avant la moquette rouge.
+- 268 objets, `validate_mx.py` 0 problème. **Non testé en jeu.**
