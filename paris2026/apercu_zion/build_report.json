@@ -70,49 +70,49 @@
   {
    "lane": "L2 singles",
    "name": "PAR-L2 double triple triple (8 bosses)",
-   "u0": 0.0,
-   "L": 273.8,
+   "u0": 0.5,
+   "L": 276.4,
    "H": 5.0,
    "items": [
     [
      "bosse ZION 2,3 ft (longue)",
      0.0,
-     27.8
+     27.5
     ],
     [
      "bosse ZION 4,6 ft (ronde)",
-     32.5,
-     66.5
-    ],
-    [
-     "bosse ZION 5.0 ft",
-     76.2,
-     105.8
+     31.1,
+     64.9
     ],
     [
      "bosse ZION 4.8 ft",
-     110.5,
-     139.5
-    ],
-    [
-     "bosse ZION 5.0 ft",
-     144.2,
-     173.8
-    ],
-    [
-     "bosse ZION 4.6 ft",
-     178.5,
-     206.9
+     73.5,
+     102.3
     ],
     [
      "bosse ZION 4.8 ft",
-     211.6,
-     240.6
+     105.9,
+     134.7
+    ],
+    [
+     "bosse ZION 5.0 ft",
+     138.3,
+     167.7
+    ],
+    [
+     "bosse ZION 4.8 ft",
+     175.3,
+     204.1
+    ],
+    [
+     "bosse ZION 4.8 ft",
+     211.7,
+     240.5
     ],
     [
      "bosse ZION 4.6 ft",
-     245.3,
-     273.7
+     248.1,
+     276.3
     ]
    ]
   },
@@ -234,15 +234,6 @@
    ]
   }
  ],
- "murs_hauteur": {
-  "T_L5a": 6.93,
-  "T_Bb ": 7.97,
-  "T_D 1": 7.28,
-  "T1 18": 6.88,
-  "T_TR ": 6.94,
-  "T_E 9": 6.93,
-  "T_C 1": 7.98
- },
  "sable_tuiles": 15987,
  "tuiles_zion": [
   "texture @USLANDParis/ztile/2.png",
@@ -258,7 +249,7 @@
    "retirés (v13) : boudins FLY Racing (whoops)": 28,
    "retirés (v13) : ballots ZION (unis)": 212,
    "retirés (v13) : poteaux ronds": 7,
-   "retirés (v13) : tuffs de virage ZION (unis)": 73,
+   "retirés (v13) : tuffs de virage ZION (unis)": 72,
    "retirés (v13) : filets": 42,
    "panneau FINISH suspendu": 1,
    "cage du drapeau": 1,
@@ -306,6 +297,7 @@
   "tuiles": 8,
   "ombrage_plat": 228
  },
+ "decals_sable": 257,
  "zion_v19": {
   "paddock": [
    776,
@@ -315,7 +307,7 @@
   ],
   "dalles_tuiles": 246446,
   "x_paddock": 706.7,
-  "overlay": 5098,
+  "overlay": 5355,
   "decals_gardes": 0,
   "start": [
    671.5,
@@ -369,14 +361,14 @@
     "T1 18",
     "honda",
     [
-     0.1,
-     0.597
+     0.171,
+     0.739
     ],
-    7,
+    8,
     [
+     1,
      2,
-     3,
-     4
+     3
     ]
    ],
    [
@@ -416,7 +408,7 @@
     ]
    ]
   ],
-  "ballots": 120,
+  "ballots": 118,
   "arche": [
    277.8,
    741.3,
@@ -428,9 +420,9 @@
    28.0
   ],
   "holeshot": [
-   380.2,
+   380.6,
    703.4,
-   12.7,
+   13.1,
    26.5
   ],
   "murs_invisibles": [

@@ -111,3 +111,15 @@ Décor
   l'appel du triple.
 - START beaucoup plus large (52 ft) ; FINISH tout noir.
 - Plus tard : stade (trop d'escaliers, public).
+
+## Review en jeu de la v25c (2026-11-25) -> v25d
+- AMV : pics de terre au pied de la bâche -> les 2 sauts à panneaux sont adoucis à part PUIS coupés (l'adoucissement étalait la falaise à
+  travers le panneau) ; moins de texture ; AMV / AMV.FR décollés du sol ; la dame plus petite ; fond vert de la bulle enlevé derrière les
+  persos ; face côté piste : blanche + logos AMV (barrière + une rangée) ; panneau plein (tranches tournées vers l'extérieur).
+- Milwaukee : moins de texture ; logo centré sur la partie rouge ; même correction de terre.
+- Holeshot : pancarte 3,6 ft (bas remonté à 10,9 ft) ; HEAVY DUTY normal plus petit, HOLESHOT gras plus grand ; texte entre 1,5 ft du sol
+  et 0,6 ft sous la pancarte ; poteau à 22 ft de l'axe.
+- Virages : terre ajoutée retirée (« monticules ») ; murs à une hauteur, au ras du haut du berm ; Honda : 8 modules, un module plus tard.
+- Sable : décals sable de SX1 (decal/sand.png + sand_tnorm, 26 ft, tous les 4,5 ft) sur toute la partie sable, comme sur SX1 / SX3.
+- Ballots Milwaukee : doublons sur le dessus du saut enlevés (trait noir).
+- L2 : 3e 5 -> 4,8, 6e 4,6 -> 4,8 ; moins de plat aux deux bouts ; creux plus grands entre les 4 dernières bosses.

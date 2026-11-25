@@ -160,6 +160,7 @@ def wall_fill(H, path):
 
 
 def render_zion(path, st):
+    SPECIAL_ = []                                               # v25d : (couche, couloir, panneau) des sauts à panneaux
     import layouts_sx as LS
     jumps = np.zeros((N, N)); whoops = np.zeros((N, N)); berms = np.zeros((N, N)); fmx = np.zeros((N, N)); secs = []
     walls = np.zeros((N, N))      # v20b : murets à part (le pied arrondi des whoops les étalait dans chaque creux = un rebord)
@@ -169,7 +170,7 @@ def render_zion(path, st):
                 lay = whoops if 'whoops' in name else jumps
                 if name == LP.L3_SEC:                           # v18 : saut du milieu de la version USLAND (« le double central du mien »)
                     tmp_ = np.zeros_like(jumps); BP.render_mid(tmp_, g, prof, u0, name)
-                    board_cut_layer(tmp_, g, 'amv'); np.maximum(jumps, tmp_, out=jumps)   # v25c : coupe sur CE saut seulement
+                    SPECIAL_.append((tmp_, g, 'amv'))           # v25d : fusionné après l'adoucissement des pieds, coupe refaite après
                 else:
                     for it in LS.COMBOS[name]['items']:        # v16 : obstacles ZION (coupe ZION), whoops USLAND (coupe USLAND + murets)
                         i0, i1 = int(it[1] / 0.1), min(int(it[2] / 0.1) + 1, len(prof))
@@ -182,7 +183,7 @@ def render_zion(path, st):
                             kk_ = sp_[0][2:] if sp_ else (1.0, 1.0)
                             if it[0].startswith('saut Milwaukee'):      # v25c : coupe sur CE saut seulement
                                 tmp_ = np.zeros_like(lay); lane_zion(tmp_, g, prof[i0:i1], u0 + it[1], *LAT['T'], kl=kk_[0], kr=kk_[1])
-                                board_cut_layer(tmp_, g, 'milwaukee'); np.maximum(lay, tmp_, out=lay)
+                                SPECIAL_.append((tmp_, g, 'milwaukee'))
                             else:
                                 lane_zion(lay, g, prof[i0:i1], u0 + it[1], *LAT['T'], kl=kk_[0], kr=kk_[1])
                 secs.append(dict(lane=g['tag'], name=name, u0=round(u0, 1), L=round(len(prof) * 0.1, 1), H=round(float(prof.max()), 2),
@@ -214,9 +215,17 @@ def render_zion(path, st):
     berms[:] = berms - 0.15 * np.tanh(berms / 0.15)
     fill_berm_dips(berms, path)
     sf = LP.SOFT_FEET
+    # v25d (« de la terre avec des pics en bas de la bâche ; la terre monte sur la bâche ») : l'adoucissement des pieds étalait la falaise
+    # coupée vers l'extérieur, à travers le panneau ; les 2 sauts à panneaux sont adoucis à part, PUIS coupés, puis fusionnés
+    for tmp_, g_, kind_ in SPECIAL_:
+        t_ = np.clip(tmp_ / sf['h'], 0, 1); w_ = t_ * t_ * (3 - 2 * t_)
+        tmp_[:] = tmp_ * w_ + gaussian_filter(tmp_, sf['sigma'] / S) * (1 - w_)
+        board_cut_layer(tmp_, g_, kind_)
     for A_ in (jumps, whoops):                                # (pas les berms : leur pied s'étalait sous les grilles)
         t_ = np.clip(A_ / sf['h'], 0, 1); w_ = t_ * t_ * (3 - 2 * t_)
         A_[:] = A_ * w_ + gaussian_filter(A_, sf['sigma'] / S) * (1 - w_)
+    for tmp_, g_, kind_ in SPECIAL_:
+        np.maximum(jumps, tmp_, out=jumps)
     np.maximum(whoops, walls, out=whoops)                     # murets après l'arrondi : face droite, rien dans les creux
     # rangée des grilles toujours à plat (le pied arrondi d'une bosse de L5 arrivait à 4 ft de la dernière grille) : fondu sur 3 ft
     G0 = np.array(st['gate']); h0 = np.radians(st['heading']); f0 = np.array([np.cos(h0), np.sin(h0)]); n0 = np.array([-f0[1], f0[0]])
@@ -231,7 +240,10 @@ def render_zion(path, st):
 
 
 SABLE_JAUNE = (226, 196, 118)
-HOLESHOT_HP = 9.5                  # v25c : bas de la bannière du portique (était 13 ft, « trop haut »)
+HOLESHOT_HP = 10.9                 # v25d : pancarte moins haute (5 -> 3,6 ft), bas remonté, haut inchangé (14,5 ft)
+HOLESHOT_BH = 3.6
+HOLESHOT_V = 22.0                  # v25d (« rapproche-le légèrement de la piste ») : poteau à 22 ft de l'axe (origine sur le plat)
+HOLESHOT_HP_V25C = 9.5                  # v25c : bas de la bannière du portique (était 13 ft, « trop haut »)
 
 
 def sand_texture(path, base=(214, 182, 128)):
@@ -408,6 +420,19 @@ def zion_extras(OUT, FOLDER):
             if inside(np.array([[x_, z_]]), fl)[0] and x_ < XPAD - 4.0 and sand_t.query([x_, z_])[0] > 34.0                     and ride_t.query([x_, z_])[0] > 12.0:
                 put_(x_, z_)
     ov = ov + (sand if RF_SAND_DECALS else [])           # v23 (« pas un sable blanc avec des taches ») : plus de décals sable RF
+    # v25d (« le sable : toujours pas de texture ; va revoir les pistes USLAND avec du sable ») : sur SX1 / SX3, le grain du sable vient des
+    # décals decal/sand.png (+ sand_tnorm.png, relief) de 26 ft posés tous les ~4,5 ft avec une rotation au hasard (1141 sur SX1), pas de la
+    # tuile ; mêmes fichiers, même taille, même pas, sur toute la partie sable
+    sdd = os.path.join(OUT, "sx1sand", "decal"); os.makedirs(sdd, exist_ok=True)
+    for f_ in ("sand.png", "sand_tnorm.png"):
+        shutil.copy(os.path.join(BP.ROOT, "tracks", "USLAND2026SX1", "decal", f_), os.path.join(sdd, f_))
+    ns_ = 0
+    for xx in np.arange(sx0, sx1, 4.5):
+        for zz in np.arange(sz0, sz1, 4.5):
+            x_, z_ = xx + rng.uniform(-1.2, 1.2), zz + rng.uniform(-1.2, 1.2)
+            if sand_t.query([x_, z_])[0] < 16.0:
+                ov.append("[%.6f %.6f] %.6f 26.000000 1.000000 @%s/sx1sand/decal/sand.png" % (x_, z_, rng.uniform(-np.pi, np.pi), FOLDER)); ns_ += 1
+    BP.REPORT['decals_sable'] = ns_
     open(os.path.join(OUT, "decals"), "w", newline=chr(10)).write(chr(10).join(ov + dl) + chr(10))
     # v19 (« le saut d'arrivée, il va pas ; il faut faire les câbles comme sur mon track, avec le finish ») : plus d'arche ZION, le panneau
     # FINISH suspendu (élingues jusqu'au toit) de la version USLAND reste
@@ -449,7 +474,7 @@ START_Y = 15.0
 BALE_V, BALE_STEP, BALE_GAP = 15.5, 9.6, 25.0
 BALE_STEP2, BALE_SLIDE, ARCH_XC = 2 * 9.6, 4.0, 18.0   # v23 : pieds au bord de la piste (était 26)
 BP.BOARD_CUT = False               # v24b : flancs coupés derrière les panneaux ; v25c : coupe faite sur la couche du saut seul (board_cut_layer)
-BP.EXTRA_H = [lambda H_, p_: wall_fill(H_, p_)]   # v25c : terre derrière les murs (wall_fill, défini plus haut)
+BP.EXTRA_H = []                    # v25d (« les virages, une catastrophe : des gros monticules de terre partout ; repars sur les virages de base ») : plus de wall_fill
 BP.ARCH_CUT = None                 # v23c : pas de découpe sous les pieds
     # v21d : 1 sur 2, glissement max, pieds de l'arche   # v21c : ballots comme RF Anaheim 1 (|v| 15-16 ft, pas 9,6 ft)
 
@@ -530,6 +555,8 @@ def deco_v21(OUT, FOLDER, combos):
                         w_ = np.nonzero(np.abs(uu - t_) <= BALE_SLIDE)[0]; k_ = w_[int(np.argmin(bad[w_]))]
                         # v23c (« enlève les deux bottes de paille à l'intérieur ») : pas les 2 premières à droite de L6
                         skip_ = g['tag'].startswith('L6') and side_ > 0 and bl is blocks[0] and nk_ < 2
+                        mp_ = LP.BOARD_POLY['milwaukee']   # v25d (« un trait noir en plus » : 2 ballots l'un dans l'autre) : pas sur le dessus du Milwaukee
+                        skip_ = skip_ or (g['tag'].startswith('LR') and abs(uu[k_] - (mp_[1][0] + mp_[2][0]) / 2) < 5.0)
                         if bad[k_] < 0.5 and not skip_:
                             key_ = bale_sponsor(g, uu[k_], nb_); fb_ = bale_files.setdefault(key_, DV.bale_u(sd, key_))
                             lines.append(line(P_[k_, 0], P_[k_, 1], yaw, *fb_)); nb_ += 1
@@ -583,13 +610,13 @@ def deco_v21(OUT, FOLDER, combos):
     gR = next(g for g in BP.PATH.segs if g['kind'] == 'S' and g['tag'].startswith('LR'))
     for side_, nm_ in ((-1, 'bache_milwaukee_g'), (1, 'bache_milwaukee_d')):
         # v23d : panneau « carton » (objet) au lieu de la bâche drapée
-        O_, jm_, png_, shp_ = D22.board_v24(sd, nm_.replace('bache', 'panneau'), Hf, gR, side_, 'milwaukee')   # v24 : forme dessinée par l'utilisateur
+        O_, jm_, png_, shp_ = D22.board_v25(sd, nm_.replace('bache', 'panneau'), Hf, gR, side_, 'milwaukee')   # v24 : forme dessinée par l'utilisateur
         lines.append(line(O_[0], O_[1], 0.0, jm_, png_, shp_))
     for prof, u0, name in g3['sections']:
         if name == LP.L3_SEC:
             it = [i for i in combos[name]['items'] if 'butte' in i[0]][0]
             for side_, nm_ in ((-1, 'bache_amv_g'), (1, 'bache_amv_d')):
-                O_, jm_, png_, shp_ = D22.board_v24(sd, nm_.replace('bache', 'panneau'), Hf, g3, side_, 'amv')   # v24 : forme dessinée par l'utilisateur
+                O_, jm_, png_, shp_ = D22.board_v25(sd, nm_.replace('bache', 'panneau'), Hf, g3, side_, 'amv')   # v24 : forme dessinée par l'utilisateur
                 lines.append(line(O_[0], O_[1], 0.0, jm_, png_, shp_))
     # v24 (« avec les 2 ballots de paille posés sur le dessus ») : 2 ballots Milwaukee au milieu du plateau du saut, un de chaque côté
     (pu0, _), (pu1, _), (pu2, _), (pu3, _) = D22.BOARD_POLY['milwaukee']; cR, sR2 = np.cos(gR['t']), np.sin(gR['t']); nR = np.array([-sR2, cR])
@@ -620,8 +647,9 @@ def deco_v21(OUT, FOLDER, combos):
     flat2 = lambda P: max(float(Hf(*(P + t2_ * a_ + n2_ * b_))[0]) for a_ in (-2.5, 0, 2.5) for b_ in (-2.5, 0, 2.5)) - min(float(Hf(*(P + t2_ * a_ + n2_ * b_))[0]) for a_ in (-2.5, 0, 2.5) for b_ in (-2.5, 0, 2.5)) < 0.06
     vh = next((v for v in np.arange(19.0, 34.0, 0.5) if flat2(B2_ - n2_ * v)), 26.0); Hp = B2_ - n2_ * vh
     fzh = -t2_; fxh = n2_                                                             # z vers les pilotes, x vers la droite (au-dessus de la piste)
-    wph = lambda x, y, z: (fxh[0] * x + fzh[0] * z, y, fxh[1] * x + fzh[1] * z)
-    lines.append(line(Hp[0], Hp[1], 0.0, *D22.holeshot_v25(sd, wph, hp=HOLESHOT_HP, mir=True))); rep_['holeshot'] = (round(float(Hp[0]), 1), round(float(Hp[1]), 1), round(uh, 1), vh)
+    dxh = vh - HOLESHOT_V                                                             # le poteau se rapproche de la piste, l'origine reste sur le plat
+    wph = lambda x, y, z: (fxh[0] * (x + dxh) + fzh[0] * z, y, fxh[1] * (x + dxh) + fzh[1] * z)
+    lines.append(line(Hp[0], Hp[1], 0.0, *D22.holeshot_v25(sd, wph, hp=HOLESHOT_HP, bh=HOLESHOT_BH, mir=True))); rep_['holeshot'] = (round(float(Hp[0]), 1), round(float(Hp[1]), 1), round(uh, 1), vh)
     lines.append(line(Hp[0], Hp[1], 0.0, *D22.drill_cutout_v25(sd, wph, 17.7, HOLESHOT_HP, mir=False, x_handle=17.7)))   # v25c : l'embout vers le logo, la poignée sur le bord
     # signaleurs : panneau 30 s derrière les grilles + signaleur animé (drapeau) dans la cabane ; fichiers repris de Saint-Georges
     shutil.copytree(os.path.join(BP.ROOT, "tracks", "USLAND2026SaintGeorgesbyBazo", "ext", "2024Bh1Conway", "flaggerfiles"),

@@ -619,10 +619,18 @@ def paris():
         # v23e (« la 2e bosse légèrement plus basse, plus ronde, plus de terre devant et derrière, surtout à droite ») : plus longue, droite 90 %
         B8[1] = ('raw', 'bosse ZION 4,6 ft (ronde)', resample(np.asarray(zsingle(4.6 / ZH)[2], float), 1.1), 'T'); u0z = 0.0   # v23f : même hauteur qu'avant, un peu plus ronde
         # v23c (« plus d'écart entre la 2e et la 3e bosse ») : +5 ft là, pris sur les autres écarts
-        gz_ = ((xWt - x_end3) - END_GAP - u0z - sum(tlen(b) for b in B8) - 5.0) / 7; assert gz_ > 2.5, gz_
+        # v25d (« la 3e à 5 -> 4,8 ; la 6e à 4,6 -> 4,8 » ; « trop de distance à la sortie du virage et à la fin » ; « espace les 4
+        # dernières bosses (3 cuvettes) un peu plus que les autres, un peu moins que l'écart entre la 4,6 et la 5 ») : bosses sans leur plat
+        # aux bouts, 0,5 ft du virage au début et 1,5 ft à la fin ; écarts : G23 = g + 5, les 3 derniers G23 - 1, les autres g
+        B8[2] = zb_(4.8); B8[5] = zb_(4.8)
+        trim_ = lambda t: ('raw', t[1], np.asarray(t[2], float)[np.nonzero(np.asarray(t[2]) > 0.03)[0][0]:np.nonzero(np.asarray(t[2]) > 0.03)[0][-1] + 1], t[3])
+        B8 = [trim_(b) for b in B8]; u0z = 0.5
+        free_ = (xWt - x_end3) - 1.5 - u0z - sum(tlen(b) for b in B8); gz_ = (free_ - 17.0) / 7; assert gz_ > 2.0, gz_
+        gaps_ = [gz_, gz_ + 5.0, gz_, gz_, gz_ + 4.0, gz_ + 4.0, gz_ + 4.0]
         toks = [B8[0]]
-        for i_, b_ in enumerate(B8[1:]):
-            toks += [('gap', round(gz_ + (5.0 if i_ == 1 else 0.0), 1)), b_]
+        for g__, b_ in zip(gaps_, B8[1:]):
+            toks += [('gap', round(g__, 1)), b_]
+        LOG['L2_gaps'] = [round(x, 1) for x in gaps_]
         SPLIT_Z[L2_NAME] = [(0.0, tlen(B8[0]), 1.5 / 2.3, 1.0)]   # v23f : 2e bosse plus coupée (« ça fait double, quadruple »)
     u0 = u0z if ZION else L2_U0                            # v18 (RF) : même écart partout comme la version USLAND (~8,5 ft, A1 : 8 - 13)
     sec2 = lane_sec(L2_NAME if ZION else 'PAR-L2 triple, triple (7 bosses, meme ecart)', toks, u0)
