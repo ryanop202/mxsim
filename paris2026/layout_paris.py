@@ -220,7 +220,7 @@ BOARD_POLY = dict(milwaukee=[(142.0, 0.0), (153.5, 13.1), (163.5, 13.1), (181.0,
 BOARD_LANE = dict(milwaukee='LR', amv='L3')
 BOARD_VB = dict(milwaukee=18.5, amv=28.0)
 BOARD_TH = 1.0
-RB_L5B = 32.0   # v23f (« l'angle du virage encore un peu plus ouvert ») : 26 -> 32 ft
+RB_L5B = 32.0   # v27d : remis comme la v25f (« remets comme avant l'après-arrivée ») ; v27b (« après l'arrivée, que ça aille plus loin, la partie gauche un peu plus longue, et tourne à gauche ») : 32 -> 26 ft, ligne droite entre les 2 virages 6 ft plus longue ; v23f (« l'angle du virage encore un peu plus ouvert ») : 26 -> 32 ft
 XW_BOT = 8.0 if ZION else 0.0   # v23f (« avant le saut d'arrivée, après l'enchaînement, le virage est trop loin ») : L5 et L6 8 ft plus courts
 XW_TOP = 9.0 if ZION else 0.0   # v23e (« les whoops commencent encore trop tard après le virage ; le virage encore trop loin de l'enchaînement ») : L2 et L1 10 ft plus courts
 END_GAP = 4.0 if ZION else 8.0   # v23 Zion (« entre la dernière bosse de chaque enchaînement et le virage, réduis l'écart ») : 8 -> 4 ft
@@ -283,9 +283,14 @@ POST_FIN_V23E = dict(b1=[(24, 0), (27.5, 0.8), (30.5, 2.2), (32.5, 2.6), (34.5, 
                      b23=[(50, 0), (52.5, 0.8), (55.5, 3.0), (57.5, 4.2), (59, 4.4), (61, 4.1), (64, 3.2), (67, 2.9), (92, 2.9), (98, 1.8), (104, 0.4), (109, 0)],
                      out_k=1.0)
 # v23f (« encore plus d'espace entre la 1re et la 2e bosse, bien plus ») : 2e bosse 15 ft après la fin de la 1re ; virage T_L5b rayon 32
-POST_FIN = dict(b1=POST_FIN_V23E['b1'], b1o=POST_FIN_V23E['b1o'],
+POST_FIN_V23F = dict(b1=POST_FIN_V23E['b1'], b1o=POST_FIN_V23E['b1o'],
                 b23=[(55, 0), (57.5, 0.8), (60.5, 3.0), (62.5, 4.2), (64, 4.4), (66, 4.1), (69, 3.2), (72, 2.9), (96, 2.9), (102, 1.8), (108, 0.4), (113, 0)],
                 out_k=1.0)
+# v27c (« l'écart entre la 1re et la 2e bosse doit être plus long, pour qu'on tourne derrière ») : 1re bosse 4 ft plus tôt, 2e bosse et
+# plateau 4 ft plus tard (8 ft de plus entre les deux)
+_sh = lambda pts, d: [(a + d, b) for a, b in pts]
+POST_FIN_V27C = dict(b1=_sh(POST_FIN_V23F['b1'], -4.0), b1o=_sh(POST_FIN_V23F['b1o'], -4.0), b23=_sh(POST_FIN_V23F['b23'], 4.0), out_k=1.0)
+POST_FIN = POST_FIN_V23F          # v27d : remis comme la v25f
 CAMEL_V22D = CAMEL
 # v23 (« un peu plus haut ; la face beaucoup plus raide, le bas toujours smooth ; un petit creux avant, que ça redescende presque au sol du stade
 # avant la face ; plus de cran ; la réception moins raide ») : replat de terre 0,4 ft, creux à 0,05, face concave jusqu'à ~60°, 11,6 ft,
@@ -641,6 +646,76 @@ def paris():
             toks += [('gap', round(g__, 1)), b_]
         LOG['L2_gaps'] = [round(x, 1) for x in gaps_]
         SPLIT_Z[L2_NAME] = [(0.0, tlen(B8[0]), 1.5 / 2.3, 1.0)]   # v23f : 2e bosse plus coupée (« ça fait double, quadruple »)
+        if L2_V26:
+            # v26 (vidéos Roczen Paris 2026, « double technique mais propre pour enchaîner triple ; pas de triple d'entrée ; double bien et
+            # triple sans faire double 4 ; à gauche simple triple ; la 1re bosse un peu plus tôt ») : 3 sauts comme en vrai (petit double,
+            # triple, triple, puis on roule au virage). Bosses ZION posées à des crêtes fixées (ft depuis la sortie du 180) ; rôles :
+            # 0 petite bosse d'entrée (droite 2,3 / gauche 0,8 : on l'enroule), 1 bosse coupée (droite = réception du double 3,9 ft,
+            # gauche = appel du triple intérieur 5,6 ft), 2 appel du triple, 3 milieu bas (3 ft), 4 réception longue, 5-7 2e triple
+            # (élan plus long avant, réception longue). Réglé avec paris2026/sim_rythme.py (ESTIMATION balistique, pas le jeu).
+            bb_ = [trim_(('raw', 'bosse ZION %.1f ft' % h, resample(np.asarray(zsingle(h / ZH)[2], float), k), 'T')) for h, k in zip(L2_V26['h'], L2_V26['k'])]
+            # bosses qui se chevauchent (pieds) : comme un max des deux, la 1re coupée là où la 2e passe au-dessus, la 2e part de là
+            pl_ = []                                                     # [début (ft depuis la sortie du 180), profil, nom]
+            for c_, b_ in zip(L2_V26['crest'], bb_):
+                p_ = np.asarray(b_[2], float); st_ = round(c_ - float(np.argmax(p_)) * 0.1, 1)
+                if pl_ and st_ < pl_[-1][0] + len(pl_[-1][1]) * 0.1 - 0.05:
+                    a0, pa = pl_[-1][0], pl_[-1][1]; i_a = int(round((st_ - a0) / 0.1)); n_ = len(pa) - i_a
+                    cut = next(j for j in range(n_) if p_[j] >= pa[i_a + j])          # 1er point où la nouvelle bosse est au-dessus
+                    pl_[-1][1] = pa[:i_a + cut]; p_ = p_[cut:]; st_ = round(st_ + cut * 0.1, 1)
+                pl_.append([st_, p_, b_[1]])
+            toks = []; sp26 = []; u0z = pl_[0][0]
+            for i_, (st_, p_, nm_) in enumerate(pl_):
+                if i_:
+                    toks += [('gap', round(st_ - (pl_[i_ - 1][0] + len(pl_[i_ - 1][1]) * 0.1), 1))]
+                kk = L2_V26['split'].get(i_)
+                if kk:
+                    sp26.append((st_ - u0z, st_ - u0z + len(p_) * 0.1, kk[0], kk[1]))
+                toks += [('raw', nm_, p_, 'T')]
+            assert all(t[1] > -0.05 for t in toks if t[0] == 'gap'), toks
+            SPLIT_Z[L2_NAME] = sp26; LOG['L2_v26'] = [round(t[1], 1) for t in toks if t[0] == 'gap']
+        if L2_V27:
+            # v27 (test v26 : « ça va pas du tout, je fais 4-3-1 ; reprends les bosses du grand enchaînement L6, avant l'arrivée ; la bosse
+            # dès la sortie du virage, qu'on n'ait pas le temps de prendre de la vitesse ; on rentre en double, pas en triple ») : les 5 bosses
+            # de L6 (mêmes formes ZION, mêmes hauteurs, même écart de 8,3 ft et le 5,3 ft entre la 2e et la 3e... comme L6) + ses 2 bosses
+            # d'après la table, la 1re à 0,5 ft de la sortie du 180, pas de coupe gauche / droite
+            hz_ = [4.2, 4.7, 4.9, 4.7, 4.9, 4.3, 4.5]; bb_ = [zsingle(h) for h in hz_]
+            free_ = (xWt - x_end3) - 0.5 - END_GAP - sum(tlen(b) for b in bb_); g_ = (free_ + 3.0) / 6     # 5,3 ft entre 3e et 4e comme L6
+            gaps_ = [g_, g_, g_ - 3.0, g_, g_, g_]
+            sp27 = []
+            if L2_V27B:
+                # v27b (test v27 : « la 1re 3,5 ft, celle d'après 4,7 ; la 1re plus basse à gauche ; après, ça fait 2-4 : des bosses plus
+                # petites, moins kickantes, qu'on soit obligé de faire 3-3 ») : 8 bosses, 3,5 / 4,7 puis 6 bosses ZION de L2_V27B ft
+                # rallongées x1,15 (face moins raide, envoient moins haut), même écart partout
+                hz_ = [3.5, 4.7] + [L2_V27B] * 6
+                bb_ = [('raw', 'bosse ZION %.1f ft' % h, resample(np.asarray(zsingle(h / ZH)[2], float), 1.0 if i < 2 else 1.15), 'T') for i, h in enumerate(hz_)]
+                free_ = (xWt - x_end3) - 0.5 - END_GAP - sum(tlen(b) for b in bb_); gaps_ = [free_ / 7] * 7
+                if L2_V27C:
+                    # v27c (test v27b : « les autres bosses plus grosses, comme avant (L6) ; la 1re même grandeur, la 2e 4 ft, ensuite 4,5 ;
+                    # que ça commence dès la sortie du virage ; on doit pouvoir faire 2-3 à l'entrée ») : 7 bosses ZION telles quelles (formes
+                    # de L6, pas rallongées), 1re plus courte (crête plus près du virage), même écart partout
+                    hz_ = [3.5, 4.0] + [4.5] * 5
+                    bb_ = [('raw', 'bosse ZION %.1f ft' % h, resample(np.asarray(zsingle(h / ZH)[2], float), 0.8 if i == 0 else 1.0), 'T') for i, h in enumerate(hz_)]
+                    free_ = (xWt - x_end3) - 0.5 - END_GAP - sum(tlen(b) for b in bb_); gaps_ = [free_ / 6] * 6
+                if L2_V27D:
+                    # v27d (capture en jeu : « la bosse dès la sortie du virage ; la 1re 20° d'angle, que ça fasse double ; la 2e 4,3 ft ; la 3e
+                    # 21° pour pas que ça fasse 4 ; une bosse de plus à la fin : double, 3, 3 ») : 8 bosses ZION, angle de montée réglé en
+                    # rallongeant la bosse (pente max de la face), même écart partout
+                    def k_ang(h, deg):
+                        q0 = np.asarray(zsingle(h / ZH)[2], float); lo, hi = 0.5, 3.0
+                        for _ in range(30):
+                            m = (lo + hi) / 2; q = resample(q0, m)
+                            if 0.55 * np.max(np.diff(q)) / 0.1 > np.tan(np.radians(deg)): lo = m   # pente sur le terrain fini ~0,55 x la pente brute (pieds adoucis, coupe) : mesuré sur profil_L2 v27c
+                            else: hi = m
+                        return hi
+                    spec_ = [(3.5, 20.0), (4.3, None), (4.5, 21.0)] + [(4.5, None)] * 5
+                    bb_ = [('raw', 'bosse ZION %.1f ft%s' % (h, ' %d°' % a if a else ''), resample(np.asarray(zsingle(h / ZH)[2], float), k_ang(h, a) if a else 1.0), 'T') for h, a in spec_]
+                    free_ = (xWt - x_end3) - 0.5 - END_GAP - sum(tlen(b) for b in bb_); gaps_ = [free_ / 7] * 7
+                    sp27 = [(0.0, tlen(bb_[0]), 2.6 / 3.5, 1.0)]                 # 1re bosse : gauche 2,6 ft
+                sp27 = [(0.0, tlen(bb_[0]), 2.6 / 3.5, 1.0)]                 # 1re bosse : gauche 2,6 ft, droite 3,5 ft
+            toks = [bb_[0]]
+            for g__, b_ in zip(gaps_, bb_[1:]):
+                toks += [('gap', round(g__, 1)), b_]
+            u0z = 0.5; SPLIT_Z[L2_NAME] = sp27; LOG['L2_v27'] = [round(x, 1) for x in gaps_]
     u0 = u0z if ZION else L2_U0                            # v18 (RF) : même écart partout comme la version USLAND (~8,5 ft, A1 : 8 - 13)
     sec2 = lane_sec(L2_NAME if ZION else 'PAR-L2 triple, triple (7 bosses, meme ecart)', toks, u0)
     if False:  # v23c : creux remontés (v23e : retiré, « des petits étages, des escaliers entre chaque bosse »)
@@ -761,7 +836,8 @@ EXIT_U0 = 6.0 if ZION else 10.0          # v23 Zion (« moins d'élan sur toutes
 L2_U0_V13 = 10.0
 BERM_END_FADE = {'T_D ': (8.0, 35.0)}     # v20c (« le virage à gauche avant l'enchaînement finit dans la bosse, il y a un trait ; le faire
 #   finir un peu plus tôt, en restant doux, limite moins haut ») : berm à zéro 8° avant la sortie, fondu sur les 35° d'avant
-BERM_GAIN_TAG = {'T_D ': 1.05 if ZION else 0.95, **({'T_Bb': 1.15} if ZION else {})}   # v23 Zion : T_D plus haut ; T_Bb entrée plus haute   # v13 : appui après le saut du milieu un peu moins haut (était 1,15) ; v22 Zion : « plus bas » 0,95 -> 0,75
+BERM_SOFT_TAG = {'T_D ': 2.5} if ZION else {}   # v27d : berm adouci (flou de 2,5 ft, même hauteur max) -> face moins raide
+BERM_GAIN_TAG = {'T_D ': 1.05 if ZION else 0.95, **({'T_Bb': 1.15} if ZION else {})}   # v27d (« le virage à la même hauteur qu'avant mais moins d'angle ; remets l'après-arrivée comme avant ») : T_D 1,05 adouci (BERM_SOFT_TAG), T_L5 comme la v25f ; v27c (« on passe trop vite dans le virage avant L2 ») : T_D 1,05 -> 0,8 ; v27b (« baisse un petit peu l'appui ») : T_L5a 1,3 -> 1,15 ; v26 Zion : T_L5a (après l'arrivée) en cuvette plus haute comme en vrai (vidéos) ; v23 Zion : T_D plus haut ; T_Bb entrée plus haute   # v13 : appui après le saut du milieu un peu moins haut (était 1,15) ; v22 Zion : « plus bas » 0,95 -> 0,75
 LD_SHIFT = 5.0                          # v10 : ligne de départ 5 ft plus loin du saut du milieu (place pour les tremplins FMX ;
 #                                         plus loin, le bout des 22 grilles monte sur le pied du berm T_C : grilles plus plates)
 L2_GAP, L2_U0 = 5.0, 10.0               # v9 : écart identique entre les 7 bosses de L2 ; v13 : 1re bosse à 10 ft du 180 (était 3 : marque)
@@ -808,6 +884,14 @@ def fmx_ramps(path=None):
 # 7,04 ft), whoop (19,8 ft, 3,14 ft, pas 22,6 ft) ; saut central et triple d'arrivée ZION non retouchés ; les obstacles de 2026
 # (nombre, ordre, hauteurs) restent ceux de la version USLAND.
 L2_NAME = 'PAR-L2 double triple triple (8 bosses)'
+# v26 : L2 refait d'après les vidéos (voir le bloc L2 dans paris()) ; crêtes en ft depuis la sortie du 180, hauteur construite (côté le
+# plus haut), longueur (x forme ZION), coupe gauche / droite (facteurs kl, kr) ; None = L2 v25f
+L2_V27 = True     # v27 : L2 = bosses de L6 (voir paris())
+L2_V27D = True    # v27d : 8 bosses, 1re 20°, 2e 4,3 ft, 3e 21°
+L2_V27C = True    # v27c : 3,5 / 4 / 4,5 x5, formes L6
+L2_V27B = 3.8     # v27b : hauteur des 6 bosses après 3,5 / 4,7 (None = v27)
+L2_V26 = None and dict(crest=[9.0, 37.0, 67.0, 93.5, 120.0, 163.0, 202.0, 241.0], h=[2.3, 5.6, 4.8, 3.0, 4.4, 4.8, 3.8, 4.4],
+              k=[0.75, 1.15, 1.0, 0.92, 1.3, 1.0, 0.92, 1.1], split={0: (0.8 / 2.3, 1.0), 1: (1.0, 3.9 / 5.6)})
 L2_GAP_Z = 10.0                   # v20 (« l'enchaînement après le saut du freestyle : moins d'écart ») : 15 -> 10 ft au sol (13 m crête à crête)
 RF_GAP = 10.5                     # v18 : écart au sol entre bosses de la RF (A1 : 8 à 13 ft)
 if ZION:

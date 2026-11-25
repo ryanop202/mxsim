@@ -287,3 +287,56 @@ allée parallèle au mur (x 772-800 ft).
 - Honda : gros camion = semi complète comme RBT (blanc, HONDA, HRC, filets rouge / noir, bandeau lumineux rouge) le long du
   bâtiment ; les 2 bus côte à côte juste avant la moquette rouge.
 - 268 objets, `validate_mx.py` 0 problème. **Non testé en jeu.**
+
+### v26 (Ryan, vidéos de Roczen à Paris 2026 : L2, virage après l'arrivée, sable)
+- **L2 refait** d'après la vidéo (13-21 s) : en vrai 3 sauts, petit double « technique mais propre », triple, triple, puis on roule
+  au virage. 8 bosses ZION posées à des crêtes fixées (`LP.L2_V26`, ft depuis la sortie du 180) : 1re bosse plus tôt (crête à
+  9 ft au lieu de 12 ; droite 2,3 ft, gauche 0,8 ft qu'on enroule), 2e bosse coupée (droite 3,9 ft = réception du double, gauche
+  5,6 ft = appel du triple intérieur), triple 4,8 -> 3,0 (milieu bas) -> 4,4 (réception longue), ~30 ft d'élan, triple 4,8 -> 3,8
+  -> 4,4, puis ~20 ft roulés jusqu'au virage. Aucune bosse pointue (hauteur / largeur à mi-hauteur <= 0,31).
+- Réglé avec `paris2026/sim_rythme.py` : ESTIMATION balistique (point matériel), pas le moteur du jeu. Calée sur l'ancien L2 tel que
+  Ryan l'a décrit (double d'entrée tout juste, triple derrière raté de peu, simple-triple impossible à gauche). Nouveau L2 : extérieur
+  double-triple-triple passe avec de la marge, double-quadruple et triple d'entrée impossibles ; intérieur simple-triple possible
+  mais plus dur (ligne de bon pilote).
+- **Virage après l'arrivée** (vidéos 1-5 s et 25-29 s : grande cuvette, mur de boudins, pilote haut dans l'appui) : berm du 1er 90°
+  (T_L5a) x1,3 ; mur et filet du virage remontés avec (+2,1 ft). Le reste (bosses, plateau) n'a pas bougé.
+- **Sable** (« tout plat, c'est bizarre ») : sable remué, sans ornières ni vagues régulières (petites bosses irrégulières de 1,6 ft
+  et ondulations de 6 ft, max ~0,35 ft, moyenne 0, fondu au bord) + grain de sable en décals de 22 ft au milieu de la bande
+  (les petites de 10 ft restent sur les bords : le sable s'arrête toujours net).
+- Build : le stade de ce PC a été reconstruit d'abord (`stade_paris/src/build.py --mx`, il datait d'avant la v10) ; les fichiers
+  RF du sable ne sont recopiés que si `rf_ext` existe ; écritures avec nouvel essai (fichier verrouillé un instant sous Windows).
+- Contrôles 7 / 7. **Non testé en jeu.** Aperçus : `apercu_zion/profils_v21d/profil_L2.png`, `apercu_zion/vue_dessus.png`,
+  (aperçu du sable v26 retiré).
+
+### v27 (test v26 de Ryan : « ça va pas du tout » ; « je fais 4-3-1 » ; sable « pas du tout »)
+- **L2** : la v26 est abandonnée (`L2_V26 = None`). L2 = les bosses du grand enchaînement L6 (ZION 4,6 / 5,2 / 5,4 / 5,2 / 5,4 ft +
+  ses 2 bosses d'après la table 4,7 / 4,9 ft), même écart que L6 (8,4 ft au sol, 5,4 ft entre la 3e et la 4e), la 1re à 0,5 ft de
+  la sortie du 180 (« pas le temps de prendre la vitesse » : on rentre en double, pas en triple).
+- **Sable** : retour à la v25f (plus de relief remué ni de grandes décals) + couche de sable surélevée de 0,3 ft, bande élargie de
+  28 à 40 ft (toute la largeur de la piste en sable : tuiles, décals, couche).
+- Virage après l'arrivée : berm x1,3 de la v26 gardé ; « plus long, tourner plus loin » pas encore fait.
+- Contrôles 7 / 7, `validate_mx` 0 problème. **Non testé en jeu.**
+
+### v27b (test v27 : « la 1re 3,5 ft, la 2e 4,7 ; 1re plus basse à gauche ; ça fait 2-4, il faut 3-3 ; baisse un peu l'appui après l'arrivée, que ça aille plus loin avant de tourner à gauche »)
+- L2 : 8 bosses, 3,5 ft (gauche 2,6) / 4,7 ft, puis 6 bosses ZION de 3,8 ft (`L2_V27B`) rallongées x1,15 (faces 21° au lieu de
+  27-28° : envoient moins haut), même écart (3,1 ft au sol) -> double, triple, triple. Choisi à l'œil : `sim_rythme.py` ne colle pas
+  au jeu sur ces bosses (il donnait le quadruple de la v27 impossible).
+- Après l'arrivée : appui T_L5a x1,3 -> x1,15 ; 2e virage T_L5b rayon 32 -> 26 ft, ligne droite entre les 2 virages 15 -> 21 ft.
+- Contrôles 7 / 7, `validate_mx` 0 problème. **Non testé en jeu.**
+
+### v27c (test v27b : « on arrive trop vite, on rentre à fond et on fait 3 ou 4 ; les bosses comme avant ; 1re même grandeur, 2e 4 ft,
+### puis 4,5 ; après l'arrivée, plus d'écart entre la 1re et la 2e bosse pour tourner derrière »)
+- Virage T_D (180 avant L2) : appui x1,05 -> x0,8 (on y passe moins vite).
+- L2 : 7 bosses ZION aux formes de L6 (pas rallongées) : 3,5 ft (gauche 2,6, plus courte : crête à ~10 ft de la sortie), 4,0 ft,
+  puis 5 x 4,5 ft ; même écart partout (11,8 ft au sol, ~43 ft de crête à crête).
+- Après l'arrivée : 1re bosse 4 ft plus tôt, 2e bosse + plateau 4 ft plus tard (8 ft de plus entre les deux).
+- Contrôles 7 / 7, `validate_mx` 0 problème. **Non testé en jeu.**
+
+### v27d (capture en jeu de Ryan : « la bosse dès la sortie du virage, 1re à 20°, double ; 2e 4,3 ft ; 3e 21° pour pas que ça fasse 4 ;
+### une bosse de plus : double, 3, 3 ; le virage même hauteur mais moins d'angle ; l'après-arrivée comme avant »)
+- Virage T_D (180 avant L2) : hauteur remise (x1,05), berm adouci (flou 2,5 ft, même hauteur max : face moins raide).
+- L2 : 8 bosses ZION, même écart (3,7 ft au sol) : 3,5 ft (gauche 2,6) à 20° dès la sortie, 4,3 ft, 4,5 ft à 21°, puis 5 x 4,5 ft.
+  Angle réglé en rallongeant la bosse (pente du terrain fini ~0,55 x pente brute, mesuré). Profil : 19° / 25° / 21° / 25°...
+- Après l'arrivée : remis comme la v25f (appui, rayon 32 ft, bosses).
+- Sable : comme la v27 (v25f + couche de 0,3 ft, bande de 40 ft).
+- Contrôles 7 / 7, `validate_mx` 0 problème. **Non testé en jeu.**

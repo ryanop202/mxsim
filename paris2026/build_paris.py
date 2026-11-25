@@ -312,6 +312,17 @@ def sand_waves(H, path):
         vc = rng.uniform(-9, 9) + rng.uniform(0.5, 1.5) * np.sin(2 * np.pi * s / rng.uniform(30, 60)); rut = np.maximum(rut, rng.uniform(0.06, 0.10) * np.exp(-((v - vc) / 0.7) ** 2))
     # v25f (« remets le sable comme avant, sans ornière, sans truc comme ça ») : plus de vaguelettes ni d'ornières
     REPORT['sable_s'] = [round(s0, 1), round(s1, 1)]
+    if SAND_BED:                     # v27 : couche de sable surélevée (bords nets de sand_weight)
+        H = H.copy(); H[sl] = H[sl] + SAND_BED * w; REPORT['sable_couche'] = SAND_BED
+    if SAND_CHOP:
+        # v26 (« dans la partie sable, mets la texture ; là c'est tout plat, c'est bizarre ») : sable remué, sans ornières ni vagues
+        # régulières : petites bosses irrégulières (bruit lissé à 1,6 ft, +-0,12 ft) sur des ondulations plus larges (6 ft, +-0,08 ft),
+        # moyenne à 0 (on ne monte pas d'un coup en entrant dans le sable), fondues à 0 sur le 1 ft du bord comme la bande de sable
+        from scipy.ndimage import gaussian_filter
+        rng = np.random.default_rng(26); n1 = gaussian_filter(rng.normal(0, 1, X.shape), 1.6 / S); n2 = gaussian_filter(rng.normal(0, 1, X.shape), 6.0 / S)
+        chop = SAND_CHOP * (0.12 * n1 / n1.std() + 0.08 * n2 / n2.std())
+        H = H.copy(); H[sl] = H[sl] + chop * w; REPORT['sable_relief'] = round(float(np.abs(chop[w > 0.5]).max()), 2)
+        return H
     if not SAND_WAVES:
         return H
     H = H.copy(); H[sl] = H[sl] + (0.25 + wav - rut) * w
@@ -362,6 +373,8 @@ def arch_cut(H, path):
 
 EXTRA_H = []
 SAND_WAVES = False
+SAND_BED = 0.0                   # v27 (version Zion) : épaisseur de la couche de sable (ft)
+SAND_CHOP = 0.0                  # v26 (version Zion) : relief du sable remué (facteur ; 0 = plat)
 SAND_V25 = False                 # v25e (version Zion) : sable en bande droite (sand_weight) + vaguelettes discrètes
 BOARD_CUT = False              # v24b (version Zion) : flancs des sauts Milwaukee / AMV coupés au plan du panneau
 

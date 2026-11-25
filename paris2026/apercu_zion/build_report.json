@@ -71,48 +71,48 @@
    "lane": "L2 singles",
    "name": "PAR-L2 double triple triple (8 bosses)",
    "u0": 0.5,
-   "L": 276.0,
-   "H": 5.0,
+   "L": 273.4,
+   "H": 4.5,
    "items": [
     [
-     "bosse ZION 2,3 ft",
+     "bosse ZION 3.5 ft 20°",
      0.0,
-     25.1
+     27.9
     ],
     [
-     "bosse ZION 4.4 ft",
-     28.7,
-     56.3
+     "bosse ZION 4.3 ft",
+     31.6,
+     61.4
     ],
     [
-     "bosse ZION 4.8 ft",
-     64.1,
-     92.9
+     "bosse ZION 4.5 ft 21°",
+     65.1,
+     102.3
     ],
     [
-     "bosse ZION 4.8 ft",
-     100.7,
-     129.5
+     "bosse ZION 4.5 ft",
+     106.0,
+     136.5
     ],
     [
-     "bosse ZION 5.0 ft",
-     137.3,
-     166.7
+     "bosse ZION 4.5 ft",
+     140.2,
+     170.7
     ],
     [
-     "bosse ZION 4.8 ft",
-     174.5,
-     203.3
+     "bosse ZION 4.5 ft",
+     174.4,
+     204.9
     ],
     [
-     "bosse ZION 4.8 ft",
-     211.1,
-     239.9
+     "bosse ZION 4.5 ft",
+     208.6,
+     239.1
     ],
     [
-     "bosse ZION 4.6 ft",
-     247.7,
-     275.9
+     "bosse ZION 4.5 ft",
+     242.8,
+     273.3
     ]
    ]
   },
@@ -238,8 +238,9 @@
   1877.3,
   2030.9
  ],
+ "sable_couche": 0.3,
  "socles": 7,
- "sable_tuiles": 12097,
+ "sable_tuiles": 17852,
  "tuiles_zion": [
   "texture @USLANDParis/ztile/2.png",
   "roost texture=@USLANDParis/ztile/roost.png count=0.1 slow_angle=1.0 vscale=0.2 size=.2 r=150 g=150 b=150 fade_a=0",
@@ -302,7 +303,7 @@
   "tuiles": 8,
   "ombrage_plat": 228
  },
- "decals_sable": 269,
+ "decals_sable": 472,
  "zion_v19": {
   "paddock": [
    776,
@@ -312,7 +313,7 @@
   ],
   "dalles_tuiles": 246446,
   "x_paddock": 706.7,
-  "overlay": 5330,
+  "overlay": 5533,
   "decals_gardes": 0,
   "start": [
    671.5,
@@ -323,7 +324,12 @@
   "grilles": 22
  },
  "boudins_whoops": 22,
- "semis_jgsx": 10,
+ "paddock_2026": {
+  "lignes": 268,
+  "modeles": 104,
+  "fichiers": 197,
+  "triangles": 401682
+ },
  "deco_v21": {
   "murs": [
    [
@@ -413,11 +419,11 @@
     ]
    ]
   ],
-  "ballots": 118,
+  "ballots": 116,
   "arche": [
    277.8,
    741.3,
-   0.89
+   1.19
   ],
   "poteaux": 6,
   "cabane": [
@@ -425,10 +431,10 @@
    25.0
   ],
   "holeshot": [
-   379.5,
-   703.4,
-   12.0,
-   26.5
+   380.8,
+   702.9,
+   13.3,
+   27.0
   ],
   "murs_invisibles": [
    [

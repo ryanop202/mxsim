@@ -28,6 +28,9 @@ BP.OUT = os.path.join(BP.ROOT, "tracks", BP.FOLDER)
 BP.AP = os.path.join(HERE, "apercu_zion")
 BP.SAND_V25 = True                 # v25e : sable en bande droite + vaguelettes
 BP.SAND_TL5 = False; BP.SAND_RUTS = False   # v23 : virage après l'arrivée en terre ; sable sans ornières
+BP.SAND_CHOP = 0.0                 # v27 (« le sable pas du tout, retourne sur la version d'avant ») : plus de relief remué ; était 0,7 en v26
+BP.SAND_BED = 0.3                  # v27 (« surélève, un tout petit peu plus haut qu'à côté ») : couche de sable de 0,3 ft (build_paris.sand_waves)
+LP.SAND_HW = 20.0                  # v27 (« vraiment du sable partout, là on dirait de la terre avec une couleur ») : bande de 28 -> 40 ft (toute la piste)
 BP.SAND_LD = 0.0                   # v19d (« le virage après le saut d'arrivée en sable, que le virage ») : pas sur la ligne de départ
 ZD = BP.ZD
 ZF = np.load(os.path.join(HERE, "data", "zion_formes.npz"))
@@ -250,6 +253,10 @@ def render_zion(path, st):
                 th_ = np.arctan2(ii_ * S - g['cz'], jj_ * S - g['cx'])
                 phi = np.degrees(np.angle(np.exp(1j * (th_ - a_ex) * (1.0 if g['ang'] > 0 else -1.0))))
                 t_ = np.clip((phi - fe_[0]) / fe_[1], 0, 1); tmp[sl] *= t_ * t_ * (3 - 2 * t_)
+            sg_ = LP.BERM_SOFT_TAG.get(g['tag'][:4])
+            if sg_:                                          # v27d : berm adouci (face moins raide), même hauteur max
+                from scipy.ndimage import gaussian_filter as _gf
+                m0_ = tmp[sl].max(); tmp[sl] = _gf(tmp[sl], sg_ / S); tmp[sl] *= m0_ / max(tmp[sl].max(), 1e-6)
             berms[sl] = np.maximum(berms[sl], tmp[sl] * gain)
     # v19d (capture en jeu : « regarde, il y a encore le trait gradient ») : (1) les croissants JGSX gardent un fond de 0,02 - 0,1 ft
     # coupé net -> petites marches droites au bout des virages : le bas des berms est fondu à zéro ; (2) pieds des bosses arrondis
@@ -440,10 +447,11 @@ def zion_extras(OUT, FOLDER):
     from scipy.spatial import cKDTree as _KD
     sand_t = _KD(BP.SAND_SMP); sd_ = os.path.join(OUT, "rfsand"); os.makedirs(sd_, exist_ok=True)
     RFT = os.path.join(os.path.dirname(BP.ROOT), "rf_ext", "sx2026r01anaheim1", "textures")
-    for f_ in ("sand2.png", "sand2_tnorm.png", "sand3.png"):
-        shutil.copy(os.path.join(RFT, f_), os.path.join(sd_, f_))
-    for f_ in ("sand2.png", "sand3.png"):                                # v22c (« fais le sable jaune »)
-        jaunir(os.path.join(sd_, f_))
+    if os.path.isdir(RFT):                                               # v26 : sans rf_ext (autre PC), les fichiers déjà dans la piste restent
+        for f_ in ("sand2.png", "sand2_tnorm.png", "sand3.png"):
+            shutil.copy(os.path.join(RFT, f_), os.path.join(sd_, f_))
+        for f_ in ("sand2.png", "sand3.png"):                            # v22c (« fais le sable jaune »)
+            jaunir(os.path.join(sd_, f_))
     sx0, sz0 = BP.SAND_SMP.min(0) - 30; sx1, sz1 = BP.SAND_SMP.max(0) + 30; sand = []
     for xx in np.arange(sx0, sx1, 8.0):
         for zz in np.arange(sz0, sz1, 8.0):
@@ -787,5 +795,24 @@ def semis_jgsx(OUT, FOLDER):
 BP.render = render_zion
 BP.export = export_zion
 
+def _open_retry():
+    """v26 : sous Windows un fichier de la piste juste écrit est parfois verrouillé un instant (Errno 22 / 13 à la réécriture) :
+    chaque ouverture en écriture réessaie 8 fois (1,5 s)."""
+    import builtins
+    import time
+    _o = builtins.open
+
+    def op(f, mode='r', *a, **k):
+        for i_ in range(8):
+            try:
+                return _o(f, mode, *a, **k)
+            except OSError as e:
+                if not any(c in mode for c in 'wax+') or e.errno not in (13, 22) or i_ == 7:
+                    raise
+                time.sleep(1.5)
+    builtins.open = op
+
+
 if __name__ == "__main__":
+    _open_retry()
     BP.main()
