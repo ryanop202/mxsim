@@ -39,7 +39,7 @@
    "name": "PAR-L3 appel, gros saut rond du milieu (ZION 2025)",
    "u0": 85.7,
    "L": 153.3,
-   "H": 21.78,
+   "H": 22.43,
    "items": [
     [
      "appel gros saut ZION 2025 (10,0) raidi",
@@ -71,7 +71,7 @@
    "lane": "L2 singles",
    "name": "PAR-L2 double triple triple (8 bosses)",
    "u0": 0.0,
-   "L": 274.1,
+   "L": 273.8,
    "H": 5.0,
    "items": [
     [
@@ -81,38 +81,38 @@
     ],
     [
      "bosse ZION 4,6 ft (ronde)",
-     32.1,
-     69.2
+     32.5,
+     66.5
     ],
     [
      "bosse ZION 5.0 ft",
-     78.5,
-     108.1
+     76.2,
+     105.8
     ],
     [
      "bosse ZION 4.8 ft",
-     112.4,
-     141.4
+     110.5,
+     139.5
     ],
     [
      "bosse ZION 5.0 ft",
-     145.7,
-     175.3
+     144.2,
+     173.8
     ],
     [
      "bosse ZION 4.6 ft",
-     179.6,
-     208.0
+     178.5,
+     206.9
     ],
     [
      "bosse ZION 4.8 ft",
-     212.3,
-     241.3
+     211.6,
+     240.6
     ],
     [
      "bosse ZION 4.6 ft",
-     245.6,
-     274.0
+     245.3,
+     273.7
     ]
    ]
   },
@@ -120,7 +120,7 @@
    "lane": "L1 whoops",
    "name": "PAR-L1 whoops, table, bosse",
    "u0": 1.2,
-   "L": 341.7,
+   "L": 338.7,
    "H": 4.22,
    "items": [
     [
@@ -130,18 +130,18 @@
     ],
     [
      "table montante 4,4 ft",
-     232.7,
-     274.8
+     229.7,
+     271.8
     ],
     [
      "bosse ZION 3.4 ft",
-     279.8,
-     306.3
+     276.8,
+     303.3
     ],
     [
      "bosse ZION 2.2 ft",
-     316.3,
-     341.6
+     313.3,
+     338.6
     ]
    ]
   },
@@ -149,7 +149,7 @@
    "lane": "LR tribune Est",
    "name": "PAR-LR sable, saut Milwaukee, triple",
    "u0": 6.0,
-   "L": 280.2,
+   "L": 281.7,
    "H": 12.96,
    "items": [
     [
@@ -169,18 +169,18 @@
     ],
     [
      "bosse ZION 4.0 ft",
-     187.9,
-     215.0
+     189.4,
+     216.5
     ],
     [
      "bosse ZION 4.1 ft",
-     220.5,
-     247.9
+     222.0,
+     249.4
     ],
     [
      "bosse ZION 3.9 ft",
-     253.4,
-     280.1
+     254.9,
+     281.6
     ]
    ]
   },
@@ -188,7 +188,7 @@
    "lane": "L6 tribune Sud",
    "name": "PAR-L6 triple, double, table, double",
    "u0": 6.0,
-   "L": 345.3,
+   "L": 337.4,
    "H": 7.0,
    "items": [
     [
@@ -198,42 +198,46 @@
     ],
     [
      "bosse ZION 5.2 ft",
-     40.3,
-     73.0
+     39.2,
+     71.9
     ],
     [
      "bosse ZION 5.4 ft",
-     82.4,
-     115.7
+     80.2,
+     113.5
     ],
     [
      "bosse ZION 5.2 ft",
-     122.1,
-     154.8
+     118.8,
+     151.5
     ],
     [
      "bosse ZION 5.4 ft",
-     164.2,
-     197.5
+     159.8,
+     193.1
     ],
     [
      "table Saint-Thibery 7.0 ft +3.3 ft",
-     208.3,
-     266.7
+     202.7,
+     261.1
     ],
     [
      "bosse ZION 4.7 ft",
-     272.5,
-     303.8
+     265.7,
+     297.0
     ],
     [
      "bosse ZION 5.0 ft",
-     313.2,
-     345.2
+     305.3,
+     337.3
     ]
    ]
   }
  ],
+ "panneaux_coupe": {
+  "milwaukee": 18.5,
+  "amv": 28.0
+ },
  "sable_tuiles": 15987,
  "tuiles_zion": [
   "texture @USLANDParis/ztile/2.png",
@@ -247,7 +251,7 @@
  "objets": {
   "objets": {
    "retirés (v13) : boudins FLY Racing (whoops)": 28,
-   "retirés (v13) : ballots ZION (unis)": 216,
+   "retirés (v13) : ballots ZION (unis)": 212,
    "retirés (v13) : poteaux ronds": 7,
    "retirés (v13) : tuffs de virage ZION (unis)": 72,
    "retirés (v13) : filets": 42,
@@ -275,7 +279,7 @@
    "libre_sous_poutre_ft": 20.3
   },
   "finish": {
-   "crete_ft": 9.5
+   "crete_ft": 9.47
   },
   "logos_redessines": [
    "minerva",
@@ -288,8 +292,8 @@
  "public": 7631,
  "export": {
   "hmin": -0.5,
-  "hmax": 22.284797463893984,
-  "statues_relevees": 36,
+  "hmax": 22.934643802407802,
+  "statues_relevees": 30,
   "decals": 86,
   "decals_terre": 0
  },
@@ -304,16 +308,16 @@
    397,
    777
   ],
-  "dalles_tuiles": 234868,
-  "x_paddock": 714.7,
-  "overlay": 5150,
+  "dalles_tuiles": 246446,
+  "x_paddock": 706.7,
+  "overlay": 5098,
   "decals_gardes": 0,
   "start": [
    671.5,
    543.3,
    150.2
   ],
-  "toit_finish": 146.4,
+  "toit_finish": 146.2,
   "grilles": 22
  },
  "boudins_whoops": 22,
@@ -324,71 +328,87 @@
     "T_L5a",
     "minerva",
     [
-     0.169,
-     0.618
+     -0.005,
+     1.005
     ],
-    3,
-    7.26
+    7,
+    [
+     2,
+     3
+    ]
    ],
    [
     "T_Bb ",
     "mxsim",
     [
-     0.169,
-     0.618
+     -0.005,
+     1.005
     ],
-    3,
-    8.3
+    7,
+    [
+     2,
+     3
+    ]
    ],
    [
     "T_D 1",
     "automoto",
     [
-     0.48,
-     0.719
+     0.404,
+     0.996
     ],
-    4,
-    7.61
+    10,
+    []
    ],
    [
     "T1 18",
     "honda",
     [
-     0.169,
-     0.468
+     0.1,
+     0.589
     ],
-    4,
-    7.15
+    7,
+    [
+     2,
+     3,
+     4
+    ]
    ],
    [
     "T_TR ",
     "motoverte",
     [
-     0.169,
-     0.618
+     -0.005,
+     1.005
     ],
-    3,
-    7.26
+    7,
+    []
    ],
    [
     "T_E 9",
     "yamaha",
     [
-     0.169,
-     0.618
+     0.12,
+     0.697
     ],
-    3,
-    7.26
+    4,
+    []
    ],
    [
     "T_C 1",
     "five",
     [
-     0.234,
-     0.52
+     0.1,
+     0.641
     ],
-    4,
-    8.3
+    8,
+    [
+     1,
+     2,
+     3,
+     4,
+     5
+    ]
    ]
   ],
   "ballots": 120,
@@ -398,28 +418,30 @@
    0.89
   ],
   "poteaux": 7,
+  "cabane": [
+   123.1,
+   28.0
+  ],
+  "holeshot": [
+   369.9,
+   525.3
+  ],
   "murs_invisibles": [
    [
-    "invisible_freestyle",
-    98.6,
-    7.1,
-    25.1
-   ],
-   [
     "invisible_milwaukee",
-    207.4,
-    13.9,
-    39.9
+    208.9,
+    18.9,
+    43.9
    ],
    [
     "invisible_arrivee",
     99.6,
-    7.0,
-    26.0
+    13.0,
+    30.0
    ]
   ]
  },
- "lap_ft": 2678.5,
+ "lap_ft": 2659.9,
  "start": {
   "gate": [
    683.5099504,
@@ -450,7 +472,7 @@
   {
    "name": "bosses <= 25 ft (gros saut rond ZION 2025 24,2 ft)",
    "ok": true,
-   "detail": "21.78 ft"
+   "detail": "22.43 ft"
   },
   {
    "name": "berms <= 10 ft (90° x1,4 comme Saint-Thibéry)",

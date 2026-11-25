@@ -159,7 +159,7 @@ PRE_FINISH_Z = [_APP_NEW, ('gap', round(22.7 - (len(LS.L('tmp', [_APP_NEW])) - l
 _APP_SGM = smooth_takeoff(4.5, 10.5, 1.8, 13.0, 0.8, pad=0.4)   # v23e : un peu plus haut, plus de terre derrière (4,0 -> 4,5 ft ; dos 9 -> 13 ft)   # v23 (« l'appel plus raide, comme le double de Saint-Georges ») : appel du double L3 de Saint-Georges (~36°)
 PRE_FINISH_Z = [_APP_SGM, ('gap', round(22.7 - (len(LS.L('tmp', [_APP_SGM])) - len(LS.L('tmp', [_APP_OLD]))) * 0.1, 1)), ('stretch', SA[1], 7.0, 1.9)]   # v23c : réception plus haute, plus ronde, plus de terre (5,8 -> 7,0 ft)   # v19 (Zion) : vrai petit double, appel pointu ;
 #   v19d (« la bosse entourée, mets-la 4 mètres plus loin ») : réception 13 ft plus loin (7 -> 20 ft)
-TRIPLE_EARLY = 20.0
+TRIPLE_EARLY = 12.0 if ZION else 20.0   # v23f : L5 8 ft plus court, le triple ne bouge pas par rapport au double
 TABLE_PLUS = 3.3                  # v20d : table de L6 +50 cm de chaque côté
 # v10 (ancien commentaire) : « avant le triple il manque une bosse, ça fait un double » (v9 : un seul roller) ;
 #   la ligne d'arrivée (item 2) retombe ainsi sur l'APPEL du triple (avec le roller, l'item 2 était la réception -> FINISH mal placé)
@@ -210,7 +210,16 @@ def whoops_zion(n=10, k=1.15, launch_m=0.60, pitch_m=6.20):   # v20 (« minimum 
     return ('raw', f'whoops x{n} (lancement {launch_m:.2f} m, pas {pitch_m:.2f} m)', np.concatenate(parts), 'W')
 
 
-RB_L5B = 26.0
+# v24 : panneaux des sauts (contours dessinés par l'utilisateur sur les vues de côté) ; v24b (« un contour en bois avec une bâche autour,
+# incrusté dans la bosse, collé, pas trop fin ; le Milwaukee un peu plus haut ») : plan du panneau à BOARD_VB ft de l'axe (bord du dessus
+# du saut), épaisseur BOARD_TH ; la terre du flanc au-delà est enlevée (build_paris.board_cut)
+BOARD_POLY = dict(milwaukee=[(145.8, 0.0), (154.6, 14.0), (163.4, 14.0), (179.8, 0.0)],
+                  amv=[(141.0, 0.0), (163.8, 21.3), (186.7, 21.3), (219.0, 0.0)])
+BOARD_LANE = dict(milwaukee='LR', amv='L3')
+BOARD_VB = dict(milwaukee=18.5, amv=28.0)
+BOARD_TH = 1.0
+RB_L5B = 32.0   # v23f (« l'angle du virage encore un peu plus ouvert ») : 26 -> 32 ft
+XW_BOT = 8.0 if ZION else 0.0   # v23f (« avant le saut d'arrivée, après l'enchaînement, le virage est trop loin ») : L5 et L6 8 ft plus courts
 XW_TOP = 9.0 if ZION else 0.0   # v23e (« les whoops commencent encore trop tard après le virage ; le virage encore trop loin de l'enchaînement ») : L2 et L1 10 ft plus courts
 END_GAP = 4.0 if ZION else 8.0   # v23 Zion (« entre la dernière bosse de chaque enchaînement et le virage, réduis l'écart ») : 8 -> 4 ft
 SPLIT_Z = {}      # v22 : section -> [(début ft, fin ft, k gauche, k droite)] ; obstacle plus bas d'un côté (gauche/droite du sens de course)
@@ -265,9 +274,13 @@ POST_FIN_V23C = dict(b1=[(24, 0), (27.5, 0.8), (30.5, 2.2), (32.5, 2.6), (34.5, 
 # v23e (« la 1re bosse un peu plus haute, moins ronde : un appel, surtout à droite ; garde-la comme ça à l'intérieur ; encore plus d'écart
 # entre la 1re et la 2e ; la 2e un peu plus raide ») : b1 (intérieur) = v23c, b1o (extérieur, droite) = appel 3,0 ft ; 2e bosse 10 ft
 # après la fin de la 1re, montée sur 6 ft ; virage T_L5b plus large (rayon 26)
-POST_FIN = dict(b1=[(24, 0), (27.5, 0.8), (30.5, 2.2), (32.5, 2.6), (34.5, 2.2), (37.5, 0.7), (40, 0)],
-                b1o=[(25, 0), (28, 0.5), (30.5, 1.5), (32.5, 2.6), (33.6, 3.0), (34.6, 2.7), (37, 1.2), (40, 0)],
-                b23=[(50, 0), (52.5, 0.8), (55.5, 3.0), (57.5, 4.2), (59, 4.4), (61, 4.1), (64, 3.2), (67, 2.9), (92, 2.9), (98, 1.8), (104, 0.4), (109, 0)],
+POST_FIN_V23E = dict(b1=[(24, 0), (27.5, 0.8), (30.5, 2.2), (32.5, 2.6), (34.5, 2.2), (37.5, 0.7), (40, 0)],
+                     b1o=[(25, 0), (28, 0.5), (30.5, 1.5), (32.5, 2.6), (33.6, 3.0), (34.6, 2.7), (37, 1.2), (40, 0)],
+                     b23=[(50, 0), (52.5, 0.8), (55.5, 3.0), (57.5, 4.2), (59, 4.4), (61, 4.1), (64, 3.2), (67, 2.9), (92, 2.9), (98, 1.8), (104, 0.4), (109, 0)],
+                     out_k=1.0)
+# v23f (« encore plus d'espace entre la 1re et la 2e bosse, bien plus ») : 2e bosse 15 ft après la fin de la 1re ; virage T_L5b rayon 32
+POST_FIN = dict(b1=POST_FIN_V23E['b1'], b1o=POST_FIN_V23E['b1o'],
+                b23=[(55, 0), (57.5, 0.8), (60.5, 3.0), (62.5, 4.2), (64, 4.4), (66, 4.1), (69, 3.2), (72, 2.9), (96, 2.9), (102, 1.8), (108, 0.4), (113, 0)],
                 out_k=1.0)
 CAMEL_V22D = CAMEL
 # v23 (« un peu plus haut ; la face beaucoup plus raide, le bas toujours smooth ; un petit creux avant, que ça redescende presque au sol du stade
@@ -510,10 +523,11 @@ def paris():
     xLR, xC, xT5 = px_x(860.0) - XLR_SHIFT, px_x(778.0), px_x(785.0)
     xTB = px_x(315.0)
     R3 = (zL2 - zL3) / 2
-    p = Path(xW, zL5, 180.0, 'PARIS')
+    xWb = xW - XW_BOT
+    p = Path(xWb, zL5, 180.0, 'PARIS')
     # L5 : single, single, SAUT D'ARRIVÉE (obstacles 3 + 4 du visuel = un double : appel / réception), table longue
-    toks, u0 = from_render('L5', xW, 'x', -1, {(1, 2): SMALL_DBL, (3, 5): Z25_TRIPLE},
-                           lane_len=xW - (xT5 + RB))   # v4 : le triple d'arrivée de ZION 2025 couvre les obstacles 3 à 5 du visuel
+    toks, u0 = from_render('L5', xWb, 'x', -1, {(1, 2): SMALL_DBL, (3, 5): Z25_TRIPLE},
+                           lane_len=xWb - (xT5 + RB))   # v4 : le triple d'arrivée de ZION 2025 couvre les obstacles 3 à 5 du visuel
     # v13 (« le double plus en sortie de virage et un peu plus long ; le triple est bien ») : le triple reste où il est, le double
     # commence à EXIT_U0 de la sortie du virage, plus long (écart 8 -> 16 ft)
     i_t = next(i for i, t in enumerate(toks) if t[0] == 'raw'); u_app = u0 + tlen(toks[:i_t]) - XW_SHIFT
@@ -524,12 +538,12 @@ def paris():
         pre = [t if t[0] == 'gap' else ('raw', 'double USLAND', np.asarray(LS.L('tmp', [t]), float), 'T') for t in PRE_FINISH_Z]; ue = 1.0   # v23e : vraiment en sortie de virage
         # v19 (« plus d'espace entre le petit double et le triple d'arrivée, moins de ligne droite après le triple ») : le triple finit
         # à 8 ft du virage
-        u_app = (xW - (xT5 + RB)) - END_GAP - tlen(toks[i_t:]) - TRIPLE_EARLY   # v19d (« la pointe de l'appel du triple au trait orange,
+        u_app = (xWb - (xT5 + RB)) - END_GAP - tlen(toks[i_t:]) - TRIPLE_EARLY   # v19d (« la pointe de l'appel du triple au trait orange,
         #   là il est un peu trop dans le virage ») : 20 ft plus tôt
     toks = pre + [('gap', round(u_app - ue - tlen(pre), 1))] + toks[i_t:]; u0 = ue
     if ZION:   # v22c (« le triple du saut d'arrivée comme à Saint-Georges : la bosse du milieu et la réception, une fusion entre les deux »)
-        toks = [fuse_raw(t) if t[0] == 'raw' and t[1].startswith('triple arrivee') else t for t in toks]
-    p.straight(xW - (xT5 + RB), [lane_sec(FINISH_SEC, toks, u0, finish=True)], tag='L5 arrivée')
+        toks = [fuse_raw(t, 0.45) if t[0] == 'raw' and t[1].startswith('triple arrivee') else t for t in toks]   # v23f : creux un peu plus creusé (0,6 -> 0,45)
+    p.straight(xWb - (xT5 + RB), [lane_sec(FINISH_SEC, toks, u0, finish=True)], tag='L5 arrivée')
     p.turn(90, RB, BIG, tag='T_L5a 90 gauche (berm)')
     RBb = RB_L5B if ZION else RB      # v23e (« le virage, ne le fais pas tourner aussi sec derrière, plus large, plus facile ») : rayon 21,5 -> 26 ft
     p.straight(zLD - zL5 - RB - RBb, tag='T_L5 milieu')
@@ -556,7 +570,10 @@ def paris():
             # v23d (« tu fais un peu en 2 étages la récep ; le même plat, de l'angle de descente à l'angle en haut de la montée ; tu peux
             # laisser un peu bomber ») : un seul plateau entre les deux arêtes (>= 95 % du haut), légèrement bombé (+0,35 ft au milieu)
             ix_ = np.nonzero(q2 >= 0.95 * q2.max())[0]; a_, b_ = int(ix_[0]), int(ix_[-1]); tt = np.linspace(0, 1, b_ - a_ + 1)
-            q2[a_:b_ + 1] = q2[a_] + (q2[b_] - q2[a_]) * tt + 0.35 * np.sin(np.pi * tt)
+            q2[a_:b_ + 1] = q2[a_] + (q2[b_] - q2[a_]) * tt + 1.0 * np.sin(np.pi * tt)   # v23f (« fais-le encore un peu bomber ») : +1,0 ft
+            from scipy.ndimage import gaussian_filter1d   # v23f (« des angles très obtus : arrondis ») : arêtes adoucies sur ~4 ft
+            w_ = np.zeros_like(q2); w_[max(0, a_ - 40):a_ + 40] = 1; w_[max(0, b_ - 40):b_ + 40] = 1; w_ = gaussian_filter1d(w_, 10)
+            q2 = q2 * (1 - w_) + gaussian_filter1d(q2, 18) * w_
             return ('raw', t[1] + ' plat +7', q2, t[3])
         toks = [_plat_devant(t) if t[0] == 'raw' and 'butte' in t[1] else t for t in toks]
     secs3 = [LS.sec(L3_SEC, toks, u0)]
@@ -598,13 +615,13 @@ def paris():
         # v23 (« moins d'écart entre la bosse haute à droite et la basse à gauche ; baisse la droite, moins raide, vrai double par-dessus »)
         B8[0] = ('raw', 'bosse ZION 2,3 ft (longue)', resample(np.asarray(zsingle(2.3 / ZH)[2], float), 1.1), 'T')
         # v23e (« la 2e bosse légèrement plus basse, plus ronde, plus de terre devant et derrière, surtout à droite ») : plus longue, droite 90 %
-        B8[1] = ('raw', 'bosse ZION 4,6 ft (ronde)', resample(np.asarray(zsingle(4.6 / ZH)[2], float), 1.2), 'T'); u0z = 0.0
+        B8[1] = ('raw', 'bosse ZION 4,6 ft (ronde)', resample(np.asarray(zsingle(4.6 / ZH)[2], float), 1.1), 'T'); u0z = 0.0   # v23f : même hauteur qu'avant, un peu plus ronde
         # v23c (« plus d'écart entre la 2e et la 3e bosse ») : +5 ft là, pris sur les autres écarts
         gz_ = ((xWt - x_end3) - END_GAP - u0z - sum(tlen(b) for b in B8) - 5.0) / 7; assert gz_ > 2.5, gz_
         toks = [B8[0]]
         for i_, b_ in enumerate(B8[1:]):
             toks += [('gap', round(gz_ + (5.0 if i_ == 1 else 0.0), 1)), b_]
-        SPLIT_Z[L2_NAME] = [(0.0, tlen(B8[0]), 1.5 / 2.3, 1.0), (tlen(B8[0]) + gz_, tlen(B8[0]) + gz_ + tlen(B8[1]), 1.0, 0.9)]
+        SPLIT_Z[L2_NAME] = [(0.0, tlen(B8[0]), 1.5 / 2.3, 1.0)]   # v23f : 2e bosse plus coupée (« ça fait double, quadruple »)
     u0 = u0z if ZION else L2_U0                            # v18 (RF) : même écart partout comme la version USLAND (~8,5 ft, A1 : 8 - 13)
     sec2 = lane_sec(L2_NAME if ZION else 'PAR-L2 triple, triple (7 bosses, meme ecart)', toks, u0)
     if False:  # v23c : creux remontés (v23e : retiré, « des petits étages, des escaliers entre chaque bosse »)
@@ -631,9 +648,19 @@ def paris():
         toks = [whoops_zion(11), ('gap', 5.5), ('raw', 'table montante 4,4 ft', TABLE_PLATE_L1_V23, 'T'), ('gap', 5.0), zb_(3.2), ('gap', 6.0), zb_(1.7)]
         # v23c (« table légèrement plus courte ; 1re bosse un tout petit peu plus haute ; plus d'espace entre les 2 dernières ; le roller plus haut »)
         toks = [whoops_zion(11), ('gap', 5.5), ('raw', 'table montante 4,4 ft', TABLE_PLATE_L1_V23C, 'T'), ('gap', 5.0), zb_(3.4), ('gap', 10.0), zb_(2.2)]
+        # v25 (« la petite table après les whoops à la même distance que si c'était un whoops d'après ; décale tout le reste derrière ») :
+        # le haut de l'appel de la table (~3,4 ft, comme une crête de whoops) au pas des whoops après la dernière crête ; les whoops ne
+        # bougent pas (u0 gardé), la table et les 2 bosses avancent, la place gagnée va avant le virage
+        from scipy.signal import find_peaks
+        wq_ = np.asarray(toks[0][2], float); pk_, _ = find_peaks(wq_, prominence=0.8); pitch_ = float(np.median(np.diff(pk_))) * 0.1
+        g_new = round(pk_[-1] * 0.1 + pitch_ - 8.5 - len(wq_) * 0.1, 1); u0_keep = lL1 - END_GAP - tlen(toks)
+        toks = [toks[0], ('gap', max(0.5, g_new))] + toks[2:]
+        LOG['L1_table_gap'] = (round(pitch_, 1), g_new)
     if RF:     # v18 : « garde nos whoops dans la version RF » : celles de la version Zion, 9 (11 : 39 ft de trop) ; table + 2 bosses RF
         toks = [whoops_up(9, 1.15), ('gap', 15.0), ('scale', TABLE_B, 6.6), ('gap', RF_GAP), ('scale', SA[1], 4.0), ('gap', RF_GAP), ('scale', SA[0], 3.6)]
     u0 = lL1 - END_GAP - tlen(toks); assert u0 >= 0.5, u0
+    if ZION:
+        u0 = u0_keep                                       # v25 : les whoops restent où elles sont
     p.straight(xWt - (xLR + RB), [LS.sec('PAR-L1 whoops, table, bosse', toks, u0)], tag='L1 whoops')
     p.turn(-90, RB, BIG, tag='T_TR 90 droite (berm)')
     # v7 (Ryan, son tracé rouge : montée, long plateau, puis des bosses) : roller, table (plateau, pas d'ondulations), 3 bosses
@@ -662,7 +689,7 @@ def paris():
         free = lLR - u0 - END_GAP - tlen([r1]) - tlen([r2]) - tlen([cam]) - tlen(tri_); creux = 3.0
         g1 = round(CAMEL_U - u0 - tlen([r1]) - tlen([r2]) - creux, 1)   # v22c : le saut commence à CAMEL_U ft du virage
         assert g1 > 15.0, free
-        toks = [r1, ('gap', g1), r2, ('gap', creux), cam, ('gap', 12.0)] + tri_   # v23e : triple un peu plus près du virage (8 -> 12 ft)
+        toks = [r1, ('gap', g1), r2, ('gap', creux), cam, ('gap', 13.5)] + tri_   # v23e : triple un peu plus près du virage (8 -> 12 ft) ; v25 : +1,5 ft
         SAND_LR = (0.0, u0 + tlen([r1]) + g1 + tlen([r2]) + creux + 2.0)
     p.straight((zL1 - RB) - (zL6 + RB), [lane_sec('PAR-LR sable, saut Milwaukee, triple' if ZION else 'PAR-LR saut de sortie, bosse, table, 3 bosses', toks, u0)], tag='LR tribune Est')
     p.turn(-90, RB, BIG, tag='T_E 90 droite (berm)')
@@ -671,7 +698,7 @@ def paris():
     # les autres bosses un peu plus hautes et plus rondes ; plus de marque berm / 1re bosse (EXIT_U0)
     L6B = [('stretch', SA[0], 4.2, 0.85), ('stretch', SA[2], 4.7, 1.15), ('stretch', SA[1], 4.9, 1.15), ('stretch', SA[3], 4.7, 1.15),
            ('stretch', SA[2], 4.9, 1.15), TABLE, ('stretch', SA[0], 4.3, 1.15), ('stretch', SA[1], 4.5, 1.15)]
-    toks, u0 = even(L6B, xW - (xLR + RB), EXIT_U0, 8.0), EXIT_U0
+    toks, u0 = even(L6B, xWb - (xLR + RB), EXIT_U0, 8.0), EXIT_U0
     if ZION:   # v19 (« la table, éloigne-la un peu, mets-la bien entre les deux bosses ») : 6 ft de plus avant ET après la table
         B_ = list(L6B); it_ = B_.index(TABLE)   # v19d (« elle n'a jamais été trop haute, remets la taille d'origine ») : 4,2 (4,6 ft en ZION)
         # v19d (« la table raccourcie un peu ; la bosse après la table est trop loin, rapproche ; la bosse avant légèrement ; surtout la
@@ -691,7 +718,7 @@ def paris():
         B_[ib_] = zionize([B_[ib_ + 0] if False else L6B[ib_]])[0]   # v23 (« la 4e bosse, refais une bosse normale ; garde cet écart ») 
         B_[it_] = table_stt(7.0, extra=TABLE_PLUS)
         adj_ = {ib_ - 1: -d_b, it_ - 1: eb_ - TABLE_PLUS / 2, it_: ea_ - TABLE_PLUS / 2}
-        g_ = (xW - (xLR + RB) - EXIT_U0 - END_GAP - sum(tlen(b) for b in B_) - sum(adj_.values())) / (len(B_) - 1)
+        g_ = (xWb - (xLR + RB) - EXIT_U0 - END_GAP - sum(tlen(b) for b in B_) - sum(adj_.values())) / (len(B_) - 1)
         toks = []
         for k, b in enumerate(B_):
             toks.append(b)
@@ -699,7 +726,7 @@ def paris():
                 toks.append(('gap', round(g_ + adj_.get(k, 0.0), 1)))
     if ZION:   # v22 (« baisse le 1er appel, plus bas à droite, comme Saint-Thibéry, voire encore plus bas ») : droite 55 %
         SPLIT_Z['PAR-L6 triple, double, table, double'] = [(0.0, tlen(toks[:1]), 1.0, 0.8)]   # v23 : intérieur (droite) relevé 0,55 -> 0,8
-    p.straight(xW - (xLR + RB), [lane_sec('PAR-L6 triple, double, table, double', toks, u0)], tag='L6 tribune Sud')
+    p.straight(xWb - (xLR + RB), [lane_sec('PAR-L6 triple, double, table, double', toks, u0)], tag='L6 tribune Sud')
     p.turn(-180, R180, BIG, tag='T_C 180 droite (berm)')
     p.lanes = dict(x_end3=x_end3, R3=R3, zL5=zL5, zLD=zLD, zL3=zL3, zL2=zL2, zL1=zL1, zL6=zL6, xW=xW, xLR=xLR, xC=xC, xT5=xT5, xTB=xTB)
     return p

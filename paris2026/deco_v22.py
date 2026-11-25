@@ -44,7 +44,7 @@ def tarp_texture(out):
     crease = np.clip(np.abs(gaussian_filter(rng.normal(0, 1, (H, W)), (14, 14), mode='wrap')) * 6 - 4.2, 0, 1)   # cassures fines
     v = 1 - (np.arange(H) + 0.5)[:, None] / H
     hi = 0.5 * np.exp(-((v - 0.42) / 0.05) ** 2) + 0.35 * np.exp(-((v - 0.62) / 0.05) ** 2)          # arêtes du dessus
-    base = np.array([108.0, 109, 113]); sh = 0.82 + 0.18 * np.sin(np.pi * np.clip(v * 1.1, 0, 1))
+    base = np.array([84.0, 85, 89]); sh = 0.82 + 0.18 * np.sin(np.pi * np.clip(v * 1.1, 0, 1))   # v25 : gris plus foncé
     a = base * sh[..., None] + (fold * 13 + diag * 6 - crease * 18 + hi * 45)[..., None] + rng.normal(0, 1.5, (H, W, 1))
     _save(Image.fromarray(np.clip(a, 0, 255).astype(np.uint8)), os.path.join(out, 'bache_paille.png'))
     return 'bache_paille.png'
@@ -301,7 +301,10 @@ def arche_50f(out, drop=0.0, xc=None):
 # crête du berm), bas enterré ; fagot de 3 boudins noirs (bouts visibles) sous une bâche aux couleurs du sponsor ; filet droit par module.
 WALL23 = dict(vis=0.5, depth=1.0, n90=3, n180=4, entry=0.02)   # v23e (« le mur est trop haut : le boudin au sommet de l'appui touche presque la terre, un petit peu de gris ») : 1,6 -> 0,5 ft
 # v23e (« un peu plus vers le milieu du virage ; enlève le 1er bloc et mets-le de l'autre côté ») : décalage du mur en modules, par virage
-WALL_SHIFT = {'T_L5a': 1, 'T_Bb': 1, 'T_D ': 1, 'T1 1': 2, 'T_TR': 1, 'T_E ': 1, 'T_C ': 3}
+WALL_SHIFT = {'T_L5a': 1, 'T_Bb': 1, 'T_D ': 0, 'T1 1': 2, 'T_TR': 1, 'T_E ': 1, 'T_C ': 3}
+# v23f (« rajoute un filet Automoto à gauche » ; « Honda : rajoute-en un vers la droite, qu'ils finissent plus tard » ; « FIVE : un de plus vers la
+# sortie ») : nombre de modules par virage (T_D : un de plus au début -> décalage 1 -> 0)
+WALL_NMOD = {'T_D ': 5, 'T1 1': 5, 'T_C ': 5}
 TURN_SPONSOR.update({'T_Bb': 'mxsim', 'T_Ba': 'mxsim'})
 
 
@@ -316,7 +319,7 @@ def bundle_texture_v23(out, key, Lm=9.3):
     if lg is not None:
         l2 = lg.resize((lg.size[0], max(1, int(lg.size[1] * Lm / P))), Image.LANCZOS)
         fit(im, l2, (int(W * 0.10), int(H * (1 - 0.44)), int(W * 0.90), int(H * (1 - 0.10))), 0.05)
-    ImageDraw.Draw(im).rectangle([0, 0, W, int(H * 0.02)], fill=(204, 204, 200))   # v23e : intérieur des boudins gris clair
+    ImageDraw.Draw(im).rectangle([0, 0, W, int(H * 0.02)], fill=(150, 150, 148))   # v23e : intérieur des boudins gris ; v23f : plus foncé
     fn = 'fagot23_%s.png' % (key or 'noir'); _save(im, os.path.join(out, fn)); return fn
 
 
@@ -326,6 +329,7 @@ def turn_wall_v23(out, k, g, Hf, key):
     cx, cz = g['cx'], g['cz']; h0 = float(np.ravel(Hf(cx, cz))[0]); H1 = lambda x, z: float(np.ravel(Hf(x, z))[0])
     f_a = g.get('berm_from', 0.0) + WALL23['entry']; nmod = WALL23['n180'] if abs(g['ang']) > 100 else WALL23['n90']
     sh_ = next((v for k_, v in WALL_SHIFT.items() if g['tag'].startswith(k_)), 0)
+    nmod = next((v for k_, v in WALL_NMOD.items() if g['tag'].startswith(k_)), nmod)
     tm = th(f_a + 0.15); rr = np.arange(g['r'], g['r'] + 40, 0.5)
     r_crest = float(rr[int(np.argmax(Hf(cx + np.cos(tm) * rr, cz + np.sin(tm) * rr)))])
     W = BLK['W']; rc = r_crest + BLK['back'] + W / 2; df = AIRF['mod'] / (abs(ang) * rc); f_a += sh_ * df
@@ -374,7 +378,14 @@ def turn_wall_v23(out, k, g, Hf, key):
             _face(a2, Q, [(u0_, v0), (u1_, v0), (u1_, v1), (u0_, v1)], N_)
         for d_, y_ in ((-rb, rb), (rb, rb), (0.0, rb * (1 + np.sqrt(3)))):   # v23e : coupés pile au ras de la bâche, gris clair
             a3 = V3(A2, dcen + d_, yb2 + y_); b3 = V3(B2, dcen + d_, yb2 + y_)
-            a2.tube(a3, b3, rb * 0.97, (0.02, 0.985, 0.98, 0.998), 14)
+            # v23f (« les boudins : la couleur de la bâche sur leur extérieur, l'intérieur gris, un peu plus foncé ») : tour = fond du sponsor
+            # (coin bas de l'image, sans logo), bouts = disques gris
+            a2.tube(a3, b3, rb * 0.97, (0.02, 0.02, 0.05, 0.05), 14, caps=False)
+            ax_ = np.subtract(b3, a3); ax_ = ax_ / np.linalg.norm(ax_); s1 = np.cross(ax_, [0, 1, 0]); s1 /= np.linalg.norm(s1); s2 = np.cross(ax_, s1)
+            for cen_, sg_ in ((np.asarray(a3), -1), (np.asarray(b3), 1)):
+                ring_ = [cen_ + (np.cos(t_) * s1 + np.sin(t_) * s2) * rb * 0.97 for t_ in np.linspace(0, 2 * np.pi, 15)]
+                for j_ in range(14):
+                    _face(a2, [cen_, ring_[j_], ring_[j_ + 1]], [(0.5, 0.993)] * 3, [tuple(ax_ * sg_)] * 3)
         for s_ in np.arange(0.5, L, 2.0):
             c_ = A + t * s_; sph_a.append((c_[0] + nn[0] * dcen, yb2 + rb * 1.3, c_[1] + nn[1] * dcen))
         # --- filet droit sur le bord arrière du bloc, tuiles de 4 ft
@@ -414,6 +425,8 @@ def pylon_skin(out, sgm_statue, key):
     """v23c (« les trucs gonflables aux intérieurs de virage ») : poteau rond de Saint-Georges aux couleurs du sponsor du virage."""
     import sponsors as SP
     bg, lg = SP.panel(key); im = Image.open(os.path.join(sgm_statue, 'pylon_round.png')).convert('RGB'); d = ImageDraw.Draw(im)
+    if key == 'motoverte' and lg is not None:                                # v25 (« pas le MV, juste le moto verte ») : le texte seul
+        c_ = lg.crop((int(0.30 * lg.size[0]), 0, lg.size[0], lg.size[1])); lg = c_.crop(c_.getbbox())
     d.rectangle([0, 0, 1024, 928], fill=bg)
     if lg is not None:
         for cx in (256, 768):
@@ -545,3 +558,285 @@ def _board_texture(kind, W, H, sil, ua_t, ub_t, px_u, px_v, ymax):
         for x in list(range(int(0.04 * W), xa - 60, int(7 * px_u))) + list(range(xb + 60, int(0.96 * W), int(7 * px_u))):
             d.text((x, yat(x) + bw + int(0.8 * px_v)), 'AMV', font=fs_, fill=G_, anchor='mm')
     d.rectangle([0, 0, 4, 4], fill=(16, 16, 18)); return K.grain(im, 1.0)
+
+
+# ================================================================ v24 : panneaux d'après les dessins de l'utilisateur (contours tracés sur les vues de côté)
+# Milwaukee : « ça monte droit un peu après l'appel, un plateau sur le dessus à la hauteur du truc, avec les 2 ballots dessus, la descente ; le
+# logo centré par rapport à la forme » ; AMV : « suis les traits verts ; le design AMV avec les traits blancs ; le dessus : la barrière AMV
+# blanche, plusieurs AMV de la taille d'une banderole, comme les sponsors autour du stade ».
+import layout_paris as _LP                                                          # noqa: E402
+BOARD_POLY = _LP.BOARD_POLY                                                         # u (ft depuis la sortie du virage), hauteur (ft)
+AMV_BARRIER = (163.8, 186.7, 21.3, 25.0)
+
+
+def board_v24(out, name, Hf, g, side, kind, th=None):
+    """panneau plan vertical au pied du flanc, contour = polygone dessiné par l'utilisateur (+ barrière AMV) ; deux faces + tranches."""
+    c, s_ = np.cos(g['t']), np.sin(g['t']); nrm = np.array([-s_, c]) * side; tg = np.array([c, s_])
+    H1 = lambda p: float(np.ravel(Hf(p[0], p[1]))[0]); base = lambda u: np.array([g['x0'] + u * c, g['z0'] + u * s_])
+    th = th or _LP.BOARD_TH; poly = BOARD_POLY[kind]; ua, ub = poly[0][0], poly[-1][0]; um = (ua + ub) / 2
+    vb = _LP.BOARD_VB[kind]; h0 = H1(base(um) + nrm * (vb + 12.0))                     # v24b : au bord du dessus du saut (flanc enlevé derrière)
+    O = base(um) + nrm * (vb + 4.0); h_o = H1(O)
+    shapes = [poly] + ([[(AMV_BARRIER[0], AMV_BARRIER[2]), (AMV_BARRIER[1], AMV_BARRIER[2]), (AMV_BARRIER[1], AMV_BARRIER[3]), (AMV_BARRIER[0], AMV_BARRIER[3])]]
+                       if kind == 'amv' else [])
+    ymax = max(y for sh in shapes for _, y in sh); L = ub - ua; W = 2048; Ht = int(min(2048, max(256, round(W * ymax / L / 64) * 64)))
+    px_u, px_v = W / L, Ht / ymax
+    im = _board_texture_v24(kind, W, Ht, px_u, px_v, ua, ymax); png = name + '.png'; _save(im, os.path.join(out, png))
+    m = Mesh(); fu = (lambda u: (u - ua) / L) if side > 0 else (lambda u: 1 - (u - ua) / L); fv = lambda y: y / ymax
+    P = lambda u, d, y: (base(u)[0] + nrm[0] * (vb + d) - O[0], y + (h0 - h_o) - (0.6 if y < 0.01 else 0.0), base(u)[1] + nrm[1] * (vb + d) - O[1])   # bas enfoncé de 0,6 ft
+    n_o = (nrm[0], 0.0, nrm[1]); n_i = (-nrm[0], 0.0, -nrm[1]); blk = (0.001, 0.999)
+    for sh in shapes:
+        for k in range(1, len(sh) - 1):                                                 # convexe : éventail
+            tri = [sh[0], sh[k], sh[k + 1]]
+            # v25 (« des deux côtés dans le bon sens : AMV et pas AVMA à l'intérieur ») : la face intérieure a le dessin retourné en u
+            _face(m, [P(u, th / 2, y) for u, y in tri], [(fu(u), fv(y)) for u, y in tri], [n_o] * 3)
+            _face(m, [P(u, -th / 2, y) for u, y in tri], [(1 - fu(u), fv(y)) for u, y in tri], [n_i] * 3)
+        for k in range(len(sh)):                                                        # tranches
+            (u0_, y0_), (u1_, y1_) = sh[k], sh[(k + 1) % len(sh)]
+            e_ = np.array([u1_ - u0_, y1_ - y0_]); nn_ = np.array([e_[1], -e_[0]]) / (np.linalg.norm(e_) or 1)
+            n3 = (tg[0] * nn_[0], nn_[1], tg[1] * nn_[0])
+            _face(m, [P(u0_, -th / 2, y0_), P(u1_, -th / 2, y1_), P(u1_, th / 2, y1_), P(u0_, th / 2, y0_)], [blk] * 4, [n3] * 4)
+    m.write(os.path.join(out, name + '.jm'), MAT_MAT)
+    K.shp(os.path.join(out, name + '.shp'), [P(u, 0, 2.0) for u in np.arange(ua + 2, ub - 1, 3.0)], 1.0)
+    return O, name + '.jm', png, name + '.shp'
+
+
+def _board_texture_v24(kind, W, H, px_u, px_v, ua, ymax):
+    import sponsors as SP
+    from PIL import ImageFont
+    X = lambda u: int((u - ua) * px_u); Y = lambda y: int(H - y * px_v)
+    poly = [(X(u), Y(y)) for u, y in BOARD_POLY[kind]]
+    if kind == 'milwaukee':
+        bg, lg = SP.panel('milwaukee'); im = Image.new('RGB', (W, H), bg); d = ImageDraw.Draw(im)
+        l2 = lg.resize((lg.size[0], max(1, int(lg.size[1] * px_v / px_u))), Image.LANCZOS)
+        (u0, _), (u1, yt), (u2, _), (u3, _) = BOARD_POLY['milwaukee']; ucx = (u0 + u1 + u2 + u3) / 4      # centre de la forme
+        fit(im, l2, (X(ucx - 0.19 * (u3 - u0)), Y(0.64 * yt), X(ucx + 0.19 * (u3 - u0)), Y(0.24 * yt)), 0.02)   # v24b : logo un peu plus petit
+        d.rectangle([0, Y(2.3), W, H], fill=(16, 16, 18))                               # v24b : noir du sol jusqu'à la forme rouge
+    else:
+        G_ = (0, 158, 79); WH = (250, 250, 248); im = Image.new('RGB', (W, H), WH); d = ImageDraw.Draw(im)
+        (u0, _), (u1, yt), (u2, _), (u3, _) = BOARD_POLY['amv']; bw = max(6, int(1.0 * px_v))
+        d.line([(X(u0), Y(0)), (X(u1), Y(yt))], fill=G_, width=2 * bw); d.line([(X(u2), Y(yt)), (X(u3), Y(0))], fill=G_, width=2 * bw)   # bords verts
+        d.rectangle([0, Y(0.9), W, H], fill=G_)
+        d.rectangle([X(u1), Y(yt), X(u2), Y(0)], outline=G_, width=bw)                 # panneau du centre (cadre vert)
+        for x_ in (X(u1), X(u2)):                                                       # traits blancs de séparation
+            d.rectangle([x_ - 3, Y(yt), x_ + 3, Y(0.9)], fill=WH)
+        src = Image.open(os.path.join(SP.U, SP.FILES['amv'])).convert('RGBA'); sq = lambda img: img.resize((img.size[0], max(1, int(img.size[1] * px_v / px_u))), Image.LANCZOS)
+        fit(im, sq(src.crop((272, 30, 522, 372))), (X(u1) + bw + 8, Y(yt) + bw + 8, X(u2) - bw - 8, Y(1.2)), 0.02)   # la bulle (AMV + texte) au centre
+        girl, boy = src.crop((130, 200, 290, 440)), src.crop((512, 200, 680, 440))
+        fit(im, sq(girl), (X(u1 - 0.55 * (u1 - u0)), Y(0.62 * yt), X(u1) - bw - 6, Y(1.0)), 0.0)
+        fit(im, sq(boy), (X(u2) + bw + 6, Y(0.62 * yt), X(u2 + 0.45 * (u3 - u2)), Y(1.0)), 0.0)
+        ft = ImageFont.truetype('C:/Windows/Fonts/ariblk.ttf', max(20, int(2.6 * px_v)))
+        d.text((X(u2 + 0.62 * (u3 - u2)), Y(2.4)), 'AMV.FR', font=ft, fill=G_, anchor='mm')
+        d.text((X(u0 + 0.45 * (u1 - u0)), Y(1.9)), 'AMV', font=ft, fill=G_, anchor='mm')
+        b0, b1, y0, y1 = AMV_BARRIER                                                    # barrière blanche, AMV comme une banderole
+        d.rectangle([X(b0), Y(y1), X(b1), Y(y0)], fill=WH, outline=G_, width=max(3, bw // 2))
+        _, la = SP.panel('amv'); hb = (y1 - y0) * 0.58; wb = hb * la.size[0] / la.size[1]; n_ = max(3, int((b1 - b0) / (wb * 1.25)))
+        for k in range(n_):
+            uc = b0 + (b1 - b0) * (k + 0.5) / n_
+            fit(im, sq(la), (X(uc - wb / 2), Y(y0 + (y1 - y0) / 2 + hb / 2), X(uc + wb / 2), Y(y0 + (y1 - y0) / 2 - hb / 2)), 0.0)
+    im = _fabric(im, (0, 0, W, H), 7, seed=24); im = _fabric(im, (0, 0, W, H), 4, seed=25)   # v24b : un peu de texture (bâche tendue), pas lisse
+    d = ImageDraw.Draw(im); d.rectangle([0, 0, 4, 4], fill=(16, 16, 18)); return K.grain(im, 2.0)
+
+
+# ================================================================ v25 : murs de virage façon Paris IRL (message de l'utilisateur)
+# « tous les virages ont un mur gris dès l'entrée jusqu'à la sortie ; le filet est que sur 3 moments décisifs du virage » ; Honda : 7 boudins,
+# filets sur 3 (1-2 à l'entrée et 2-3 à la fin sans filet) ; FIVE : 8, alterné logo FIVE / 5, filets du 2e au 6e ; Minerva : 2 filets au
+# milieu ; MX Sim : 2 filets ; Automoto, Moto Verte, Yamaha (4 boudins) : pas de filet ; « les murs moins hauts : que ce soit le boudin qui
+# touche, presque pas de gris au sommet » -> dessus de chaque module à la crête locale + VIS25 ; gris plus foncé.
+WALL_N = {'T1 1': 7, 'T_C ': 8, 'T_E ': 4}                     # nombre de modules imposé ; sinon tout l'appui (berm) couvert
+WALL_START = {'T1 1': 0.10, 'T_C ': 0.10, 'T_E ': 0.12}         # début (fraction du virage) quand le nombre est imposé
+WALL_NETS = {'T1 1': (2, 3, 4), 'T_C ': (1, 2, 3, 4, 5), 'T_D ': (), 'T_TR': (), 'T_E ': ()}   # modules à filet ; sinon 2 au milieu
+WALL_KEYS = {'T_C ': ('five', 'five5')}                         # logos alternés
+VIS25 = 0.15
+
+
+def turn_wall_v25(out, k, g, Hf, key):
+    tg_ = lambda d: next((v for k_, v in d.items() if g['tag'].startswith(k_)), None)
+    sg = 1.0 if g['ang'] > 0 else -1.0; th_in = g['t0'] + sg * np.pi / 2; ang = np.radians(g['ang']); th = lambda f: th_in - ang * f
+    cx, cz = g['cx'], g['cz']; h0 = float(np.ravel(Hf(cx, cz))[0]); H1 = lambda x, z: float(np.ravel(Hf(x, z))[0])
+    fb0 = g.get('berm_from', 0.0); tm = th((fb0 + 1) / 2); rr = np.arange(g['r'], g['r'] + 40, 0.5)
+    r_crest = float(rr[int(np.argmax(Hf(cx + np.cos(tm) * rr, cz + np.sin(tm) * rr)))])
+    W = BLK['W']; rc = r_crest + BLK['back'] + W / 2; df = AIRF['mod'] / (abs(ang) * rc)
+    nmod = tg_(WALL_N)
+    if nmod:
+        f_a = fb0 + (tg_(WALL_START) or 0.08)
+    else:
+        nmod = max(2, int(round((1 - fb0) / df))); f_a = fb0 + ((1 - fb0) - nmod * df) / 2
+    fs = f_a + df * np.arange(nmod + 1)
+    nets = tg_(WALL_NETS)
+    if nets is None:
+        nets = (nmod // 2 - 1, nmod // 2)
+    keys = tg_(WALL_KEYS) or (key,)
+    P2 = lambda f, r_: np.array([np.cos(th(f)) * r_, np.sin(th(f)) * r_]); E = lambda f: np.array([np.cos(th(f)), np.sin(th(f))])
+    crest = lambda f: max(float(np.max(Hf(cx + E(f)[0] * (r_crest + np.linspace(-4, 4, 9)), cz + E(f)[1] * (r_crest + np.linspace(-4, 4, 9))))) for _ in [0])
+    m = Mesh(); airs = {kk: Mesh() for kk in keys}; n2 = Mesh(); rb = AIRF['rb']; dcen = -W / 2 + 2 * rb + 0.15; sec_b = _tri_section(rb, 30)
+    Vb, Vt = NT_['v']; TL = 4.0; sph_w, sph_a, sph_n = [], [], []; dot = lambda u: (u[0], u[1], u[0] + 0.0005, u[1] + 0.0005)
+    tops = []
+    for q in range(nmod):
+        A, B = P2(fs[q], rc), P2(fs[q + 1], rc); L = float(np.linalg.norm(B - A)); t = (B - A) / L; nn = np.array([-t[1], t[0]])
+        if np.dot(nn, (A + B) / 2) < 0:
+            nn = -nn
+        right = np.array([-nn[1], nn[0]]); rev = np.dot(t, right) < 0
+        A = A - t * 0.04; B = B + t * 0.04; L += 0.08
+        ytop = max(crest(f) for f in np.linspace(fs[q], fs[q + 1], 5)) + VIS25 - h0; tops.append(ytop + h0)
+        gnd = min(H1(cx + p_[0], cz + p_[1]) for s_ in np.linspace(0, 1, 5) for w_ in (-W / 2, 0, W / 2) for p_ in [A + (B - A) * s_ + nn * w_]) - h0
+        yb = gnd - WALL23['depth']
+        sec = [(-W / 2, yb)] + [(-W / 2 + BLK['rnd'] - BLK['rnd'] * np.cos(a_), ytop - BLK['rnd'] + BLK['rnd'] * np.sin(a_)) for a_ in np.linspace(0, np.pi / 2, 5)]
+        sec += [(W / 2 - BLK['rnd'] + BLK['rnd'] * np.cos(a_), ytop - BLK['rnd'] + BLK['rnd'] * np.sin(a_)) for a_ in np.linspace(np.pi / 2, 0, 5)] + [(W / 2, yb)]
+        sec = np.array(sec); tg2 = np.gradient(sec, axis=0); nr = np.c_[-tg2[:, 1], tg2[:, 0]]; nr /= np.linalg.norm(nr, axis=1, keepdims=True)
+        if nr[len(sec) // 2, 1] < 0:
+            nr = -nr
+        sl_ = np.r_[0, np.cumsum(np.hypot(*np.diff(sec, axis=0).T))]
+        V3 = lambda p, d, y: (p[0] + nn[0] * d, y, p[1] + nn[1] * d)
+        for j in range(len(sec) - 1):
+            Q = [V3(A, *sec[j]), V3(B, *sec[j]), V3(B, *sec[j + 1]), V3(A, *sec[j + 1])]
+            N_ = [(nn[0] * nr[j][0], nr[j][1], nn[1] * nr[j][0])] * 2 + [(nn[0] * nr[j + 1][0], nr[j + 1][1], nn[1] * nr[j + 1][0])] * 2
+            _face(m, Q, [(0, sl_[j] / 9), (L / 8, sl_[j] / 9), (L / 8, sl_[j + 1] / 9), (0, sl_[j + 1] / 9)], N_)
+        for P_, sgn in ((A, -1), (B, 1)):
+            pts = [V3(P_, *p) for p in sec]; cen = np.mean(pts, axis=0); nrm = (t[0] * sgn, 0.0, t[1] * sgn)
+            for j in range(len(pts)):
+                _face(m, [cen, pts[j], pts[(j + 1) % len(pts)]], [(0.3, 0.5), (0.3 + 0.01 * j, 0.1), (0.31 + 0.01 * j, 0.1)], [nrm] * 3)
+        for s_ in (0.25, 0.75):
+            c_ = A + (B - A) * s_; sph_w.append((c_[0], ytop - 1.2, c_[1]))
+        a2 = airs[keys[q % len(keys)]]; yb2 = ytop - 0.15; A2, B2 = A + t * 0.45, B - t * 0.45
+        for j in range(len(sec_b) - 1):
+            (d0, y0, nd0, ny0), (d1, y1, nd1, ny1) = sec_b[j], sec_b[j + 1]; v0, v1 = 0.975 * j / (len(sec_b) - 1), 0.975 * (j + 1) / (len(sec_b) - 1)
+            u0_, u1_ = (1.0, 0.0) if rev else (0.0, 1.0)
+            Q = [V3(A2, dcen + d0, yb2 + y0), V3(B2, dcen + d0, yb2 + y0), V3(B2, dcen + d1, yb2 + y1), V3(A2, dcen + d1, yb2 + y1)]
+            _face(a2, Q, [(u0_, v0), (u1_, v0), (u1_, v1), (u0_, v1)], [(nn[0] * nd0, ny0, nn[1] * nd0)] * 2 + [(nn[0] * nd1, ny1, nn[1] * nd1)] * 2)
+        for d_, y_ in ((-rb, rb), (rb, rb), (0.0, rb * (1 + np.sqrt(3)))):
+            a3 = V3(A2, dcen + d_, yb2 + y_); b3 = V3(B2, dcen + d_, yb2 + y_)
+            a2.tube(a3, b3, rb * 0.97, (0.02, 0.02, 0.05, 0.05), 14, caps=False)
+            ax_ = np.subtract(b3, a3); ax_ = ax_ / np.linalg.norm(ax_); s1 = np.cross(ax_, [0, 1, 0]); s1 /= np.linalg.norm(s1); s2 = np.cross(ax_, s1)
+            for cen_, sg_ in ((np.asarray(a3), -1), (np.asarray(b3), 1)):
+                ring_ = [cen_ + (np.cos(t_) * s1 + np.sin(t_) * s2) * rb * 0.97 for t_ in np.linspace(0, 2 * np.pi, 15)]
+                for j_ in range(14):
+                    _face(a2, [cen_, ring_[j_], ring_[j_ + 1]], [(0.5, 0.993)] * 3, [tuple(ax_ * sg_)] * 3)
+        for s_ in np.arange(0.5, L, 2.0):
+            c_ = A + t * s_; sph_a.append((c_[0] + nn[0] * dcen, yb2 + rb * 1.3, c_[1] + nn[1] * dcen))
+        if q in nets:                                                            # filet de ce module
+            net_top = ytop - 0.15 + rb * (2 + np.sqrt(3)) + NETV['above']
+            An = A + nn * (W / 2 - NETV['off']); cuts = list(np.arange(0, L, TL)) + [L]
+            for sa, sb in zip(cuts[:-1], cuts[1:]):
+                pa, pb = An + t * sa, An + t * sb; ua, ub = (sa % TL) / TL, (sa % TL + (sb - sa)) / TL
+                Q = [(pa[0], ytop - 0.2, pa[1]), (pb[0], ytop - 0.2, pb[1]), (pb[0], net_top, pb[1]), (pa[0], net_top, pa[1])]
+                UV = [(ua, Vb), (ub, Vb), (ub, Vt), (ua, Vt)]; e3 = (nn[0], 0, nn[1])
+                _face(n2, Q, UV, [tuple(-np.array(e3))] * 4); _face(n2, Q, UV, [e3] * 4)
+            for s_ in np.arange(1.0, L, 2.0):
+                c_ = An + t * s_; sph_n += [(c_[0], ytop + h_, c_[1]) for h_ in (1.5, 3.0, 4.5)]
+    nets = sorted(q for q in nets if q < nmod)
+    if nets:                                                                     # poteaux : aux raccords des modules à filet + mousses
+        runs = []; r_ = [nets[0]]
+        for q in nets[1:]:
+            if q == r_[-1] + 1:
+                r_.append(q)
+            else:
+                runs.append(r_); r_ = [q]
+        runs.append(r_)
+        for run in runs:
+            ytr = max(tops[q] for q in run) - h0; net_top = ytr - 0.15 + rb * (2 + np.sqrt(3)) + NETV['above']
+            for qi in range(run[0], run[-1] + 2):
+                f = fs[qi]; p_ = P2(f, rc); e_ = p_ / np.linalg.norm(p_); pp = p_ + e_ * (W / 2 - NETV['off'] + 0.12)
+                ends = qi in (run[0], run[-1] + 1)
+                if ends:
+                    t_in = P2(fs[qi + 1] if qi == run[0] else fs[qi - 1], rc) - p_; pp = pp + t_in / np.linalg.norm(t_in) * 0.9
+                yb_ = tops[min(qi, nmod - 1)] - h0 - 0.2; yt_ = net_top + 0.35
+                n2.tube((pp[0], yb_, pp[1]), (pp[0], yt_, pp[1]), NETV['pole_r'], dot(NT_['red']), 8)
+                n2.tube((pp[0], yt_, pp[1]), (pp[0], yt_ + NETV['cap'], pp[1]), NETV['pole_r'] * 1.25, dot(NT_['yel']), 8)
+                if ends:
+                    tg3 = np.array([-e_[1], e_[0]]); w2, d2 = NETV['epad']
+                    _obox(n2, (pp[0] - e_[0] * (d2 / 2 - 0.1), pp[1] - e_[1] * (d2 / 2 - 0.1)), tg3, e_, w2, d2, yb_ + 0.15, yb_ + 0.15 + NETV['epad_h'], NT_['blk'])
+                else:
+                    n2.tube((pp[0], yb_ + 0.15, pp[1]), (pp[0], yb_ + 0.15 + NETV['pad_h'], pp[1]), NETV['pad_r'], dot(NT_['blk']), 10)
+    files = [('mur_virage_%d.jm' % k, 'bache_paille.png', 'mur_virage_%d.shp' % k)]
+    m.write(os.path.join(out, 'mur_virage_%d.jm' % k), MAT_BACHE); K.shp(os.path.join(out, 'mur_virage_%d.shp' % k), sph_w, 2.2)
+    for i_, kk in enumerate(keys):
+        nm_ = 'air_virage_%d%s' % (k, '' if i_ == 0 else '_%d' % i_)
+        airs[kk].write(os.path.join(out, nm_ + '.jm'), MAT_BACHE)
+        K.shp(os.path.join(out, nm_ + '.shp'), sph_a if i_ == 0 else [sph_a[0]], 1.1, par=(0.6, 150, 8))
+        files.append((nm_ + '.jm', bundle_texture_v23(out, kk), nm_ + '.shp'))
+    if len(n2.V):
+        n2.write(os.path.join(out, 'filet_virage_%d.jm' % k), MAT_MAT); K.shp(os.path.join(out, 'filet_virage_%d.shp' % k), sph_n, 0.9, par=(1.0, 85, 4))
+        files.append(('filet_virage_%d.jm' % k, NT_['png'], 'filet_virage_%d.shp' % k))
+    return dict(modules=nmod, nets=list(nets), f=(round(fs[0], 3), round(fs[-1], 3)), files=tuple(files))
+
+
+# ================================================================ v25 : cabane du signaleur (MX Sim Racing) et portique holeshot Milwaukee
+def cabin_v25(out, wp, key='mxsim'):
+    """cabane noire fermée (7 x 6 x 8,5 ft), fenêtre ouverte vers la piste (+z), toit qui déborde, logo du sponsor sur les 3 autres
+    faces ; wp(x, y, z) -> point monde relatif (le modèle est posé au lacet 0, déjà tourné par wp)."""
+    import sponsors as SP
+    bg, lg = SP.panel(key); Wt, Ht = 1024, 512; im = Image.new('RGB', (Wt, Ht), (14, 14, 15)); d = ImageDraw.Draw(im)
+    d.rectangle([0, 0, 512, 512], fill=bg)
+    if lg is not None:
+        fit(im, lg, (20, 120, 492, 392), 0.04)
+    d.rectangle([600, 0, 700, 100], fill=(14, 14, 15)); d.rectangle([720, 0, 820, 100], fill=(40, 40, 42))
+    im = K.grain(im, 1.5); _save(im, os.path.join(out, 'cabane_mxsim.png'))
+    pan, blk, grey = R((0, 0, 512, 512), Wt, Ht), R((600, 0, 700, 100), Wt, Ht), R((720, 0, 820, 100), Wt, Ht)
+    m = Mesh(); X, Z, Hc, hw = 3.5, 3.0, 8.5, (3.5, 7.5)
+    q = lambda P, r, n: _face(m, [wp(*p) for p in P], [(r[0], r[1]), (r[2], r[1]), (r[2], r[3]), (r[0], r[3])], [n] * 4)
+    nw = lambda v: tuple(np.subtract(wp(*v), wp(0, 0, 0)))
+    for sx in (-1, 1):                                                                   # côtés (logo), dehors et dedans
+        P = [(sx * X, 0, -Z), (sx * X, 0, Z), (sx * X, Hc, Z), (sx * X, Hc, -Z)]
+        q(P, (pan[2], pan[1], pan[0], pan[3]) if sx > 0 else pan, nw((sx, 0, 0)))   # v25 : logo à l'endroit des 2 côtés (_face règle le sens)
+        q(P[::-1] if sx > 0 else P, blk, nw((-sx, 0, 0)))
+    P = [(X, 0, -Z), (-X, 0, -Z), (-X, Hc, -Z), (X, Hc, -Z)]; q(P, pan, nw((0, 0, -1))); q(P[::-1], blk, nw((0, 0, 1)))   # dos
+    for y0, y1 in ((0, hw[0]), (hw[1], Hc)):                                             # devant : bas + haut, fenêtre ouverte
+        P = [(-X, y0, Z), (X, y0, Z), (X, y1, Z), (-X, y1, Z)]; q(P, blk, nw((0, 0, 1))); q(P[::-1], blk, nw((0, 0, -1)))
+    P = [(-X - 0.6, Hc, -Z - 0.6), (X + 0.6, Hc, -Z - 0.6), (X + 0.6, Hc, Z + 1.2), (-X - 0.6, Hc, Z + 1.2)]   # toit
+    q(P[::-1], grey, nw((0, 1, 0))); q(P, blk, nw((0, -1, 0)))
+    m.write(os.path.join(out, 'cabane_mxsim.jm'), MAT_MAT)
+    K.shp(os.path.join(out, 'cabane_mxsim.shp'), [wp(x, 2.5, z) for x in (-2, 2) for z in (-1.5, 1.5)], 1.6, par=(1.5, 1000, 200))
+    return 'cabane_mxsim.jm', 'cabane_mxsim.png', 'cabane_mxsim.shp'
+
+
+def holeshot_v25(out, wp, span=34.0, hp=13.0, bh=4.2):
+    """portique « Heavy Duty Holeshot » Milwaukee en L renversé (photo) : poteau rouge (texte vertical) au bord de la piste, bannière
+    Milwaukee au-dessus de la piste ; repère local : x = vers l'intérieur de la piste (la bannière part en +x), z = vers les pilotes."""
+    import sponsors as SP
+    from PIL import ImageFont
+    bg, lg = SP.panel('milwaukee'); Wt, Ht = 2048, 1024; im = Image.new('RGB', (Wt, Ht), bg); d = ImageDraw.Draw(im)
+    bw_px = int(Wt * 1.0); bh_px = int(bw_px * bh / span)                               # bannière : rangée 0..bh_px (même échelle)
+    fit(im, lg, (300, 8, bw_px - 300, bh_px - 8), 0.04)
+    pw = 1.8; ph_px = 760; pcol = (0, 300, int(ph_px * pw / (hp + bh)), 300 + ph_px)    # poteau : colonne de texte
+    f_ = ImageFont.truetype('C:/Windows/Fonts/ariblk.ttf', 60); timg = Image.new('RGBA', (900, 200), (0, 0, 0, 0)); td = ImageDraw.Draw(timg)
+    td.text((450, 50), 'HEAVY DUTY', font=f_, fill=(250, 250, 250, 255), anchor='mm'); td.text((450, 140), 'HOLESHOT', font=ImageFont.truetype('C:/Windows/Fonts/arialbi.ttf', 60), fill=(250, 250, 250, 255), anchor='mm')
+    d.rectangle(pcol, fill=bg); fit(im, timg.crop(timg.getbbox()).rotate(90, expand=True), (pcol[0] + 4, pcol[1] + 20, pcol[2] - 4, pcol[3] - 20), 0.02)
+    d.rectangle([1900, 980, 1950, 1020], fill=(16, 16, 18)); im = K.grain(im, 1.2); _save(im, os.path.join(out, 'holeshot.png'))
+    rb_, rp_, rk = R((0, 0, bw_px, bh_px), Wt, Ht), R(pcol, Wt, Ht), R((1900, 980, 1950, 1020), Wt, Ht)
+    m = Mesh(); nw = lambda v: tuple(np.subtract(wp(*v), wp(0, 0, 0)))
+    q = lambda P, r, n: _face(m, [wp(*p) for p in P], [(r[0], r[1]), (r[2], r[1]), (r[2], r[3]), (r[0], r[3])], [n] * 4)
+    a, t2 = pw / 2, 0.5
+    for zf, nz in ((a, 1), (-a, -1)):                                                    # poteau : faces avant / arrière avec le texte
+        P = [(-a, 0, zf), (a, 0, zf), (a, hp + bh, zf), (-a, hp + bh, zf)]; q([P[1], P[0], P[3], P[2]] if nz > 0 else P, rp_, nw((0, 0, nz)))   # v25 : pas en miroir
+    for xf, nx in ((a, 1), (-a, -1)):
+        P = [(xf, 0, -a), (xf, 0, a), (xf, hp + bh, a), (xf, hp + bh, -a)]; q(P if nx > 0 else P[::-1], rk if nx > 0 else rp_, nw((nx, 0, 0)))
+    for zf, nz in ((t2, 1), (-t2, -1)):                                                  # bannière, des deux côtés
+        P = [(a, hp, zf), (a + span, hp, zf), (a + span, hp + bh, zf), (a, hp + bh, zf)]; q([P[1], P[0], P[3], P[2]] if nz > 0 else P, rb_, nw((0, 0, nz)))   # v25 : pas en miroir
+    for y_, ny in ((hp, -1), (hp + bh, 1)):
+        P = [(a, y_, -t2), (a + span, y_, -t2), (a + span, y_, t2), (a, y_, t2)]; q(P if ny > 0 else P[::-1], rk, nw((0, ny, 0)))
+    P = [(a + span, hp, -t2), (a + span, hp, t2), (a + span, hp + bh, t2), (a + span, hp + bh, -t2)]; q(P, rk, nw((1, 0, 0)))
+    m.write(os.path.join(out, 'holeshot.jm'), MAT_MAT)
+    K.shp(os.path.join(out, 'holeshot.shp'), [wp(0, y, 0) for y in (1.0, 3.0, 5.0)], 1.0, par=(1.5, 1000, 200))
+    return 'holeshot.jm', 'holeshot.png', 'holeshot.shp'
+
+
+def drill_cutout_v25(out, wp, x0, y0, h=6.0):
+    """v25 (photo du portique + image de l'utilisateur) : la perceuse Milwaukee en carton découpé (fond blanc rendu transparent), debout au
+    bout de la bannière, deux faces lisibles (jamais en miroir) ; repère du portique (x vers l'intérieur de la piste, z vers les pilotes)."""
+    import sponsors as SP
+    from scipy.ndimage import gaussian_filter, binary_fill_holes, binary_opening
+    im = Image.open(os.path.join(SP.U, 'perceuse milwaukee.jpg')).convert('RGB'); a = np.asarray(im, float)
+    fg = np.linalg.norm(a - 255, axis=-1) > 28; fg = binary_fill_holes(binary_opening(fg, iterations=1))
+    ys, xs = np.nonzero(fg); a = a[ys.min():ys.max() + 1, xs.min():xs.max() + 1]; fg = fg[ys.min():ys.max() + 1, xs.min():xs.max() + 1]
+    al = np.clip(gaussian_filter(fg.astype(float), 0.8) * 255, 0, 255); rgba = Image.fromarray(np.dstack([a, al]).astype(np.uint8), 'RGBA')
+    rgba = rgba.resize((512, int(512 * rgba.size[1] / rgba.size[0])), Image.LANCZOS); Wt = 1024; Ht = 1024
+    sheet = Image.new('RGBA', (Wt, Ht), (0, 0, 0, 0)); sheet.paste(rgba, (0, 0), rgba); sheet.paste(rgba.transpose(Image.FLIP_LEFT_RIGHT), (512, 0))
+    sheet.save(os.path.join(out, 'perceuse.png'))
+    w = h * rgba.size[0] / rgba.size[1]; vh = rgba.size[1] / Ht
+    m = Mesh(); nw = lambda v: tuple(np.subtract(wp(*v), wp(0, 0, 0)))
+    P = [(x0, y0, 0.55), (x0 + w, y0, 0.55), (x0 + w, y0 + h, 0.55), (x0, y0 + h, 0.55)]
+    _face(m, [wp(*p) for p in P], [(1.0, 1 - vh), (0.5, 1 - vh), (0.5, 1), (1.0, 1)], [nw((0, 0, 1))] * 4)          # face vers les pilotes (v25 : pas en miroir)
+    P2 = [(x0 + w, y0, -0.55), (x0, y0, -0.55), (x0, y0 + h, -0.55), (x0 + w, y0 + h, -0.55)]
+    _face(m, [wp(*p) for p in P2], [(0.5, 1 - vh), (0.0, 1 - vh), (0.0, 1), (0.5, 1)], [nw((0, 0, -1))] * 4)   # dos
+    m.write(os.path.join(out, 'perceuse.jm'), MAT_MAT)
+    return 'perceuse.jm', 'perceuse.png', None

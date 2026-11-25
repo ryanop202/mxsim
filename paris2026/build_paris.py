@@ -322,6 +322,27 @@ def arch_cut(H, path):
     return H
 
 
+BOARD_CUT = False              # v24b (version Zion) : flancs des sauts Milwaukee / AMV coupés au plan du panneau
+
+
+def board_cut(H, path):
+    """v24b (« incrusté dans la bosse, collé, pas d'écart ») : au-delà du plan du panneau (|v| > BOARD_VB + BOARD_TH / 2), sur la longueur
+    du panneau, la terre du flanc est ramenée au sol ; le panneau devient le côté du saut."""
+    if not BOARD_CUT:
+        return H
+    H = H.copy(); ss = lambda t: (lambda t_: t_ * t_ * (3 - 2 * t_))(np.clip(t, 0, 1))
+    for kind, poly in LP.BOARD_POLY.items():
+        g = next(g for g in path.segs if g['kind'] == 'S' and g['tag'].startswith(LP.BOARD_LANE[kind])); c, s_ = np.cos(g['t']), np.sin(g['t'])
+        ua, ub = poly[0][0], poly[-1][0]; vb = LP.BOARD_VB[kind] + LP.BOARD_TH / 2; R = vb + 40
+        pts = np.array([(g['x0'] + uu * c - vv * s_, g['z0'] + uu * s_ + vv * c) for uu in (ua - 3, ub + 3) for vv in (-R, R)])
+        sl, X, Z = G.window(pts[:, 0].min(), pts[:, 0].max(), pts[:, 1].min(), pts[:, 1].max())
+        dx, dz = X - g['x0'], Z - g['z0']; u = dx * c + dz * s_; v = np.abs(-dx * s_ + dz * c)
+        m = ss((v - vb) / 0.6) * ss((u - ua + 1.0) / 1.5) * ss((ub + 1.0 - u) / 1.5)
+        H[sl] = H[sl] * (1 - m)
+    REPORT['panneaux_coupe'] = {k: LP.BOARD_VB[k] for k in LP.BOARD_POLY}
+    return H
+
+
 def render(path, st):
     jumps = np.zeros((N, N)); whoops = np.zeros((N, N)); berms = np.zeros((N, N)); fmx = np.zeros((N, N))
     import layouts_sx as LS
@@ -584,6 +605,7 @@ def main():
     H = np.maximum.reduce([jumps, whoops, berms, fmx])
     H = sand_ruts(H, path)                                             # v22 : ornières du sable de LR (version Zion)
     H = arch_cut(H, path)                                              # v23 : sol plat sous les pieds de l'arche (version Zion)
+    H = board_cut(H, path)                                             # v24b : flancs des sauts à panneaux enlevés (version Zion)
     from geo_tools import inside
     jj, ii = np.meshgrid(np.arange(N) * S, np.arange(N) * S)
     pts = np.c_[jj.ravel(), ii.ravel()]

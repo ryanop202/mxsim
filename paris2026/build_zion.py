@@ -190,6 +190,14 @@ def render_zion(path, st):
 
 
 SABLE_JAUNE = (226, 196, 118)
+
+
+def sand_texture(path, base=(214, 182, 128)):
+    """v23f : sable beige clair (au-dessus de la terre orange-marron TERRE_RGB), grain fin + petites ondulations ; 512 x 512, raccordable."""
+    from scipy.ndimage import gaussian_filter
+    rng = np.random.default_rng(23); n1 = gaussian_filter(rng.normal(0, 1, (512, 512)), 1.0, mode='wrap'); n2 = gaussian_filter(rng.normal(0, 1, (512, 512)), 12, mode='wrap')
+    a = np.asarray(base, float)[None, None, :] * (1 + 0.05 * (n1 / n1.std())[..., None] + 0.04 * (n2 / n2.std())[..., None])
+    Image.fromarray(np.clip(a, 0, 255).astype(np.uint8)).save(path)
 RF_SAND_DECALS = False
 
 
@@ -224,6 +232,9 @@ def zion_ground(OUT, FOLDER):
     zb = [sxb("Sand Straight", "viraplasable") if re.search(r"name viraplasable", b) else sxb("Sand Exit", "turnsable") if re.search(r"name turnsable", b) else b for b in zb]
     for sub_ in ("tiles", "roost", "treads"):
         shutil.copytree(os.path.join(BP.ROOT, "tracks", "USLAND2026SX1", sub_), os.path.join(OUT, "sx1sand", sub_), dirs_exist_ok=True)
+    # v23f (« le sable est toujours buggé, il est vert ») : la texture 16x16 de SX1 (130, 100, 60) rend vert-olive sous l'éclairage ZION ;
+    # texture de sable beige faite maison (grain fin), la physique des tuiles USLAND est gardée
+    sand_texture(os.path.join(OUT, "sx1sand", "tiles", "sand.ppm"))
     # v21d (« le sol derrière le terrain, là où il y a les camions, de la tribune à l'autre côté : des dalles noires un peu de plastique,
     # noir gris ») : une tuile de plus, « Paddock » (index PADDOCK_TILE), réglages de la tuile Road, texture dalles_noires.png
     road = next(b for b in pick if re.search(r"name Road", b))
@@ -394,6 +405,7 @@ def zion_extras(OUT, FOLDER):
 START_Y = 15.0
 BALE_V, BALE_STEP, BALE_GAP = 15.5, 9.6, 25.0
 BALE_STEP2, BALE_SLIDE, ARCH_XC = 2 * 9.6, 4.0, 18.0   # v23 : pieds au bord de la piste (était 26)
+BP.BOARD_CUT = True                # v24b : flancs coupés derrière les panneaux Milwaukee / AMV
 BP.ARCH_CUT = None                 # v23c : pas de découpe sous les pieds
     # v21d : 1 sur 2, glissement max, pieds de l'arche   # v21c : ballots comme RF Anaheim 1 (|v| 15-16 ft, pas 9,6 ft)
 
@@ -433,7 +445,7 @@ def deco_v21(OUT, FOLDER, combos):
     for k, g in enumerate(g_ for g_ in BP.PATH.segs if g_['kind'] == 'T' and g_.get('berm')):
         sp_ = next((v for k_, v in D22.TURN_SPONSOR.items() if g['tag'].startswith(k_)), None)       # v23 : logo du sponsor du virage
         # v23c : murs droits, même hauteur, à l'entrée du virage (3 modules pour un 90°, 4 pour un 180°), couleurs du sponsor
-        w = D22.turn_wall_v23(sd, k, g, Hf, sp_); rep_['murs'].append((g['tag'][:5], sp_, w['f'], w['modules'], w['top']))
+        w = D22.turn_wall_v25(sd, k, g, Hf, sp_); rep_['murs'].append((g['tag'][:5], sp_, w['f'], w['modules'], w['nets']))   # v25 : mur entrée -> sortie, filets choisis
         gy, gx = np.gradient(Hm[int(g['cz'] / s_) - 2:int(g['cz'] / s_) + 3, int(g['cx'] / s_) - 2:int(g['cx'] / s_) + 3], s_)
         assert max(abs(gx).max(), abs(gy).max()) < 0.02, ("origine du mur pas à plat", g['tag'])
         for jm, png, shp_ in w['files']:
@@ -518,22 +530,60 @@ def deco_v21(OUT, FOLDER, combos):
             continue
         it = [i for i in combos[name]['items'] if 'butte' in i[0]][0]; i0_, i1_ = int(it[1] / 0.1), int(it[2] / 0.1)
         uc = u0 + it[1] + float(np.argmax(prof[i0_:i1_])) * 0.1; ue = u0 + it[2]
+        top_ = np.nonzero(prof[i0_:i1_] >= prof[i0_:i1_].max() - 1.2)[0]; ut0, ut1 = u0 + it[1] + top_[0] * 0.1, u0 + it[1] + top_[-1] * 0.1
         c, s2 = np.cos(g3['t']), np.sin(g3['t']); nrm = np.array([-s2, c]); yaw = float(np.arctan2(-s2, c)); fa = DV.bale_u(sd, 'amv')
-        for u_ in (uc + 0.30 * (ue - uc), uc + 0.60 * (ue - uc)):     # v23e : dans la descente de la réception
+        for u_ in (ut0 + 1.5, ut1 - 1.5):   # v23f (« sur les bords de la bosse, juste avant l'angle, pas au milieu »)
             for side_ in (-1, 1):
                 p_ = np.array([g3['x0'] + u_ * c, g3['z0'] + u_ * s2]) + nrm * side_ * BALE_V; lines.append(line(p_[0], p_[1], yaw, *fa))
     # v23c : bâches drapées sur les flancs : saut Milwaukee (LR) et réception du freestyle (plaque AMV)
     gR = next(g for g in BP.PATH.segs if g['kind'] == 'S' and g['tag'].startswith('LR'))
     for side_, nm_ in ((-1, 'bache_milwaukee_g'), (1, 'bache_milwaukee_d')):
         # v23d : panneau « carton » (objet) au lieu de la bâche drapée
-        O_, jm_, png_, shp_ = D22.board_v23(sd, nm_.replace('bache', 'panneau'), Hf, gR, LP.CAMEL_U + 8.0, LP.CAMEL_U + len(LP.CAMEL) * 0.1, side_, 'milwaukee')
+        O_, jm_, png_, shp_ = D22.board_v24(sd, nm_.replace('bache', 'panneau'), Hf, gR, side_, 'milwaukee')   # v24 : forme dessinée par l'utilisateur
         lines.append(line(O_[0], O_[1], 0.0, jm_, png_, shp_))
     for prof, u0, name in g3['sections']:
         if name == LP.L3_SEC:
             it = [i for i in combos[name]['items'] if 'butte' in i[0]][0]
             for side_, nm_ in ((-1, 'bache_amv_g'), (1, 'bache_amv_d')):
-                O_, jm_, png_, shp_ = D22.board_v23(sd, nm_.replace('bache', 'panneau'), Hf, g3, u0 + it[1], u0 + it[2], side_, 'amv')
+                O_, jm_, png_, shp_ = D22.board_v24(sd, nm_.replace('bache', 'panneau'), Hf, g3, side_, 'amv')   # v24 : forme dessinée par l'utilisateur
                 lines.append(line(O_[0], O_[1], 0.0, jm_, png_, shp_))
+    # v24 (« avec les 2 ballots de paille posés sur le dessus ») : 2 ballots Milwaukee au milieu du plateau du saut, un de chaque côté
+    (pu0, _), (pu1, _), (pu2, _), (pu3, _) = D22.BOARD_POLY['milwaukee']; cR, sR2 = np.cos(gR['t']), np.sin(gR['t']); nR = np.array([-sR2, cR])
+    fM = DV.bale_u(sd, 'milwaukee')
+    for side_ in (-1, 1):
+        p_ = np.array([gR['x0'] + (pu1 + pu2) / 2 * cR, gR['z0'] + (pu1 + pu2) / 2 * sR2]) + nR * side_ * BALE_V
+        lines.append(line(p_[0], p_[1], float(np.arctan2(-sR2, cR)), *fM))
+    # v25 : cabane noire MX Sim Racing à gauche du saut d'arrivée, signaleur (drapeau) dedans ; portique holeshot Milwaukee
+    g5_ = next(g for g in BP.PATH.segs if g['kind'] == 'S' and g['tag'].startswith('L5')); s5_ = g5_['sections'][0]; it5_ = combos[s5_[2]]['items'][2]
+    i0c, i1c = int(it5_[1] / 0.1), int(it5_[2] / 0.1); ucab = s5_[1] + it5_[1] + float(np.argmax(s5_[0][i0c:i1c])) * 0.1
+    c5, s5 = np.cos(g5_['t']), np.sin(g5_['t']); n5 = np.array([-s5, c5])            # n5 = droite du sens de course
+    from scipy.spatial import cKDTree as _KD2
+    smp_ = BP.PATH.samples(1.0); other = np.array([BP.PATH.segs[int(k)]['tag'][:2] != 'L5' for k in smp_['seg']]); trO = _KD2(np.c_[smp_['x'][other], smp_['z'][other]])
+    # v25 : sur du sol plat (pas contre la pente de l'appel), loin des autres couloirs
+    Pc_ = lambda v: np.array([g5_['x0'] + ucab * c5, g5_['z0'] + ucab * s5]) - n5 * v
+    flat_ = lambda v: max(float(Hf(*(Pc_(v) + np.array([c5, s5]) * a_ + n5 * b_))[0]) for a_ in (-4, 4) for b_ in (-4, 4)) < 0.25
+    vcab = next((v for v in np.arange(28.0, 50.0, 1.0) if flat_(v) and trO.query(Pc_(v))[0] > 16.0), 40.0)
+    Cc = np.array([g5_['x0'] + ucab * c5, g5_['z0'] + ucab * s5]) - n5 * vcab        # à gauche
+    fz = n5; fx = np.array([fz[1], -fz[0]])                                          # +z de la cabane = vers la piste
+    wp = lambda x, y, z: (fx[0] * x + fz[0] * z, y, fx[1] * x + fz[1] * z)
+    lines.append(line(Cc[0], Cc[1], 0.0, *D22.cabin_v25(sd, wp))); rep_['cabane'] = (round(ucab, 1), vcab)
+    st_ = BP.START; G0 = np.array(st_['gate']); f0 = np.array([np.cos(np.radians(st_['heading'])), np.sin(np.radians(st_['heading']))]); r0 = np.array([-f0[1], f0[0]])
+    Ls = float(st_.get('straight', 120.0)); Hp = G0 + f0 * max(20.0, Ls - 12.0) + r0 * 18.0    # bord droit, juste avant le 1er virage
+    fzh = -f0; fxh = -r0                                                              # z vers les pilotes, x vers l'intérieur de la piste
+    wph = lambda x, y, z: (fxh[0] * x + fzh[0] * z, y, fxh[1] * x + fzh[1] * z)
+    lines.append(line(Hp[0], Hp[1], 0.0, *D22.holeshot_v25(sd, wph))); rep_['holeshot'] = (round(float(Hp[0]), 1), round(float(Hp[1]), 1))
+    lines.append(line(Hp[0], Hp[1], 0.0, *D22.drill_cutout_v25(sd, wph, 0.9 + 34.0 - 5.6, 13.0 + 1.2)))   # v25 : la perceuse au bout de la bannière
+    # signaleurs : panneau 30 s derrière les grilles + signaleur animé (drapeau) dans la cabane ; fichiers repris de Saint-Georges
+    shutil.copytree(os.path.join(BP.ROOT, "tracks", "USLAND2026SaintGeorgesbyBazo", "ext", "2024Bh1Conway", "flaggerfiles"),
+                    os.path.join(OUT, "ext", "2024Bh1Conway", "flaggerfiles"), dirs_exist_ok=True)
+    os.makedirs(os.path.join(OUT, "billboard"), exist_ok=True); Image.new('RGBA', (64, 64), (0, 0, 0, 0)).save(os.path.join(OUT, "billboard", "blank.png"))
+    half_ = (LP.N_GATES - 1) / 2 * LP.GATE_PITCH; b1 = G0 - f0 * 25 + r0 * (half_ - 15); b2 = G0 - f0 * 25 - r0 * (half_ - 15)
+    ff = "@%s/ext/2024Bh1Conway/flaggerfiles/" % FOLDER
+    open(os.path.join(OUT, "flaggers"), "w", newline=chr(10)).write(chr(10).join([
+        "[%.6f 0.000 %.6f]" % tuple(b1), "[%.6f 0.000 %.6f]" % tuple(b2), "8.4 1", "10", "@30sec_30.png", "@30sec_turn.seq", "@30sec_5.png",
+        "@30sec_run.seq", "@%s/billboard/blank.png" % FOLDER, "", "[%.6f 0.000 %.6f]" % tuple(Cc), "10.5 1", ff + "defaultflag.png", ff + "halfway.png",
+        ff + "lastlap.png", ff + "rf.flagger_waving.seq", "", "", "", "[0.00000000 0.000 0.00000000]", "9.6 1", "3 4 5 -1", "@flagger_resting.png",
+        "@flagger_waving.seq", ""]))
     # v23e : murs INVISIBLES (collision seule), assez hauts pour ne pas gêner un saut normal : (1) entre la petite table et l'appel du
     # freestyle (« ça saute derrière l'appel ») ; (2) après le Milwaukee, au-dessus du 1er obstacle du triple (« pas sauter dans la 2e,
     # ça fait monter très haut ») ; (3) entre la réception du double et l'appel du triple d'arrivée (« pas sauter par-dessus le triple »)
@@ -545,11 +595,11 @@ def deco_v21(OUT, FOLDER, combos):
         rep_.setdefault('murs_invisibles', []).append((nm, round(u, 1), round(h_ + lo, 1), round(h_ + hi, 1)))
     it_ = combos[LP.L3_SEC]['items'][0]; s3 = next(sec for sec in g3['sections'] if sec[2] == LP.L3_SEC); pr3 = s3[0]
     i0_, i1_ = int(it_[1] / 0.1), int(it_[2] / 0.1); kc_ = i0_ + int(np.argmax(pr3[i0_:i1_]))
-    inv_wall('invisible_freestyle', g3, s3[1] + (i0_ + 0.5 * (kc_ - i0_)) * 0.1, 7.0, 25.0)
+    # v23f (« le mur invisible à l'appel du freestyle est complètement buggé, même en enroulant ça fait tomber ; au pire n'en mets pas ») : retiré
     sR = gR['sections'][0]; itR = combos[sR[2]]['items']; kM = next(i for i, it in enumerate(itR) if 'Milwaukee' in it[0])
-    inv_wall('invisible_milwaukee', gR, sR[1] + (itR[kM + 1][1] + itR[kM + 1][2]) / 2, 10.0, 36.0)
+    inv_wall('invisible_milwaukee', gR, sR[1] + (itR[kM + 1][1] + itR[kM + 1][2]) / 2, 15.0, 40.0)   # v23f : plus haut (« buggés »)
     g5 = next(g for g in BP.PATH.segs if g['kind'] == 'S' and g['tag'].startswith('L5')); s5 = g5['sections'][0]; it5 = combos[s5[2]]['items']
-    inv_wall('invisible_arrivee', g5, s5[1] + (it5[1][2] + it5[2][1]) / 2, 7.0, 26.0)
+    inv_wall('invisible_arrivee', g5, s5[1] + (it5[1][2] + it5[2][1]) / 2, 13.0, 30.0)   # v23f : « le plus haut pour le saut d'arrivée encore »
     for f in ["statues"] + ["variants/" + v for v in os.listdir(os.path.join(OUT, "variants")) if v.startswith("statues")]:
         p = os.path.join(OUT, f); s0 = open(p).read().rstrip(chr(10)) + chr(10)
         open(p, "w", newline=chr(10)).write(s0 + chr(10).join(lines) + chr(10))
