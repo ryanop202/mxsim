@@ -133,7 +133,7 @@ def pylon_spots(path):
     import deco_v22 as D22
     out = []
     for g in path.segs:
-        if g['kind'] != 'T' or abs(g['ang']) < 89 or g['tag'].startswith(('T_L5a', 'T_L5b')):
+        if g['kind'] != 'T' or abs(g['ang']) < 89 or g['tag'].startswith(('T_L5a', 'T_L5b')) or not g.get('berm'):   # v25f : pas sur la ligne de départ (T_Ba)
             continue
         mid = turn_mid_angle(g); r_ = max(0.0, g['r'] - 15.2 - 1.5 - next((v for k_, v in PYLON_IN.items() if g['tag'].startswith(k_)), 0.0))
         key_ = next((v for k_, v in D22.TURN_SPONSOR.items() if g['tag'].startswith(k_)), 'mxsim')
@@ -151,7 +151,8 @@ def cabin_spot(path):
     return np.array([g5['x0'], g5['z0']]) + t5 * uc - n5 * CAB_V, t5, n5, uc
 
 
-CAB_V, CAB_PAD = 21.0, 3.0
+CAB_V, CAB_PAD = 25.0, 3.0         # v25f (« un peu dans l'appui, dans la terre ») : 21 -> 25 ft de l'axe
+CAB_MAN = 5.2                      # v25f (« on voit pas le mec : une plateforme pour qu'il soit en haut, qui dépasse la cabane ») : ft au-dessus du socle
 
 
 def pads(H, path):
@@ -164,6 +165,7 @@ def pads(H, path):
     C, t5, n5, uc = cabin_spot(path); sl, X, Z = G.window(C[0] - 12, C[0] + 12, C[1] - 12, C[1] + 12)
     du, dv = (X - C[0]) * t5[0] + (Z - C[1]) * t5[1], (X - C[0]) * n5[0] + (Z - C[1]) * n5[1]
     d = np.hypot(np.maximum(np.abs(du) - 4.5, 0), np.maximum(np.abs(dv) - 4.0, 0)); H[sl] = np.maximum(H[sl], CAB_PAD * ss((3.5 - d) / 3.5))
+    inn = (np.abs(du) < 1.6) & (np.abs(dv) < 1.6); H[sl] = np.where(inn, np.maximum(H[sl], CAB_PAD + CAB_MAN), H[sl])   # plateforme du signaleur (cachée par la cabane)
     BP.REPORT['socles'] = len(pylon_spots(path)) + 1
     return H
 
@@ -691,7 +693,7 @@ def deco_v21(OUT, FOLDER, combos):
     ff = "@%s/ext/2024Bh1Conway/flaggerfiles/" % FOLDER
     open(os.path.join(OUT, "flaggers"), "w", newline=chr(10)).write(chr(10).join([
         "[%.6f 0.000 %.6f]" % tuple(b1), "[%.6f 0.000 %.6f]" % tuple(b2), "8.4 1", "10", "@30sec_30.png", "@30sec_turn.seq", "@30sec_5.png",
-        "@30sec_run.seq", "@%s/billboard/blank.png" % FOLDER, "", "[%.6f 0.000 %.6f]" % tuple(Cc + n5 * 0.8), "10.5 1", ff + "defaultflag.png", ff + "halfway.png",
+        "@30sec_run.seq", "@%s/billboard/blank.png" % FOLDER, "", "[%.6f 0.000 %.6f]" % tuple(Cc), "10.5 1", ff + "defaultflag.png", ff + "halfway.png",
         ff + "lastlap.png", ff + "rf.flagger_waving.seq", "", "", "", "[0.00000000 0.000 0.00000000]", "9.6 1", "3 4 5 -1", "@flagger_resting.png",
         "@flagger_waving.seq", ""]))
     # v23e : murs INVISIBLES (collision seule), assez hauts pour ne pas gêner un saut normal : (1) entre la petite table et l'appel du

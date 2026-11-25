@@ -961,7 +961,7 @@ def _board_side_v25(kind, W, H, px_u, px_v, ua, inner, top=None):
     ft = ImageFont.truetype('C:/Windows/Fonts/ariblk.ttf', max(20, int(2.4 * px_v)))
     uR_, uL_ = u2 + 0.64 * (u3 - u2), u0 + 0.50 * (u1 - u0)
     if top is not None:                                                                 # v25e : là où la bosse fait au moins 8 ft (pas coupé par le bord)
-        hi_ = np.nonzero(ty >= 8.0)[0]; uL_, uR_ = float(tu[hi_[0]]) + 7.0, float(tu[hi_[-1]]) - 9.0
+        uL_, uR_ = u0 + 0.40 * (u1 - u0), u2 + 0.64 * (u3 - u2)                        # v25f : entre le pied et chaque perso
     d.text((X(uR_), Y(3.4)), 'AMV.FR', font=ft, fill=G_, anchor='mm')                  # au-dessus de la bande verte (« touche pas le sol »)
     d.text((X(uL_), Y(3.4)), 'AMV', font=ft, fill=G_, anchor='mm')
     return im
@@ -1016,6 +1016,12 @@ def board_v25b(out, name, Hf, g, side, kind, th=None):
     if kind == 'amv':
         us = np.arange(ua, ub + 0.01, 1.0); ys = np.array([max(0.0, H1(base(u)) - h0) + 0.1 for u in us]); k = np.nonzero(ys > 0.45)[0]
         us, ys = us[k[0]:k[-1] + 1], ys[k[0]:k[-1] + 1]
+        # v25f (« les bords droits, sans courbe ; léger petit angle au début, le reste droit ») : pied -> 2 ft (petit angle), puis ligne droite
+        # jusqu'au bord du plat (à la hauteur du plat), plat droit
+        ytp = float(ys.max()); kk_ = np.nonzero(ys >= ytp - 1.2)[0]; i1, i2 = kk_[0], kk_[-1]
+        iL = int(np.nonzero(ys[:i1 + 1] >= 2.0)[0][0]); iR = i2 + int(np.nonzero(ys[i2:] <= 2.0)[0][0])
+        ku = [us[0], us[iL], us[i1], us[i2], us[iR], us[-1]]; ky = [0.3, ys[iL], ytp, ytp, ys[iR], 0.3]
+        ys = np.interp(us, ku, ky)
     else:
         us = np.arange(ua, ub + 0.01, 0.5); ys = np.interp(us, [q[0] for q in poly], [q[1] for q in poly])
     top = list(zip(us.tolist(), ys.tolist())); ytop = float(ys.max()); hb_ = AMV_BARRIER[3] - AMV_BARRIER[2]

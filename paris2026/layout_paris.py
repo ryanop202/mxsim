@@ -632,7 +632,8 @@ def paris():
         # v25e (« le petit double en sortie de virage, la 1re bosse vraiment plus près du virage ; le double même taille ; plus d'écart entre
         # les bosses, presque autant que la ligne avant l'arrivée (~8,3 ft) mais moins ») : 1re bosse plus courte (crête plus près du virage),
         # écart du double gardé, les 6 autres écarts égaux (~8 ft)
-        B8[0] = trim_(('raw', 'bosse ZION 2,3 ft', resample(np.asarray(zsingle(2.3 / ZH)[2], float), 0.85), 'T'))
+        B8[0] = trim_(('raw', 'bosse ZION 2,3 ft', resample(np.asarray(zsingle(2.3 / ZH)[2], float), 1.0), 'T'))   # v25f : moins raide, plus ronde
+        B8[1] = trim_(zb_(4.4))                                                       # v25f : 1re bosse de l'enchaînement un tout petit peu plus basse
         g_dbl = 3.6; free_ = (xWt - x_end3) - 1.5 - u0z - sum(tlen(b) for b in B8); g_o = (free_ - g_dbl) / 6
         gaps_ = [g_dbl] + [g_o] * 6
         toks = [B8[0]]

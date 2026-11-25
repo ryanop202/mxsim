@@ -77,37 +77,37 @@
     [
      "bosse ZION 2,3 ft",
      0.0,
-     21.3
+     25.1
     ],
     [
-     "bosse ZION 4,6 ft (ronde)",
-     24.9,
-     58.7
-    ],
-    [
-     "bosse ZION 4.8 ft",
-     66.1,
-     94.9
+     "bosse ZION 4.4 ft",
+     28.7,
+     56.3
     ],
     [
      "bosse ZION 4.8 ft",
-     102.3,
-     131.1
+     64.1,
+     92.9
+    ],
+    [
+     "bosse ZION 4.8 ft",
+     100.7,
+     129.5
     ],
     [
      "bosse ZION 5.0 ft",
-     138.5,
-     167.9
+     137.3,
+     166.7
     ],
     [
      "bosse ZION 4.8 ft",
-     175.3,
-     204.1
+     174.5,
+     203.3
     ],
     [
      "bosse ZION 4.8 ft",
-     211.5,
-     240.3
+     211.1,
+     239.9
     ],
     [
      "bosse ZION 4.6 ft",
@@ -238,7 +238,7 @@
   1877.3,
   2030.9
  ],
- "socles": 8,
+ "socles": 7,
  "sable_tuiles": 12097,
  "tuiles_zion": [
   "texture @USLANDParis/ztile/2.png",
@@ -417,17 +417,17 @@
   "arche": [
    277.8,
    741.3,
-   1.12
+   0.89
   ],
-  "poteaux": 7,
+  "poteaux": 6,
   "cabane": [
    119.1,
-   21.0
+   25.0
   ],
   "holeshot": [
-   377.8,
+   379.5,
    703.4,
-   10.3,
+   12.0,
    26.5
   ],
   "murs_invisibles": [

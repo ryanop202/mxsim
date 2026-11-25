@@ -310,7 +310,11 @@ def sand_waves(H, path):
     rng = np.random.default_rng(25); wav = 0.08 * np.sin(2 * np.pi * s / 7.0 + 0.6 * np.sin(v / 3.0)); rut = np.zeros_like(v)
     for _ in range(5):
         vc = rng.uniform(-9, 9) + rng.uniform(0.5, 1.5) * np.sin(2 * np.pi * s / rng.uniform(30, 60)); rut = np.maximum(rut, rng.uniform(0.06, 0.10) * np.exp(-((v - vc) / 0.7) ** 2))
-    H = H.copy(); H[sl] = H[sl] + (0.25 + wav - rut) * w; REPORT['sable_s'] = [round(s0, 1), round(s1, 1)]
+    # v25f (« remets le sable comme avant, sans ornière, sans truc comme ça ») : plus de vaguelettes ni d'ornières
+    REPORT['sable_s'] = [round(s0, 1), round(s1, 1)]
+    if not SAND_WAVES:
+        return H
+    H = H.copy(); H[sl] = H[sl] + (0.25 + wav - rut) * w
     return H
 
 
@@ -357,6 +361,7 @@ def arch_cut(H, path):
 
 
 EXTRA_H = []
+SAND_WAVES = False
 SAND_V25 = False                 # v25e (version Zion) : sable en bande droite (sand_weight) + vaguelettes discrètes
 BOARD_CUT = False              # v24b (version Zion) : flancs des sauts Milwaukee / AMV coupés au plan du panneau
 
