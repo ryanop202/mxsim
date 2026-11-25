@@ -280,11 +280,45 @@ def split_blend(out, seg, split, u0, top_width, band=10.0):
     out[sl] = np.maximum(out[sl], (a * (1 - w) + b * w) * sx_wall(np.abs(v) - top_width / 2))
 
 
+def sand_range(path):
+    """v25e : partie sable en abscisse curviligne du tour : du virage avant LR (SAND_TURN_F) au bas de la pelle Milwaukee."""
+    gT = next(g for g in path.segs if g['tag'].startswith('T_TR')); gR = next(g for g in path.segs if g['tag'].startswith('LR'))
+    return gT['s0'] + LP.SAND_TURN_F * gT['L'], gR['s0'] + LP.SAND_LR[1]
+
+
+def sand_weight(path, X, Z, inset=0.0):
+    """v25e : poids 0..1 du sable aux points (X, Z) : bande de SAND_HW ft autour de la trajectoire entre les 2 abscisses, bords nets
+    (fondu 1 ft), bouts coupés droit (perpendiculaires à la trajectoire)."""
+    from scipy.spatial import cKDTree
+    s0, s1 = sand_range(path); smp = path.samples(0.4); k = (smp['s'] > s0 - 30) & (smp['s'] < s1 + 30)
+    tr = cKDTree(np.c_[smp['x'][k], smp['z'][k]]); d, i = tr.query(np.c_[np.ravel(X), np.ravel(Z)], distance_upper_bound=LP.SAND_HW + 6)
+    ok = np.isfinite(d); i = np.where(ok, i, 0); s = smp['s'][k][i]; d = np.where(ok, d, 99.0)
+    ss = lambda t: (lambda t_: t_ * t_ * (3 - 2 * t_))(np.clip(t, 0, 1))
+    w = ss((LP.SAND_HW - inset - d) / 1.0) * ss((s - s0) / 1.0) * ss((s1 - s) / 1.0) * ok
+    return w.reshape(np.shape(X)), s.reshape(np.shape(X))
+
+
+def sand_waves(H, path):
+    """v25e (« légèrement de déformation : des petites vagues avec de légères ornières, des trucs très discrets ») : 0,25 ft de sable,
+    vaguelettes de 0,08 ft (pas ~7 ft) et 5 ornières de 0,06 à 0,1 ft dans le sens de la course."""
+    smp = path.samples(2.0); s0, s1 = sand_range(path); k = (smp['s'] > s0 - 20) & (smp['s'] < s1 + 20)
+    x0, x1 = smp['x'][k].min() - 25, smp['x'][k].max() + 25; z0, z1 = smp['z'][k].min() - 25, smp['z'][k].max() + 25
+    sl, X, Z = G.window(x0, x1, z0, z1); w, s = sand_weight(path, X, Z)
+    from scipy.spatial import cKDTree
+    sm = path.samples(0.4); tr = cKDTree(np.c_[sm['x'], sm['z']]); _, j = tr.query(np.c_[X.ravel(), Z.ravel()]); j = j.reshape(X.shape)
+    v = -(X - sm['x'][j]) * np.sin(sm['th'][j]) + (Z - sm['z'][j]) * np.cos(sm['th'][j])
+    rng = np.random.default_rng(25); wav = 0.08 * np.sin(2 * np.pi * s / 7.0 + 0.6 * np.sin(v / 3.0)); rut = np.zeros_like(v)
+    for _ in range(5):
+        vc = rng.uniform(-9, 9) + rng.uniform(0.5, 1.5) * np.sin(2 * np.pi * s / rng.uniform(30, 60)); rut = np.maximum(rut, rng.uniform(0.06, 0.10) * np.exp(-((v - vc) / 0.7) ** 2))
+    H = H.copy(); H[sl] = H[sl] + (0.25 + wav - rut) * w; REPORT['sable_s'] = [round(s0, 1), round(s1, 1)]
+    return H
+
+
 def sand_ruts(H, path):
     """v22 (« des rollers en sable, avec pas mal d'ornières dans le sable ») : couche de sable de 0,35 ft sur la partie sable de LR,
     creusée d'ornières dans le sens de la course (largeur ~1,3 ft, 0,1 à 0,3 ft de creux, qui ondulent), bords et bouts adoucis."""
     if not LP.SAND_LR or not SAND_RUTS:
-        return H
+        return sand_waves(H, path) if (LP.SAND_LR and SAND_V25) else H
     g = next(g for g in path.segs if g['tag'].startswith('LR')); ua, ub = LP.SAND_LR; c, s_ = np.cos(g['t']), np.sin(g['t'])
     half = TW / 2 + 6.0
     pts = np.array([(g['x0'] + uu * c - vv * s_, g['z0'] + uu * s_ + vv * c) for uu in (ua - 2, ub + 6) for vv in (-half, half)])
@@ -323,6 +357,7 @@ def arch_cut(H, path):
 
 
 EXTRA_H = []
+SAND_V25 = False                 # v25e (version Zion) : sable en bande droite (sand_weight) + vaguelettes discrètes
 BOARD_CUT = False              # v24b (version Zion) : flancs des sauts Milwaukee / AMV coupés au plan du panneau
 
 
@@ -632,6 +667,9 @@ def main():
     TJ, TI = np.meshgrid(np.arange(TN) * 2 * S, np.arange(TN) * 2 * S)
     dq, _ = cKDTree(np.c_[smp_['x'][sel_], smp_['z'][sel_]]).query(np.c_[TJ.ravel(), TI.ravel()], distance_upper_bound=20.0)
     sand = (dq < 17.0).reshape(TN, TN)
+    if SAND_V25:                                                       # v25e : bande droite entre les 2 abscisses
+        sand = sand_weight(path, TJ, TI)[0] > 0.5
+        s0_, s1_ = sand_range(path); kk_ = (smp_['s'] >= s0_) & (smp_['s'] <= s1_); SAND_SMP = np.c_[smp_['x'][kk_], smp_['z'][kk_]]
     tiles[sand & (tiles == T_BERM)] = 6; tiles[sand & (tiles == T_JUMP)] = 5; tiles[sand & (tiles == T_MAIN)] = 4
     REPORT['sable_tuiles'] = int(sand.sum())
     # portes de chrono (timing.py des pistes SX)

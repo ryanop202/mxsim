@@ -123,3 +123,15 @@ Décor
 - Sable : décals sable de SX1 (decal/sand.png + sand_tnorm, 26 ft, tous les 4,5 ft) sur toute la partie sable, comme sur SX1 / SX3.
 - Ballots Milwaukee : doublons sur le dessus du saut enlevés (trait noir).
 - L2 : 3e 5 -> 4,8, 6e 4,6 -> 4,8 ; moins de plat aux deux bouts ; creux plus grands entre les 4 dernières bosses.
+
+## Review en jeu de la v25d (2026-11-25) -> v25e
+- L2 : 1re bosse plus courte (crête plus près du virage), double gardé (3,6 ft), les 6 autres écarts égaux (7,4 ft ; L6 ~8,3).
+- Murs : bâche grise simple, mate, presque unie. Modules enlevés / ajoutés : Automoto -1 début -2 fin ; Moto Verte -1 / -1 ; FIVE -1 début
+  +2 fin ; Minerva -1 / -1 ; MX Sim -1 / -1 ; Honda inchangé.
+- Logos flous de loin (boudins des murs, ballots) : texture des fagots aux proportions de l'objet (1024 x 512), ballots 512 x 1024, mats.
+- AMV : haut du panneau = forme de la bosse (+0,1 ft), barrière posée sur le plat ; Milwaukee : haut au ras (13,1 ft), angles gardés.
+- Sable : bande droite de 14 ft de demi-largeur, du virage avant LR (60 %) au bas de la pelle Milwaukee ; vaguelettes + ornières discrètes ;
+  décals sable de 10 ft dont le centre reste à 5 ft du bord.
+- Poteaux gonflables sur un socle de terre (0,8 ft) ; Moto Verte et Yamaha 4 ft plus à l'intérieur.
+- Cabane : près de l'appel (4 ft avant la crête, 21 ft de l'axe), sur un socle de terre de 3 ft, sans toit, murs 6,5 ft ; signaleur dedans.
+- À faire ensuite : placer des bottes de paille (selon l'utilisateur).

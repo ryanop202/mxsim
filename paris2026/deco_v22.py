@@ -34,18 +34,12 @@ BANNERS = ('five', 'five_rouge')
 
 # ---------------------------------------------------------------- textures
 def tarp_texture(out):
-    """bâche grise du bloc de paille : u = le long du mur (tuile de 8 ft), v = le tour de la section (pied avant en bas de l'image ->
-    pied arrière en haut). Plis verticaux mous + plis cassés en diagonale + reflet doux sur l'arête du dessus (photos)."""
+    """bâche grise du bloc de paille ; v25e (« trop de noir dans les murs, la texture pas bien, un reflet pourri ; fais plus simple, plus
+    lisse, moins de détails ») : gris moyen presque uni, quelques grands plis très doux, pas de cassures sombres (et mat, pas de reflet)."""
     from scipy.ndimage import gaussian_filter
     W, H = 512, 1024; rng = np.random.default_rng(22)
-    fold = gaussian_filter(rng.normal(0, 1, (H, W)), (90, 9), mode='wrap'); fold /= fold.std()          # plis verticaux
-    diag = gaussian_filter(rng.normal(0, 1, (H, W)), (22, 22), mode='wrap'); diag /= diag.std()
-    yy, xx = np.mgrid[0:H, 0:W]; diag = np.roll(diag, 0, 0) * (0.6 + 0.4 * np.sin(xx / W * 2 * np.pi * 3 + yy / H * 9))
-    crease = np.clip(np.abs(gaussian_filter(rng.normal(0, 1, (H, W)), (14, 14), mode='wrap')) * 6 - 4.2, 0, 1)   # cassures fines
-    v = 1 - (np.arange(H) + 0.5)[:, None] / H
-    hi = 0.5 * np.exp(-((v - 0.42) / 0.05) ** 2) + 0.35 * np.exp(-((v - 0.62) / 0.05) ** 2)          # arêtes du dessus
-    base = np.array([84.0, 85, 89]); sh = 0.82 + 0.18 * np.sin(np.pi * np.clip(v * 1.1, 0, 1))   # v25 : gris plus foncé
-    a = base * sh[..., None] + (fold * 13 + diag * 6 - crease * 18 + hi * 45)[..., None] + rng.normal(0, 1.5, (H, W, 1))
+    fold = gaussian_filter(rng.normal(0, 1, (H, W)), (120, 18), mode='wrap'); fold /= fold.std()
+    a = np.array([118.0, 119, 122])[None, None, :] + (fold * 5)[..., None] + rng.normal(0, 0.8, (H, W, 1))
     _save(Image.fromarray(np.clip(a, 0, 255).astype(np.uint8)), os.path.join(out, 'bache_paille.png'))
     return 'bache_paille.png'
 
@@ -312,12 +306,14 @@ def bundle_texture_v23(out, key, Lm=9.3):
     """bâche du fagot : fond = couleur du sponsor, logo côté piste (v 0,10 - 0,44) ; bande noire en haut de l'image (v > 0,975) pour les
     bouts des 3 boudins."""
     import sponsors as SP
-    bg, lg = SP.panel(key); P = float(np.sum(np.hypot(*np.diff(_tri_section(AIRF['rb'])[:, :2], axis=0).T))); W = H = 2048
+    # v25e (« les logos tout flous, bizarres avant qu'on soit collé ») : texture aux proportions du fagot (pas carrée : le logo était étiré
+    # dans un sens, flou de loin), 1024 x 512
+    bg, lg = SP.panel(key); P = float(np.sum(np.hypot(*np.diff(_tri_section(AIRF['rb'])[:, :2], axis=0).T))); W, H = 1024, 512
     from scipy.ndimage import gaussian_filter
     rng = np.random.default_rng(7); n = gaussian_filter(rng.normal(0, 1, (H, W)), (40, 6)); n /= n.std()
     a = np.asarray(bg, float)[None, None, :] * (1 + 0.035 * n[..., None]); im = Image.fromarray(np.clip(a, 0, 255).astype(np.uint8))
     if lg is not None:
-        l2 = lg.resize((lg.size[0], max(1, int(lg.size[1] * Lm / P))), Image.LANCZOS)
+        l2 = lg.resize((lg.size[0], max(1, int(lg.size[1] * (Lm / W) / (P / H)))), Image.LANCZOS)
         fit(im, l2, (int(W * 0.10), int(H * (1 - 0.44)), int(W * 0.90), int(H * (1 - 0.10))), 0.05)
     ImageDraw.Draw(im).rectangle([0, 0, W, int(H * 0.02)], fill=(150, 150, 148))   # v23e : intérieur des boudins gris ; v23f : plus foncé
     fn = 'fagot23_%s.png' % (key or 'noir'); _save(im, os.path.join(out, fn)); return fn
@@ -643,9 +639,11 @@ def _board_texture_v24(kind, W, H, px_u, px_v, ua, ymax):
 # milieu ; MX Sim : 2 filets ; Automoto, Moto Verte, Yamaha (4 boudins) : pas de filet ; « les murs moins hauts : que ce soit le boudin qui
 # touche, presque pas de gris au sommet » -> dessus de chaque module à la crête locale + VIS25 ; gris plus foncé.
 WALL_N = {'T1 1': 8, 'T_C ': 8, 'T_E ': 4}   # v25d : Honda « commence 1 trop tôt, il en manque 2 à la sortie » : 7 -> 8, un module plus tard
-WALL_START_MOD = {'T1 1': 1}                     # nombre de modules imposé ; sinon tout l'appui (berm) couvert
+WALL_START_MOD = {'T1 1': 1}
+# v25e (traits rouges / bleus sur les captures) : modules enlevés au début, modules en plus (+) ou en moins (-) à la fin
+WALL_TRIM = {'T_D ': (1, -2), 'T_TR': (1, -1), 'T_C ': (1, 2), 'T_L5a': (1, -1), 'T_Bb': (1, -1)}                     # nombre de modules imposé ; sinon tout l'appui (berm) couvert
 WALL_START = {'T1 1': 0.10, 'T_C ': 0.10, 'T_E ': 0.12}         # début (fraction du virage) quand le nombre est imposé
-WALL_NETS = {'T1 1': (1, 2, 3), 'T_C ': (1, 2, 3, 4, 5), 'T_D ': (), 'T_TR': (), 'T_E ': ()}   # modules à filet ; sinon 2 au milieu
+WALL_NETS = {'T1 1': (1, 2, 3), 'T_C ': (0, 1, 2, 3, 4), 'T_D ': (), 'T_TR': (), 'T_E ': ()}   # modules à filet ; sinon 2 au milieu
 WALL_KEYS = {'T_C ': ('five', 'five5')}                         # logos alternés
 VIS25 = 0.15
 
@@ -667,6 +665,7 @@ def wall_geom(g, Hf):
         f_a = fb0 + (tg_(WALL_START) or 0.08) + (tg_(WALL_START_MOD) or 0) * df
     else:
         nmod = max(2, int(round((1 - fb0) / df))); f_a = fb0 + ((1 - fb0) - nmod * df) / 2
+    tr_ = tg_(WALL_TRIM) or (0, 0); f_a += tr_[0] * df; nmod = nmod - tr_[0] + tr_[1]
     fs = f_a + df * np.arange(nmod + 1)
     nets = tg_(WALL_NETS)
     if nets is None:
@@ -765,7 +764,7 @@ def turn_wall_v25(out, k, g, Hf, key):
                 else:
                     n2.tube((pp[0], yb_ + 0.15, pp[1]), (pp[0], yb_ + 0.15 + NETV['pad_h'], pp[1]), NETV['pad_r'], dot(NT_['blk']), 10)
     files = [('mur_virage_%d.jm' % k, 'bache_paille.png', 'mur_virage_%d.shp' % k)]
-    m.write(os.path.join(out, 'mur_virage_%d.jm' % k), MAT_BACHE); K.shp(os.path.join(out, 'mur_virage_%d.shp' % k), sph_w, 2.2)
+    m.write(os.path.join(out, 'mur_virage_%d.jm' % k), MAT_MAT); K.shp(os.path.join(out, 'mur_virage_%d.shp' % k), sph_w, 2.2)   # v25e : mat
     for i_, kk in enumerate(keys):
         nm_ = 'air_virage_%d%s' % (k, '' if i_ == 0 else '_%d' % i_)
         airs[kk].write(os.path.join(out, nm_ + '.jm'), MAT_BACHE)
@@ -789,7 +788,7 @@ def cabin_v25(out, wp, key='mxsim'):
     d.rectangle([600, 0, 700, 100], fill=(14, 14, 15)); d.rectangle([720, 0, 820, 100], fill=(40, 40, 42))
     im = K.grain(im, 1.5); _save(im, os.path.join(out, 'cabane_mxsim.png'))
     pan, blk, grey = R((0, 0, 512, 512), Wt, Ht), R((600, 0, 700, 100), Wt, Ht), R((720, 0, 820, 100), Wt, Ht)
-    m = Mesh(); X, Z, Hc, hw = 3.5, 3.0, 8.5, (3.5, 7.5)
+    m = Mesh(); X, Z, Hc, hw = 3.5, 3.0, 6.5, (3.0, 6.5)                              # v25e : murs plus bas (le signaleur se voit), devant ouvert à 3 ft
     q = lambda P, r, n: _face(m, [wp(*p) for p in P], [(r[0], r[1]), (r[2], r[1]), (r[2], r[3]), (r[0], r[3])], [n] * 4)
     nw = lambda v: tuple(np.subtract(wp(*v), wp(0, 0, 0)))
     for sx in (-1, 1):                                                                   # côtés (logo), dehors et dedans
@@ -797,10 +796,9 @@ def cabin_v25(out, wp, key='mxsim'):
         q(P, (pan[2], pan[1], pan[0], pan[3]) if sx > 0 else pan, nw((sx, 0, 0)))   # v25 : logo à l'endroit des 2 côtés (_face règle le sens)
         q(P[::-1] if sx > 0 else P, blk, nw((-sx, 0, 0)))
     P = [(X, 0, -Z), (-X, 0, -Z), (-X, Hc, -Z), (X, Hc, -Z)]; q(P, pan, nw((0, 0, -1))); q(P[::-1], blk, nw((0, 0, 1)))   # dos
-    for y0, y1 in ((0, hw[0]), (hw[1], Hc)):                                             # devant : bas + haut, fenêtre ouverte
+    for y0, y1 in [q_ for q_ in ((0, hw[0]), (hw[1], Hc)) if q_[1] > q_[0] + 0.01]:  # devant : bas (+ haut), ouvert au-dessus
         P = [(-X, y0, Z), (X, y0, Z), (X, y1, Z), (-X, y1, Z)]; q(P, blk, nw((0, 0, 1))); q(P[::-1], blk, nw((0, 0, -1)))
-    P = [(-X - 0.6, Hc, -Z - 0.6), (X + 0.6, Hc, -Z - 0.6), (X + 0.6, Hc, Z + 1.2), (-X - 0.6, Hc, Z + 1.2)]   # toit
-    q(P[::-1], grey, nw((0, 1, 0))); q(P, blk, nw((0, -1, 0)))
+    # v25e (« pas de toit, il faut mettre quelqu'un dedans avec un drapeau ») : plus de toit, le signaleur est dans la cabane
     m.write(os.path.join(out, 'cabane_mxsim.jm'), MAT_MAT)
     K.shp(os.path.join(out, 'cabane_mxsim.shp'), [wp(x, 2.5, z) for x in (-2, 2) for z in (-1.5, 1.5)], 1.6, par=(1.5, 1000, 200))
     return 'cabane_mxsim.jm', 'cabane_mxsim.png', 'cabane_mxsim.shp'
@@ -909,13 +907,16 @@ def _cut_bg(img, keep_bottom=True):
     a[kill, 3] = 0; return Image.fromarray(a, 'RGBA')
 
 
-def _board_side_v25(kind, W, H, px_u, px_v, ua, inner):
+def _board_side_v25(kind, W, H, px_u, px_v, ua, inner, top=None):
     """dessin d'une face (W x H) ; inner : face côté piste, coordonnées u en miroir (lue à l'endroit depuis la piste)."""
     import sponsors as SP
     from PIL import ImageFont
     X = (lambda u: int(W - (u - ua) * px_u)) if inner else (lambda u: int((u - ua) * px_u)); Y = lambda y: int(H - y * px_v)
     sq = lambda img: img.resize((img.size[0], max(1, int(img.size[1] * px_v / px_u))), Image.LANCZOS)
     (u0, _), (u1, yt), (u2, _), (u3, _) = BOARD_POLY[kind]
+    if top is not None and kind == 'amv':                                               # v25e : contour = la forme de la bosse
+        tu, ty = np.array([q[0] for q in top]), np.array([q[1] for q in top]); yt = float(ty.max()); kk = np.nonzero(ty >= yt - 1.2)[0]
+        u0, u1, u2, u3 = float(tu[0]), float(tu[kk[0]]), float(tu[kk[-1]]), float(tu[-1])
     if kind == 'milwaukee':
         bg, lg = SP.panel('milwaukee'); im = Image.new('RGB', (W, H), bg); d = ImageDraw.Draw(im); ysk = 2.3
         d.rectangle([0, Y(ysk), W, H], fill=(16, 16, 18))                               # noir du sol jusqu'à la forme rouge
@@ -926,9 +927,14 @@ def _board_side_v25(kind, W, H, px_u, px_v, ua, inner):
         fit(im, sq(lg), (xa, Y(yc + hh / 2), xb, Y(yc - hh / 2)), 0.0)
         return im
     G_ = (0, 158, 79); WH = (250, 250, 248); im = Image.new('RGB', (W, H), WH); d = ImageDraw.Draw(im); bw = max(6, int(1.0 * px_v))
-    d.line([(X(u0), Y(0)), (X(u1), Y(yt))], fill=G_, width=2 * bw); d.line([(X(u2), Y(yt)), (X(u3), Y(0))], fill=G_, width=2 * bw)
+    if top is not None:                                                                 # liseré vert le long du haut (la forme de la bosse)
+        d.line([(X(u_), Y(y_) + bw) for u_, y_ in top], fill=G_, width=2 * bw, joint='curve')
+    else:
+        d.line([(X(u0), Y(0)), (X(u1), Y(yt))], fill=G_, width=2 * bw); d.line([(X(u2), Y(yt)), (X(u3), Y(0))], fill=G_, width=2 * bw)
     d.rectangle([0, Y(0.9), W, H], fill=G_)
     b0, b1, y0, y1 = AMV_BARRIER; _, la = SP.panel('amv')
+    if top is not None:
+        b0, b1, y0, y1 = u1, u2, yt, yt + (AMV_BARRIER[3] - AMV_BARRIER[2])
     def row(ua_, ub_, yb_, yh_, n_min=3):
         hb = (yh_ - yb_) * 0.58; wb = hb * la.size[0] / la.size[1] * (px_v / px_u) * (px_u / px_v); n_ = max(n_min, int((ub_ - ua_) / (wb * 1.3)))
         for k in range(n_):
@@ -938,6 +944,8 @@ def _board_side_v25(kind, W, H, px_u, px_v, ua, inner):
     row(b0, b1, y0, y1)                                                                 # barrière : AMV comme une banderole
     if inner:                                                                           # côté piste : tout blanc + une rangée de logos AMV
         ym = 0.45 * yt; ul, ur = u0 + (u1 - u0) * (ym + 2) / yt, u3 - (u3 - u2) * (ym + 2) / yt
+        if top is not None:
+            ab = np.nonzero(np.array([q[1] for q in top]) >= ym + 2.5)[0]; ul, ur = top[ab[0]][0], top[ab[-1]][0]
         row(ul + 2, ur - 2, ym - 2.2, ym + 2.2, 4)
         return im
     xa, xb = sorted((X(u1), X(u2))); d.rectangle([xa, Y(yt), xb, Y(0)], outline=G_, width=bw)
@@ -951,8 +959,11 @@ def _board_side_v25(kind, W, H, px_u, px_v, ua, inner):
     bx0, bx1 = sorted((X(u2) + bw + 8, X(u2 + 0.45 * (u3 - u2))))
     fit(im, sq(boy), (bx0, Y(0.58 * yt), bx1, Y(1.4)), 0.0)
     ft = ImageFont.truetype('C:/Windows/Fonts/ariblk.ttf', max(20, int(2.4 * px_v)))
-    d.text((X(u2 + 0.64 * (u3 - u2)), Y(3.3)), 'AMV.FR', font=ft, fill=G_, anchor='mm')     # au-dessus de la bande verte (« touche pas le sol »)
-    d.text((X(u0 + 0.50 * (u1 - u0)), Y(3.3)), 'AMV', font=ft, fill=G_, anchor='mm')
+    uR_, uL_ = u2 + 0.64 * (u3 - u2), u0 + 0.50 * (u1 - u0)
+    if top is not None:                                                                 # v25e : là où la bosse fait au moins 8 ft (pas coupé par le bord)
+        hi_ = np.nonzero(ty >= 8.0)[0]; uL_, uR_ = float(tu[hi_[0]]) + 7.0, float(tu[hi_[-1]]) - 9.0
+    d.text((X(uR_), Y(3.4)), 'AMV.FR', font=ft, fill=G_, anchor='mm')                  # au-dessus de la bande verte (« touche pas le sol »)
+    d.text((X(uL_), Y(3.4)), 'AMV', font=ft, fill=G_, anchor='mm')
     return im
 
 
@@ -988,6 +999,58 @@ def board_v25(out, name, Hf, g, side, kind, th=None):
                 nn_ = -nn_
             n3 = (tg[0] * nn_[0], nn_[1], tg[1] * nn_[0])
             _face(m, [P(u0_, -th / 2, y0_), P(u1_, -th / 2, y1_), P(u1_, th / 2, y1_), P(u0_, th / 2, y0_)], [blk] * 4, [n3] * 4)
+    m.write(os.path.join(out, name + '.jm'), MAT_MAT)
+    K.shp(os.path.join(out, name + '.shp'), [P(u, 0, 2.0) for u in np.arange(ua + 2, ub - 1, 3.0)], 1.0)
+    return O, name + '.jm', png, name + '.shp'
+
+
+def board_v25b(out, name, Hf, g, side, kind, th=None):
+    """v25e (« baisse la hauteur des rebords, ça remonte sur les côtés de la bosse ; même angle que la bosse ; le trait vert sous les logos
+    doit toucher le plat » ; Milwaukee : « les rebords dépassent en haut : à ras, même hauteur que la bosse, l'angle est bien ») :
+    AMV : le haut du panneau = la forme de la bosse (+0,1 ft), barrière posée dessus ; Milwaukee : trapèze (BOARD_POLY), haut au ras.
+    Panneau plein (bandes verticales), 2 faces dessinées, tranches fermées."""
+    c, s_ = np.cos(g['t']), np.sin(g['t']); nrm = np.array([-s_, c]) * side; tg = np.array([c, s_])
+    H1 = lambda p: float(np.ravel(Hf(p[0], p[1]))[0]); base = lambda u: np.array([g['x0'] + u * c, g['z0'] + u * s_])
+    th = th or _LP.BOARD_TH; poly = BOARD_POLY[kind]; ua, ub = poly[0][0], poly[-1][0]; um = (ua + ub) / 2
+    vb = _LP.BOARD_VB[kind]; h0 = H1(base(um) + nrm * (vb + 12.0)); O = base(um) + nrm * (vb + 4.0); h_o = H1(O)
+    if kind == 'amv':
+        us = np.arange(ua, ub + 0.01, 1.0); ys = np.array([max(0.0, H1(base(u)) - h0) + 0.1 for u in us]); k = np.nonzero(ys > 0.45)[0]
+        us, ys = us[k[0]:k[-1] + 1], ys[k[0]:k[-1] + 1]
+    else:
+        us = np.arange(ua, ub + 0.01, 0.5); ys = np.interp(us, [q[0] for q in poly], [q[1] for q in poly])
+    top = list(zip(us.tolist(), ys.tolist())); ytop = float(ys.max()); hb_ = AMV_BARRIER[3] - AMV_BARRIER[2]
+    kk = np.nonzero(ys >= ytop - 1.2)[0]; bu0, bu1 = float(us[kk[0]]), float(us[kk[-1]])
+    ymax = ytop + (hb_ + 0.2 if kind == 'amv' else 0.0); L = ub - ua; W = 2048; Ht = int(min(1024, max(256, round(W * ymax / L / 32) * 32)))
+    px_u, px_v = W / L, Ht / ymax
+    outer = _board_side_v25(kind, W, Ht, px_u, px_v, ua, False, top if kind == 'amv' else None)
+    inner = _board_side_v25(kind, W, Ht, px_u, px_v, ua, True, top if kind == 'amv' else None)
+    im = Image.new('RGB', (W, 2 * Ht)); im.paste(outer, (0, 0)); im.paste(inner, (0, Ht))
+    im = _fabric(im, (0, 0, W, 2 * Ht), 3, seed=24); im = K.grain(im, 0.8)
+    ImageDraw.Draw(im).rectangle([0, 0, 4, 4], fill=(16, 16, 18)); png = name + '.png'; _save(im, os.path.join(out, png))
+    m = Mesh(); fu = (lambda u: (u - ua) / L) if side > 0 else (lambda u: 1 - (u - ua) / L)
+    fvo = lambda y: 0.5 + 0.5 * y / ymax; fvi = lambda y: min(0.499, 0.5 * y / ymax); blk = (0.001, 0.999)
+    P = lambda u, d, y: (base(u)[0] + nrm[0] * (vb + d) - O[0], y + (h0 - h_o) - (0.6 if y < 0.01 else 0.0), base(u)[1] + nrm[1] * (vb + d) - O[1])
+    n_o = (nrm[0], 0.0, nrm[1]); n_i = (-nrm[0], 0.0, -nrm[1])
+    def strip(tp, bt, vmap=None):
+        """bande verticale entre bt(u) et tp(u) (listes (u, y)), 2 faces + tranches haut / bas / bouts."""
+        for (ua_, ta), (ub_, tb), (_, ba), (_, bb) in zip(tp[:-1], tp[1:], bt[:-1], bt[1:]):
+            Q = [(ua_, ba), (ub_, bb), (ub_, tb), (ua_, ta)]
+            vo = [fvo(y) for _, y in Q] if vmap is None else [vmap(0.5, y_, b_) for (_, y_), b_ in zip(Q, (1, 1, 0, 0))]
+            vi = [fvi(y) for _, y in Q] if vmap is None else [vmap(0.0, y_, b_) for (_, y_), b_ in zip(Q, (1, 1, 0, 0))]
+            _face(m, [P(u, th / 2, y) for u, y in Q], [(fu(u), v) for (u, _), v in zip(Q, vo)], [n_o] * 4)
+            _face(m, [P(u, -th / 2, y) for u, y in Q], [(1 - fu(u), v) for (u, _), v in zip(Q, vi)], [n_i] * 4)
+            for (p0, p1, sgn) in (((ua_, ta), (ub_, tb), 1), ((ua_, ba), (ub_, bb), -1)):
+                e_ = np.array([p1[0] - p0[0], p1[1] - p0[1]]); nn_ = np.array([-e_[1], e_[0]]) * sgn / (np.linalg.norm(e_) or 1)
+                n3 = (tg[0] * nn_[0], nn_[1], tg[1] * nn_[0])
+                _face(m, [P(p0[0], -th / 2, p0[1]), P(p1[0], -th / 2, p1[1]), P(p1[0], th / 2, p1[1]), P(p0[0], th / 2, p0[1])], [blk] * 4, [n3] * 4)
+        for (u_, t_), (_, b_), sgn in ((tp[0], bt[0], -1), (tp[-1], bt[-1], 1)):
+            n3 = (tg[0] * sgn, 0.0, tg[1] * sgn)
+            _face(m, [P(u_, -th / 2, b_), P(u_, th / 2, b_), P(u_, th / 2, t_), P(u_, -th / 2, t_)], [blk] * 4, [n3] * 4)
+    strip(top, [(u, 0.0) for u in us])
+    if kind == 'amv':                                                                   # barrière posée sur le plat, même dessin que le texte
+        k2 = [i for i, u in enumerate(us) if bu0 - 1e-6 <= u <= bu1 + 1e-6]; bt = [top[i] for i in k2]; tp = [(u, y + hb_) for u, y in bt]
+        vm = lambda off, y, isb: off + 0.5 * ((ytop if isb else ytop + hb_) / ymax) if off > 0 else min(0.499, 0.5 * ((ytop if isb else ytop + hb_) / ymax))
+        strip(tp, bt, vm)
     m.write(os.path.join(out, name + '.jm'), MAT_MAT)
     K.shp(os.path.join(out, name + '.shp'), [P(u, 0, 2.0) for u in np.arange(ua + 2, ub - 1, 3.0)], 1.0)
     return O, name + '.jm', png, name + '.shp'

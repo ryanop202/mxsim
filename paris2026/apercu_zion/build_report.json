@@ -71,33 +71,33 @@
    "lane": "L2 singles",
    "name": "PAR-L2 double triple triple (8 bosses)",
    "u0": 0.5,
-   "L": 276.4,
+   "L": 276.0,
    "H": 5.0,
    "items": [
     [
-     "bosse ZION 2,3 ft (longue)",
+     "bosse ZION 2,3 ft",
      0.0,
-     27.5
+     21.3
     ],
     [
      "bosse ZION 4,6 ft (ronde)",
-     31.1,
-     64.9
+     24.9,
+     58.7
     ],
     [
      "bosse ZION 4.8 ft",
-     73.5,
-     102.3
+     66.1,
+     94.9
     ],
     [
      "bosse ZION 4.8 ft",
-     105.9,
-     134.7
+     102.3,
+     131.1
     ],
     [
      "bosse ZION 5.0 ft",
-     138.3,
-     167.7
+     138.5,
+     167.9
     ],
     [
      "bosse ZION 4.8 ft",
@@ -106,13 +106,13 @@
     ],
     [
      "bosse ZION 4.8 ft",
-     211.7,
-     240.5
+     211.5,
+     240.3
     ],
     [
      "bosse ZION 4.6 ft",
-     248.1,
-     276.3
+     247.7,
+     275.9
     ]
    ]
   },
@@ -234,7 +234,12 @@
    ]
   }
  ],
- "sable_tuiles": 15987,
+ "sable_s": [
+  1877.3,
+  2030.9
+ ],
+ "socles": 8,
+ "sable_tuiles": 12097,
  "tuiles_zion": [
   "texture @USLANDParis/ztile/2.png",
   "roost texture=@USLANDParis/ztile/roost.png count=0.1 slow_angle=1.0 vscale=0.2 size=.2 r=150 g=150 b=150 fade_a=0",
@@ -252,7 +257,7 @@
    "retirés (v13) : tuffs de virage ZION (unis)": 72,
    "retirés (v13) : filets": 42,
    "panneau FINISH suspendu": 1,
-   "cage du drapeau": 1,
+   "retirés (de travers) : cage du drapeau": 1,
    "retirés (v13) : boudins Thor": 6,
    "retirés (v13) : habillage Venum des tremplins": 2,
    "retirés (v13) : arche 50 Factory": 1,
@@ -264,7 +269,7 @@
    "retirés (v13) : long boudin noir FLY / RBT / SX TOUR (dans le U)": 2,
    "camions du paddock": 10
   },
-  "total": 13,
+  "total": 12,
   "amv_pied_ft": {},
   "arche": {
    "crete_ft": 4.17,
@@ -297,7 +302,7 @@
   "tuiles": 8,
   "ombrage_plat": 228
  },
- "decals_sable": 257,
+ "decals_sable": 269,
  "zion_v19": {
   "paddock": [
    776,
@@ -307,7 +312,7 @@
   ],
   "dalles_tuiles": 246446,
   "x_paddock": 706.7,
-  "overlay": 5355,
+  "overlay": 5330,
   "decals_gardes": 0,
   "start": [
    671.5,
@@ -325,36 +330,36 @@
     "T_L5a",
     "minerva",
     [
-     -0.015,
-     1.015
+     0.132,
+     0.868
     ],
-    7,
+    5,
     [
-     2,
-     3
+     1,
+     2
     ]
    ],
    [
     "T_Bb ",
     "mxsim",
     [
-     -0.015,
-     1.015
+     0.132,
+     0.868
     ],
-    7,
+    5,
     [
-     2,
-     3
+     1,
+     2
     ]
    ],
    [
     "T_D 1",
     "automoto",
     [
-     0.399,
-     1.001
+     0.459,
+     0.881
     ],
-    10,
+    7,
     []
    ],
    [
@@ -375,10 +380,10 @@
     "T_TR ",
     "motoverte",
     [
-     -0.015,
-     1.015
+     0.132,
+     0.868
     ],
-    7,
+    5,
     []
    ],
    [
@@ -395,16 +400,16 @@
     "T_C 1",
     "five",
     [
-     0.1,
-     0.65
+     0.169,
+     0.787
     ],
-    8,
+    9,
     [
+     0,
      1,
      2,
      3,
-     4,
-     5
+     4
     ]
    ]
   ],
@@ -412,17 +417,17 @@
   "arche": [
    277.8,
    741.3,
-   0.89
+   1.12
   ],
   "poteaux": 7,
   "cabane": [
-   123.1,
-   28.0
+   119.1,
+   21.0
   ],
   "holeshot": [
-   380.6,
+   377.8,
    703.4,
-   13.1,
+   10.3,
    26.5
   ],
   "murs_invisibles": [

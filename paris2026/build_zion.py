@@ -26,6 +26,7 @@ BP.FOLDER = "USLANDParis"                     # v22d (« renomme-la usland paris
 BP.DESC = "USLAND Paris"                        # v22d (« renomme-la usland paris »)
 BP.OUT = os.path.join(BP.ROOT, "tracks", BP.FOLDER)
 BP.AP = os.path.join(HERE, "apercu_zion")
+BP.SAND_V25 = True                 # v25e : sable en bande droite + vaguelettes
 BP.SAND_TL5 = False; BP.SAND_RUTS = False   # v23 : virage après l'arrivée en terre ; sable sans ornières
 BP.SAND_LD = 0.0                   # v19d (« le virage après le saut d'arrivée en sable, que le virage ») : pas sur la ligne de départ
 ZD = BP.ZD
@@ -121,6 +122,50 @@ def post_finish(out, path, sm=1.2):
     h = gaussian_filter(h, sm / S)
     out[sl] = np.maximum(out[sl], h)
     BP.REPORT['apres_arrivee'] = dict(b1=round(float(P1.max()), 2), b23=round(float(P23.max()), 2), plateau=LP.POST_FIN['b23'][3][1])
+
+
+PYLON_IN = {'T_TR': 5.0, 'T_E ': 5.0}   # v25e (« le truc à l'intérieur, décale-le, moins dans la trace » ; carré bleu Yamaha) : ft vers le centre
+
+
+def pylon_spots(path):
+    """v25e : poteaux gonflables à l'intérieur des virages (sponsor du virage) : (x, z, mid, clé)."""
+    from engine import turn_mid_angle
+    import deco_v22 as D22
+    out = []
+    for g in path.segs:
+        if g['kind'] != 'T' or abs(g['ang']) < 89 or g['tag'].startswith(('T_L5a', 'T_L5b')):
+            continue
+        mid = turn_mid_angle(g); r_ = max(0.0, g['r'] - 15.2 - 1.5 - next((v for k_, v in PYLON_IN.items() if g['tag'].startswith(k_)), 0.0))
+        key_ = next((v for k_, v in D22.TURN_SPONSOR.items() if g['tag'].startswith(k_)), 'mxsim')
+        out.append((g['cx'] + r_ * np.cos(mid), g['cz'] + r_ * np.sin(mid), mid, key_))
+    return out
+
+
+def cabin_spot(path):
+    """v25e (« la cabine trop loin de la pelle : plus dans la pelle, plus haute ») : à gauche de l'appel du saut d'arrivée, 4 ft avant sa
+    crête, à 21 ft de l'axe, sur un socle de terre plat de CAB_PAD ft."""
+    import layouts_sx as LS
+    g5 = next(g for g in path.segs if g['kind'] == 'S' and g['tag'].startswith('L5')); s5 = g5['sections'][0]; it = LS.COMBOS[s5[2]]['items'][2]
+    i0, i1 = int(it[1] / 0.1), int(it[2] / 0.1); uc = s5[1] + it[1] + float(np.argmax(s5[0][i0:i1])) * 0.1 - 4.0
+    t5 = np.array([np.cos(g5['t']), np.sin(g5['t'])]); n5 = np.array([-t5[1], t5[0]])
+    return np.array([g5['x0'], g5['z0']]) + t5 * uc - n5 * CAB_V, t5, n5, uc
+
+
+CAB_V, CAB_PAD = 21.0, 3.0
+
+
+def pads(H, path):
+    """v25e (« mets bien des monticules de terre sous les plots intérieurs » ; cabane plus haute) : petits socles de terre plats (le jeu
+    ne penche pas un objet posé à plat) : poteaux 0,8 ft (dessus 2,2 ft de rayon, flancs 2,5 ft) ; cabane : dessus plat à CAB_PAD ft."""
+    ss = lambda t: (lambda t_: t_ * t_ * (3 - 2 * t_))(np.clip(t, 0, 1)); H = H.copy()
+    for x, z, mid, key in pylon_spots(path):
+        sl, X, Z = G.window(x - 6, x + 6, z - 6, z + 6); r = np.hypot(X - x, Z - z); h0 = float(map_coordinates(H, [[z / S], [x / S]], order=1)[0])
+        H[sl] = np.maximum(H[sl], h0 + 0.8 * ss((3.4 - r) / 1.8))   # dessus plat 1,6 ft de rayon, pied à 3,4 ft (le centre du virage reste plat)
+    C, t5, n5, uc = cabin_spot(path); sl, X, Z = G.window(C[0] - 12, C[0] + 12, C[1] - 12, C[1] + 12)
+    du, dv = (X - C[0]) * t5[0] + (Z - C[1]) * t5[1], (X - C[0]) * n5[0] + (Z - C[1]) * n5[1]
+    d = np.hypot(np.maximum(np.abs(du) - 4.5, 0), np.maximum(np.abs(dv) - 4.0, 0)); H[sl] = np.maximum(H[sl], CAB_PAD * ss((3.5 - d) / 3.5))
+    BP.REPORT['socles'] = len(pylon_spots(path)) + 1
+    return H
 
 
 def board_cut_layer(lay, g, kind):
@@ -427,11 +472,11 @@ def zion_extras(OUT, FOLDER):
     for f_ in ("sand.png", "sand_tnorm.png"):
         shutil.copy(os.path.join(BP.ROOT, "tracks", "USLAND2026SX1", "decal", f_), os.path.join(sdd, f_))
     ns_ = 0
-    for xx in np.arange(sx0, sx1, 4.5):
-        for zz in np.arange(sz0, sz1, 4.5):
-            x_, z_ = xx + rng.uniform(-1.2, 1.2), zz + rng.uniform(-1.2, 1.2)
-            if sand_t.query([x_, z_])[0] < 16.0:
-                ov.append("[%.6f %.6f] %.6f 26.000000 1.000000 @%s/sx1sand/decal/sand.png" % (x_, z_, rng.uniform(-np.pi, np.pi), FOLDER)); ns_ += 1
+    # v25e (« pas déborder, coupé droit ») : décals de 10 ft (le sable s'arrête net au bord) dont le centre reste à 5 ft du bord
+    XX_, ZZ_ = np.meshgrid(np.arange(sx0, sx1, 3.0), np.arange(sz0, sz1, 3.0)); XX_ = XX_ + rng.uniform(-0.8, 0.8, XX_.shape); ZZ_ = ZZ_ + rng.uniform(-0.8, 0.8, ZZ_.shape)
+    wS_, _ = BP.sand_weight(path, XX_, ZZ_, inset=5.0)
+    for x_, z_ in zip(XX_[wS_ > 0.5], ZZ_[wS_ > 0.5]):
+        ov.append("[%.6f %.6f] %.6f 10.000000 1.000000 @%s/sx1sand/decal/sand.png" % (x_, z_, rng.uniform(-np.pi, np.pi), FOLDER)); ns_ += 1
     BP.REPORT['decals_sable'] = ns_
     open(os.path.join(OUT, "decals"), "w", newline=chr(10)).write(chr(10).join(ov + dl) + chr(10))
     # v19 (« le saut d'arrivée, il va pas ; il faut faire les câbles comme sur mon track, avec le finish ») : plus d'arche ZION, le panneau
@@ -474,7 +519,7 @@ START_Y = 15.0
 BALE_V, BALE_STEP, BALE_GAP = 15.5, 9.6, 25.0
 BALE_STEP2, BALE_SLIDE, ARCH_XC = 2 * 9.6, 4.0, 18.0   # v23 : pieds au bord de la piste (était 26)
 BP.BOARD_CUT = False               # v24b : flancs coupés derrière les panneaux ; v25c : coupe faite sur la couche du saut seul (board_cut_layer)
-BP.EXTRA_H = []                    # v25d (« les virages, une catastrophe : des gros monticules de terre partout ; repars sur les virages de base ») : plus de wall_fill
+BP.EXTRA_H = [lambda H_, p_: pads(H_, p_)]   # v25e : socles des poteaux et de la cabane ; v25d (« les virages, une catastrophe : des gros monticules de terre partout ; repars sur les virages de base ») : plus de wall_fill
 BP.ARCH_CUT = None                 # v23c : pas de découpe sous les pieds
     # v21d : 1 sur 2, glissement max, pieds de l'arche   # v21c : ballots comme RF Anaheim 1 (|v| 15-16 ft, pas 9,6 ft)
 
@@ -587,11 +632,7 @@ def deco_v21(OUT, FOLDER, combos):
     for f_ in ("pylon_round.jm", "pylon_round.shp"):
         shutil.copy(os.path.join(sgm_st, f_), os.path.join(sd, f_))
     npy = 0
-    for g in BP.PATH.segs:
-        if g['kind'] != 'T' or abs(g['ang']) < 89 or g['tag'].startswith(('T_L5a', 'T_L5b')):
-            continue
-        mid = turn_mid_angle(g); r_ = max(1.5, g['r'] - 15.2 - 1.5); x_, z_ = g['cx'] + r_ * np.cos(mid), g['cz'] + r_ * np.sin(mid)
-        key_ = next((v for k_, v in D22.TURN_SPONSOR.items() if g['tag'].startswith(k_)), 'mxsim')
+    for x_, z_, mid, key_ in pylon_spots(BP.PATH):                                     # v25e : sur leur socle de terre (pads)
         lines.append(line(x_, z_, float(np.arctan2(np.cos(mid), np.sin(mid))), "pylon_round.jm", D22.pylon_skin(sd, sgm_st, key_), "pylon_round.shp")); npy += 1
     rep_['poteaux'] = npy
     # v23c (« la réception du saut freestyle, AMV : 2 bottes de paille dans la descente, et sur le dessus ») : 4 ballots AMV
@@ -610,13 +651,13 @@ def deco_v21(OUT, FOLDER, combos):
     gR = next(g for g in BP.PATH.segs if g['kind'] == 'S' and g['tag'].startswith('LR'))
     for side_, nm_ in ((-1, 'bache_milwaukee_g'), (1, 'bache_milwaukee_d')):
         # v23d : panneau « carton » (objet) au lieu de la bâche drapée
-        O_, jm_, png_, shp_ = D22.board_v25(sd, nm_.replace('bache', 'panneau'), Hf, gR, side_, 'milwaukee')   # v24 : forme dessinée par l'utilisateur
+        O_, jm_, png_, shp_ = D22.board_v25b(sd, nm_.replace('bache', 'panneau'), Hf, gR, side_, 'milwaukee')   # v24 : forme dessinée par l'utilisateur
         lines.append(line(O_[0], O_[1], 0.0, jm_, png_, shp_))
     for prof, u0, name in g3['sections']:
         if name == LP.L3_SEC:
             it = [i for i in combos[name]['items'] if 'butte' in i[0]][0]
             for side_, nm_ in ((-1, 'bache_amv_g'), (1, 'bache_amv_d')):
-                O_, jm_, png_, shp_ = D22.board_v25(sd, nm_.replace('bache', 'panneau'), Hf, g3, side_, 'amv')   # v24 : forme dessinée par l'utilisateur
+                O_, jm_, png_, shp_ = D22.board_v25b(sd, nm_.replace('bache', 'panneau'), Hf, g3, side_, 'amv')   # v24 : forme dessinée par l'utilisateur
                 lines.append(line(O_[0], O_[1], 0.0, jm_, png_, shp_))
     # v24 (« avec les 2 ballots de paille posés sur le dessus ») : 2 ballots Milwaukee au milieu du plateau du saut, un de chaque côté
     (pu0, _), (pu1, _), (pu2, _), (pu3, _) = D22.BOARD_POLY['milwaukee']; cR, sR2 = np.cos(gR['t']), np.sin(gR['t']); nR = np.array([-sR2, cR])
@@ -625,16 +666,7 @@ def deco_v21(OUT, FOLDER, combos):
         p_ = np.array([gR['x0'] + (pu1 + pu2) / 2 * cR, gR['z0'] + (pu1 + pu2) / 2 * sR2]) + nR * side_ * BALE_V
         lines.append(line(p_[0], p_[1], float(np.arctan2(-sR2, cR)), *fM))
     # v25 : cabane noire MX Sim Racing à gauche du saut d'arrivée, signaleur (drapeau) dedans ; portique holeshot Milwaukee
-    g5_ = next(g for g in BP.PATH.segs if g['kind'] == 'S' and g['tag'].startswith('L5')); s5_ = g5_['sections'][0]; it5_ = combos[s5_[2]]['items'][2]
-    i0c, i1c = int(it5_[1] / 0.1), int(it5_[2] / 0.1); ucab = s5_[1] + it5_[1] + float(np.argmax(s5_[0][i0c:i1c])) * 0.1
-    c5, s5 = np.cos(g5_['t']), np.sin(g5_['t']); n5 = np.array([-s5, c5])            # n5 = droite du sens de course
-    from scipy.spatial import cKDTree as _KD2
-    smp_ = BP.PATH.samples(1.0); other = np.array([BP.PATH.segs[int(k)]['tag'][:2] != 'L5' for k in smp_['seg']]); trO = _KD2(np.c_[smp_['x'][other], smp_['z'][other]])
-    # v25 : sur du sol plat (pas contre la pente de l'appel), loin des autres couloirs
-    Pc_ = lambda v: np.array([g5_['x0'] + ucab * c5, g5_['z0'] + ucab * s5]) - n5 * v
-    flat_ = lambda v: max(float(Hf(*(Pc_(v) + np.array([c5, s5]) * a_ + n5 * b_))[0]) for a_ in (-4, 4) for b_ in (-4, 4)) < 0.25
-    vcab = next((v for v in np.arange(28.0, 50.0, 1.0) if flat_(v) and trO.query(Pc_(v))[0] > 16.0), 40.0)
-    Cc = np.array([g5_['x0'] + ucab * c5, g5_['z0'] + ucab * s5]) - n5 * vcab        # à gauche
+    Cc, t5_, n5, ucab = cabin_spot(BP.PATH); vcab = CAB_V                              # v25e : près de l'appel, sur son socle (pads)
     fz = n5; fx = np.array([fz[1], -fz[0]])                                          # +z de la cabane = vers la piste
     wp = lambda x, y, z: (fx[0] * x + fz[0] * z, y, fx[1] * x + fz[1] * z)
     lines.append(line(Cc[0], Cc[1], 0.0, *D22.cabin_v25(sd, wp))); rep_['cabane'] = (round(ucab, 1), vcab)
@@ -659,7 +691,7 @@ def deco_v21(OUT, FOLDER, combos):
     ff = "@%s/ext/2024Bh1Conway/flaggerfiles/" % FOLDER
     open(os.path.join(OUT, "flaggers"), "w", newline=chr(10)).write(chr(10).join([
         "[%.6f 0.000 %.6f]" % tuple(b1), "[%.6f 0.000 %.6f]" % tuple(b2), "8.4 1", "10", "@30sec_30.png", "@30sec_turn.seq", "@30sec_5.png",
-        "@30sec_run.seq", "@%s/billboard/blank.png" % FOLDER, "", "[%.6f 0.000 %.6f]" % tuple(Cc), "10.5 1", ff + "defaultflag.png", ff + "halfway.png",
+        "@30sec_run.seq", "@%s/billboard/blank.png" % FOLDER, "", "[%.6f 0.000 %.6f]" % tuple(Cc + n5 * 0.8), "10.5 1", ff + "defaultflag.png", ff + "halfway.png",
         ff + "lastlap.png", ff + "rf.flagger_waving.seq", "", "", "", "[0.00000000 0.000 0.00000000]", "9.6 1", "3 4 5 -1", "@flagger_resting.png",
         "@flagger_waving.seq", ""]))
     # v23e : murs INVISIBLES (collision seule), assez hauts pour ne pas gêner un saut normal : (1) entre la petite table et l'appel du

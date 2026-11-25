@@ -73,7 +73,7 @@ def bale_u(out, key='noir'):
         body, lo_img = SP.panel(key); lg, ink = (key if lo_img is not None else None), None
     L, a, hs, t, tb, lip = (BU[k] for k in ('L', 'a', 'hs', 't', 'tb', 'lip'))
     po, so = _u_curve(a, hs, tb); pi_, si = _u_curve(a - t, hs, tb); stot = so[-1]
-    W, H = 1024, 2048; kpx = W / L; rows = int(round(stot * kpx))                     # même échelle en u et en v : logos jamais déformés
+    W, H = 512, 1024; kpx = W / L; rows = int(round(stot * kpx))   # v25e : moitié moins de pixels (logos flous / bizarres de loin)                     # même échelle en u et en v : logos jamais déformés
     im = Image.new('RGB', (W, H), body); d = ImageDraw.Draw(im)
     a_ = np.asarray(im, float); y_ = np.arange(H)[:, None]                           # ombre cuite : pieds plus sombres que le dessus
     sh = 0.78 + 0.22 * np.sin(np.pi * np.clip(y_ / rows, 0, 1)); a_[:rows] *= sh[:rows, :, None]; im = Image.fromarray(np.clip(a_, 0, 255).astype(np.uint8))
@@ -85,9 +85,9 @@ def bale_u(out, key='noir'):
         fit(im, lo.rotate(180, expand=True), (band + 12, sc - hb, W - band - 12, sc + hb), 0.0)      # flanc -z : vu de dehors, à l'endroit
         sc2 = int((stot - 0.62 * fl_) * kpx); fit(im, lo, (band + 12, sc2 - hb, W - band - 12, sc2 + hb), 0.0)  # flanc +z
     inn = tuple(int(c * 0.42) for c in body) if key != 'noir' else (12, 12, 13)
-    d.rectangle([0, 1440, W, 1700], fill=inn); d.rectangle([0, 1720, W, 1800], fill=BLACK)
+    d.rectangle([0, 720, W, 850], fill=inn); d.rectangle([0, 860, W, 900], fill=BLACK)
     im = K.grain(im, 1.5); _save(im, os.path.join(out, 'bale_u_%s.png' % key))
-    m = Mesh(); r_out = R((0, 0, W, rows), W, H); r_in = R((0, 1440, W, 1700), W, H); blk = R((0, 1720, W, 1800), W, H)
+    m = Mesh(); r_out = R((0, 0, W, rows), W, H); r_in = R((0, 720, W, 850), W, H); blk = R((0, 860, W, 900), W, H)
     uv = lambda r, fu, fv: (r[0] + (r[2] - r[0]) * fu, r[3] - (r[3] - r[1]) * fv)
     for P_, S_, rr, sg in ((po, so, r_out, 1.0), (pi_, si, r_in, -1.0)):
         for i in range(len(P_) - 1):
@@ -102,7 +102,7 @@ def bale_u(out, key='noir'):
                       (sx * L / 2, pi_[i][1], pi_[i][0])], [blk[:2]] * 4, [(sx, 0, 0)] * 4)
     m.box((-L / 2 - lip, 0, -a - lip), (L / 2 + lip, tb, a + lip), blk, 'xXzZY')    # socle noir
     if out not in _BU_WRITTEN:                                                       # v25c : écrit une seule fois (Windows verrouillait le fichier réécrit en boucle)
-        m.write(os.path.join(out, 'bale_u.jm'), MAT_BACHE)
+        m.write(os.path.join(out, 'bale_u.jm'), MAT_MAT)   # v25e : mat
     # v21d (« pas de physique, ou très peu : presque que ça t'arrête pas, juste une petite réaction ») : 2 petites boules molles
     if out not in _BU_WRITTEN:
         K.shp(os.path.join(out, 'bale_u.shp'), [(-0.7, 0.55, 0), (0.7, 0.55, 0)], 0.5, par=(0.2, 12, 0.6)); _BU_WRITTEN.add(out)

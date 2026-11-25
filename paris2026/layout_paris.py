@@ -215,7 +215,7 @@ def whoops_zion(n=10, k=1.15, launch_m=0.60, pitch_m=6.20):   # v20 (« minimum 
 # du saut), épaisseur BOARD_TH ; la terre du flanc au-delà est enlevée (build_paris.board_cut)
 # v25c (« de près ça fait des trucs bizarres ») : trapèzes de l'utilisateur élargis juste ce qu'il faut pour couvrir toute la terre du saut
 # (pentes droites, plateau), sinon la terre traverse la bâche
-BOARD_POLY = dict(milwaukee=[(142.0, 0.0), (153.5, 14.3), (163.5, 14.3), (181.0, 0.0)],
+BOARD_POLY = dict(milwaukee=[(142.0, 0.0), (153.5, 13.1), (163.5, 13.1), (181.0, 0.0)],   # v25e : haut au ras du saut (13,1 ft)
                   amv=[(133.0, 0.0), (163.8, 23.4), (184.0, 23.4), (232.0, 0.0)])
 BOARD_LANE = dict(milwaukee='LR', amv='L3')
 BOARD_VB = dict(milwaukee=18.5, amv=28.0)
@@ -225,6 +225,8 @@ XW_BOT = 8.0 if ZION else 0.0   # v23f (« avant le saut d'arrivée, après l'en
 XW_TOP = 9.0 if ZION else 0.0   # v23e (« les whoops commencent encore trop tard après le virage ; le virage encore trop loin de l'enchaînement ») : L2 et L1 10 ft plus courts
 END_GAP = 4.0 if ZION else 8.0   # v23 Zion (« entre la dernière bosse de chaque enchaînement et le virage, réduis l'écart ») : 8 -> 4 ft
 SPLIT_Z = {}      # v22 : section -> [(début ft, fin ft, k gauche, k droite)] ; obstacle plus bas d'un côté (gauche/droite du sens de course)
+SAND_HW = 14.0    # v25e (« pas sur le bord de la piste, vraiment dans la piste, coupé droit ») : demi-largeur du sable (ft)
+SAND_TURN_F = 0.6   # v25e (« ça part du truc à l'intérieur ») : le sable commence dans le virage avant LR, à 60 % du virage
 SAND_LR = None    # v22 : (u début, u fin) de la partie sable de LR (ornières) ; rempli par paris()
 
 
@@ -627,6 +629,12 @@ def paris():
         B8 = [trim_(b) for b in B8]; u0z = 0.5
         free_ = (xWt - x_end3) - 1.5 - u0z - sum(tlen(b) for b in B8); gz_ = (free_ - 17.0) / 7; assert gz_ > 2.0, gz_
         gaps_ = [gz_, gz_ + 5.0, gz_, gz_, gz_ + 4.0, gz_ + 4.0, gz_ + 4.0]
+        # v25e (« le petit double en sortie de virage, la 1re bosse vraiment plus près du virage ; le double même taille ; plus d'écart entre
+        # les bosses, presque autant que la ligne avant l'arrivée (~8,3 ft) mais moins ») : 1re bosse plus courte (crête plus près du virage),
+        # écart du double gardé, les 6 autres écarts égaux (~8 ft)
+        B8[0] = trim_(('raw', 'bosse ZION 2,3 ft', resample(np.asarray(zsingle(2.3 / ZH)[2], float), 0.85), 'T'))
+        g_dbl = 3.6; free_ = (xWt - x_end3) - 1.5 - u0z - sum(tlen(b) for b in B8); g_o = (free_ - g_dbl) / 6
+        gaps_ = [g_dbl] + [g_o] * 6
         toks = [B8[0]]
         for g__, b_ in zip(gaps_, B8[1:]):
             toks += [('gap', round(g__, 1)), b_]
@@ -701,6 +709,7 @@ def paris():
         assert g1 > 15.0, free
         toks = [r1, ('gap', g1), r2, ('gap', creux), cam, ('gap', 13.5)] + tri_   # v23e : triple un peu plus près du virage (8 -> 12 ft) ; v25 : +1,5 ft
         SAND_LR = (0.0, u0 + tlen([r1]) + g1 + tlen([r2]) + creux + 2.0)
+        SAND_LR = (0.0, CAMEL_U + 9.0)   # v25e (« arrête la sortie au trait rouge, au bas de la pelle Milwaukee »)
     p.straight((zL1 - RB) - (zL6 + RB), [lane_sec('PAR-LR sable, saut Milwaukee, triple' if ZION else 'PAR-LR saut de sortie, bosse, table, 3 bosses', toks, u0)], tag='LR tribune Est')
     p.turn(-90, RB, BIG, tag='T_E 90 droite (berm)')
     # v10 (« triple : 3 bosses, 2 bosses, une table, 2 bosses ») : bosses de Saint-Thibéry, même écart partout, 8 ft du virage
