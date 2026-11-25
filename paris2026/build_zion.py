@@ -572,7 +572,7 @@ def deco_v21(OUT, FOLDER, combos):
     fzh = -f0; fxh = -r0                                                              # z vers les pilotes, x vers l'intérieur de la piste
     wph = lambda x, y, z: (fxh[0] * x + fzh[0] * z, y, fxh[1] * x + fzh[1] * z)
     lines.append(line(Hp[0], Hp[1], 0.0, *D22.holeshot_v25(sd, wph))); rep_['holeshot'] = (round(float(Hp[0]), 1), round(float(Hp[1]), 1))
-    lines.append(line(Hp[0], Hp[1], 0.0, *D22.drill_cutout_v25(sd, wph, 0.9 + 34.0 - 5.6, 13.0 + 1.2)))   # v25 : la perceuse au bout de la bannière
+    lines.append(line(Hp[0], Hp[1], 0.0, *D22.drill_cutout_v25(sd, wph, 1.5 + 17.0 - 0.2, 13.0)))   # v25b : perceuse au bout de la bannière, bas au bas de la bannière
     # signaleurs : panneau 30 s derrière les grilles + signaleur animé (drapeau) dans la cabane ; fichiers repris de Saint-Georges
     shutil.copytree(os.path.join(BP.ROOT, "tracks", "USLAND2026SaintGeorgesbyBazo", "ext", "2024Bh1Conway", "flaggerfiles"),
                     os.path.join(OUT, "ext", "2024Bh1Conway", "flaggerfiles"), dirs_exist_ok=True)

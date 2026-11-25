@@ -789,54 +789,67 @@ def cabin_v25(out, wp, key='mxsim'):
     return 'cabane_mxsim.jm', 'cabane_mxsim.png', 'cabane_mxsim.shp'
 
 
-def holeshot_v25(out, wp, span=34.0, hp=13.0, bh=4.2):
-    """portique « Heavy Duty Holeshot » Milwaukee en L renversé (photo) : poteau rouge (texte vertical) au bord de la piste, bannière
-    Milwaukee au-dessus de la piste ; repère local : x = vers l'intérieur de la piste (la bannière part en +x), z = vers les pilotes."""
+def holeshot_v25(out, wp, span=17.0, hp=13.0, bh=6.0, pw=3.0):
+    """portique « Heavy Duty Holeshot » Milwaukee en L renversé (photo) : poteau rouge large (texte vertical du bas en haut) au bord de la
+    piste, bannière Milwaukee au-dessus de la piste (logo près du poteau, perceuse au bout) ; repère local : x = vers l'intérieur de la
+    piste (la bannière part en +x), z = vers les pilotes. v25b : bannière 2x moins longue, plus haute, poteau plus large."""
     import sponsors as SP
     from PIL import ImageFont
-    bg, lg = SP.panel('milwaukee'); Wt, Ht = 2048, 1024; im = Image.new('RGB', (Wt, Ht), bg); d = ImageDraw.Draw(im)
-    bw_px = int(Wt * 1.0); bh_px = int(bw_px * bh / span)                               # bannière : rangée 0..bh_px (même échelle)
-    fit(im, lg, (300, 8, bw_px - 300, bh_px - 8), 0.04)
-    pw = 1.8; ph_px = 760; pcol = (0, 300, int(ph_px * pw / (hp + bh)), 300 + ph_px)    # poteau : colonne de texte
-    f_ = ImageFont.truetype('C:/Windows/Fonts/ariblk.ttf', 60); timg = Image.new('RGBA', (900, 200), (0, 0, 0, 0)); td = ImageDraw.Draw(timg)
-    td.text((450, 50), 'HEAVY DUTY', font=f_, fill=(250, 250, 250, 255), anchor='mm'); td.text((450, 140), 'HOLESHOT', font=ImageFont.truetype('C:/Windows/Fonts/arialbi.ttf', 60), fill=(250, 250, 250, 255), anchor='mm')
-    d.rectangle(pcol, fill=bg); fit(im, timg.crop(timg.getbbox()).rotate(90, expand=True), (pcol[0] + 4, pcol[1] + 20, pcol[2] - 4, pcol[3] - 20), 0.02)
-    d.rectangle([1900, 980, 1950, 1020], fill=(16, 16, 18)); im = K.grain(im, 1.2); _save(im, os.path.join(out, 'holeshot.png'))
-    rb_, rp_, rk = R((0, 0, bw_px, bh_px), Wt, Ht), R(pcol, Wt, Ht), R((1900, 980, 1950, 1020), Wt, Ht)
+    bg, lg = SP.panel('milwaukee'); Wt, Ht = 2048, 2048; im = Image.new('RGB', (Wt, Ht), bg); d = ImageDraw.Draw(im)
+    bh_px = int(round(Wt * bh / span)); a = pw / 2
+    wd = DRILL_H * DRILL_AR; x_logo1 = span - wd - 0.4                                 # le logo s'arrête avant la perceuse
+    fit(im, lg, (int(0.05 * Wt), 16, int(Wt * x_logo1 / span), bh_px - 16), 0.03)
+    ph_px = Ht - bh_px - 60; pc_w = int(round(ph_px * pw / (hp + bh))); pcol = (0, bh_px + 40, pc_w, bh_px + 40 + ph_px)
+    f1 = ImageFont.truetype('C:/Windows/Fonts/ariblk.ttf', 150); f2 = ImageFont.truetype('C:/Windows/Fonts/arialbi.ttf', 150)
+    timg = Image.new('RGBA', (2000, 400), (0, 0, 0, 0)); td = ImageDraw.Draw(timg)
+    td.text((1000, 100), 'HEAVY DUTY', font=f1, fill=(250, 250, 250, 255), anchor='mm'); td.text((1000, 300), 'HOLESHOT', font=f2, fill=(250, 250, 250, 255), anchor='mm')
+    timg = timg.crop(timg.getbbox())
+    d.rectangle(pcol, fill=bg); fit(im, timg.rotate(90, expand=True), (pcol[0] + 6, pcol[1] + 12, pcol[2] - 6, pcol[3] - 12), 0.0)
+    xb0 = pc_w + 40; bwB = Wt - xb0; bB = (xb0, bh_px + 40, Wt, bh_px + 40 + int(round(bwB * bh / span)))   # bannière du dos : logo près du poteau aussi
+    fit(im, lg, (xb0 + int(bwB * (1 - x_logo1 / span)), bB[1] + 14, xb0 + int(bwB * 0.95), bB[3] - 14), 0.03)
+    d.rectangle([1980, 2000, 2030, 2040], fill=(16, 16, 18)); im = K.grain(im, 1.2); _save(im, os.path.join(out, 'holeshot.png'))
+    rb_, rp_, rk = R((0, 0, Wt, bh_px), Wt, Ht), R(pcol, Wt, Ht), R((1980, 2000, 2030, 2040), Wt, Ht); rbB = R(bB, Wt, Ht)
     m = Mesh(); nw = lambda v: tuple(np.subtract(wp(*v), wp(0, 0, 0)))
     q = lambda P, r, n: _face(m, [wp(*p) for p in P], [(r[0], r[1]), (r[2], r[1]), (r[2], r[3]), (r[0], r[3])], [n] * 4)
-    a, t2 = pw / 2, 0.5
+    t2 = 0.5
     for zf, nz in ((a, 1), (-a, -1)):                                                    # poteau : faces avant / arrière avec le texte
-        P = [(-a, 0, zf), (a, 0, zf), (a, hp + bh, zf), (-a, hp + bh, zf)]; q([P[1], P[0], P[3], P[2]] if nz > 0 else P, rp_, nw((0, 0, nz)))   # v25 : pas en miroir
+        P = [(-a, 0, zf), (a, 0, zf), (a, hp + bh, zf), (-a, hp + bh, zf)]; q([P[1], P[0], P[3], P[2]] if nz > 0 else P, rp_, nw((0, 0, nz)))
     for xf, nx in ((a, 1), (-a, -1)):
         P = [(xf, 0, -a), (xf, 0, a), (xf, hp + bh, a), (xf, hp + bh, -a)]; q(P if nx > 0 else P[::-1], rk if nx > 0 else rp_, nw((nx, 0, 0)))
     for zf, nz in ((t2, 1), (-t2, -1)):                                                  # bannière, des deux côtés
-        P = [(a, hp, zf), (a + span, hp, zf), (a + span, hp + bh, zf), (a, hp + bh, zf)]; q([P[1], P[0], P[3], P[2]] if nz > 0 else P, rb_, nw((0, 0, nz)))   # v25 : pas en miroir
+        P = [(a, hp, zf), (a + span, hp, zf), (a + span, hp + bh, zf), (a, hp + bh, zf)]; q([P[1], P[0], P[3], P[2]] if nz > 0 else P, rbB if nz > 0 else rb_, nw((0, 0, nz)))
     for y_, ny in ((hp, -1), (hp + bh, 1)):
         P = [(a, y_, -t2), (a + span, y_, -t2), (a + span, y_, t2), (a, y_, t2)]; q(P if ny > 0 else P[::-1], rk, nw((0, ny, 0)))
     P = [(a + span, hp, -t2), (a + span, hp, t2), (a + span, hp + bh, t2), (a + span, hp + bh, -t2)]; q(P, rk, nw((1, 0, 0)))
     m.write(os.path.join(out, 'holeshot.jm'), MAT_MAT)
-    K.shp(os.path.join(out, 'holeshot.shp'), [wp(0, y, 0) for y in (1.0, 3.0, 5.0)], 1.0, par=(1.5, 1000, 200))
+    K.shp(os.path.join(out, 'holeshot.shp'), [wp(0, y, 0) for y in (1.0, 3.0, 5.0)], 1.4, par=(1.5, 1000, 200))
     return 'holeshot.jm', 'holeshot.png', 'holeshot.shp'
 
 
-def drill_cutout_v25(out, wp, x0, y0, h=6.0):
-    """v25 (photo du portique + image de l'utilisateur) : la perceuse Milwaukee en carton découpé (fond blanc rendu transparent), debout au
-    bout de la bannière, deux faces lisibles (jamais en miroir) ; repère du portique (x vers l'intérieur de la piste, z vers les pilotes)."""
+DRILL_H, DRILL_AR = 9.5, 0.80          # v25b : la perceuse (hauteur ft, largeur / hauteur de l'image détourée), bas au bas de la bannière
+
+
+def drill_cutout_v25(out, wp, x_right, y0, h=None):
+    """v25b (« colle-la là où je t'ai mis, sur le bord, à la même hauteur que le Milwaukee en bas, elle dépasse en haut ; un contour blanc
+    autour ») : la perceuse Milwaukee en carton découpé avec un liseré blanc, debout contre le bout de la bannière, deux faces lisibles."""
     import sponsors as SP
-    from scipy.ndimage import gaussian_filter, binary_fill_holes, binary_opening
+    from scipy.ndimage import gaussian_filter, binary_fill_holes, binary_opening, binary_dilation
+    h = h or DRILL_H
     im = Image.open(os.path.join(SP.U, 'perceuse milwaukee.jpg')).convert('RGB'); a = np.asarray(im, float)
     fg = np.linalg.norm(a - 255, axis=-1) > 28; fg = binary_fill_holes(binary_opening(fg, iterations=1))
-    ys, xs = np.nonzero(fg); a = a[ys.min():ys.max() + 1, xs.min():xs.max() + 1]; fg = fg[ys.min():ys.max() + 1, xs.min():xs.max() + 1]
-    al = np.clip(gaussian_filter(fg.astype(float), 0.8) * 255, 0, 255); rgba = Image.fromarray(np.dstack([a, al]).astype(np.uint8), 'RGBA')
-    rgba = rgba.resize((512, int(512 * rgba.size[1] / rgba.size[0])), Image.LANCZOS); Wt = 1024; Ht = 1024
+    pad = 24; a = np.pad(a, ((pad, pad), (pad, pad), (0, 0)), constant_values=255); fg = np.pad(fg, pad)
+    ys, xs = np.nonzero(fg); a = a[ys.min() - pad:ys.max() + pad + 1, xs.min() - pad:xs.max() + pad + 1]; fg = fg[ys.min() - pad:ys.max() + pad + 1, xs.min() - pad:xs.max() + pad + 1]
+    out_m = binary_dilation(fg, iterations=14)                                          # liseré blanc
+    rgb = np.where(fg[..., None], a, 250.0); al = np.clip(gaussian_filter(out_m.astype(float), 1.0) * 255, 0, 255)
+    rgba = Image.fromarray(np.dstack([rgb, al]).astype(np.uint8), 'RGBA')
+    rgba = rgba.resize((512, int(512 * rgba.size[1] / rgba.size[0])), Image.LANCZOS); Wt = Ht = 1024
     sheet = Image.new('RGBA', (Wt, Ht), (0, 0, 0, 0)); sheet.paste(rgba, (0, 0), rgba); sheet.paste(rgba.transpose(Image.FLIP_LEFT_RIGHT), (512, 0))
     sheet.save(os.path.join(out, 'perceuse.png'))
-    w = h * rgba.size[0] / rgba.size[1]; vh = rgba.size[1] / Ht
+    w = h * rgba.size[0] / rgba.size[1]; vh = rgba.size[1] / Ht; x0 = x_right - w
     m = Mesh(); nw = lambda v: tuple(np.subtract(wp(*v), wp(0, 0, 0)))
-    P = [(x0, y0, 0.55), (x0 + w, y0, 0.55), (x0 + w, y0 + h, 0.55), (x0, y0 + h, 0.55)]
-    _face(m, [wp(*p) for p in P], [(1.0, 1 - vh), (0.5, 1 - vh), (0.5, 1), (1.0, 1)], [nw((0, 0, 1))] * 4)          # face vers les pilotes (v25 : pas en miroir)
-    P2 = [(x0 + w, y0, -0.55), (x0, y0, -0.55), (x0, y0 + h, -0.55), (x0 + w, y0 + h, -0.55)]
-    _face(m, [wp(*p) for p in P2], [(0.5, 1 - vh), (0.0, 1 - vh), (0.0, 1), (0.5, 1)], [nw((0, 0, -1))] * 4)   # dos
+    P = [(x0, y0, 0.56), (x0 + w, y0, 0.56), (x0 + w, y0 + h, 0.56), (x0, y0 + h, 0.56)]
+    _face(m, [wp(*p) for p in P], [(1.0, 1 - vh), (0.5, 1 - vh), (0.5, 1), (1.0, 1)], [nw((0, 0, 1))] * 4)
+    P2 = [(x0 + w, y0, -0.56), (x0, y0, -0.56), (x0, y0 + h, -0.56), (x0 + w, y0 + h, -0.56)]
+    _face(m, [wp(*p) for p in P2], [(0.5, 1 - vh), (0.0, 1 - vh), (0.0, 1), (0.5, 1)], [nw((0, 0, -1))] * 4)
     m.write(os.path.join(out, 'perceuse.jm'), MAT_MAT)
     return 'perceuse.jm', 'perceuse.png', None
