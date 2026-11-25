@@ -103,11 +103,13 @@ def post_finish(out, path, sm=1.2):
     smp = path.samples(0.25); sr = smp['s'] - ga['s0']; keep = (sr > -15) & (sr < e3 + 30)
     sx, sz, st_, th = smp['x'][keep], smp['z'][keep], sr[keep], smp['th'][keep]
     P1 = LP.pts_prof(LP.POST_FIN['b1'], 1.0); P23 = LP.pts_prof(LP.POST_FIN['b23'], 1.0)
+    P1o = LP.pts_prof(LP.POST_FIN.get('b1o', LP.POST_FIN['b1']), 0.7)            # v23e : extérieur (droite) en appel
     R = 40.0; sl, X, Z = G.window(sx.min() - R, sx.max() + R, sz.min() - R, sz.max() + R)
     tree = cKDTree(np.c_[sx, sz]); d_, i_ = tree.query(np.c_[X.ravel(), Z.ravel()]); i_ = i_.reshape(X.shape)
     dx, dz = X - sx[i_], Z - sz[i_]; v = -dx * np.sin(th[i_]) + dz * np.cos(th[i_]); s_ = st_[i_]
     u0_ = 0.0                                                   # les points de POST_FIN sont déjà en s absolu
-    h1 = np.interp((s_ - u0_) / 0.1, np.arange(len(P1)), P1, left=0, right=0)
+    h1i = np.interp((s_ - u0_) / 0.1, np.arange(len(P1)), P1, left=0, right=0); h1o = np.interp((s_ - u0_) / 0.1, np.arange(len(P1o)), P1o, left=0, right=0)
+    wq = np.clip(v / 10.0 + 0.5, 0, 1); wq = wq * wq * (3 - 2 * wq); h1 = h1i * (1 - wq) + h1o * wq
     u2_ = 0.0
     h23 = np.interp((s_ - u2_) / 0.1, np.arange(len(P23)), P23, left=0, right=0)
     tw = LP.TOP_W; ss = lambda t: (lambda t_: t_ * t_ * (3 - 2 * t_))(np.clip(t, 0, 1))
@@ -212,6 +214,16 @@ def zion_ground(OUT, FOLDER):
     # v19d (« en sable, texture sable et tout ») : les tuiles sable de ZION (viraplasable, turnsable) avec la texture sable de ZION
     # v23 : sable USLAND (SX1) ; v23c (« la texture toute verte ») : copié dans ztile (le chemin ext/ ne se charge pas dans ces tuiles)
     zb = [re.sub(r"texture @\S+/ztile/2\.png", "texture @%s/ztile/sand_usland.ppm" % FOLDER, b) if re.search(r"name (viraplasable|turnsable)", b) else b for b in zb]
+    # v23e (« t'as toujours pas mis de sable ; une texture sable, que ça freine la moto, comme on a l'habitude ») : les tuiles sable de
+    # ZION remplacées par les vraies tuiles sable des pistes USLAND (SX1 : Sand Straight / Sand Exit : freinage, érosion, traces et
+    # poussière de sable), fichiers copiés dans sx1sand/
+    sx1 = open(os.path.join(BP.ROOT, "tracks", "USLAND2026SX1", "tileinfo")).read().split("addtile")
+    def sxb(nm, newname):
+        b_ = next(b for b in sx1 if re.search(r"name %s\s*$" % nm, b, re.M)).replace("@USLAND2026SX1/", "@%s/sx1sand/" % FOLDER)
+        return re.sub(r"name [^\r\n]+", "name " + newname, b_, count=1)
+    zb = [sxb("Sand Straight", "viraplasable") if re.search(r"name viraplasable", b) else sxb("Sand Exit", "turnsable") if re.search(r"name turnsable", b) else b for b in zb]
+    for sub_ in ("tiles", "roost", "treads"):
+        shutil.copytree(os.path.join(BP.ROOT, "tracks", "USLAND2026SX1", sub_), os.path.join(OUT, "sx1sand", sub_), dirs_exist_ok=True)
     # v21d (« le sol derrière le terrain, là où il y a les camions, de la tribune à l'autre côté : des dalles noires un peu de plastique,
     # noir gris ») : une tuile de plus, « Paddock » (index PADDOCK_TILE), réglages de la tuile Road, texture dalles_noires.png
     road = next(b for b in pick if re.search(r"name Road", b))
@@ -507,7 +519,7 @@ def deco_v21(OUT, FOLDER, combos):
         it = [i for i in combos[name]['items'] if 'butte' in i[0]][0]; i0_, i1_ = int(it[1] / 0.1), int(it[2] / 0.1)
         uc = u0 + it[1] + float(np.argmax(prof[i0_:i1_])) * 0.1; ue = u0 + it[2]
         c, s2 = np.cos(g3['t']), np.sin(g3['t']); nrm = np.array([-s2, c]); yaw = float(np.arctan2(-s2, c)); fa = DV.bale_u(sd, 'amv')
-        for u_ in (uc, uc + 0.5 * (ue - uc)):
+        for u_ in (uc + 0.30 * (ue - uc), uc + 0.60 * (ue - uc)):     # v23e : dans la descente de la réception
             for side_ in (-1, 1):
                 p_ = np.array([g3['x0'] + u_ * c, g3['z0'] + u_ * s2]) + nrm * side_ * BALE_V; lines.append(line(p_[0], p_[1], yaw, *fa))
     # v23c : bâches drapées sur les flancs : saut Milwaukee (LR) et réception du freestyle (plaque AMV)
@@ -522,6 +534,22 @@ def deco_v21(OUT, FOLDER, combos):
             for side_, nm_ in ((-1, 'bache_amv_g'), (1, 'bache_amv_d')):
                 O_, jm_, png_, shp_ = D22.board_v23(sd, nm_.replace('bache', 'panneau'), Hf, g3, u0 + it[1], u0 + it[2], side_, 'amv')
                 lines.append(line(O_[0], O_[1], 0.0, jm_, png_, shp_))
+    # v23e : murs INVISIBLES (collision seule), assez hauts pour ne pas gêner un saut normal : (1) entre la petite table et l'appel du
+    # freestyle (« ça saute derrière l'appel ») ; (2) après le Milwaukee, au-dessus du 1er obstacle du triple (« pas sauter dans la 2e,
+    # ça fait monter très haut ») ; (3) entre la réception du double et l'appel du triple d'arrivée (« pas sauter par-dessus le triple »)
+    def inv_wall(nm, g, u, lo, hi):
+        c, s2 = np.cos(g['t']), np.sin(g['t']); nrm = np.array([-s2, c]); P0 = np.array([g['x0'] + u * c, g['z0'] + u * s2])
+        h_ = float(Hf(*P0)[0]); sph = [(nrm[0] * v, h_ - h_ + y, nrm[1] * v) for v in np.arange(-16.0, 16.01, 2.6) for y in np.arange(lo, hi + 0.01, 2.6)]
+        m = DV.Mesh(); m.tri([(0, -20, 0), (0.01, -20, 0), (0, -20, 0.01)], [(0.5, 0.5)] * 3); m.write(os.path.join(sd, nm + '.jm'))
+        DV.K.shp(os.path.join(sd, nm + '.shp'), sph, 1.4, par=(1.5, 1000, 200)); lines.append(line(P0[0], P0[1], 0.0, nm + '.jm', 'bache_paille.png', nm + '.shp'))
+        rep_.setdefault('murs_invisibles', []).append((nm, round(u, 1), round(h_ + lo, 1), round(h_ + hi, 1)))
+    it_ = combos[LP.L3_SEC]['items'][0]; s3 = next(sec for sec in g3['sections'] if sec[2] == LP.L3_SEC); pr3 = s3[0]
+    i0_, i1_ = int(it_[1] / 0.1), int(it_[2] / 0.1); kc_ = i0_ + int(np.argmax(pr3[i0_:i1_]))
+    inv_wall('invisible_freestyle', g3, s3[1] + (i0_ + 0.5 * (kc_ - i0_)) * 0.1, 7.0, 25.0)
+    sR = gR['sections'][0]; itR = combos[sR[2]]['items']; kM = next(i for i, it in enumerate(itR) if 'Milwaukee' in it[0])
+    inv_wall('invisible_milwaukee', gR, sR[1] + (itR[kM + 1][1] + itR[kM + 1][2]) / 2, 10.0, 36.0)
+    g5 = next(g for g in BP.PATH.segs if g['kind'] == 'S' and g['tag'].startswith('L5')); s5 = g5['sections'][0]; it5 = combos[s5[2]]['items']
+    inv_wall('invisible_arrivee', g5, s5[1] + (it5[1][2] + it5[2][1]) / 2, 7.0, 26.0)
     for f in ["statues"] + ["variants/" + v for v in os.listdir(os.path.join(OUT, "variants")) if v.startswith("statues")]:
         p = os.path.join(OUT, f); s0 = open(p).read().rstrip(chr(10)) + chr(10)
         open(p, "w", newline=chr(10)).write(s0 + chr(10).join(lines) + chr(10))

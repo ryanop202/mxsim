@@ -299,7 +299,9 @@ def arche_50f(out, drop=0.0, xc=None):
 # sont 3 boudins » ; « la couleur du logo que je t'ai envoyé » (fond + logo du sponsor, sponsors.py).
 # Chaque module de 10 ft = un bloc DROIT (corde de l'arc), dessus à la même hauteur sur tout le mur (VIS ft au-dessus de la plus haute
 # crête du berm), bas enterré ; fagot de 3 boudins noirs (bouts visibles) sous une bâche aux couleurs du sponsor ; filet droit par module.
-WALL23 = dict(vis=1.6, depth=1.0, n90=3, n180=4, entry=0.02)
+WALL23 = dict(vis=0.5, depth=1.0, n90=3, n180=4, entry=0.02)   # v23e (« le mur est trop haut : le boudin au sommet de l'appui touche presque la terre, un petit peu de gris ») : 1,6 -> 0,5 ft
+# v23e (« un peu plus vers le milieu du virage ; enlève le 1er bloc et mets-le de l'autre côté ») : décalage du mur en modules, par virage
+WALL_SHIFT = {'T_L5a': 1, 'T_Bb': 1, 'T_D ': 1, 'T1 1': 2, 'T_TR': 1, 'T_E ': 1, 'T_C ': 3}
 TURN_SPONSOR.update({'T_Bb': 'mxsim', 'T_Ba': 'mxsim'})
 
 
@@ -314,7 +316,7 @@ def bundle_texture_v23(out, key, Lm=9.3):
     if lg is not None:
         l2 = lg.resize((lg.size[0], max(1, int(lg.size[1] * Lm / P))), Image.LANCZOS)
         fit(im, l2, (int(W * 0.10), int(H * (1 - 0.44)), int(W * 0.90), int(H * (1 - 0.10))), 0.05)
-    ImageDraw.Draw(im).rectangle([0, 0, W, int(H * 0.02)], fill=(18, 18, 20))
+    ImageDraw.Draw(im).rectangle([0, 0, W, int(H * 0.02)], fill=(204, 204, 200))   # v23e : intérieur des boudins gris clair
     fn = 'fagot23_%s.png' % (key or 'noir'); _save(im, os.path.join(out, fn)); return fn
 
 
@@ -323,9 +325,10 @@ def turn_wall_v23(out, k, g, Hf, key):
     sg = 1.0 if g['ang'] > 0 else -1.0; th_in = g['t0'] + sg * np.pi / 2; ang = np.radians(g['ang']); th = lambda f: th_in - ang * f
     cx, cz = g['cx'], g['cz']; h0 = float(np.ravel(Hf(cx, cz))[0]); H1 = lambda x, z: float(np.ravel(Hf(x, z))[0])
     f_a = g.get('berm_from', 0.0) + WALL23['entry']; nmod = WALL23['n180'] if abs(g['ang']) > 100 else WALL23['n90']
+    sh_ = next((v for k_, v in WALL_SHIFT.items() if g['tag'].startswith(k_)), 0)
     tm = th(f_a + 0.15); rr = np.arange(g['r'], g['r'] + 40, 0.5)
     r_crest = float(rr[int(np.argmax(Hf(cx + np.cos(tm) * rr, cz + np.sin(tm) * rr)))])
-    W = BLK['W']; rc = r_crest + BLK['back'] + W / 2; df = AIRF['mod'] / (abs(ang) * rc)
+    W = BLK['W']; rc = r_crest + BLK['back'] + W / 2; df = AIRF['mod'] / (abs(ang) * rc); f_a += sh_ * df
     f_b = min(1.0, f_a + nmod * df); f_a = f_b - nmod * df
     P2 = lambda f, r_: np.array([np.cos(th(f)) * r_, np.sin(th(f)) * r_])
     fs = f_a + df * np.arange(nmod + 1); hc = []
@@ -369,8 +372,8 @@ def turn_wall_v23(out, k, g, Hf, key):
             Q = [V3(A2, dcen + d0, yb2 + y0), V3(B2, dcen + d0, yb2 + y0), V3(B2, dcen + d1, yb2 + y1), V3(A2, dcen + d1, yb2 + y1)]
             N_ = [(nn[0] * nd0, ny0, nn[1] * nd0)] * 2 + [(nn[0] * nd1, ny1, nn[1] * nd1)] * 2
             _face(a2, Q, [(u0_, v0), (u1_, v0), (u1_, v1), (u0_, v1)], N_)
-        for d_, y_ in ((-rb, rb), (rb, rb), (0.0, rb * (1 + np.sqrt(3)))):
-            a3 = V3(A + t * 0.12, dcen + d_, yb2 + y_); b3 = V3(B - t * 0.12, dcen + d_, yb2 + y_)
+        for d_, y_ in ((-rb, rb), (rb, rb), (0.0, rb * (1 + np.sqrt(3)))):   # v23e : coupés pile au ras de la bâche, gris clair
+            a3 = V3(A2, dcen + d_, yb2 + y_); b3 = V3(B2, dcen + d_, yb2 + y_)
             a2.tube(a3, b3, rb * 0.97, (0.02, 0.985, 0.98, 0.998), 14)
         for s_ in np.arange(0.5, L, 2.0):
             c_ = A + t * s_; sph_a.append((c_[0] + nn[0] * dcen, yb2 + rb * 1.3, c_[1] + nn[1] * dcen))
@@ -385,6 +388,8 @@ def turn_wall_v23(out, k, g, Hf, key):
             c_ = An + t * s_; sph_n += [(c_[0], ytop + h_, c_[1]) for h_ in (1.5, 3.0, 4.5)]
     for qi in range(nmod + 1):                                                  # poteaux aux raccords + mousses
         f = fs[qi]; p_ = P2(f, rc); e_ = p_ / np.linalg.norm(p_); pp = p_ + e_ * (W / 2 - NETV['off'] + 0.12)
+        if qi in (0, nmod):                                                     # v23e : poteau du bout sur le bloc, pas dans le vide
+            t_in = P2(fs[1 if qi == 0 else nmod - 1], rc) - p_; pp = pp + t_in / np.linalg.norm(t_in) * 0.9
         yb_ = ytop - 0.2; yt_ = net_top + 0.35
         n2.tube((pp[0], yb_, pp[1]), (pp[0], yt_, pp[1]), NETV['pole_r'], dot(NT_['red']), 8)
         n2.tube((pp[0], yt_, pp[1]), (pp[0], yt_ + NETV['cap'], pp[1]), NETV['pole_r'] * 1.25, dot(NT_['yel']), 8)
@@ -412,7 +417,7 @@ def pylon_skin(out, sgm_statue, key):
     d.rectangle([0, 0, 1024, 928], fill=bg)
     if lg is not None:
         for cx in (256, 768):
-            fit(im, lg, (cx - 90, 120, cx + 90, 820), 0.0, rot=90)
+            fit(im, lg, (cx - 95, 30, cx + 95, 680), 0.0, rot=90)   # v23e : centré sur le corps gonflable (pas le socle)
     im = K.shade_v(im, (0, 0, 1024, 928), 1.0, 0.82); fn = 'pylone23_%s.png' % (key or 'noir'); _save(im, os.path.join(out, fn)); return fn
 
 
@@ -462,9 +467,10 @@ def _profile_along(Hf, g, ua, ub, step=0.25):
     hc = np.array([float(np.ravel(Hf(g['x0'] + u * c, g['z0'] + u * s_))[0]) for u in us]); return us, hc
 
 
-def board_v23(out, name, Hf, g, ua, ub, side, kind, lift=0.35, head=3.5, th=0.25):
+def board_v23(out, name, Hf, g, ua, ub, side, kind, lift=None, head=3.5, th=0.25):
     """panneau vertical droit au pied du flanc (côté side), silhouette = profil du saut sur l'axe (+ lift) ; kind 'milwaukee' ou 'amv'
     (AMV : le panneau du centre, au-dessus du plat, dépasse de head ft). Texture : u le long du saut, v = hauteur (logo jamais en miroir)."""
+    lift = lift if lift is not None else (2.5 if kind == 'amv' else 0.35)   # v23e (« ça fait presque des barrières, ça remonte plus haut sur le sommet »)
     c, s_ = np.cos(g['t']), np.sin(g['t']); nrm = np.array([-s_, c]) * side; tg = np.array([c, s_])
     H1 = lambda p: float(np.ravel(Hf(p[0], p[1]))[0]); base = lambda u: np.array([g['x0'] + u * c, g['z0'] + u * s_])
     us, hc = _profile_along(Hf, g, ua, ub); h0 = float(np.min(hc)); k = hc > h0 + 0.4; us, hc = us[k], hc[k]
@@ -535,4 +541,7 @@ def _board_texture(kind, W, H, sil, ua_t, ub_t, px_u, px_v, ymax):
         for x in range(0, W, 4):
             y_ = yat(x); d.rectangle([x, y_, x + 4, y_ + bw], fill=G_)
         d.rectangle([0, H - bw, W, H], fill=G_); d.rectangle([xa - 6, yt_c, xa + 6, H], fill=G_); d.rectangle([xb - 6, yt_c, xb + 6, H], fill=G_)
+        fs_ = ImageFont.truetype('C:/Windows/Fonts/ariblk.ttf', max(14, int(0.9 * px_v)))   # v23e : petits AMV le long de la barrière du haut
+        for x in list(range(int(0.04 * W), xa - 60, int(7 * px_u))) + list(range(xb + 60, int(0.96 * W), int(7 * px_u))):
+            d.text((x, yat(x) + bw + int(0.8 * px_v)), 'AMV', font=fs_, fill=G_, anchor='mm')
     d.rectangle([0, 0, 4, 4], fill=(16, 16, 18)); return K.grain(im, 1.0)

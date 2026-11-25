@@ -93,3 +93,21 @@ Décor
 - Ballots aux couleurs des sponsors par zone (MV = juste le sigle ; FIVE logo / 5 rouge en alternance ; AMV = 3 lettres) ; 4 ballots
   AMV sur la réception du freestyle + plaque AMV drapée sur ses flancs ; 2 ballots enlevés au début de L6 (côté droit).
 - Poteaux gonflables à l'intérieur des virages (sponsor du virage).
+
+## Review en jeu de la v23c (2026-11-25) -> v23e
+- Ballots : Minerva sur fond noir ; logos plus gros sur tous les ballots.
+- Murs : un peu plus vers le milieu du virage (décalage en modules par virage : T_L5a +1, T_Bb +1, T_D +1, T1 +2, T_TR +1, T_E +1,
+  T_C +3) ; beaucoup moins hauts (le fagot touche presque la crête : 0,5 ft de gris) ; boudins coupés au ras de la bâche, intérieur
+  gris clair ; poteau du bout plus dans le vide.
+- Poteaux gonflables : logo centré sur le corps gonflable (pas sur le socle).
+- Virage après l'arrivée : 1re bosse en appel à droite (3 ft), ronde à gauche ; plus d'écart ; 2e plus raide ; 2e virage plus large (r 26).
+- Petite table creusée : bout plus haut (5,6 ft) ; mur invisible en hauteur avant l'appel du freestyle.
+- Réception du freestyle : ballots AMV dans la descente ; panneaux AMV en barrière plus haute (+2,5 ft) avec petits AMV en haut.
+- L2 : 1re bosse au ras du virage ; 2e bosse plus ronde, plus basse à droite ; plus de creux remontés (« escaliers ») ; L2 et L1 9 ft
+  plus courts (virage T1 plus près, whoops plus près de la sortie).
+- Sable : vraies tuiles sable USLAND (SX1 : Sand Straight / Sand Exit, freinage, traces, poussière).
+- Milwaukee : haut 13 ft, réception plus raide (~33°) ; mur invisible au-dessus du triple ; triple 4 ft plus près du virage.
+- L5 : double au ras de la sortie du virage, appel 4,5 ft avec plus de terre derrière ; mur invisible entre la réception du double et
+  l'appel du triple.
+- START beaucoup plus large (52 ft) ; FINISH tout noir.
+- Plus tard : stade (trop d'escaliers, public).

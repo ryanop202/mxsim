@@ -16,7 +16,7 @@ def _detour(path, plate=False):
     im = Image.open(path).convert('RGBA'); a = np.asarray(im, float)
     if a[..., 3].min() < 10:                                         # PNG transparent (Minerva) : fond blanc
         al = a[..., 3]; ys, xs = np.nonzero(al > 10)
-        return (255, 255, 255), im.crop((xs.min(), ys.min(), xs.max() + 1, ys.max() + 1))
+        return (14, 14, 15), im.crop((xs.min(), ys.min(), xs.max() + 1, ys.max() + 1))   # v23e : Minerva sur fond noir
     rgb = a[..., :3]; bd = np.concatenate([rgb[0], rgb[-1], rgb[:, 0], rgb[:, -1]]); b0 = np.median(bd, 0)
     m0 = np.linalg.norm(rgb - b0, axis=-1) > 45; ys, xs = np.nonzero(m0); c = rgb[ys.min():ys.max() + 1, xs.min():xs.max() + 1]
     mc = m0[ys.min():ys.max() + 1, xs.min():xs.max() + 1]; c1 = np.median(c[mc], 0)

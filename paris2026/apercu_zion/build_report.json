@@ -1,21 +1,21 @@
 {
  "apres_arrivee": {
   "b1": 2.32,
-  "b23": 4.2,
+  "b23": 4.24,
   "plateau": 4.2
  },
  "sections": [
   {
    "lane": "L5 arrivée",
    "name": "PAR-L5 petit double, triple d arrivee (ZION 2025)",
-   "u0": 4.0,
-   "L": 267.9,
+   "u0": 1.0,
+   "L": 270.9,
    "H": 11.15,
    "items": [
     [
      "double USLAND",
      0.0,
-     20.1
+     24.6
     ],
     [
      "double USLAND",
@@ -24,13 +24,13 @@
     ],
     [
      "appel arrivee ZION 2025 (10,0)",
-     99.5,
-     144.9
+     102.5,
+     147.9
     ],
     [
      "triple arrivee ZION 2025 (6,0 / 11,2) fusionne",
-     144.9,
-     267.8
+     147.9,
+     270.8
     ]
    ]
   },
@@ -58,7 +58,7 @@
    "name": "PAR-L3 petite table creusee",
    "u0": 6.0,
    "L": 65.5,
-   "H": 4.88,
+   "H": 5.48,
    "items": [
     [
      "petite table creusee x1.98",
@@ -70,8 +70,8 @@
   {
    "lane": "L2 singles",
    "name": "PAR-L2 double triple triple (8 bosses)",
-   "u0": 3.0,
-   "L": 280.1,
+   "u0": 0.0,
+   "L": 274.1,
    "H": 5.0,
    "items": [
     [
@@ -80,46 +80,46 @@
      27.8
     ],
     [
-     "bosse ZION 4.6 ft",
-     34.2,
-     62.6
+     "bosse ZION 4,6 ft (ronde)",
+     32.1,
+     69.2
     ],
     [
      "bosse ZION 5.0 ft",
-     74.0,
-     103.6
+     78.5,
+     108.1
     ],
     [
      "bosse ZION 4.8 ft",
-     110.0,
-     139.0
+     112.4,
+     141.4
     ],
     [
      "bosse ZION 5.0 ft",
-     145.4,
-     175.0
+     145.7,
+     175.3
     ],
     [
      "bosse ZION 4.6 ft",
-     181.4,
-     209.8
+     179.6,
+     208.0
     ],
     [
      "bosse ZION 4.8 ft",
-     216.2,
-     245.2
+     212.3,
+     241.3
     ],
     [
      "bosse ZION 4.6 ft",
-     251.6,
-     280.0
+     245.6,
+     274.0
     ]
    ]
   },
   {
    "lane": "L1 whoops",
    "name": "PAR-L1 whoops, table, bosse",
-   "u0": 10.2,
+   "u0": 1.2,
    "L": 341.7,
    "H": 4.22,
    "items": [
@@ -149,8 +149,8 @@
    "lane": "LR tribune Est",
    "name": "PAR-LR sable, saut Milwaukee, triple",
    "u0": 6.0,
-   "L": 283.7,
-   "H": 11.57,
+   "L": 280.2,
+   "H": 12.96,
    "items": [
     [
      "roller sable 1,1 ft",
@@ -165,22 +165,22 @@
     [
      "saut Milwaukee 11,6 ft",
      124.8,
-     183.4
+     175.9
     ],
     [
      "bosse ZION 4.0 ft",
-     191.4,
-     218.5
+     187.9,
+     215.0
     ],
     [
      "bosse ZION 4.1 ft",
-     224.0,
-     251.4
+     220.5,
+     247.9
     ],
     [
      "bosse ZION 3.9 ft",
-     256.9,
-     283.6
+     253.4,
+     280.1
     ]
    ]
   },
@@ -247,7 +247,7 @@
  "objets": {
   "objets": {
    "retirés (v13) : boudins FLY Racing (whoops)": 28,
-   "retirés (v13) : ballots ZION (unis)": 218,
+   "retirés (v13) : ballots ZION (unis)": 216,
    "retirés (v13) : poteaux ronds": 7,
    "retirés (v13) : tuffs de virage ZION (unis)": 72,
    "retirés (v13) : filets": 42,
@@ -289,7 +289,7 @@
  "export": {
   "hmin": -0.5,
   "hmax": 22.284797463893984,
-  "statues_relevees": 44,
+  "statues_relevees": 36,
   "decals": 86,
   "decals_terre": 0
  },
@@ -306,7 +306,7 @@
   ],
   "dalles_tuiles": 234868,
   "x_paddock": 714.7,
-  "overlay": 5161,
+  "overlay": 5150,
   "decals_gardes": 0,
   "start": [
    671.5,
@@ -324,82 +324,102 @@
     "T_L5a",
     "minerva",
     [
-     0.02,
-     0.468
+     0.169,
+     0.618
     ],
     3,
-    8.33
+    7.26
    ],
    [
     "T_Bb ",
     "mxsim",
     [
-     0.02,
-     0.468
+     0.169,
+     0.618
     ],
     3,
-    9.36
+    8.3
    ],
    [
     "T_D 1",
     "automoto",
     [
-     0.42,
-     0.659
+     0.48,
+     0.719
     ],
     4,
-    8.56
+    7.61
    ],
    [
     "T1 18",
     "honda",
     [
-     0.02,
-     0.319
+     0.169,
+     0.468
     ],
     4,
-    6.13
+    7.15
    ],
    [
     "T_TR ",
     "motoverte",
     [
-     0.02,
-     0.468
+     0.169,
+     0.618
     ],
     3,
-    8.33
+    7.26
    ],
    [
     "T_E 9",
     "yamaha",
     [
-     0.02,
-     0.468
+     0.169,
+     0.618
     ],
     3,
-    8.33
+    7.26
    ],
    [
     "T_C 1",
     "five",
     [
-     0.02,
-     0.305
+     0.234,
+     0.52
     ],
     4,
-    6.47
+    8.3
    ]
   ],
-  "ballots": 122,
+  "ballots": 120,
   "arche": [
    277.8,
    741.3,
    0.89
   ],
-  "poteaux": 7
+  "poteaux": 7,
+  "murs_invisibles": [
+   [
+    "invisible_freestyle",
+    98.6,
+    7.1,
+    25.1
+   ],
+   [
+    "invisible_milwaukee",
+    207.4,
+    13.9,
+    39.9
+   ],
+   [
+    "invisible_arrivee",
+    99.6,
+    7.0,
+    26.0
+   ]
+  ]
  },
- "lap_ft": 2698.4,
+ "lap_ft": 2678.5,
  "start": {
   "gate": [
    683.5099504,

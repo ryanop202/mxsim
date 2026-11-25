@@ -436,11 +436,11 @@ def finish(out, drop=0.0, y_bas=34.0, roof=118.0, word='finish', fname='finish')
     v23 (photos START / FINISH de Paris : « regarde comment c'est fait ») : treillis carré en acier foncé (1,2 x 1,2 ft) au-dessus d'une
     longue bannière (32 x 3,4 ft) : Venum | griffe Monster + MONSTER ENERGY | START / FINISH | Monster | Venum ; fond noir (START) ou
     gris à rayures claires (FINISH) ; 2 élingues jusqu'au toit (haut des élingues à y = roof, convention reprise par build_zion)."""
-    L, Hb, T = 32.0, 3.4, 1.2
+    L, Hb, T = (52.0 if word == 'start' else 32.0), 3.4, 1.2   # v23e (« le truc start, bien plus large »)
     W, H = 2048, 256; bh = int(round(W * Hb / L)); fb = (0, 0, W, bh)
-    bg = (10, 10, 11) if word == 'start' else (78, 80, 84)
+    bg = (10, 10, 11)                                                          # v23e : FINISH tout noir comme le START
     im = Image.new('RGB', (W, H), bg); d = ImageDraw.Draw(im)
-    if word != 'start':                                                        # FINISH : bâche grise, grandes rayures claires
+    if False:                                                                  # (v23b : FINISH gris à rayures ; v23e : tout noir)
         for x in range(-200, W, 260):
             d.polygon([(x, bh), (x + 90, bh), (x + 190, 0), (x + 100, 0)], fill=tuple(int(c * 1.18) for c in bg))
     fx = lambda a: int(a * W)

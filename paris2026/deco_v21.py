@@ -78,9 +78,9 @@ def bale_u(out, key='noir'):
     band = int(0.025 * W); d.rectangle([0, 0, band, rows], fill=BLACK); d.rectangle([W - band, 0, W, rows], fill=BLACK)   # bord noir
     if lg:
         lo = lo_img if lo_img is not None else (K.logo(lg) if ink is None else K.tint(K.logo(lg), ink))
-        fl_ = hs + np.pi * a / 2; sc = int(0.55 * fl_ * kpx); hb = int(0.26 * fl_ * kpx)          # logo au milieu du flanc
-        fit(im, lo.rotate(180, expand=True), (band + 40, sc - hb, W - band - 40, sc + hb), 0.04)      # flanc -z : vu de dehors, à l'endroit
-        sc2 = int((stot - 0.55 * fl_) * kpx); fit(im, lo, (band + 40, sc2 - hb, W - band - 40, sc2 + hb), 0.04)  # flanc +z
+        fl_ = hs + np.pi * a / 2; sc = int(0.55 * fl_ * kpx); hb = int(0.38 * fl_ * kpx)          # logo au milieu du flanc ; v23e : plus gros
+        fit(im, lo.rotate(180, expand=True), (band + 12, sc - hb, W - band - 12, sc + hb), 0.0)      # flanc -z : vu de dehors, à l'endroit
+        sc2 = int((stot - 0.55 * fl_) * kpx); fit(im, lo, (band + 12, sc2 - hb, W - band - 12, sc2 + hb), 0.0)  # flanc +z
     inn = tuple(int(c * 0.42) for c in body) if key != 'noir' else (12, 12, 13)
     d.rectangle([0, 1440, W, 1700], fill=inn); d.rectangle([0, 1720, W, 1800], fill=BLACK)
     im = K.grain(im, 1.5); _save(im, os.path.join(out, 'bale_u_%s.png' % key))
