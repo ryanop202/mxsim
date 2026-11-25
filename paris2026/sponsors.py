@@ -52,7 +52,12 @@ def panel(key):
         r = ((249, 229, 42), K.logo('50factory'))
     elif key == 'mv':                                                # Moto Verte : « juste le MV » (le symbole, ~le premier quart du logo)
         bg, lg = _detour(os.path.join(U, FILES['motoverte'])); w_ = int(0.295 * lg.size[0]); c_ = lg.crop((0, 0, w_, lg.size[1]))
-        r = (bg, c_.crop(c_.getbbox()))
+        from scipy.ndimage import label   # v25c (« le petit point rouge ») : on enlève les morceaux de lettre coupés au bord droit
+        a_ = np.asarray(c_).copy(); lab_, n_ = label(a_[..., 3] > 30)
+        for i_ in range(1, n_ + 1):
+            if (lab_[:, -3:] == i_).any():
+                a_[lab_ == i_, 3] = 0
+        c_ = Image.fromarray(a_, 'RGBA'); r = (bg, c_.crop(c_.getbbox()))
     elif key == 'amv_plaque':                                        # la plaque AMV entière (texte + personnages) : bâche de la réception du freestyle
         im = Image.open(os.path.join(U, FILES['amv'])).convert('RGB'); a = np.asarray(im, float)
         ys, xs = np.nonzero(np.linalg.norm(a - 255, axis=-1) > 40); c = im.crop((xs.min(), ys.min(), xs.max() + 1, ys.max() + 1)).convert('RGBA')

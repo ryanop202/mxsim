@@ -213,8 +213,10 @@ def whoops_zion(n=10, k=1.15, launch_m=0.60, pitch_m=6.20):   # v20 (« minimum 
 # v24 : panneaux des sauts (contours dessinés par l'utilisateur sur les vues de côté) ; v24b (« un contour en bois avec une bâche autour,
 # incrusté dans la bosse, collé, pas trop fin ; le Milwaukee un peu plus haut ») : plan du panneau à BOARD_VB ft de l'axe (bord du dessus
 # du saut), épaisseur BOARD_TH ; la terre du flanc au-delà est enlevée (build_paris.board_cut)
-BOARD_POLY = dict(milwaukee=[(145.8, 0.0), (154.6, 14.0), (163.4, 14.0), (179.8, 0.0)],
-                  amv=[(141.0, 0.0), (163.8, 21.3), (186.7, 21.3), (219.0, 0.0)])
+# v25c (« de près ça fait des trucs bizarres ») : trapèzes de l'utilisateur élargis juste ce qu'il faut pour couvrir toute la terre du saut
+# (pentes droites, plateau), sinon la terre traverse la bâche
+BOARD_POLY = dict(milwaukee=[(142.0, 0.0), (153.5, 14.3), (163.5, 14.3), (181.0, 0.0)],
+                  amv=[(133.0, 0.0), (163.8, 23.4), (184.0, 23.4), (232.0, 0.0)])
 BOARD_LANE = dict(milwaukee='LR', amv='L3')
 BOARD_VB = dict(milwaukee=18.5, amv=28.0)
 BOARD_TH = 1.0

@@ -123,6 +123,42 @@ def post_finish(out, path, sm=1.2):
     BP.REPORT['apres_arrivee'] = dict(b1=round(float(P1.max()), 2), b23=round(float(P23.max()), 2), plateau=LP.POST_FIN['b23'][3][1])
 
 
+def board_cut_layer(lay, g, kind):
+    """v25c (« de l'autre côté de la bosse t'as tout coupé, cassé l'enchaînement ») : la terre de CE saut seulement (couche à part) est
+    coupée au plan du panneau (|v| > BOARD_VB - 0,2 ft, fondu de 0,8 ft), sur la longueur du panneau ; les autres couloirs ne sont pas touchés."""
+    poly = LP.BOARD_POLY[kind]; ua, ub = poly[0][0], poly[-1][0]; vb = LP.BOARD_VB[kind]; c, s_ = np.cos(g['t']), np.sin(g['t']); R = vb + 70
+    pts = np.array([(g['x0'] + uu * c - vv * s_, g['z0'] + uu * s_ + vv * c) for uu in (ua - 4, ub + 4) for vv in (-R, R)])
+    sl, X, Z = G.window(pts[:, 0].min(), pts[:, 0].max(), pts[:, 1].min(), pts[:, 1].max())
+    dx, dz = X - g['x0'], Z - g['z0']; u = dx * c + dz * s_; v = np.abs(-dx * s_ + dz * c)
+    ss = lambda t: (lambda t_: t_ * t_ * (3 - 2 * t_))(np.clip(t, 0, 1))
+    m = ss((v - (vb - 1.0)) / 0.8) * ss((u - ua) / 1.5) * ss((ub - u) / 1.5)
+    lay[sl] *= (1 - m)
+
+
+def wall_fill(H, path):
+    """v25c (« tous les virages : t'as fait des escaliers, fais droit » ; « quitte à mettre un peu plus de terre à l'entrée et à la sortie
+    pour cacher la hauteur des murs en gris ») : la géométrie des murs (deco_v22.wall_geom, une seule hauteur par virage) est calculée ici
+    sur le terrain, puis la terre est remontée entre le haut du berm et le pied du mur jusqu'au haut du mur (-0,12 ft), fondu aux bouts."""
+    import deco_v22 as D22
+    Hf = lambda x, z: map_coordinates(H, [np.atleast_1d(z) / S, np.atleast_1d(x) / S], order=1)
+    ss = lambda t: (lambda t_: t_ * t_ * (3 - 2 * t_))(np.clip(t, 0, 1)); H = H.copy(); rep_ = {}
+    for g in path.segs:
+        if g['kind'] != 'T' or not g.get('berm'):
+            continue
+        W_ = D22.wall_geom(g, Hf); D22.WALL_GEOM[g['tag']] = W_
+        rc, rcr, Wd, fs, ang, th_in, cx, cz, h0 = (W_[k] for k in ('rc', 'r_crest', 'W', 'fs', 'ang', 'th_in', 'cx', 'cz', 'h0'))
+        target = h0 + W_['ytop_rel'] - 0.12; R = rc + Wd / 2 + 2
+        sl, X, Z = G.window(cx - R, cx + R, cz - R, cz + R); dx, dz = X - cx, Z - cz; r = np.hypot(dx, dz)
+        f = -np.angle(np.exp(1j * (np.arctan2(dz, dx) - th_in))) / ang; fp = 8.0 / (abs(ang) * rc)
+        wf = ss((f - (fs[0] - fp)) / fp) * ss(((fs[-1] + fp) - f) / fp)
+        r_in, r_w = rcr - 9.0, rc - Wd / 2 + 0.3
+        wr = ss((r - r_in) / (r_w - r_in)) * (r <= rc + Wd / 2 + 0.5)
+        fill = h0 + (target - h0) * wr * wf
+        H[sl] = np.maximum(H[sl], fill); rep_[g['tag'][:5]] = round(float(W_['ytop_rel']), 2)
+    BP.REPORT['murs_hauteur'] = rep_
+    return H
+
+
 def render_zion(path, st):
     import layouts_sx as LS
     jumps = np.zeros((N, N)); whoops = np.zeros((N, N)); berms = np.zeros((N, N)); fmx = np.zeros((N, N)); secs = []
@@ -132,7 +168,8 @@ def render_zion(path, st):
             for prof, u0, name in g['sections']:
                 lay = whoops if 'whoops' in name else jumps
                 if name == LP.L3_SEC:                           # v18 : saut du milieu de la version USLAND (« le double central du mien »)
-                    BP.render_mid(jumps, g, prof, u0, name)
+                    tmp_ = np.zeros_like(jumps); BP.render_mid(tmp_, g, prof, u0, name)
+                    board_cut_layer(tmp_, g, 'amv'); np.maximum(jumps, tmp_, out=jumps)   # v25c : coupe sur CE saut seulement
                 else:
                     for it in LS.COMBOS[name]['items']:        # v16 : obstacles ZION (coupe ZION), whoops USLAND (coupe USLAND + murets)
                         i0, i1 = int(it[1] / 0.1), min(int(it[2] / 0.1) + 1, len(prof))
@@ -143,7 +180,11 @@ def render_zion(path, st):
                         else:
                             sp_ = [q for q in LP.SPLIT_Z.get(name, []) if q[0] - 0.5 <= it[1] and it[2] <= q[1] + 0.5]   # v22
                             kk_ = sp_[0][2:] if sp_ else (1.0, 1.0)
-                            lane_zion(lay, g, prof[i0:i1], u0 + it[1], *LAT['T'], kl=kk_[0], kr=kk_[1])
+                            if it[0].startswith('saut Milwaukee'):      # v25c : coupe sur CE saut seulement
+                                tmp_ = np.zeros_like(lay); lane_zion(tmp_, g, prof[i0:i1], u0 + it[1], *LAT['T'], kl=kk_[0], kr=kk_[1])
+                                board_cut_layer(tmp_, g, 'milwaukee'); np.maximum(lay, tmp_, out=lay)
+                            else:
+                                lane_zion(lay, g, prof[i0:i1], u0 + it[1], *LAT['T'], kl=kk_[0], kr=kk_[1])
                 secs.append(dict(lane=g['tag'], name=name, u0=round(u0, 1), L=round(len(prof) * 0.1, 1), H=round(float(prof.max()), 2),
                                  items=[(i[0], round(i[1], 1), round(i[2], 1)) for i in LS.COMBOS[name]['items']]))
         elif g.get('berm'):                                  # v16 : virages USLAND (berms JGSX, comme la version USLAND)
@@ -190,6 +231,7 @@ def render_zion(path, st):
 
 
 SABLE_JAUNE = (226, 196, 118)
+HOLESHOT_HP = 9.5                  # v25c : bas de la bannière du portique (était 13 ft, « trop haut »)
 
 
 def sand_texture(path, base=(214, 182, 128)):
@@ -234,7 +276,8 @@ def zion_ground(OUT, FOLDER):
         shutil.copytree(os.path.join(BP.ROOT, "tracks", "USLAND2026SX1", sub_), os.path.join(OUT, "sx1sand", sub_), dirs_exist_ok=True)
     # v23f (« le sable est toujours buggé, il est vert ») : la texture 16x16 de SX1 (130, 100, 60) rend vert-olive sous l'éclairage ZION ;
     # texture de sable beige faite maison (grain fin), la physique des tuiles USLAND est gardée
-    sand_texture(os.path.join(OUT, "sx1sand", "tiles", "sand.ppm"))
+    # v25c (« t'as juste mis la couleur, pas de texture sable ») : la vraie texture sable de ZION (ztile/sand.ppm, faite pour cet éclairage)
+    zb = [re.sub(r"texture @\S+/sx1sand/tiles/sand\.ppm", "texture @%s/ztile/sand.ppm" % FOLDER, b) for b in zb]
     # v21d (« le sol derrière le terrain, là où il y a les camions, de la tribune à l'autre côté : des dalles noires un peu de plastique,
     # noir gris ») : une tuile de plus, « Paddock » (index PADDOCK_TILE), réglages de la tuile Road, texture dalles_noires.png
     road = next(b for b in pick if re.search(r"name Road", b))
@@ -405,7 +448,8 @@ def zion_extras(OUT, FOLDER):
 START_Y = 15.0
 BALE_V, BALE_STEP, BALE_GAP = 15.5, 9.6, 25.0
 BALE_STEP2, BALE_SLIDE, ARCH_XC = 2 * 9.6, 4.0, 18.0   # v23 : pieds au bord de la piste (était 26)
-BP.BOARD_CUT = True                # v24b : flancs coupés derrière les panneaux Milwaukee / AMV
+BP.BOARD_CUT = False               # v24b : flancs coupés derrière les panneaux ; v25c : coupe faite sur la couche du saut seul (board_cut_layer)
+BP.EXTRA_H = [lambda H_, p_: wall_fill(H_, p_)]   # v25c : terre derrière les murs (wall_fill, défini plus haut)
 BP.ARCH_CUT = None                 # v23c : pas de découpe sous les pieds
     # v21d : 1 sur 2, glissement max, pieds de l'arche   # v21c : ballots comme RF Anaheim 1 (|v| 15-16 ft, pas 9,6 ft)
 
@@ -568,11 +612,17 @@ def deco_v21(OUT, FOLDER, combos):
     wp = lambda x, y, z: (fx[0] * x + fz[0] * z, y, fx[1] * x + fz[1] * z)
     lines.append(line(Cc[0], Cc[1], 0.0, *D22.cabin_v25(sd, wp))); rep_['cabane'] = (round(ucab, 1), vcab)
     st_ = BP.START; G0 = np.array(st_['gate']); f0 = np.array([np.cos(np.radians(st_['heading'])), np.sin(np.radians(st_['heading']))]); r0 = np.array([-f0[1], f0[0]])
-    Ls = float(st_.get('straight', 120.0)); Hp = G0 + f0 * max(20.0, Ls - 12.0) + r0 * 18.0    # bord droit, juste avant le 1er virage
-    fzh = -f0; fxh = -r0                                                              # z vers les pilotes, x vers l'intérieur de la piste
+    # v25c (« pas du tout au niveau du holeshot : le placer au niveau de la 1re bosse après le saut freestyle » ; « trop haut ») : poteau à gauche
+    # de L2, au niveau de la crête de sa 1re bosse, sur du sol PLAT (le jeu penche un objet posé en pente), bannière au-dessus de la piste
+    g2_ = next(g for g in BP.PATH.segs if g['kind'] == 'S' and g['tag'].startswith('L2')); s2_ = g2_['sections'][0]; it2_ = combos[s2_[2]]['items'][0]
+    i0h, i1h = int(it2_[1] / 0.1), int(it2_[2] / 0.1); uh = s2_[1] + it2_[1] + float(np.argmax(s2_[0][i0h:i1h])) * 0.1
+    t2_ = np.array([np.cos(g2_['t']), np.sin(g2_['t'])]); n2_ = np.array([-t2_[1], t2_[0]]); B2_ = np.array([g2_['x0'], g2_['z0']]) + t2_ * uh
+    flat2 = lambda P: max(float(Hf(*(P + t2_ * a_ + n2_ * b_))[0]) for a_ in (-2.5, 0, 2.5) for b_ in (-2.5, 0, 2.5)) - min(float(Hf(*(P + t2_ * a_ + n2_ * b_))[0]) for a_ in (-2.5, 0, 2.5) for b_ in (-2.5, 0, 2.5)) < 0.06
+    vh = next((v for v in np.arange(19.0, 34.0, 0.5) if flat2(B2_ - n2_ * v)), 26.0); Hp = B2_ - n2_ * vh
+    fzh = -t2_; fxh = n2_                                                             # z vers les pilotes, x vers la droite (au-dessus de la piste)
     wph = lambda x, y, z: (fxh[0] * x + fzh[0] * z, y, fxh[1] * x + fzh[1] * z)
-    lines.append(line(Hp[0], Hp[1], 0.0, *D22.holeshot_v25(sd, wph))); rep_['holeshot'] = (round(float(Hp[0]), 1), round(float(Hp[1]), 1))
-    lines.append(line(Hp[0], Hp[1], 0.0, *D22.drill_cutout_v25(sd, wph, 1.5 + 17.0 - 0.2, 13.0)))   # v25b : perceuse au bout de la bannière, bas au bas de la bannière
+    lines.append(line(Hp[0], Hp[1], 0.0, *D22.holeshot_v25(sd, wph, hp=HOLESHOT_HP, mir=True))); rep_['holeshot'] = (round(float(Hp[0]), 1), round(float(Hp[1]), 1), round(uh, 1), vh)
+    lines.append(line(Hp[0], Hp[1], 0.0, *D22.drill_cutout_v25(sd, wph, 17.7, HOLESHOT_HP, mir=False, x_handle=17.7)))   # v25c : l'embout vers le logo, la poignée sur le bord
     # signaleurs : panneau 30 s derrière les grilles + signaleur animé (drapeau) dans la cabane ; fichiers repris de Saint-Georges
     shutil.copytree(os.path.join(BP.ROOT, "tracks", "USLAND2026SaintGeorgesbyBazo", "ext", "2024Bh1Conway", "flaggerfiles"),
                     os.path.join(OUT, "ext", "2024Bh1Conway", "flaggerfiles"), dirs_exist_ok=True)

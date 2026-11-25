@@ -45,7 +45,7 @@ def _face(m, P, UV, N):
 
 
 # ================================================================ (2) ballot creux en U
-BU = dict(L=4.0, a=0.72, hs=0.36, t=0.08, tb=0.14, lip=0.10)   # v25 (« fais les bottes de paille plus longues ») : 3,0 -> 4,0 ft   # v21d (« bien trop gros, trop hauts ; même forme, juste plus petits »)
+BU = dict(L=3.8, a=0.72, hs=0.46, t=0.08, tb=0.14, lip=0.10)   # v25c : un peu plus hautes (0,36 -> 0,46), 0,2 ft moins longues   # v25 (« fais les bottes de paille plus longues ») : 3,0 -> 4,0 ft   # v21d (« bien trop gros, trop hauts ; même forme, juste plus petits »)
 BU_V21B = dict(L=4.2, a=1.15, hs=0.7, t=0.10, tb=0.22, lip=0.15)    # v21b (« la bâche qui fait l'arc est plus fine ; un peu plus longues ») : 0,28 -> 0,10 ft, 3,6 -> 4,2 ft
 SPONSORS = dict(noir=(BLACK, None, None), honda=((204, 8, 18), 'honda', None), yamaha=((22, 50, 140), 'yamaha', None),
                 seong=((0, 160, 172), 'seong', (10, 10, 10)), cinquante=((249, 229, 42), '50factory', None), monster=((16, 16, 18), 'monster', None))
@@ -58,6 +58,9 @@ def _u_curve(a, hs, y0, n=26):
     pts += [(a, y, 1.0, 0.0) for y in np.linspace(y0 + hs, y0, 4)]
     s = np.r_[0, np.cumsum([np.hypot(pts[i + 1][0] - pts[i][0], pts[i + 1][1] - pts[i][1]) for i in range(len(pts) - 1)])]
     return pts, s
+
+
+_BU_WRITTEN = set()
 
 
 def bale_u(out, key='noir'):
@@ -98,9 +101,11 @@ def bale_u(out, key='noir'):
             _face(m, [(sx * L / 2, po[i][1], po[i][0]), (sx * L / 2, po[i + 1][1], po[i + 1][0]), (sx * L / 2, pi_[i + 1][1], pi_[i + 1][0]),
                       (sx * L / 2, pi_[i][1], pi_[i][0])], [blk[:2]] * 4, [(sx, 0, 0)] * 4)
     m.box((-L / 2 - lip, 0, -a - lip), (L / 2 + lip, tb, a + lip), blk, 'xXzZY')    # socle noir
-    m.write(os.path.join(out, 'bale_u.jm'), MAT_BACHE)
+    if out not in _BU_WRITTEN:                                                       # v25c : écrit une seule fois (Windows verrouillait le fichier réécrit en boucle)
+        m.write(os.path.join(out, 'bale_u.jm'), MAT_BACHE)
     # v21d (« pas de physique, ou très peu : presque que ça t'arrête pas, juste une petite réaction ») : 2 petites boules molles
-    K.shp(os.path.join(out, 'bale_u.shp'), [(-0.7, 0.55, 0), (0.7, 0.55, 0)], 0.5, par=(0.2, 12, 0.6))
+    if out not in _BU_WRITTEN:
+        K.shp(os.path.join(out, 'bale_u.shp'), [(-0.7, 0.55, 0), (0.7, 0.55, 0)], 0.5, par=(0.2, 12, 0.6)); _BU_WRITTEN.add(out)
     return 'bale_u.jm', 'bale_u_%s.png' % key, 'bale_u.shp'
 
 

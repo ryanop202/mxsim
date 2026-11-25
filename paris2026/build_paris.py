@@ -322,6 +322,7 @@ def arch_cut(H, path):
     return H
 
 
+EXTRA_H = []
 BOARD_CUT = False              # v24b (version Zion) : flancs des sauts Milwaukee / AMV coupés au plan du panneau
 
 
@@ -606,6 +607,8 @@ def main():
     H = sand_ruts(H, path)                                             # v22 : ornières du sable de LR (version Zion)
     H = arch_cut(H, path)                                              # v23 : sol plat sous les pieds de l'arche (version Zion)
     H = board_cut(H, path)                                             # v24b : flancs des sauts à panneaux enlevés (version Zion)
+    for fn_ in EXTRA_H:                                                # v25c : retouches de la version Zion (terre derrière les murs)
+        H = fn_(H, path)
     from geo_tools import inside
     jj, ii = np.meshgrid(np.arange(N) * S, np.arange(N) * S)
     pts = np.c_[jj.ravel(), ii.ravel()]

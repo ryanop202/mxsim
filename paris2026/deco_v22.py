@@ -23,7 +23,7 @@ import hab_kit as K                       # noqa: E402
 from hab_kit import Mesh, R, logo, fit    # noqa: E402
 from deco_v21 import _face, _save, BLACK, MAT_MAT, MAT_BACHE, NET_RED, _tri_section   # noqa: E402
 
-BLK = dict(W=4.6, H=3.4, rnd=0.35, flare=0.35, back=0.3, sink=1.0)   # v23 (« enterre plus ; plus près du sommet du virage ») : sink 0,3 -> 1,0, back 0,9 -> 0,3   # bloc de paille bâché (ft) ; back = écart crête -> face avant
+BLK = dict(W=3.0, H=3.4, rnd=0.25, flare=0.35, back=0.3, sink=1.0)   # v25c (« même largeur que les 3 boudins, ça dépasse ») : 4,6 -> 3,0 ft   # v23 (« enterre plus ; plus près du sommet du virage ») : sink 0,3 -> 1,0, back 0,9 -> 0,3   # bloc de paille bâché (ft) ; back = écart crête -> face avant
 AIRF = dict(ra=0.95, mod=10.0, gap=0.45, end=0.7, squash=0.9, rb=0.72, nmin=3, nmax=4)   # v23 : fagot de 3 boudins (rb), modules fixes de 10 ft (3 ou 4)
 # v23 (« les trucs FIVE : tout noir, pas FIVE partout, en fonction du sponsor ») : sponsor du mur de chaque virage (code couleur de l'utilisateur)
 TURN_SPONSOR = {'T_L5a': 'minerva', 'T_Bb': None, 'T_D ': 'automoto', 'T1 1': 'honda', 'T_TR': 'motoverte', 'T_E ': 'yamaha', 'T_C ': 'five'}      # boudins AIR : rayon, module, jour entre modules, bout arrondi
@@ -566,7 +566,7 @@ def _board_texture(kind, W, H, sil, ua_t, ub_t, px_u, px_v, ymax):
 # blanche, plusieurs AMV de la taille d'une banderole, comme les sponsors autour du stade ».
 import layout_paris as _LP                                                          # noqa: E402
 BOARD_POLY = _LP.BOARD_POLY                                                         # u (ft depuis la sortie du virage), hauteur (ft)
-AMV_BARRIER = (163.8, 186.7, 21.3, 25.0)
+AMV_BARRIER = (163.8, 184.0, 23.4, 27.1)
 
 
 def board_v24(out, name, Hf, g, side, kind, th=None):
@@ -649,10 +649,15 @@ WALL_KEYS = {'T_C ': ('five', 'five5')}                         # logos alterné
 VIS25 = 0.15
 
 
-def turn_wall_v25(out, k, g, Hf, key):
+WALL_GEOM = {}                                                  # v25c : géométrie des murs calculée au rendu du terrain (build_zion.wall_fill)
+
+
+def wall_geom(g, Hf):
+    """v25c : géométrie d'un mur de virage (modules, filets, logos) et UNE hauteur pour tout le mur (« fais droit, pas des escaliers ») :
+    la plus haute crête du berm le long du mur + VIS25 ; ytop_rel est relatif à la hauteur du centre du virage."""
     tg_ = lambda d: next((v for k_, v in d.items() if g['tag'].startswith(k_)), None)
     sg = 1.0 if g['ang'] > 0 else -1.0; th_in = g['t0'] + sg * np.pi / 2; ang = np.radians(g['ang']); th = lambda f: th_in - ang * f
-    cx, cz = g['cx'], g['cz']; h0 = float(np.ravel(Hf(cx, cz))[0]); H1 = lambda x, z: float(np.ravel(Hf(x, z))[0])
+    cx, cz = g['cx'], g['cz']; h0 = float(np.ravel(Hf(cx, cz))[0])
     fb0 = g.get('berm_from', 0.0); tm = th((fb0 + 1) / 2); rr = np.arange(g['r'], g['r'] + 40, 0.5)
     r_crest = float(rr[int(np.argmax(Hf(cx + np.cos(tm) * rr, cz + np.sin(tm) * rr)))])
     W = BLK['W']; rc = r_crest + BLK['back'] + W / 2; df = AIRF['mod'] / (abs(ang) * rc)
@@ -665,10 +670,21 @@ def turn_wall_v25(out, k, g, Hf, key):
     nets = tg_(WALL_NETS)
     if nets is None:
         nets = (nmod // 2 - 1, nmod // 2)
+    E = lambda f: np.array([np.cos(th(f)), np.sin(th(f))]); rr_ = r_crest + np.linspace(-4, 4, 9)
+    hc = max(float(np.max(Hf(cx + E(f)[0] * rr_, cz + E(f)[1] * rr_))) for f in np.linspace(fs[0], fs[-1], 6 * nmod + 1))
+    return dict(rc=rc, r_crest=r_crest, W=W, fs=fs, nmod=nmod, nets=tuple(nets), ang=ang, th_in=th_in, cx=cx, cz=cz, h0=h0, ytop_rel=hc + VIS25 - h0)
+
+
+def turn_wall_v25(out, k, g, Hf, key):
+    tg_ = lambda d: next((v for k_, v in d.items() if g['tag'].startswith(k_)), None)
+    Gm = WALL_GEOM.get(g['tag']) or wall_geom(g, Hf)
+    sg = 1.0 if g['ang'] > 0 else -1.0; th_in = g['t0'] + sg * np.pi / 2; ang = np.radians(g['ang']); th = lambda f: th_in - ang * f
+    cx, cz = g['cx'], g['cz']; h0 = float(np.ravel(Hf(cx, cz))[0]); H1 = lambda x, z: float(np.ravel(Hf(x, z))[0])
+    r_crest, W, rc, nmod, fs, nets = Gm['r_crest'], Gm['W'], Gm['rc'], Gm['nmod'], Gm['fs'], Gm['nets']; YT = Gm['ytop_rel']
     keys = tg_(WALL_KEYS) or (key,)
     P2 = lambda f, r_: np.array([np.cos(th(f)) * r_, np.sin(th(f)) * r_]); E = lambda f: np.array([np.cos(th(f)), np.sin(th(f))])
     crest = lambda f: max(float(np.max(Hf(cx + E(f)[0] * (r_crest + np.linspace(-4, 4, 9)), cz + E(f)[1] * (r_crest + np.linspace(-4, 4, 9))))) for _ in [0])
-    m = Mesh(); airs = {kk: Mesh() for kk in keys}; n2 = Mesh(); rb = AIRF['rb']; dcen = -W / 2 + 2 * rb + 0.15; sec_b = _tri_section(rb, 30)
+    m = Mesh(); airs = {kk: Mesh() for kk in keys}; n2 = Mesh(); rb = AIRF['rb']; dcen = 0.0; sec_b = _tri_section(rb, 30)   # v25c : fagot centré sur le bloc
     Vb, Vt = NT_['v']; TL = 4.0; sph_w, sph_a, sph_n = [], [], []; dot = lambda u: (u[0], u[1], u[0] + 0.0005, u[1] + 0.0005)
     tops = []
     for q in range(nmod):
@@ -677,7 +693,7 @@ def turn_wall_v25(out, k, g, Hf, key):
             nn = -nn
         right = np.array([-nn[1], nn[0]]); rev = np.dot(t, right) < 0
         A = A - t * 0.04; B = B + t * 0.04; L += 0.08
-        ytop = max(crest(f) for f in np.linspace(fs[q], fs[q + 1], 5)) + VIS25 - h0; tops.append(ytop + h0)
+        ytop = YT; tops.append(ytop + h0)                                        # v25c : même hauteur sur tout le mur
         gnd = min(H1(cx + p_[0], cz + p_[1]) for s_ in np.linspace(0, 1, 5) for w_ in (-W / 2, 0, W / 2) for p_ in [A + (B - A) * s_ + nn * w_]) - h0
         yb = gnd - WALL23['depth']
         sec = [(-W / 2, yb)] + [(-W / 2 + BLK['rnd'] - BLK['rnd'] * np.cos(a_), ytop - BLK['rnd'] + BLK['rnd'] * np.sin(a_)) for a_ in np.linspace(0, np.pi / 2, 5)]
@@ -789,7 +805,7 @@ def cabin_v25(out, wp, key='mxsim'):
     return 'cabane_mxsim.jm', 'cabane_mxsim.png', 'cabane_mxsim.shp'
 
 
-def holeshot_v25(out, wp, span=17.0, hp=13.0, bh=6.0, pw=3.0):
+def holeshot_v25(out, wp, span=17.0, hp=13.0, bh=5.0, pw=1.4, mir=False, t2=0.25):   # v25c : moins épais (« moins fat »)
     """portique « Heavy Duty Holeshot » Milwaukee en L renversé (photo) : poteau rouge large (texte vertical du bas en haut) au bord de la
     piste, bannière Milwaukee au-dessus de la piste (logo près du poteau, perceuse au bout) ; repère local : x = vers l'intérieur de la
     piste (la bannière part en +x), z = vers les pilotes. v25b : bannière 2x moins longue, plus haute, poteau plus large."""
@@ -797,27 +813,32 @@ def holeshot_v25(out, wp, span=17.0, hp=13.0, bh=6.0, pw=3.0):
     from PIL import ImageFont
     bg, lg = SP.panel('milwaukee'); Wt, Ht = 2048, 2048; im = Image.new('RGB', (Wt, Ht), bg); d = ImageDraw.Draw(im)
     bh_px = int(round(Wt * bh / span)); a = pw / 2
-    wd = DRILL_H * DRILL_AR; x_logo1 = span - wd - 0.4                                 # le logo s'arrête avant la perceuse
-    fit(im, lg, (int(0.05 * Wt), 16, int(Wt * x_logo1 / span), bh_px - 16), 0.03)
+    # v25c (« centre le Milwaukee ») : centré sur la partie de la bannière que la perceuse ne cache pas (sa moitié gauche dépasse du bord)
+    wd, hf_ = drill_geom(); x_vis = span - hf_ * wd - 0.3
+    fit(im, lg, (int(Wt * 0.3 / span), 16, int(Wt * x_vis / span), bh_px - 16), 0.04)
     ph_px = Ht - bh_px - 60; pc_w = int(round(ph_px * pw / (hp + bh))); pcol = (0, bh_px + 40, pc_w, bh_px + 40 + ph_px)
-    f1 = ImageFont.truetype('C:/Windows/Fonts/ariblk.ttf', 150); f2 = ImageFont.truetype('C:/Windows/Fonts/arialbi.ttf', 150)
-    timg = Image.new('RGBA', (2000, 400), (0, 0, 0, 0)); td = ImageDraw.Draw(timg)
-    td.text((1000, 100), 'HEAVY DUTY', font=f1, fill=(250, 250, 250, 255), anchor='mm'); td.text((1000, 300), 'HOLESHOT', font=f2, fill=(250, 250, 250, 255), anchor='mm')
-    timg = timg.crop(timg.getbbox())
-    d.rectangle(pcol, fill=bg); fit(im, timg.rotate(90, expand=True), (pcol[0] + 6, pcol[1] + 12, pcol[2] - 6, pcol[3] - 12), 0.0)
+    # v25c (« HEAVY DUTY en plus gros, gras » + « HOLESHOT en plus gros aussi ») : une seule ligne le long du poteau, toute la largeur :
+    # HEAVY DUTY (très gras) puis HOLESHOT (gras italique), même hauteur de lettres
+    f1 = ImageFont.truetype('C:/Windows/Fonts/ariblk.ttf', 220); f2 = ImageFont.truetype('C:/Windows/Fonts/arialbi.ttf', 250)
+    l1 = Image.new('RGBA', (2600, 330), (0, 0, 0, 0)); ImageDraw.Draw(l1).text((1300, 165), 'HEAVY DUTY', font=f1, fill=(250, 250, 250, 255), anchor='mm', stroke_width=4, stroke_fill=(250, 250, 250, 255))
+    l2 = Image.new('RGBA', (2600, 330), (0, 0, 0, 0)); ImageDraw.Draw(l2).text((1300, 165), 'HOLESHOT', font=f2, fill=(250, 250, 250, 255), anchor='mm', stroke_width=3, stroke_fill=(250, 250, 250, 255))
+    l1, l2 = l1.crop(l1.getbbox()), l2.crop(l2.getbbox()); l2 = l2.resize((int(l2.size[0] * l1.size[1] / l2.size[1]), l1.size[1]), Image.LANCZOS)
+    timg = Image.new('RGBA', (l1.size[0] + 90 + l2.size[0], l1.size[1]), (0, 0, 0, 0)); timg.paste(l1, (0, 0), l1); timg.paste(l2, (l1.size[0] + 90, 0), l2)
+    d.rectangle(pcol, fill=bg); fit(im, timg.rotate(90, expand=True), (pcol[0] + 2, pcol[1] + 4, pcol[2] - 2, pcol[3] - 4), 0.0)
     xb0 = pc_w + 40; bwB = Wt - xb0; bB = (xb0, bh_px + 40, Wt, bh_px + 40 + int(round(bwB * bh / span)))   # bannière du dos : logo près du poteau aussi
-    fit(im, lg, (xb0 + int(bwB * (1 - x_logo1 / span)), bB[1] + 14, xb0 + int(bwB * 0.95), bB[3] - 14), 0.03)
+    fit(im, lg, (xb0 + int(bwB * (1 - x_vis / span)), bB[1] + 16, xb0 + int(bwB * (1 - 0.3 / span)), bB[3] - 16), 0.04)
     d.rectangle([1980, 2000, 2030, 2040], fill=(16, 16, 18)); im = K.grain(im, 1.2); _save(im, os.path.join(out, 'holeshot.png'))
     rb_, rp_, rk = R((0, 0, Wt, bh_px), Wt, Ht), R(pcol, Wt, Ht), R((1980, 2000, 2030, 2040), Wt, Ht); rbB = R(bB, Wt, Ht)
     m = Mesh(); nw = lambda v: tuple(np.subtract(wp(*v), wp(0, 0, 0)))
-    q = lambda P, r, n: _face(m, [wp(*p) for p in P], [(r[0], r[1]), (r[2], r[1]), (r[2], r[3]), (r[0], r[3])], [n] * 4)
-    t2 = 0.5
+    rf_ = (lambda r: (r[2], r[1], r[0], r[3])) if mir else (lambda r: r)     # v25c : objet posé à l'envers (poteau à gauche) : u retourné
+    q = lambda P, r, n: _face(m, [wp(*p) for p in P], [(rf_(r)[0], r[1]), (rf_(r)[2], r[1]), (rf_(r)[2], r[3]), (rf_(r)[0], r[3])], [n] * 4)
+
     for zf, nz in ((a, 1), (-a, -1)):                                                    # poteau : faces avant / arrière avec le texte
         P = [(-a, 0, zf), (a, 0, zf), (a, hp + bh, zf), (-a, hp + bh, zf)]; q([P[1], P[0], P[3], P[2]] if nz > 0 else P, rp_, nw((0, 0, nz)))
     for xf, nx in ((a, 1), (-a, -1)):
         P = [(xf, 0, -a), (xf, 0, a), (xf, hp + bh, a), (xf, hp + bh, -a)]; q(P if nx > 0 else P[::-1], rk if nx > 0 else rp_, nw((nx, 0, 0)))
     for zf, nz in ((t2, 1), (-t2, -1)):                                                  # bannière, des deux côtés
-        P = [(a, hp, zf), (a + span, hp, zf), (a + span, hp + bh, zf), (a, hp + bh, zf)]; q([P[1], P[0], P[3], P[2]] if nz > 0 else P, rbB if nz > 0 else rb_, nw((0, 0, nz)))
+        P = [(a, hp, zf), (a + span, hp, zf), (a + span, hp + bh, zf), (a, hp + bh, zf)]; q([P[1], P[0], P[3], P[2]] if nz > 0 else P, (rbB if nz > 0 else rb_) if not mir else (rb_ if nz > 0 else rbB), nw((0, 0, nz)))
     for y_, ny in ((hp, -1), (hp + bh, 1)):
         P = [(a, y_, -t2), (a + span, y_, -t2), (a + span, y_, t2), (a, y_, t2)]; q(P if ny > 0 else P[::-1], rk, nw((0, ny, 0)))
     P = [(a + span, hp, -t2), (a + span, hp, t2), (a + span, hp + bh, t2), (a + span, hp + bh, -t2)]; q(P, rk, nw((1, 0, 0)))
@@ -826,10 +847,20 @@ def holeshot_v25(out, wp, span=17.0, hp=13.0, bh=6.0, pw=3.0):
     return 'holeshot.jm', 'holeshot.png', 'holeshot.shp'
 
 
-DRILL_H, DRILL_AR = 9.5, 0.80          # v25b : la perceuse (hauteur ft, largeur / hauteur de l'image détourée), bas au bas de la bannière
+def drill_geom(h=None):
+    """largeur (ft) de la perceuse détourée et position de sa poignée (fraction de la largeur, depuis la gauche)."""
+    import sponsors as SP
+    from scipy.ndimage import binary_fill_holes, binary_opening
+    h = h or DRILL_H; a = np.asarray(Image.open(os.path.join(SP.U, 'perceuse milwaukee.jpg')).convert('RGB'), float)
+    fg = binary_fill_holes(binary_opening(np.linalg.norm(a - 255, axis=-1) > 28, iterations=1)); ys, xs = np.nonzero(fg)
+    fg = fg[ys.min():ys.max() + 1, xs.min():xs.max() + 1]; row = np.nonzero(fg[int(0.58 * fg.shape[0])])[0]
+    return h * (fg.shape[1] + 52) / (fg.shape[0] + 52), (row.min() + row.max()) / 2 / fg.shape[1]
 
 
-def drill_cutout_v25(out, wp, x_right, y0, h=None):
+DRILL_H, DRILL_AR = 7.0, 0.80          # v25b : la perceuse (hauteur ft, largeur / hauteur de l'image détourée), bas au bas de la bannière
+
+
+def drill_cutout_v25(out, wp, x_right, y0, h=None, mir=False, x_handle=None):
     """v25b (« colle-la là où je t'ai mis, sur le bord, à la même hauteur que le Milwaukee en bas, elle dépasse en haut ; un contour blanc
     autour ») : la perceuse Milwaukee en carton découpé avec un liseré blanc, debout contre le bout de la bannière, deux faces lisibles."""
     import sponsors as SP
@@ -846,10 +877,14 @@ def drill_cutout_v25(out, wp, x_right, y0, h=None):
     sheet = Image.new('RGBA', (Wt, Ht), (0, 0, 0, 0)); sheet.paste(rgba, (0, 0), rgba); sheet.paste(rgba.transpose(Image.FLIP_LEFT_RIGHT), (512, 0))
     sheet.save(os.path.join(out, 'perceuse.png'))
     w = h * rgba.size[0] / rgba.size[1]; vh = rgba.size[1] / Ht; x0 = x_right - w
+    if x_handle is not None:                                      # v25c (« que le bord soit le manche ») : milieu de la poignée sur x_handle
+        row = fg[int(0.58 * fg.shape[0])]; cols = np.nonzero(row)[0]; hf = (cols.min() + cols.max()) / 2 / fg.shape[1]
+        x0 = x_handle - hf * w
     m = Mesh(); nw = lambda v: tuple(np.subtract(wp(*v), wp(0, 0, 0)))
-    P = [(x0, y0, 0.56), (x0 + w, y0, 0.56), (x0 + w, y0 + h, 0.56), (x0, y0 + h, 0.56)]
-    _face(m, [wp(*p) for p in P], [(1.0, 1 - vh), (0.5, 1 - vh), (0.5, 1), (1.0, 1)], [nw((0, 0, 1))] * 4)
-    P2 = [(x0 + w, y0, -0.56), (x0, y0, -0.56), (x0, y0 + h, -0.56), (x0 + w, y0 + h, -0.56)]
-    _face(m, [wp(*p) for p in P2], [(0.5, 1 - vh), (0.0, 1 - vh), (0.0, 1), (0.5, 1)], [nw((0, 0, -1))] * 4)
+    P = [(x0, y0, 0.31), (x0 + w, y0, 0.31), (x0 + w, y0 + h, 0.31), (x0, y0 + h, 0.31)]
+    uf_ = (0.5, 1.0) if mir else (1.0, 0.5); ub_ = (0.0, 0.5) if mir else (0.5, 0.0)
+    _face(m, [wp(*p) for p in P], [(uf_[0], 1 - vh), (uf_[1], 1 - vh), (uf_[1], 1), (uf_[0], 1)], [nw((0, 0, 1))] * 4)
+    P2 = [(x0 + w, y0, -0.31), (x0, y0, -0.31), (x0, y0 + h, -0.31), (x0 + w, y0 + h, -0.31)]
+    _face(m, [wp(*p) for p in P2], [(ub_[0], 1 - vh), (ub_[1], 1 - vh), (ub_[1], 1), (ub_[0], 1)], [nw((0, 0, -1))] * 4)
     m.write(os.path.join(out, 'perceuse.jm'), MAT_MAT)
     return 'perceuse.jm', 'perceuse.png', None
