@@ -39,7 +39,7 @@
    "name": "PAR-L3 appel, gros saut rond du milieu (ZION 2025)",
    "u0": 85.7,
    "L": 153.3,
-   "H": 22.55,
+   "H": 21.78,
    "items": [
     [
      "appel gros saut ZION 2025 (10,0) raidi",
@@ -288,7 +288,7 @@
  "public": 7631,
  "export": {
   "hmin": -0.5,
-  "hmax": 23.05249995164597,
+  "hmax": 22.284797463893984,
   "statues_relevees": 44,
   "decals": 86,
   "decals_terre": 0
@@ -430,7 +430,7 @@
   {
    "name": "bosses <= 25 ft (gros saut rond ZION 2025 24,2 ft)",
    "ok": true,
-   "detail": "22.55 ft"
+   "detail": "21.78 ft"
   },
   {
    "name": "berms <= 10 ft (90° x1,4 comme Saint-Thibéry)",

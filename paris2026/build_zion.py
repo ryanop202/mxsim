@@ -513,14 +513,15 @@ def deco_v21(OUT, FOLDER, combos):
     # v23c : bâches drapées sur les flancs : saut Milwaukee (LR) et réception du freestyle (plaque AMV)
     gR = next(g for g in BP.PATH.segs if g['kind'] == 'S' and g['tag'].startswith('LR'))
     for side_, nm_ in ((-1, 'bache_milwaukee_g'), (1, 'bache_milwaukee_d')):
-        O_, jm_, png_ = D22.drape_tarp(sd, nm_, Hf, gR, LP.CAMEL_U + 6.0, LP.CAMEL_U + len(LP.CAMEL) * 0.1 - 2.0, side_, 'milwaukee')
-        lines.append(line(O_[0], O_[1], 0.0, jm_, png_, None))
+        # v23d : panneau « carton » (objet) au lieu de la bâche drapée
+        O_, jm_, png_, shp_ = D22.board_v23(sd, nm_.replace('bache', 'panneau'), Hf, gR, LP.CAMEL_U + 8.0, LP.CAMEL_U + len(LP.CAMEL) * 0.1, side_, 'milwaukee')
+        lines.append(line(O_[0], O_[1], 0.0, jm_, png_, shp_))
     for prof, u0, name in g3['sections']:
         if name == LP.L3_SEC:
             it = [i for i in combos[name]['items'] if 'butte' in i[0]][0]
             for side_, nm_ in ((-1, 'bache_amv_g'), (1, 'bache_amv_d')):
-                O_, jm_, png_ = D22.drape_tarp(sd, nm_, Hf, g3, u0 + it[1] + 8.0, u0 + it[2] - 8.0, side_, 'amv_plaque', step=0.8)
-                lines.append(line(O_[0], O_[1], 0.0, jm_, png_, None))
+                O_, jm_, png_, shp_ = D22.board_v23(sd, nm_.replace('bache', 'panneau'), Hf, g3, u0 + it[1], u0 + it[2], side_, 'amv')
+                lines.append(line(O_[0], O_[1], 0.0, jm_, png_, shp_))
     for f in ["statues"] + ["variants/" + v for v in os.listdir(os.path.join(OUT, "variants")) if v.startswith("statues")]:
         p = os.path.join(OUT, f); s0 = open(p).read().rstrip(chr(10)) + chr(10)
         open(p, "w", newline=chr(10)).write(s0 + chr(10).join(lines) + chr(10))

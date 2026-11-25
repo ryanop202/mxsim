@@ -536,7 +536,12 @@ def paris():
         # angles ») : 7 ft de plat en plus devant le dessus, pris sur le creux avant la face (la descente de réception ne bouge pas)
         def _plat_devant(t, E=7.0):
             q = np.asarray(t[2], float); it_ = int(np.argmax(q > 0.97 * q.max())); k_ = int(round(E / 0.1))
-            return ('raw', t[1] + ' plat +7', np.r_[q[k_:it_], np.full(k_, q[it_]), q[it_:]], t[3])
+            q2 = np.r_[q[k_:it_], np.full(k_, q[it_]), q[it_:]]
+            # v23d (« tu fais un peu en 2 étages la récep ; le même plat, de l'angle de descente à l'angle en haut de la montée ; tu peux
+            # laisser un peu bomber ») : un seul plateau entre les deux arêtes (>= 95 % du haut), légèrement bombé (+0,35 ft au milieu)
+            ix_ = np.nonzero(q2 >= 0.95 * q2.max())[0]; a_, b_ = int(ix_[0]), int(ix_[-1]); tt = np.linspace(0, 1, b_ - a_ + 1)
+            q2[a_:b_ + 1] = q2[a_] + (q2[b_] - q2[a_]) * tt + 0.35 * np.sin(np.pi * tt)
+            return ('raw', t[1] + ' plat +7', q2, t[3])
         toks = [_plat_devant(t) if t[0] == 'raw' and 'butte' in t[1] else t for t in toks]
     secs3 = [LS.sec(L3_SEC, toks, u0)]
     if ZION:   # v20c (« ajoute un roller en sortie de virage avant le saut de freestyle ») : le roller de Saint-Georges (Custom1_g30_1,

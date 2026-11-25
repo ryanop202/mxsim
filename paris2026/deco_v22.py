@@ -451,3 +451,88 @@ def drape_tarp(out, name, Hf, g, ua, ub, side, key, step=0.6, nv=18, lift=0.3):
             m.tri([P_[0], P_[2], P_[1]], [U_[0], U_[2], U_[1]]); m.tri([P_[0], P_[3], P_[2]], [U_[0], U_[3], U_[2]])
     m.write(os.path.join(out, name + '.jm'), MAT_BACHE)
     return O, name + '.jm', png
+
+
+# ================================================================ v23d : panneaux « carton » le long des sauts (objets 3D, pas de la couleur sur la terre)
+# « pas mettre de la couleur sur la bosse, mais un genre de carton qui se met autour de la bosse, un truc 3D, un modèle ; pareil pour le
+# Milwaukee : le logo pas centré et ça fait pas effet carton ; que ça fasse un objet, un peu comme le truc 50 Factory » + photo de côté
+# de la réception du freestyle à Paris (triangle mascotte / grand panneau blanc AMV au centre / triangle mascotte + AMV.FR).
+def _profile_along(Hf, g, ua, ub, step=0.25):
+    c, s_ = np.cos(g['t']), np.sin(g['t']); us = np.arange(ua, ub + 1e-6, step)
+    hc = np.array([float(np.ravel(Hf(g['x0'] + u * c, g['z0'] + u * s_))[0]) for u in us]); return us, hc
+
+
+def board_v23(out, name, Hf, g, ua, ub, side, kind, lift=0.35, head=3.5, th=0.25):
+    """panneau vertical droit au pied du flanc (côté side), silhouette = profil du saut sur l'axe (+ lift) ; kind 'milwaukee' ou 'amv'
+    (AMV : le panneau du centre, au-dessus du plat, dépasse de head ft). Texture : u le long du saut, v = hauteur (logo jamais en miroir)."""
+    c, s_ = np.cos(g['t']), np.sin(g['t']); nrm = np.array([-s_, c]) * side; tg = np.array([c, s_])
+    H1 = lambda p: float(np.ravel(Hf(p[0], p[1]))[0]); base = lambda u: np.array([g['x0'] + u * c, g['z0'] + u * s_])
+    us, hc = _profile_along(Hf, g, ua, ub); h0 = float(np.min(hc)); k = hc > h0 + 0.4; us, hc = us[k], hc[k]
+    um = us[int(np.argmax(hc))]; vv = np.arange(0, 80, 0.5); hs = np.array([H1(base(um) + nrm * v) for v in vv])
+    vb = float(vv[int(np.argmax(hs < h0 + 0.12 * (hc.max() - h0)))]) - 0.5           # pied du flanc
+    top_ = np.nonzero(hc >= hc.max() - (3.5 if kind == 'amv' else 0.6))[0]; ua_t, ub_t = us[top_[0]], us[top_[-1]]   # le plat (AMV : panneau du centre plus large)
+    ext = np.where((us >= ua_t) & (us <= ub_t), head, 0.0) if kind == 'amv' else np.zeros_like(us)
+    O = base(um) + nrm * (vb + 4.0); h_o = H1(O); yt = hc - h_o + lift + ext
+    if kind == 'amv':                                                                   # panneau du centre : haut plat (rectangle)
+        yt = np.where(ext > 0, float(hc.max()) - h_o + lift + head, yt)
+    ymax = float(yt.max()); L = us[-1] - us[0]
+    yb = np.array([H1(base(u) + nrm * vb) for u in us]) - h_o - 0.6
+    W, Ht = 2048, 1024; px_u, px_v = W / L, Ht / ymax; U = lambda u: (u - us[0]) / L
+    sil = [(int(U(u) * W), int(Ht - y * px_v)) for u, y in zip(us, yt)]
+    im = _board_texture(kind, W, Ht, sil, U(ua_t), U(ub_t), px_u, px_v, ymax); png = name + '.png'; _save(im, os.path.join(out, png))
+    m = Mesh(); fu = (lambda u: U(u)) if side > 0 else (lambda u: 1 - U(u)); fv = lambda y: float(np.clip(y / ymax, 0, 1))
+    P = lambda u, d, y: tuple(np.r_[base(u) + nrm * (vb + d) - O][[0]].tolist() + [y] + (base(u) + nrm * (vb + d) - O)[[1]].tolist())
+    blk = (0.001, 0.001)
+    for i in range(len(us) - 1):
+        u0_, u1_ = us[i], us[i + 1]
+        out_ = [P(u0_, th / 2, yb[i]), P(u1_, th / 2, yb[i + 1]), P(u1_, th / 2, yt[i + 1]), P(u0_, th / 2, yt[i])]
+        uvo = [(fu(u0_), fv(yb[i])), (fu(u1_), fv(yb[i + 1])), (fu(u1_), fv(yt[i + 1])), (fu(u0_), fv(yt[i]))]
+        n_o = tuple(np.r_[nrm[0], 0, nrm[1]]); n_i = tuple(-np.r_[nrm[0], 0, nrm[1]])
+        _face(m, out_, uvo, [n_o] * 4)                                                  # face extérieure (logo)
+        in_ = [P(u0_, -th / 2, yb[i]), P(u1_, -th / 2, yb[i + 1]), P(u1_, -th / 2, yt[i + 1]), P(u0_, -th / 2, yt[i])]
+        _face(m, in_, uvo, [n_i] * 4)                                                   # face intérieure (même dessin, vue de la piste)
+        _face(m, [P(u0_, -th / 2, yt[i]), P(u1_, -th / 2, yt[i + 1]), P(u1_, th / 2, yt[i + 1]), P(u0_, th / 2, yt[i])], [blk] * 4, [(0, 1, 0)] * 4)
+    for i, sg in ((0, -1), (len(us) - 1, 1)):                                           # tranches des bouts
+        u_ = us[i]; n3 = (tg[0] * sg, 0, tg[1] * sg)
+        _face(m, [P(u_, -th / 2, yb[i]), P(u_, th / 2, yb[i]), P(u_, th / 2, yt[i]), P(u_, -th / 2, yt[i])], [blk] * 4, [n3] * 4)
+    m.write(os.path.join(out, name + '.jm'), MAT_MAT)
+    K.shp(os.path.join(out, name + '.shp'), [tuple(np.r_[(base(u) + nrm * vb - O)[0], 2.0, (base(u) + nrm * vb - O)[1]]) for u in us[::12]], 1.0)
+    return O, name + '.jm', png, name + '.shp'
+
+
+def _board_texture(kind, W, H, sil, ua_t, ub_t, px_u, px_v, ymax):
+    """dessin du panneau (silhouette sil en pixels) ; coin (0,0)-(4,4) noir pour les tranches."""
+    import sponsors as SP
+    from PIL import ImageFont
+    yat = lambda x: min(H, max(0, int(np.interp(x, [p[0] for p in sil], [p[1] for p in sil]))))   # haut du panneau à la colonne x
+    if kind == 'milwaukee':
+        bg, lg = SP.panel('milwaukee'); im = Image.new('RGB', (W, H), bg); d = ImageDraw.Draw(im)
+        xa, xb = int(ua_t * W), int(ub_t * W); xm = (xa + xb) // 2; ytop = max(yat(xa), yat(xb)); half = int(0.30 * W)
+        l2 = lg.resize((lg.size[0], max(1, int(lg.size[1] * px_v / px_u))), Image.LANCZOS)
+        fit(im, l2, (xm - half, ytop + int(0.12 * (H - ytop)), xm + half, H - int(0.30 * (H - ytop))), 0.04)
+        d.rectangle([0, H - int(1.2 * px_v), W, H], fill=(16, 16, 18))                  # jupe noire
+    else:
+        G_ = (0, 166, 81); WH = (250, 250, 248); im = Image.new('RGB', (W, H), G_); d = ImageDraw.Draw(im)
+        src = Image.open(os.path.join(SP.U, SP.FILES['amv'])).convert('RGBA')
+        girl, boy, bubble = src.crop((130, 200, 300, 440)), src.crop((490, 200, 680, 440)), src.crop((140, 0, 670, 380))
+        xa, xb = int(ua_t * W), int(ub_t * W); yt_c = yat((xa + xb) // 2)
+        d.rectangle([xa, 0, xb, H], fill=WH)                                             # grand panneau blanc du centre
+        for x0, x1, flip in ((0, xa, False), (xb, W, True)):                             # triangles : blanc en diagonale, bord vert
+            d.polygon([(x0, H), (x1, H), (x1 if not flip else x0, yat(x1 - 2) if not flip else yat(x0 + 2))], fill=WH)
+        fh = ImageFont.truetype('C:/Windows/Fonts/ariblk.ttf', max(16, int(min(1.6 * px_v, (xb - xa) / 3 / 2.4))))
+        hb = int(3.2 * px_v)                                                             # bandeau « AMV AMV AMV » (dépasse du plat)
+        d.rectangle([xa, yt_c, xb, yt_c + hb], fill=WH); d.rectangle([xa, yt_c + hb, xb, yt_c + hb + 6], fill=G_)
+        for k_ in range(3):
+            cx_ = xa + (xb - xa) * (k_ + 0.5) / 3; d.text((cx_, yt_c + int(0.62 * hb)), 'AMV', font=fh, fill=G_, anchor='mm')
+        sq = lambda img: img.resize((img.size[0], max(1, int(img.size[1] * px_v / px_u))), Image.LANCZOS)
+        fit(im, sq(src.crop((150, 0, 660, 370))), (xa + 14, yt_c + hb + 16, xb - 14, H - int(1.4 * px_v)), 0.0)   # la bulle (AMV + texte), au centre, en grand
+        hl = H - yat(int(xa * 0.70)); fit(im, sq(girl), (int(xa * 0.30), H - int(0.98 * hl), xa - 10, H - 8), 0.0)
+        hr = H - yat(int(xb + (W - xb) * 0.30)); fit(im, sq(boy), (xb + 10, H - int(0.98 * hr), xb + int((W - xb) * 0.62), H - 8), 0.0)
+        ft = ImageFont.truetype('C:/Windows/Fonts/ariblk.ttf', max(20, int(2.2 * px_v)))
+        d.text((xb + int((W - xb) * 0.58), H - int(1.6 * px_v)), 'AMV.FR', font=ft, fill=G_, anchor='lm')
+        d.text((int(xa * 0.05), H - int(1.2 * px_v)), 'AMV', font=fh, fill=G_, anchor='lm')
+        bw = max(6, int(0.9 * px_v))                                                     # liserés verts (bord du haut, bas, panneau du centre)
+        for x in range(0, W, 4):
+            y_ = yat(x); d.rectangle([x, y_, x + 4, y_ + bw], fill=G_)
+        d.rectangle([0, H - bw, W, H], fill=G_); d.rectangle([xa - 6, yt_c, xa + 6, H], fill=G_); d.rectangle([xb - 6, yt_c, xb + 6, H], fill=G_)
+    d.rectangle([0, 0, 4, 4], fill=(16, 16, 18)); return K.grain(im, 1.0)
