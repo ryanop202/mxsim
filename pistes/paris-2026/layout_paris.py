@@ -293,7 +293,7 @@ POST_FIN_V27C = dict(b1=_sh(POST_FIN_V23F['b1'], -4.0), b1o=_sh(POST_FIN_V23F['b
 POST_FIN = POST_FIN_V23F          # v27d : remis comme la v25f
 # v28m (croquis vert sur la vue de dessus : le virage T_L5b avec un appui à l'extérieur) : plus de 2e bosse + plateau qui tournait
 # dans T_L5b (la trace passait au milieu) ; T_L5b porte un berm JGSX à l'extérieur (comme T_L5a) ; la 1re bosse (roller dans T_L5a) reste
-L5B_BERM = True
+L5B_BERM = False   # v28n (« pas du tout, remets comme avant ») : False = comme la v25f
 if L5B_BERM:
     POST_FIN = dict(POST_FIN_V23F, b23=[(0, 0), (1, 0), (2, 0), (3, 0)])
 CAMEL_V22D = CAMEL
