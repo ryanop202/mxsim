@@ -329,7 +329,8 @@ SAND_CUT = 32.0
 # le virage, toute cette partie ») : T_Bb et tout L3 15 ft plus près de T_D
 L3_EAST = 15.0
 L3_TO_L2 = 6.0   # v28t : T_Bb + L3 6 ft plus près de L2 -> T_D plus serré (rayons -3 ft)
-T_D_CUT = 15.0   # v28q : T_D commence 15 ft plus tard (voir paris())
+T_D_CUT = 15.0
+T_D_PYLON = (-22.2, 11.7)   # v28u (« replace le plot de l'inter à mon point ») : position du poteau de T_D, relevée sur le croquis   # v28q : T_D commence 15 ft plus tard (voir paris())
 CAMEL_U -= SAND_CUT
 # v22 (dessin sur L1) : « après les whoops, comme une whoops en plus, sauf que ça fait une table plate d'à peu près la longueur d'une
 # table normale ; ça redescend »
@@ -658,6 +659,7 @@ def paris():
         apex_TD = (p.x, p.z)
         p.turn(90, R3 + T_D_CUT / 2, BIG, tag='T_D 90 gauche (berm 2e moitie)')
         p.segs[-1]['pylon_mid'] = float(np.arctan2(apex_TD[1] - p.segs[-1]['cz'], apex_TD[0] - p.segs[-1]['cx']))   # poteau au sommet, comme avant
+        p.segs[-1]['pylon_dxz'] = T_D_PYLON   # v28u (point vert de Ryan) : poteau gonflable placé à la main (ft depuis le centre du berm)
     else:
         p.straight(x3 - x_end3, secs3, tag='L3 grande table')
         p.turn(180, R3, BIG, tag='T_D 180 gauche (berm 2e moitié)'); p.segs[-1]['berm_from'] = T_D_BERM_FROM if (ZION and T_D_RF) else (0.4 if ZION else 0.5)   # v23 : appui qui commence plus tôt
