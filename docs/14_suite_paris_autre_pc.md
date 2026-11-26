@@ -8,9 +8,9 @@
    ```bash
    git clone -b paris-2026 https://github.com/ryanop202/mxsim.git
    ```
-4. Les photos sont dans le dépôt (`paris2026/refs/photos2025/`). Ryan t'envoie à part (WhatsApp / Drive, PAS sur GitHub)
-   `ZION.2025.SupercrossParis.rar` (165 Mo) : mets-le où tu veux (ex. Téléchargements).
-5. Ouvre Claude Code dans le dossier `mxsim` et colle le prompt ci-dessous (remplace le chemin du .rar).
+4. Rien d'autre à récupérer : les photos (`paris2026/refs/photos2025/`) et l'archive ZION déjà extraite
+   (`paris2026/refs/zion25_full/`) sont dans le dépôt.
+5. Ouvre Claude Code dans le dossier `mxsim` et colle le prompt ci-dessous.
 
 ## B. Prompt à coller dans Claude Code
 
@@ -25,8 +25,7 @@ Je ne suis pas Ryan, je suis un pote qui l'aide. Réponds en français, simple e
    - git pull
    - py -3.12 -m pip install -r requirements.txt
    - npm install
-   - node tools/unrar.mjs "<CHEMIN DU .RAR ZION>" paris2026/refs/zion25_full
-     (doit donner paris2026/refs/zion25_full/ZION.2025.SupercrossParis/ ; ce dossier ne va jamais sur GitHub)
+   - l'archive ZION est déjà extraite dans paris2026/refs/zion25_full/ZION.2025.SupercrossParis/ (versionnée)
    - les photos de référence sont dans paris2026/refs/photos2025/ (versionnées)
 
 3. Construis dans cet ordre et vérifie que ça finit sur « contrôles : 7 / 7 » et « problems: [] » :
@@ -65,5 +64,5 @@ Je ne suis pas Ryan, je suis un pote qui l'aide. Réponds en français, simple e
    paris2026/apercu/vue_dessus_habillage.png + captures de l'aperçu 3D) AVANT de dire que c'est fini.
    Ne dis jamais que la piste marche en jeu : « non testé en jeu ». Logos jamais déformés ni en miroir.
    Commits en français, courts, sur paris-2026 ; git pull avant de commencer et git push souvent
-   (Ryan travaille aussi sur le dépôt). Ne mets jamais l'archive ZION (ni le .rar) sur GitHub.
+   (Ryan travaille aussi sur le dépôt). Ne mets pas le .rar lui-même sur GitHub (le dossier extrait y est déjà).
 ```

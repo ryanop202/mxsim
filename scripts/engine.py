@@ -150,18 +150,21 @@ def render_crescent(grid, out, cx, cz, mid_angle, fam, base=0.0):
 BERMS = _load(ROOT + '/lib/berm_stamps.json')
 
 
-def render_berm_stamp(grid, out, key, cx, cz, mid_angle, base=0.0, mirror=False, ang_scale=1.0):
+def render_berm_stamp(grid, out, key, cx, cz, mid_angle, base=0.0, mirror=False, ang_scale=1.0, r_shift=0.0):
     """Paste a measured crescent (2D as-built stamp), rotated so its mid-angle matches the turn's outer bisector.
     ang_scale > 1 compresses the crescent around its bisector (radial profile unchanged): used to put a 180-degree
     big berm on a 90-degree turn without its ends sticking out over the approach and exit lanes (v4, SX2 T1 'rebord')."""
     B = BERMS[key]; P = np.load(f'{ROOT}/lib/berm_{key}.npy').astype(np.float64)
-    rad = max(P.shape) * B['s'] * 0.75
+    rad = max(P.shape) * B['s'] * 0.75 + max(0.0, r_shift)
     sl, X, Z = grid.window(cx - rad, cx + rad, cz - rad, cz + rad)
     dx, dz = X - cx, Z - cz
     keep = np.ones(dx.shape, bool)
+    if r_shift:   # Paris v9 : crescent measured for r = 21.5 ft moved out radially (same profile) for a wider turn
+        r = np.hypot(dx, dz); r2 = r - r_shift; keep = r2 > 0.0; f_ = np.where(r > 1e-6, np.maximum(r2, 0.0) / np.maximum(r, 1e-6), 0.0)
+        dx, dz = dx * f_, dz * f_
     if ang_scale != 1.0:
         r = np.hypot(dx, dz); a = (np.arctan2(dz, dx) - mid_angle + np.pi) % (2 * np.pi) - np.pi
-        a2 = a * ang_scale; keep = np.abs(a2) < np.pi
+        a2 = a * ang_scale; keep = keep & (np.abs(a2) < np.pi)
         dx, dz = r * np.cos(mid_angle + a2), r * np.sin(mid_angle + a2)
     rot = B['mid_angle'] - mid_angle
     if mirror:  # reflect across the mid-angle axis

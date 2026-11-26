@@ -158,7 +158,27 @@ def build_crown(L, scene):
             m = m.flipped()
         scene.add("crown", "concrete_white", m.double_sided())
     ref.extra["panels"] = np.array([npanels])
+    # v10 (Paris 2026 : « sur le toit de l'arena, d'un côté, il y a écrit plenitude arena ; un peu plus gros, accroché avec des
+    # bâtonnets discrets derrière, pas dans le vide ; et sur le côté adjacent ») : enseigne lumineuse (lettres blanches, chien
+    # vert) debout sur la couronne de la façade Ouest (entrée 33, 70 m) et de l'extrémité Sud (60 m), ratio 8:1 compensé de
+    # l'agrandissement en plan (logo non étiré), tenue par des montants fins + jambes de force vers le toit
+    # v12 (« trop de grillage blanc ; pose les lettres sur le rebord comme IRL ; pas au-dessus du petit rebord avec les télés,
+    # c'est qu'à un endroit ») : UNE enseigne, extrémité Sud, lettres posées directement sur le toit derrière le rebord, sans montants
+    _roof_sign(scene, ref, S, (dims.X_SOUTH, 0.0), 60.0)
     return ref
+
+
+def _roof_sign(scene, ref, S, xy, length_m):
+    """enseigne « plenitude arena » du toit au point de couronne le plus proche de xy ; length_m = longueur finale (arène agrandie)."""
+    ss_ = np.linspace(0, S, 3000); Pq, nq = ref.at(ss_)
+    i_ = int(np.argmin(np.hypot(Pq[:, 0] - xy[0], Pq[:, 1] - xy[1]))); p_, n_ = Pq[i_], nq[i_]
+    t_ = np.array([n_[1], -n_[0]]); hz = float(ref.get("H", ss_[i_]))
+    K = branding.PLAN_K; sw = length_m / K; sh = sw * K / 8.0
+    c_ = p_ - n_ * 1.6; z0 = hz - 0.25                       # v12 : lettres posées sur le toit juste derrière le rebord (pied un peu enfoncé)
+    q = quad(tuple(np.r_[c_ - t_ * sw / 2, z0]), tuple(np.r_[c_ + t_ * sw / 2, z0]), tuple(np.r_[c_ + t_ * sw / 2, z0 + sh]),
+             tuple(np.r_[c_ - t_ * sw / 2, z0 + sh]))
+    q = q if np.dot(q.N[0][:2], n_) > 0 else _flip_uv(q)
+    scene.add("crown", "signage_roof", q)
 
 
 # ------------------------------------------------------------------ socle, bandeau, peau intérieure

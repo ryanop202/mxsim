@@ -1,0 +1,10 @@
+sun_vector [ 12049 12000 -8049 ] 
+sun_color [ 1.3 1.3 1.3 ]
+ambient [ 0.08 0.08 0.08 ]
+sky_n @USLANDParis/zsky/sky-n.png
+sky_e @USLANDParis/zsky/sky-e.png
+sky_s @USLANDParis/zsky/sky-s.png
+sky_w @USLANDParis/zsky/sky-w.png
+sky_u @USLANDParis/zsky/sky-u.png
+sky_env @USLANDParis/zsky/sky-env.png
+dynamic_lighting 1
