@@ -958,8 +958,9 @@ BERM_GAIN_TAG = {'T_D ': 1.05 if ZION else 0.95, **({'T_Bb': 1.15} if ZION else 
 # v28s (croquis : le virage T_Bb entouré, flèche vers T_D : « reprends ce virage pour le mettre avant L2, adapte-le juste ») : berm de T_D
 # comme T_Bb (croissant JGSX tel quel, x1,15, pas de flou) ; fondu de fin gardé léger (la 1re bosse de L2 part dans la courbe)
 if ZION and T_D_CUT:
-    BERM_GAIN_TAG['T_D '] = BERM_GAIN_TAG['T_Bb']; BERM_SOFT_TAG.pop('T_D ', None); BERM_END_FADE['T_D '] = (4.0, 20.0)
-    BERM_START_FADE = {'T_D ': (11.0, 8.0)}   # v28v (trait vert : « coupe le début du virage ») : berm coupé sur les 11 premiers degrés (au trait), fondu sur 8°
+    BERM_GAIN_TAG['T_D '] = BERM_GAIN_TAG['T_Bb']; BERM_SOFT_TAG['T_D '] = 1.5   # v28w : léger flou (bouts arrondis)
+    BERM_END_FADE['T_D '] = (4.0, 20.0)
+    BERM_START_FADE = {'T_D ': (6.0, 28.0)}   # v28w (« adoucis, ça fait carré ») : fondu 8 -> 28°, commence à 6° ; v28v (trait vert : « coupe le début du virage ») : berm coupé sur les 11 premiers degrés (au trait), fondu sur 8°
 LD_SHIFT = 5.0                          # v10 : ligne de départ 5 ft plus loin du saut du milieu (place pour les tremplins FMX ;
 #                                         plus loin, le bout des 22 grilles monte sur le pied du berm T_C : grilles plus plates)
 L2_GAP, L2_U0 = 5.0, 10.0               # v9 : écart identique entre les 7 bosses de L2 ; v13 : 1re bosse à 10 ft du 180 (était 3 : marque)
