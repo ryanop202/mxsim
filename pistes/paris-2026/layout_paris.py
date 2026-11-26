@@ -766,8 +766,11 @@ def paris():
                 # v28c (« l'enchaînement commence juste à la sortie du virage et finit juste avec le virage d'après, comme L6 ») :
                 # 1re bosse à fill['start'] ft de la sortie, dernière à fill['end'] ft de T1 (L6 : 4,7 ft), même écart partout
                 F_ = spec_['fill']; q0_, q1_ = (rfb(*spec_['bumps'][i]) for i in (0, -1))
-                c0_ = F_['start'] + float(np.argmax(q0_)) * 0.1 * spec_.get('front1', 1.0); c1_ = (xWt - x_end3) - F_['end'] - (len(q1_) - float(np.argmax(q1_))) * 0.1
+                k0t_ = int(np.argmax(q0_ > spec_['toe'])) if spec_.get('toe') else 0; c0_ = F_['start'] + (float(np.argmax(q0_)) - k0t_) * 0.1 * (spec_.get('front1') or 1.0); c1_ = (xWt - x_end3) - F_['end'] - (len(q1_) - float(np.argmax(q1_))) * 0.1
                 r12_ = F_.get('r12', 1.0); sp_ = (c1_ - c0_) / (len(spec_['bumps']) - 2 + r12_)   # r12 : 1er écart = r12 x les autres
+                if F_.get('pitch'):   # v28h (« 36 ft entre chaque ») : écart imposé, crêtes depuis la 1re
+                    sp_ = F_['pitch']; r12_ = 1.0
+                LOG['L2_fill'] = dict(c0=round(c0_, 1), c1_max=round(c1_, 1), last=round(c0_ + sp_ * (len(spec_['bumps']) - 1), 1))
                 spec_['crest'] = [c0_] + [c0_ + sp_ * (r12_ + i) for i in range(len(spec_['bumps']) - 1)]
             pl_ = []                                                     # [début (ft depuis la sortie du 180), profil, nom]
             for c_, bsp_ in zip(spec_['crest'], spec_['bumps']):
@@ -784,7 +787,7 @@ def paris():
                 pl_[0][1] = np.r_[fq_, q_[ic_ + 1:]]; pl_[0][0] = round(pl_[0][0] - (n_ - ic_) * 0.1, 1)
             toe_ = spec_.get('toe')
             if toe_:   # v28f (trait vert de Ryan : « la 1re bosse commence à mon trait », la sortie du virage) : pied de la 1re bosse coupé sous toe_ ft
-                k0_ = int(np.argmax(pl_[0][1] > toe_)); pl_[0][1] = pl_[0][1][k0_:]
+                k0_ = int(np.argmax(pl_[0][1] > toe_)); pl_[0][1] = pl_[0][1][k0_:]; pl_[0][0] = round(pl_[0][0] + k0_ * 0.1, 1)   # v28h : le pied coupé commence à la sortie
             assert pl_[0][0] >= 0.0 and pl_[-1][0] + len(pl_[-1][1]) * 0.1 <= (xWt - x_end3) - END_GAP + 0.05, pl_[-1][0]
             toks = []; u0z = pl_[0][0]
             for i_, (st_, p_, nm_) in enumerate(pl_):
@@ -999,10 +1002,12 @@ RF_BERM_TAGS = ()         # v28 : virages au berm RF mesuré (build_zion.berm_rf
 # 5 ft de T1 ; estimation (sim_rythme) : double - triple - triple tout juste, quadruple et triple d'entrée impossibles
 # v28g (« les bosses un peu trop hautes ; la 1re plus douce à l'avant et plus tôt à la sortie du virage ; même longueur entre chaque
 # bosse toujours ; la 1re plus petite pour faire 2 précis puis 3 ») : 1re 4,6 ft face avant x1,6, les 7 autres 5,0 ft, même écart partout
-L2_V28 = dict(fill=dict(start=0.0, end=5.0, r12=1.0), front1=1.6,   # v28 : bosses RF (voir paris()) ; None = v27d
-              bumps=[(4.6, 'single', 1.0)] + [(5.0, 'single', 1.0)] * 7,
+# v28h (« 1re bosse 3,5 ft à droite, 2 ft à gauche ; 36 ft entre chaque ; les autres 5 ft ; l'enchaînement commence plus près du
+# virage ») : 1re sans face étirée et pied coupé (crête plus tôt), écart fixe 36 ft
+L2_V28 = dict(fill=dict(start=0.0, end=4.0, pitch=36.0), front1=None, toe=0.3,   # v28 : bosses RF (voir paris()) ; None = v27d
+              bumps=[(3.5, 'single', 1.0)] + [(5.0, 'single', 1.0)] * 6 + [(5.0, 'single', 0.85)],
               smooth=0.8,          # v28e : forme RF de longueur normale, lissage léger
-              left1=2.0 / 3.0)
+              left1=2.0 / 3.5)
 L2_V27 = True     # v27 : L2 = bosses de L6 (voir paris())
 L2_V27D = True    # v27d : 8 bosses, 1re 20°, 2e 4,3 ft, 3e 21°
 L2_V27C = True    # v27c : 3,5 / 4 / 4,5 x5, formes L6
