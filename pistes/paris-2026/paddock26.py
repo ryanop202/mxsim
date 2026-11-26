@@ -1413,6 +1413,9 @@ def plan():
     # v28z2 (« le box du bas, décale-le un peu sur la gauche pour que ça ne touche pas ») : ses barrières touchaient le camion
     #   vitré USLAND (6 ft) : box 8 ft vers le mur de scène
     P = [(k, x + (8.0 if c.startswith('box motos (côté photo 2)') else 0.0), z, f, c) for k, x, z, f, c in P]
+    # v28z3 (« tout le stand Honda sans rien oublier, monte-le de 5 ft ») : tout ce qui porte « Honda » (bâtiment, semi, bus, moquette,
+    #   pilotes, motos, servantes, tables, barrières, flammes) 5 ft vers Suzuki
+    P = [(k, x, z + (5.0 if 'Honda' in c else 0.0), f, c) for k, x, z, f, c in P]
     add("ecran_geant", X_WALL - 2.5, _LP.OZ, W_, "écran géant")
     return P
 

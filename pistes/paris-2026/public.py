@@ -37,14 +37,25 @@ def build(out, folder, arena_to_mx, FT):
     ref = bowl.floor_ref(); S = ref.length
     aisles = bowl.segments(ref)
     rng = np.random.default_rng(77); lines = []
-    tiers = [(bowl.LOWER, bowl.LOWER['rows']), (bowl.UPPER, 12)]
-    for tier, nrows in tiers:
+    # v28 (« les spectateurs mal mis ») : comme les sièges de bowl.build : personne dans les débouchés de vomitoire (tribune basse,
+    # rangs 10-17, 4 m au milieu d'un bloc sur trois : avant, des silhouettes flottaient dans le trou), ni au-delà des rangs réels
+    # de la tribune haute (limités par la façade et la toiture)
+    edges = np.concatenate([[0.0], aisles, [S]])
+    vom = [((edges[b] + edges[b + 1]) / 2) for b in range(1, len(edges) - 1, 3)]
+    nub = [int(bowl.upper_rows_for(ref, (edges[b] + edges[b + 1]) / 2)) for b in range(len(edges) - 1)]   # rangs hauts réels par bloc
+    nup = lambda s_: nub[min(len(nub) - 1, int(np.searchsorted(edges, s_, side='right')) - 1)]
+    tiers = [(bowl.LOWER, bowl.LOWER['rows'], 'lower'), (bowl.UPPER, 12, 'upper')]
+    for tier, nrows, name in tiers:
         d, z = bowl.tier_profile(tier, nrows)
         for k in range(nrows):
             dk = (d[k] + d[k + 1]) / 2 + 0.15; zk = z[k]
             ss = np.arange(0.4, S - 0.4, STEP_M) + rng.uniform(-0.25, 0.25, int(np.ceil((S - 0.8) / STEP_M)))[:len(np.arange(0.4, S - 0.4, STEP_M))]
             for s in ss:
                 if np.min(np.abs(aisles - s)) < 0.9 or rng.random() < EMPTY:
+                    continue
+                if name == 'lower' and 10 <= k <= 17 and min(abs(m_ - s) for m_ in vom) < 2.3:
+                    continue
+                if name == 'upper' and k >= nup(s):
                     continue
                 p, _ = ref.at(s, dk)
                 x, zz = arena_to_mx(p[0], p[1])
