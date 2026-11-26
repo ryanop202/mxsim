@@ -951,6 +951,10 @@ BERM_END_FADE = {'T_D ': (12.0, 40.0)}   # v28k (« adoucis l'angle du virage »
 #   finir un peu plus tôt, en restant doux, limite moins haut ») : berm à zéro 8° avant la sortie, fondu sur les 35° d'avant
 BERM_SOFT_TAG = {'T_D ': 4.0} if ZION else {}   # v28k : flou 2,5 -> 4 ft   # v27d : berm adouci (flou de 2,5 ft, même hauteur max) -> face moins raide
 BERM_GAIN_TAG = {'T_D ': 1.05 if ZION else 0.95, **({'T_Bb': 1.15} if ZION else {})}   # v27d (« le virage à la même hauteur qu'avant mais moins d'angle ; remets l'après-arrivée comme avant ») : T_D 1,05 adouci (BERM_SOFT_TAG), T_L5 comme la v25f ; v27c (« on passe trop vite dans le virage avant L2 ») : T_D 1,05 -> 0,8 ; v27b (« baisse un petit peu l'appui ») : T_L5a 1,3 -> 1,15 ; v26 Zion : T_L5a (après l'arrivée) en cuvette plus haute comme en vrai (vidéos) ; v23 Zion : T_D plus haut ; T_Bb entrée plus haute   # v13 : appui après le saut du milieu un peu moins haut (était 1,15) ; v22 Zion : « plus bas » 0,95 -> 0,75
+# v28s (croquis : le virage T_Bb entouré, flèche vers T_D : « reprends ce virage pour le mettre avant L2, adapte-le juste ») : berm de T_D
+# comme T_Bb (croissant JGSX tel quel, x1,15, pas de flou) ; fondu de fin gardé léger (la 1re bosse de L2 part dans la courbe)
+if ZION and T_D_CUT:
+    BERM_GAIN_TAG['T_D '] = BERM_GAIN_TAG['T_Bb']; BERM_SOFT_TAG.pop('T_D ', None); BERM_END_FADE['T_D '] = (4.0, 20.0)
 LD_SHIFT = 5.0                          # v10 : ligne de départ 5 ft plus loin du saut du milieu (place pour les tremplins FMX ;
 #                                         plus loin, le bout des 22 grilles monte sur le pied du berm T_C : grilles plus plates)
 L2_GAP, L2_U0 = 5.0, 10.0               # v9 : écart identique entre les 7 bosses de L2 ; v13 : 1re bosse à 10 ft du 180 (était 3 : marque)
