@@ -298,7 +298,7 @@ if L5B_BERM:
     POST_FIN = dict(POST_FIN_V23F, b23=[(0, 0), (1, 0), (2, 0), (3, 0)])
 # v28o (« la 2e bosse un angle légèrement plus doux, avec l'intérieur ça fait un à-coup ; la petite ligne droite doit faire 21 ft, le plateau ») :
 # montée de la 2e bosse sur 12 ft au lieu de 9 (crête au même endroit, 4,4 ft), plateau 2,9 ft sur 21 ft au lieu de 24, descente identique
-POST_FIN_V28O = dict(POST_FIN_V23F, b23=[(48, 0), (52, 0.6), (57, 2.4), (61, 3.8), (64, 4.4), (66, 4.1), (69, 3.2), (72, 2.9), (93, 2.9),   # v28p : montée sur 16 ft
+POST_FIN_V28O = dict(POST_FIN_V23F, b23=[(52, 0), (55.5, 0.7), (59.5, 2.8), (62.3, 4.1), (64, 4.4), (66, 4.1), (69, 3.2), (72, 2.9), (93, 2.9),   # v28q : remis à 26° (v28o, « c'était bien »)
                                          (99, 1.8), (105, 0.4), (110, 0)])
 if not L5B_BERM:
     POST_FIN = POST_FIN_V28O
@@ -325,6 +325,10 @@ CAMEL_U = 131.0   # v22d (« mets le saut Milwaukee plus centré vers mon trait 
 # v28p (croquis : 2 traits sur le sable de LR, « coupe, toute la partie du bas remonte, le reste identique ») : 32 ft de sable plat
 # enlevés dans LR (entre u 48 et 80, avant le 2e roller) ; tout le bas (L5, après-arrivée, LD + départ, L6, T_C, T_E) remonte de 32 ft
 SAND_CUT = 32.0
+# v28q (croquis : cadre vert autour de T_Bb + L3, flèche « 15 » vers T_D : « la ligne avec le saut freestyle, avance-la de 15 ft, même
+# le virage, toute cette partie ») : T_Bb et tout L3 15 ft plus près de T_D
+L3_EAST = 15.0
+T_D_CUT = 15.0   # v28q : T_D commence 15 ft plus tard (voir paris())
 CAMEL_U -= SAND_CUT
 # v22 (dessin sur L1) : « après les whoops, comme une whoops en plus, sauf que ça fait une table plate d'à peu près la longueur d'une
 # table normale ; ça redescend »
@@ -548,7 +552,7 @@ def paris():
     zL1, zL6 = zL2 + 2 * R180, zL5 - 2 * R180        # 180° JGSX : couloirs voisins à 43 ft (v19 Zion : 55 ft)
     xW = px_x(312.0) + XW_SHIFT                        # virages Ouest (T1, T_C) : x des sorties de 180°
     xLR, xC, xT5 = px_x(860.0) - XLR_SHIFT, px_x(778.0), px_x(785.0)
-    xTB = px_x(315.0)
+    xTB = px_x(315.0) - (L3_EAST if ZION else 0.0)   # v28q : T_Bb + L3 avancés de L3_EAST ft vers T_D (la ligne de départ raccourcit d'autant)
     R3 = (zL2 - zL3) / 2
     xWb = xW - XW_BOT
     p = Path(xWb, zL5, 180.0, 'PARIS')
@@ -615,6 +619,7 @@ def paris():
     x_end3 = xC - X_APEX_SHIFT + R3 - (T_D_EAST if ZION else 0.0)   # v28b : T_D reculé vers le sable (LR)
     toks, u0 = from_render('L3', x3, 'x', -1, {(1, 2): Z25_MILIEU}, lane_len=x3 - x_end3)
     u0 -= L3_ADVANCE
+    u0 += L3_EAST if ZION else 0.0                       # v28q : les obstacles de L3 avancent avec T_Bb (même u depuis sa sortie)
     if ZION:   # v23 (« baisse légèrement la hauteur de la réception » du saut freestyle) : butte x0,93
         toks = [('raw', t[1].replace('(24,2)', '(22,5)'), np.asarray(t[2], float) * 0.93, t[3]) if t[0] == 'raw' and 'butte' in t[1] else t for t in toks]
         # v23c (photo de côté : « le plat sur le dessus un peu plus long, en gardant la même distance de saut ; le plat vers la pelle, mêmes
@@ -642,8 +647,17 @@ def paris():
         LOG['table_creusee_k'] = round(kL, 2)
         assert EXIT_U0 + tlen(rl_) + 13.0 < u0, u0
         secs3.append(LS.sec('PAR-L3 petite table creusee', rl_, EXIT_U0))
-    p.straight(x3 - x_end3, secs3, tag='L3 grande table')
-    p.turn(180, R3, BIG, tag='T_D 180 gauche (berm 2e moitié)'); p.segs[-1]['berm_from'] = T_D_BERM_FROM if (ZION and T_D_RF) else (0.4 if ZION else 0.5)   # v23 : appui qui commence plus tôt
+    if ZION and T_D_CUT:   # v28q (« coupe le début du virage pour qu'il commence plus tard, on est obligé de tourner plus avant d'y rentrer ») :
+        #   L3 T_D_CUT ft plus long, 90° serré (rayon R3 - T_D_CUT), petite ligne droite de T_D_CUT ft, puis le 90° à berm de rayon R3 :
+        #   même sommet, même sortie sur L2 qu'avant ; le départ rejoint toujours au même point (fin de la petite ligne droite)
+        p.straight(x3 - x_end3 + T_D_CUT, secs3, tag='L3 grande table')
+        p.turn(90, R3 - T_D_CUT, None, tag='TD1 90 gauche serre (avant T_D)')
+        p.straight(T_D_CUT, tag='TD milieu')
+        p.turn(90, R3, BIG, tag='T_D 90 gauche (berm)')
+        gm_ = p.segs[-2]; p.segs[-1]['pylon_mid'] = float(np.arctan2(gm_['z0'] + gm_['L'] * np.sin(gm_['t']) - p.segs[-1]['cz'], gm_['x0'] + gm_['L'] * np.cos(gm_['t']) - p.segs[-1]['cx']))   # poteau au sommet, comme avant
+    else:
+        p.straight(x3 - x_end3, secs3, tag='L3 grande table')
+        p.turn(180, R3, BIG, tag='T_D 180 gauche (berm 2e moitié)'); p.segs[-1]['berm_from'] = T_D_BERM_FROM if (ZION and T_D_RF) else (0.4 if ZION else 0.5)   # v23 : appui qui commence plus tôt
     # v7 (Ryan : « ça fait 4 d'entrée, ça doit faire 3, 4 et le 4 dur où faut pousser ») : les 7 bosses du visuel = un triple
     # serré (écarts 3 ft, bosses Arlington x1,2) puis un quad dur (écarts 7 ft, bosses x1,35), 20 ft entre les deux ;
     # près de la sortie du virage (pas d'élan trop long) - unités et réglages de Saint-Thibéry (up, rounded)

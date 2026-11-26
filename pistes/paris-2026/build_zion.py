@@ -158,7 +158,7 @@ def pylon_spots(path):
     for g in path.segs:
         if g['kind'] != 'T' or abs(g['ang']) < 89 or g['tag'].startswith(('T_L5a', 'T_L5b')) or not g.get('berm'):   # v25f : pas sur la ligne de départ (T_Ba)
             continue
-        mid = turn_mid_angle(g); r_ = max(0.0, g['r'] - 15.2 - 1.5 - next((v for k_, v in PYLON_IN.items() if g['tag'].startswith(k_)), 0.0))
+        mid = g.get('pylon_mid', turn_mid_angle(g)); r_ = max(0.0, g['r'] - 15.2 - 1.5 - next((v for k_, v in PYLON_IN.items() if g['tag'].startswith(k_)), 0.0))
         key_ = next((v for k_, v in D22.TURN_SPONSOR.items() if g['tag'].startswith(k_)), 'mxsim')
         out.append((g['cx'] + r_ * np.cos(mid), g['cz'] + r_ * np.sin(mid), mid, key_))
     return out
