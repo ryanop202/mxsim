@@ -1259,7 +1259,7 @@ PAD_DX = X_WALL - 879.34
 # z : le paddock prenait 469 ft (357 -> 826), le sol n'en fait plus que 458 (x1,55) : les 2 bandes vides (passage « croix » 706-715,
 # bande 818-824 avant les barrières numérotées) réduites à 4 ft et 1 ft ; le reste quasi intact (< 1 %), chaque stand bouge d'un bloc
 PAD_ZK = [357.3, 706.0, 715.0, 818.0, 824.0, 826.0]
-MUR_DOWN = 5.0
+MUR_DOWN = 20.0   # v28z (« descends de 15 ft encore ») : 5 -> 20 ft
 def pad_z(z):
     o = PAD_ZK; h = 45.0 * _LP.PLAN_K * _LP.FT; lo, hi = _LP.OZ - h + 1.0, _LP.OZ + h - 1.0
     f = min(1.0, ((hi - lo) - 5.0) / ((o[-1] - o[0]) - 15.0))
