@@ -68,7 +68,8 @@ def margins(u, H, pk, plan):
 def lane_sides(tag='L2'):
     import layout_paris as LP
     p = LP.paris(); s = next(s for s in p.segs if s['kind'] == 'S' and s['tag'].startswith(tag)); prof, u0, name = s['sections'][0]
-    u = np.arange(0, s['L'], 0.1); h = np.interp(u, u0 + np.arange(len(prof)) * 0.1, prof, left=0, right=0)
+    u = np.arange(min(0.0, round(u0, 1)), s['L'], 0.1)   # v28j : u0 < 0 = bosse qui commence dans la sortie du virage
+    h = np.interp(u, u0 + np.arange(len(prof)) * 0.1, prof, left=0, right=0)
     sides = []
     for k_ in (0, 1):                                    # 0 gauche (kl), 1 droite (kr) du sens de course
         f = np.ones_like(h)
@@ -76,7 +77,7 @@ def lane_sides(tag='L2'):
             f[(u >= u0 + a - 0.05) & (u <= u0 + b + 0.05)] = (kl, kr)[k_]
         sides.append(h * f)
     import layouts_sx as LS
-    pk = [int(round((u0 + it[1] + float(np.argmax(prof[int(it[1] / 0.1):int(it[2] / 0.1) + 1])) * 0.1) / 0.1)) for it in LS.COMBOS[name]['items']]
+    pk = [int(round((u0 + it[1] + float(np.argmax(prof[int(it[1] / 0.1):int(it[2] / 0.1) + 1])) * 0.1 - u[0]) / 0.1)) for it in LS.COMBOS[name]['items']]
     return u, sides, pk, name, s['L']
 
 

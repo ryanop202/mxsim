@@ -788,7 +788,7 @@ def paris():
             toe_ = spec_.get('toe')
             if toe_:   # v28f (trait vert de Ryan : « la 1re bosse commence à mon trait », la sortie du virage) : pied de la 1re bosse coupé sous toe_ ft
                 k0_ = int(np.argmax(pl_[0][1] > toe_)); pl_[0][1] = pl_[0][1][k0_:]; pl_[0][0] = round(pl_[0][0] + k0_ * 0.1, 1)   # v28h : le pied coupé commence à la sortie
-            assert pl_[0][0] >= 0.0 and pl_[-1][0] + len(pl_[-1][1]) * 0.1 <= (xWt - x_end3) - END_GAP + 0.05, pl_[-1][0]
+            assert pl_[0][0] >= (spec_.get('fill') or {}).get('start', 0.0) - 0.05 and pl_[-1][0] + len(pl_[-1][1]) * 0.1 <= (xWt - x_end3) - END_GAP + 0.05, pl_[-1][0]
             toks = []; u0z = pl_[0][0]
             for i_, (st_, p_, nm_) in enumerate(pl_):
                 if i_:
@@ -804,6 +804,7 @@ def paris():
         pr_ = sec2[0]; pk_, _ = find_peaks(pr_, prominence=1.0); a_, b_ = int(pk_[0]), int(pk_[-1])
         pr_[a_:b_] = np.maximum(pr_[a_:b_], 0.5 * gaussian_filter1d(pr_, 45)[a_:b_])
     p.straight(xWt - x_end3, [sec2], tag='L2 singles')
+    p.segs[-1]['u_min'] = min(0.0, u0)   # v28j : la 1re bosse de L2 peut commencer dans la sortie de T_D (contrôle 2 de build_paris)
     p.turn(-180, R180, BIG2, tag='T1 180 droite (berm)')
     # v10 : 11 whoops (une petite + 10) plus hautes, plus rondes, plus de terre ; la table + 2 bosses gardées (« pas mal »)
     lL1 = xWt - (xLR + RB)
@@ -1004,7 +1005,8 @@ RF_BERM_TAGS = ()         # v28 : virages au berm RF mesuré (build_zion.berm_rf
 # bosse toujours ; la 1re plus petite pour faire 2 précis puis 3 ») : 1re 4,6 ft face avant x1,6, les 7 autres 5,0 ft, même écart partout
 # v28h (« 1re bosse 3,5 ft à droite, 2 ft à gauche ; 36 ft entre chaque ; les autres 5 ft ; l'enchaînement commence plus près du
 # virage ») : 1re sans face étirée et pied coupé (crête plus tôt), écart fixe 36 ft
-L2_V28 = dict(fill=dict(start=0.0, end=4.0, pitch=36.0), front1=None, toe=0.3,   # v28 : bosses RF (voir paris()) ; None = v27d
+# v28j (« avance l'enchaînement de 15 ft », choix « tout avancer ») : start -15 = la 1re bosse commence 15 ft avant la sortie de T_D (dans la courbe), 15 ft de plat avant T1
+L2_V28 = dict(fill=dict(start=-15.0, end=4.0, pitch=36.0), front1=None, toe=0.3,   # v28 : bosses RF (voir paris()) ; None = v27d
               bumps=[(3.5, 'single', 0.8)] + [(5.0, 'single', 1.0)] * 6 + [(5.0, 'single', 0.85)],
               smooth=1.5,          # v28e : forme RF de longueur normale, lissage léger
               left1=2.0 / 3.5)

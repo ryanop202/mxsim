@@ -454,7 +454,7 @@ def checks(path, st, H, jumps, whoops, berms, fmx, floor_mx):
             continue
         iv = sorted((u0, u0 + len(p) * 0.1, n) for p, u0, n in g['sections'])
         for a, b, n in iv:
-            if a < -0.05 or b > g['L'] + 0.05:
+            if a < g.get('u_min', 0.0) - 0.05 or b > g['L'] + 0.05:   # u_min < 0 : obstacle voulu dans la sortie du virage (L2 v28j)
                 bad.append("%s hors ligne droite (%.1f..%.1f / %.1f)" % (n, a, b, g['L']))
         for (a1, b1, n1), (a2, b2, n2) in zip(iv, iv[1:]):
             if a2 < b1 - 0.3:
