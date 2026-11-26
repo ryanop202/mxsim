@@ -278,6 +278,14 @@ def render_zion(path, st):
                 th_ = np.arctan2(ii_ * S - g['cz'], jj_ * S - g['cx'])
                 phi = np.degrees(np.angle(np.exp(1j * (th_ - a_ex) * (1.0 if g['ang'] > 0 else -1.0))))
                 t_ = np.clip((phi - fe_[0]) / fe_[1], 0, 1); tmp[sl] *= t_ * t_ * (3 - 2 * t_)
+            fs_ = getattr(LP, 'BERM_START_FADE', {}).get(g['tag'][:4])
+            if fs_:                                          # v28v (« coupe le début du virage ») : berm à zéro sur les fs_[0] premiers degrés, fondu sur fs_[1]
+                lf_ = g['ang'] > 0; t0_ = g['t0']
+                a_st = np.arctan2(np.cos(t0_), -np.sin(t0_)) if lf_ else np.arctan2(-np.cos(t0_), np.sin(t0_))
+                jj_, ii_ = np.meshgrid(np.arange(N)[sl[1]], np.arange(N)[sl[0]])
+                th_ = np.arctan2(ii_ * S - g['cz'], jj_ * S - g['cx'])
+                phs = np.degrees(np.angle(np.exp(1j * (a_st - th_) * (1.0 if lf_ else -1.0))))
+                t_ = np.clip((phs - fs_[0]) / fs_[1], 0, 1); tmp[sl] *= t_ * t_ * (3 - 2 * t_)
             sg_ = LP.BERM_SOFT_TAG.get(g['tag'][:4])
             if sg_:                                          # v27d : berm adouci (face moins raide), même hauteur max
                 from scipy.ndimage import gaussian_filter as _gf

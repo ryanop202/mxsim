@@ -329,8 +329,8 @@ SAND_CUT = 32.0
 # le virage, toute cette partie ») : T_Bb et tout L3 15 ft plus près de T_D
 L3_EAST = 15.0
 L3_TO_L2 = 6.0   # v28t : T_Bb + L3 6 ft plus près de L2 -> T_D plus serré (rayons -3 ft)
-T_D_CUT = 15.0
-T_D_PYLON = (-22.2, 11.7)   # v28u (« replace le plot de l'inter à mon point ») : position du poteau de T_D, relevée sur le croquis   # v28q : T_D commence 15 ft plus tard (voir paris())
+T_D_CUT = 15.0   # v28q : T_D commence 15 ft plus tard (voir paris())
+T_D_PYLON = (-16.7, 8.4)   # v28v : replacé au 2e point (était -22,2 / 11,7) ; v28u (« replace le plot de l'inter à mon point ») : position du poteau de T_D, relevée sur le croquis
 CAMEL_U -= SAND_CUT
 # v22 (dessin sur L1) : « après les whoops, comme une whoops en plus, sauf que ça fait une table plate d'à peu près la longueur d'une
 # table normale ; ça redescend »
@@ -959,6 +959,7 @@ BERM_GAIN_TAG = {'T_D ': 1.05 if ZION else 0.95, **({'T_Bb': 1.15} if ZION else 
 # comme T_Bb (croissant JGSX tel quel, x1,15, pas de flou) ; fondu de fin gardé léger (la 1re bosse de L2 part dans la courbe)
 if ZION and T_D_CUT:
     BERM_GAIN_TAG['T_D '] = BERM_GAIN_TAG['T_Bb']; BERM_SOFT_TAG.pop('T_D ', None); BERM_END_FADE['T_D '] = (4.0, 20.0)
+    BERM_START_FADE = {'T_D ': (11.0, 8.0)}   # v28v (trait vert : « coupe le début du virage ») : berm coupé sur les 11 premiers degrés (au trait), fondu sur 8°
 LD_SHIFT = 5.0                          # v10 : ligne de départ 5 ft plus loin du saut du milieu (place pour les tremplins FMX ;
 #                                         plus loin, le bout des 22 grilles monte sur le pied du berm T_C : grilles plus plates)
 L2_GAP, L2_U0 = 5.0, 10.0               # v9 : écart identique entre les 7 bosses de L2 ; v13 : 1re bosse à 10 ft du 180 (était 3 : marque)
