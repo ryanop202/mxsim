@@ -328,6 +328,7 @@ SAND_CUT = 32.0
 # v28q (croquis : cadre vert autour de T_Bb + L3, flèche « 15 » vers T_D : « la ligne avec le saut freestyle, avance-la de 15 ft, même
 # le virage, toute cette partie ») : T_Bb et tout L3 15 ft plus près de T_D
 L3_EAST = 15.0
+L3_TO_L2 = 6.0   # v28t : T_Bb + L3 6 ft plus près de L2 -> T_D plus serré (rayons -3 ft)
 T_D_CUT = 15.0   # v28q : T_D commence 15 ft plus tard (voir paris())
 CAMEL_U -= SAND_CUT
 # v22 (dessin sur L1) : « après les whoops, comme une whoops en plus, sauf que ça fait une table plate d'à peu près la longueur d'une
@@ -547,6 +548,7 @@ def paris():
     zL5 += SAND_CUT if zL3 > zL5 else -SAND_CUT; zLD += SAND_CUT if zL3 > zLD else -SAND_CUT   # v28p : le bas remonte (vers L3)
     if ZION:   # v23c (« le virage plus tôt, rapprocher le virage de la bosse » ; déjà « plus serré ») : L3 12 ft plus près de L2 (180 de rayon -6 ft)
         zL3 += 12.0 if zL2 > zL3 else -12.0
+        zL3 += L3_TO_L2 if zL2 > zL3 else -L3_TO_L2   # v28t (« la section entourée, pousse-la un peu du côté L2 pour que le virage soit plus serré »)
         if T_D_RF:   # v28 (« le virage, mets un virage de la RF, ça passe trop vite ») : 180 au rayon de la RF (A1 : 24,4 ft), L3 plus près de L2
             zL3 = zL2 - 2 * T_D_RF if zL2 > zL3 else zL2 + 2 * T_D_RF
     zL1, zL6 = zL2 + 2 * R180, zL5 - 2 * R180        # 180° JGSX : couloirs voisins à 43 ft (v19 Zion : 55 ft)
