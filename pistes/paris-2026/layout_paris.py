@@ -561,16 +561,15 @@ def paris():
         # v28f (croquis de Ryan, trait B : « la nouvelle ligne pour traverser le départ en roulant ») : après T_L5a, plus de petite ligne
         # droite + 2e 90° + ligne de départ + 2 virages à droite : une grande courbe à gauche (AF_R1), une diagonale qui traverse la zone
         # de départ, une courbe à droite (AF_R2) qui arrive dans T_Bb (inchangé). Départ vers le nord (+z) -> vers +x, puis retour au nord.
-        # v28f (traits bleus de Ryan) : en sortant de T_L5a, une partie droite qui monte avec des bosses RF (mesurées sur A1),
-        # avant la courbe à gauche ; la 1re dès la sortie du virage, même écart de crête à crête
+        # v28g (« reprends la base d'avant, refais-la comme demandé plus longue ») : la traversée de la v28f d'origine (grande courbe,
+        # longue diagonale) et les bosses RF (mesurées sur A1) sur le début de la diagonale, même écart de crête à crête
         bb_ = []
         for h_ in AF_BUMPS['h']:
             q_ = np.asarray(RFF['single'], float); q_ = np.maximum(q_, 0.0) * (h_ / q_.max()); bb_.append(('raw', 'bosse RF %.1f ft' % h_, q_, 'T'))
         toks_ = [bb_[0]]
         for b_ in bb_[1:]:
             toks_ += [('gap', round(AF_BUMPS['pitch'] - tlen(bb_[0]), 1)), b_]
-        Lv_ = AF_BUMPS['u0'] + tlen(toks_) + AF_BUMPS['after']
-        p.straight(Lv_, [lane_sec('PAR-LB bosses RF (sortie de T_L5a)', toks_, AF_BUMPS['u0'])], tag='LBv bosses RF (sortie de T_L5a)')
+        AF_SECS_ = lambda L: [lane_sec('PAR-LB bosses RF (traversee)', toks_, AF_BUMPS['u0'])] if AF_BUMPS['u0'] + tlen(toks_) < L - 10 else []
         X1, Z1 = xTB, zL3 - RB                                     # entrée de T_Bb (comme avant : fin de T_B milieu)
         dx_, dz_ = X1 - p.x, Z1 - p.z; Rs_ = AF_R1 + AF_R2
         assert abs(np.cos(p.t)) < 1e-6 and np.sin(p.t) > 0 and dx_ > 0, (p.t, dx_)
@@ -582,7 +581,8 @@ def paris():
         th_ = np.degrees(m_); Ld_ = (dz_ - Rs_ * np.sin(m_)) / np.cos(m_); assert Ld_ > 20.0, Ld_
         LOG['B_v28f'] = dict(angle=round(th_, 1), diagonale=round(Ld_, 1))
         p.turn(th_, AF_R1, None, tag='T_LBa courbe gauche (traversee)')
-        p.straight(Ld_, AF_SECS(Ld_), tag='LB traversee du depart')
+        secB_ = AF_SECS_(Ld_); assert secB_, Ld_
+        p.straight(Ld_, secB_, tag='LB traversee du depart')
         p.turn(-th_, AF_R2, None, tag='T_LBb courbe droite (traversee)')
     else:
         p.straight(zLD - zL5 - RB - RBb, tag='T_L5 milieu')
@@ -766,7 +766,7 @@ def paris():
                 # v28c (« l'enchaînement commence juste à la sortie du virage et finit juste avec le virage d'après, comme L6 ») :
                 # 1re bosse à fill['start'] ft de la sortie, dernière à fill['end'] ft de T1 (L6 : 4,7 ft), même écart partout
                 F_ = spec_['fill']; q0_, q1_ = (rfb(*spec_['bumps'][i]) for i in (0, -1))
-                c0_ = F_['start'] + float(np.argmax(q0_)) * 0.1; c1_ = (xWt - x_end3) - F_['end'] - (len(q1_) - float(np.argmax(q1_))) * 0.1
+                c0_ = F_['start'] + float(np.argmax(q0_)) * 0.1 * spec_.get('front1', 1.0); c1_ = (xWt - x_end3) - F_['end'] - (len(q1_) - float(np.argmax(q1_))) * 0.1
                 r12_ = F_.get('r12', 1.0); sp_ = (c1_ - c0_) / (len(spec_['bumps']) - 2 + r12_)   # r12 : 1er écart = r12 x les autres
                 spec_['crest'] = [c0_] + [c0_ + sp_ * (r12_ + i) for i in range(len(spec_['bumps']) - 1)]
             pl_ = []                                                     # [début (ft depuis la sortie du 180), profil, nom]
@@ -777,6 +777,11 @@ def paris():
                     cut = next(j for j in range(n_) if p_[j] >= pa[i_a + j])
                     pl_[-1][1] = pa[:i_a + cut]; p_ = p_[cut:]; st_ = round(st_ + cut * 0.1, 1)
                 pl_.append([st_, p_, nm_])
+            fr_ = spec_.get('front1')
+            if fr_:    # v28g (« la 1re plus douce à l'avant ») : face avant de la 1re bosse étirée x fr_ (crête au même endroit, début plus tôt)
+                q_ = pl_[0][1]; ic_ = int(np.argmax(q_)); n_ = int(round(ic_ * fr_))
+                fq_ = np.interp(np.linspace(0, ic_, n_ + 1), np.arange(ic_ + 1), q_[:ic_ + 1])
+                pl_[0][1] = np.r_[fq_, q_[ic_ + 1:]]; pl_[0][0] = round(pl_[0][0] - (n_ - ic_) * 0.1, 1)
             toe_ = spec_.get('toe')
             if toe_:   # v28f (trait vert de Ryan : « la 1re bosse commence à mon trait », la sortie du virage) : pied de la 1re bosse coupé sous toe_ ft
                 k0_ = int(np.argmax(pl_[0][1] > toe_)); pl_[0][1] = pl_[0][1][k0_:]
@@ -976,10 +981,10 @@ L2_NAME = 'PAR-L2 double triple triple (8 bosses)'
 # v28f (croquis de Ryan : « B la nouvelle ligne pour traverser le départ en roulant ; A et C sont les lignes qui font le départ ») :
 # le tour après l'arrivée traverse la zone de départ en diagonale (B) ; départ : grilles sur le trait A (plus haut), entonnoir vers T_D
 AF_V28 = True
-AF_R1, AF_R2 = 25.0, 25.0          # B : grande courbe à gauche en sortie de T_L5a, courbe à droite avant T_Bb (ft)
+AF_R1, AF_R2 = 40.0, 30.0          # B : grande courbe à gauche en sortie de T_L5a, courbe à droite avant T_Bb (ft)
 AF_SECS = lambda L: []             # B : diagonale plate (elle traverse le couloir de départ)
-AF_BUMPS = dict(h=[3.4, 3.4, 3.4], pitch=32.0, u0=0.5, after=6.0)   # B : bosses RF en sortie de T_L5a (traits bleus) ; pitch = crête à crête
-START_DZ, START_R = 20.0, 45.0     # départ : centre des grilles 44 ft au-dessus de l'ancienne ligne (A : 546 -> 632), virage du départ
+AF_BUMPS = dict(h=[3.4] * 4, pitch=34.0, u0=2.0)   # v28g : 4 bosses RF (la 5e tombait sur la ligne de départ) sur le début de la diagonale   # B : bosses RF en sortie de T_L5a (traits bleus) ; pitch = crête à crête
+START_DZ, START_R = 44.0, 45.0     # départ : centre des grilles 44 ft au-dessus de l'ancienne ligne (A : 546 -> 632), virage du départ
 T_D_RF = None   # v28 : rayon du 180 avant L2 (None = (zL2 - zL3) / 2 = 31 ft, v27d)
 # v28b (« il est trop en avant, il doit être plus reculé vers le sable, qu'on tourne et qu'on sorte pas au milieu du terrain ») :
 # 180 avant L2 décalé vers LR ; limite = le berm RF (46 ft du centre) ne doit pas toucher les bosses de LR
@@ -992,10 +997,11 @@ RF_BERM_TAGS = ()         # v28 : virages au berm RF mesuré (build_zion.berm_rf
 # v28c (« l'enchaînement est trop serré : il commence à la sortie du virage et finit juste avec le virage d'après, comme L6 ») :
 # bosses RF un peu plus courtes (x0,85 = 22 ft, face plus raide), 5,0 / 5,0 puis 5,4 ft, même écart partout de la sortie de T_D à
 # 5 ft de T1 ; estimation (sim_rythme) : double - triple - triple tout juste, quadruple et triple d'entrée impossibles
-L2_V28 = dict(fill=dict(start=0.0, end=5.0, r12=0.95), toe=0.4,   # v28f : 1re bosse dès la sortie du virage (trait vert)
-                # v28 : bosses RF (voir paris()) ; None = v27d
-              bumps=[(5.3, 'single', 1.0)] * 2 + [(5.6, 'single', 1.0)] * 6,   # v28e (« adoucis, moins d'angles, comme L6 ») : 5,3 / 5,6 ft
-              smooth=0.8,          # v28e : forme RF de longueur normale, lissage léger (face 33° ; L6 41-43°) ; estimation : 1er triple limite
+# v28g (« les bosses un peu trop hautes ; la 1re plus douce à l'avant et plus tôt à la sortie du virage ; même longueur entre chaque
+# bosse toujours ; la 1re plus petite pour faire 2 précis puis 3 ») : 1re 4,6 ft face avant x1,6, les 7 autres 5,0 ft, même écart partout
+L2_V28 = dict(fill=dict(start=0.0, end=5.0, r12=1.0), front1=1.6,   # v28 : bosses RF (voir paris()) ; None = v27d
+              bumps=[(4.6, 'single', 1.0)] + [(5.0, 'single', 1.0)] * 7,
+              smooth=0.8,          # v28e : forme RF de longueur normale, lissage léger
               left1=2.0 / 3.0)
 L2_V27 = True     # v27 : L2 = bosses de L6 (voir paris())
 L2_V27D = True    # v27d : 8 bosses, 1re 20°, 2e 4,3 ft, 3e 21°
