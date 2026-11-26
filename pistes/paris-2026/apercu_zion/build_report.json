@@ -1,4 +1,12 @@
 {
+ "berm_regulier": {
+  "T_D ": {
+   "debut": 11.0,
+   "fin": 82.0,
+   "sommet": 45.0,
+   "h": 6.94
+  }
+ },
  "apres_arrivee": {
   "b1": 2.32,
   "b23": 4.23,
@@ -9,7 +17,7 @@
    "lane": "L5 arrivée",
    "name": "PAR-L5 petit double, triple d arrivee (ZION 2025)",
    "u0": 1.0,
-   "L": 270.9,
+   "L": 260.9,
    "H": 11.15,
    "items": [
     [
@@ -25,19 +33,19 @@
     [
      "appel arrivee ZION 2025 (10,0)",
      102.5,
-     147.9
+     142.9
     ],
     [
      "triple arrivee ZION 2025 (6,0 / 11,2) fusionne",
-     147.9,
-     270.8
+     142.9,
+     260.8
     ]
    ]
   },
   {
    "lane": "L3 grande table",
    "name": "PAR-L3 appel, gros saut rond du milieu (ZION 2025)",
-   "u0": 85.7,
+   "u0": 70.7,
    "L": 153.3,
    "H": 22.43,
    "items": [
@@ -57,13 +65,13 @@
    "lane": "L3 grande table",
    "name": "PAR-L3 petite table creusee",
    "u0": 6.0,
-   "L": 65.5,
-   "H": 5.48,
+   "L": 50.5,
+   "H": 5.46,
    "items": [
     [
-     "petite table creusee x1.98",
+     "petite table creusee x1.53",
      0.0,
-     65.4
+     50.4
     ]
    ]
   },
@@ -71,48 +79,48 @@
    "lane": "L2 singles",
    "name": "PAR-L2 double triple triple (8 bosses)",
    "u0": -8.6,
-   "L": 282.5,
+   "L": 304.8,
    "H": 5.0,
    "items": [
     [
-     "bosse RF 3.5 ft",
+     "bosse RF 2.6 ft",
      0.0,
-     29.5
+     29.0
     ],
     [
-     "bosse RF 4.7 ft",
-     38.4,
-     68.3
+     "bosse RF 4.6 ft",
+     36.9,
+     70.5
     ],
     [
-     "bosse RF 4.8 ft",
-     74.4,
-     104.3
+     "bosse ZION 4.8 ft",
+     78.8,
+     110.3
     ],
     [
-     "bosse RF 5.0 ft",
-     110.3,
-     140.4
+     "bosse ZION 5.0 ft",
+     117.0,
+     149.2
     ],
     [
-     "bosse RF 5.0 ft",
-     146.3,
-     176.4
+     "bosse ZION 5.0 ft",
+     155.5,
+     187.7
     ],
     [
-     "bosse RF 4.8 ft",
-     182.4,
-     212.3
+     "bosse ZION 4.8 ft",
+     194.3,
+     225.8
     ],
     [
-     "bosse RF 5.0 ft",
-     218.3,
-     248.4
+     "bosse ZION 5.0 ft",
+     232.5,
+     264.7
     ],
     [
-     "bosse RF 4.7 ft",
-     256.0,
-     282.4
+     "bosse ZION 4.7 ft",
+     271.5,
+     304.7
     ]
    ]
   },
@@ -188,7 +196,7 @@
    "lane": "L6 tribune Sud",
    "name": "PAR-L6 triple, double, table, double",
    "u0": 6.0,
-   "L": 337.4,
+   "L": 327.1,
    "H": 7.0,
    "items": [
     [
@@ -198,49 +206,61 @@
     ],
     [
      "bosse ZION 5.2 ft",
-     39.2,
-     71.9
+     37.7,
+     70.4
     ],
     [
      "bosse ZION 5.4 ft",
-     80.2,
-     113.5
+     77.2,
+     110.5
     ],
     [
      "bosse ZION 5.2 ft",
-     118.8,
-     151.5
+     114.3,
+     147.0
     ],
     [
      "bosse ZION 5.4 ft",
-     159.8,
-     193.1
+     153.8,
+     187.1
     ],
     [
      "table Saint-Thibery 7.0 ft +3.3 ft",
-     202.7,
-     261.1
+     195.3,
+     253.7
     ],
     [
      "bosse ZION 4.7 ft",
-     265.7,
-     297.0
+     256.9,
+     288.2
     ],
     [
      "bosse ZION 5.0 ft",
-     305.3,
-     337.3
+     295.0,
+     327.0
     ]
    ]
   }
  ],
  "sable_s": [
-  1832.9,
-  1954.4
+  1802.9,
+  1924.4
  ],
- "sable_couche": 0.3,
- "socles": 7,
- "sable_tuiles": 13950,
+ "sable_couche": [
+  0.3,
+  8.0
+ ],
+ "raccords_adoucis": [
+  [
+   "T_L5a",
+   292.0,
+   311.5,
+   1.24
+  ]
+ ],
+ "socles": 8,
+ "sable_degrade": 14.0,
+ "sable_tuiles": 13031,
  "tuiles_zion": [
   "texture @USLANDParis/ztile/2.png",
   "roost texture=@USLANDParis/ztile/roost.png count=0.1 slow_angle=1.0 vscale=0.2 size=.2 r=150 g=150 b=150 fade_a=0",
@@ -253,7 +273,7 @@
  "objets": {
   "objets": {
    "retirés (v13) : boudins FLY Racing (whoops)": 28,
-   "retirés (v13) : ballots ZION (unis)": 206,
+   "retirés (v13) : ballots ZION (unis)": 200,
    "retirés (v13) : poteaux ronds": 8,
    "retirés (v13) : tuffs de virage ZION (unis)": 71,
    "retirés (v13) : filets": 42,
@@ -266,22 +286,22 @@
    "retirés (v13) : bandeau START + mur de fond": 1,
    "retirés (v13) : canettes Monster": 2,
    "retirés (v13) : portique Minerva Oil": 1,
-   "retirés (v13) : murs automoto": 12,
+   "retirés (v13) : murs automoto": 6,
    "retirés (v13) : long boudin noir FLY / RBT / SX TOUR (dans le U)": 2,
    "camions du paddock": 10
   },
   "total": 12,
   "amv_pied_ft": {},
   "arche": {
-   "crete_ft": 4.14,
+   "crete_ft": 4.15,
    "sol_pieds_ft": [
-    0.32,
-    0.2
+    0.3,
+    0.22
    ],
-   "libre_sous_poutre_ft": 20.4
+   "libre_sous_poutre_ft": 20.3
   },
   "finish": {
-   "crete_ft": 9.49
+   "crete_ft": 9.47
   },
   "logos_redessines": [
    "minerva",
@@ -294,16 +314,16 @@
  "public": 6072,
  "export": {
   "hmin": -0.5,
-  "hmax": 22.93461138703752,
-  "statues_relevees": 64,
-  "decals": 86,
+  "hmax": 22.93475760838552,
+  "statues_relevees": 72,
+  "decals": 85,
   "decals_terre": 0
  },
  "sol_zion": {
   "tuiles": 8,
   "ombrage_plat": 228
  },
- "decals_sable": 385,
+ "decals_sable": 500,
  "zion_v19": {
   "paddock": [
    761,
@@ -311,16 +331,16 @@
    397,
    777
   ],
-  "dalles_tuiles": 213300,
-  "x_paddock": 707.8,
-  "overlay": 5223,
+  "dalles_tuiles": 174590,
+  "x_paddock": 736.3,
+  "overlay": 5374,
   "decals_gardes": 0,
   "start": [
    672.6,
-   550.6,
-   150.3
+   555.6,
+   150.5
   ],
-  "toit_finish": 146.4,
+  "toit_finish": 147.0,
   "grilles": 22
  },
  "boudins_whoops": 22,
@@ -419,21 +439,21 @@
     ]
    ]
   ],
-  "ballots": 116,
+  "ballots": 117,
   "arche": [
-   278.9,
+   300.9,
    716.6,
    1.19
   ],
-  "poteaux": 6,
+  "poteaux": 7,
   "cabane": [
    119.1,
    25.0
   ],
   "holeshot": [
-   373.5,
+   388.2,
    678.2,
-   8.0,
+   7.7,
    27.0
   ],
   "murs_invisibles": [
@@ -449,19 +469,78 @@
     13.0,
     30.0
    ]
-  ]
+  ],
+  "bottes_v29": 40,
+  "poteau_virage": [
+   390.5,
+   535.6
+  ],
+  "couloir_depart": {
+   "A": [
+    [
+     406.8,
+     542.6
+    ],
+    [
+     597.8,
+     542.6
+    ]
+   ],
+   "B": [
+    [
+     406.8,
+     580.6
+    ],
+    [
+     589.8,
+     580.6
+    ],
+    [
+     607.1,
+     619.3
+    ]
+   ]
+  },
+  "automoto_ligne2": [
+   [
+    397.8,
+    621.0
+   ],
+   [
+    365.5,
+    629.3
+   ],
+   [
+    351.4,
+    631.9
+   ],
+   [
+    339.1,
+    639.2
+   ],
+   [
+    330.1,
+    650.4
+   ],
+   [
+    325.6,
+    664.0
+   ]
+  ],
+  "boudins_tardifs": 32,
+  "boudins_20s": 32
  },
- "lap_ft": 2583.5,
+ "lap_ft": 2538.5,
  "start": {
   "gate": [
    684.5768800000001,
-   550.5899999999999
+   555.5899999999999
   ],
   "merge": [
-   329.93188,
+   344.93188,
    669.60375
   ],
-  "length": 464.4
+  "length": 444.4
  },
  "checks": [
   {
@@ -497,7 +576,7 @@
   {
    "name": "ligne de départ plate (grilles)",
    "ok": true,
-   "detail": "max 0.00 ft"
+   "detail": "max 0.01 ft"
   }
  ],
  "gates": {

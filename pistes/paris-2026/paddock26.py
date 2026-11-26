@@ -1040,6 +1040,12 @@ def semi(D, team, tractor=True):
     name = "semi_%s%s" % (team, "" if tractor else "_remorque")
     open(os.path.join(D, name + ".jm"), "w", newline="\n").write("\n".join(L))
     base = Image.open(SJ._src("ws_semiskin.png")).convert("RGB"); d = ImageDraw.Draw(base)
+    if team == "honda_semi":                                                # v28 (« le devant du camion HRC en blanc ») : tôles du tracteur
+        a_ = np.asarray(base, float); top = a_[:730]; lum = top.mean(-1)    # (haut de la peau, tôles gris très foncé 10-16) -> blanc ; vitres,
+        body = (lum >= 9.5) & (lum < 17.0)                                  # fond noir, chromes et phares gardés
+        body[480:650, 680:1180] = False; body[:, 1700:] = False
+        top[body] = (240.0 + 1.5 * (lum[body] - 13.0))[:, None].clip(228, 248)
+        a_[:730] = top; base = Image.fromarray(a_.clip(0, 255).astype(np.uint8)); d = ImageDraw.Draw(base)
     fn = {"bud": _bud_side, "suzuki": _suzuki_side}.get(team) or (lambda W, H, fr: _plain_side(W, H, PLAIN[team], PLAIN_LOGO.get(team)))
     for k, (x0, y0, x1, y1) in enumerate(SJ.PANELS):                       # PANELS[0] = flanc -x (avant à droite), [1] = flanc +x
         base.paste(fn(x1 - x0, y1 - y0, k == 0).convert("RGB"), (x0, y0))
@@ -1366,13 +1372,17 @@ def plan():
     # ======================= rangée PISTE : bout whoops -> KTM (validé)
     for k, n in enumerate((None, None, 6, 8, 10, 12, None, None, None)):
         P.append(("barriere_num_%d" % n if n else "barriere_vauban", 741.3 + 6.7 * k, 825.0, AL_X, "barrière numérotée"))
-    add("gant_five", 739.0, 808.0, S_, "gant gonflable Five")
+    add("gant_five", 739.0, 808.0, W_, "gant gonflable Five")   # v28 (« tourne-le dans le bon sens, le truc 5 ») : face à la piste
     add("van_blanc", 750.0, 806.0, N_, "van blanc")
     add("tente_arche", 763.5, 806.0, S_, "tente arche noire")
     add("van_bus_noir", 746.5, 770.0, N_, "bus noir à côté du KTM")
     add("van_ktm_ouvert", 755.0, 770.0, N_, "KTM")
     add("tente_ktm_10x15", 764.0, 772.0, S_, "KTM"); add("tente_ktm_10x15", 764.0, 788.0, S_, "KTM")
-    add("canette_geante", 740.0, 744.0, S_, "Monster"); add("canette_geante", 740.0, 730.0, S_, "Monster")
+    # v28 (« les canettes Monster, écarte-les ; face à la piste, le logo dans le même sens que le truc START ; une ici, une ici ») :
+    # au bord de la piste devant les camions, ~65 ft l'une de l'autre, logo vers la piste
+    # v35 (reprise de Bazo sur ce plan : ses points tombaient contre la bâche noire derrière les grilles) : au sud du bout des grilles,
+    # entre les grilles et la bâche, ~65 ft l'une de l'autre, logo vers la piste
+    add("canette_geante", 721.0, 609.0, W_, "Monster"); add("canette_geante", 721.0, 674.0, W_, "Monster")
     add("table_haute", 763.0, 750.0, S_, "KTM"); add("caisses", 763.0, 738.0, S_, "KTM"); add("table_haute", 763.0, 726.0, S_, "KTM")
     add("acces_piste", 767.0, 716.5, S_, "ACCÈS PISTE (croix)")
     # ---- après la croix, file A (x 741-750) : RBT | Milwaukee | 2 bus Stark | Bud ; file B (x 755-769) : stands

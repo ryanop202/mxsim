@@ -286,7 +286,7 @@ def sand_range(path):
     return gT['s0'] + LP.SAND_TURN_F * gT['L'], gR['s0'] + LP.SAND_LR[1]
 
 
-def sand_weight(path, X, Z, inset=0.0):
+def sand_weight(path, X, Z, inset=0.0, fade=1.0, inset_s=0.0, fade_s=None):
     """v25e : poids 0..1 du sable aux points (X, Z) : bande de SAND_HW ft autour de la trajectoire entre les 2 abscisses, bords nets
     (fondu 1 ft), bouts coupés droit (perpendiculaires à la trajectoire)."""
     from scipy.spatial import cKDTree
@@ -294,7 +294,10 @@ def sand_weight(path, X, Z, inset=0.0):
     tr = cKDTree(np.c_[smp['x'][k], smp['z'][k]]); d, i = tr.query(np.c_[np.ravel(X), np.ravel(Z)], distance_upper_bound=LP.SAND_HW + 6)
     ok = np.isfinite(d); i = np.where(ok, i, 0); s = smp['s'][k][i]; d = np.where(ok, d, 99.0)
     ss = lambda t: (lambda t_: t_ * t_ * (3 - 2 * t_))(np.clip(t, 0, 1))
-    w = ss((LP.SAND_HW - inset - d) / 1.0) * ss((s - s0) / 1.0) * ss((s1 - s) / 1.0) * ok
+    # v35 (repris de Bazo v28-v29) : fade = largeur du fondu (ft), inset_s = retrait aux 2 bouts (début, fin) ; fade_s = fondu des bouts
+    # seulement (le dégradé du sable : centré sur le bout d'origine quand inset_s = -fade_s / 2) ; défaut = v25e
+    i0_, i1_ = (inset_s, inset_s) if np.isscalar(inset_s) else inset_s; fs_ = fade if fade_s is None else fade_s
+    w = ss((LP.SAND_HW - inset - d) / fade) * ss((s - s0 - i0_) / fs_) * ss((s1 - i1_ - s) / fs_) * ok
     return w.reshape(np.shape(X)), s.reshape(np.shape(X))
 
 
@@ -313,7 +316,10 @@ def sand_waves(H, path):
     # v25f (« remets le sable comme avant, sans ornière, sans truc comme ça ») : plus de vaguelettes ni d'ornières
     REPORT['sable_s'] = [round(s0, 1), round(s1, 1)]
     if SAND_BED:                     # v27 : couche de sable surélevée (bords nets de sand_weight)
-        H = H.copy(); H[sl] = H[sl] + SAND_BED * w; REPORT['sable_couche'] = SAND_BED
+        # v35 (captures : « un petit cran à la limite du sable », entrée et bas de l'appel du Milwaukee) : la couche monte sur SAND_BED_FADE ft
+        # (était 1 ft = marche de 0,3 ft), centrée sur le bout d'origine ; côtés aussi (Bazo v28 : « un petit rebord tout le long »)
+        wb_ = sand_weight(path, X, Z, fade=SAND_BED_FADE, inset_s=-SAND_BED_FADE / 2)[0]
+        H = H.copy(); H[sl] = H[sl] + SAND_BED * wb_; REPORT['sable_couche'] = (SAND_BED, SAND_BED_FADE)
     if SAND_CHOP:
         # v26 (« dans la partie sable, mets la texture ; là c'est tout plat, c'est bizarre ») : sable remué, sans ornières ni vagues
         # régulières : petites bosses irrégulières (bruit lissé à 1,6 ft, +-0,12 ft) sur des ondulations plus larges (6 ft, +-0,08 ft),
@@ -373,6 +379,8 @@ def arch_cut(H, path):
 
 EXTRA_H = []
 SAND_WAVES = False
+SAND_BED_FADE = 8.0              # v35 : fondu de la couche de sable (ft) ; Bazo v28 : 5
+SAND_GRAD = 14.0                 # v35 (« pas que ça change de couleur aussi vite : dégradé ») : longueur du dégradé terre -> sable aux 2 bouts (ft)
 SAND_BED = 0.0                   # v27 (version Zion) : épaisseur de la couche de sable (ft)
 SAND_CHOP = 0.0                  # v26 (version Zion) : relief du sable remué (facteur ; 0 = plat)
 SAND_V25 = False                 # v25e (version Zion) : sable en bande droite (sand_weight) + vaguelettes discrètes
@@ -687,6 +695,10 @@ def main():
     sand = (dq < 17.0).reshape(TN, TN)
     if SAND_V25:                                                       # v25e : bande droite entre les 2 abscisses
         sand = sand_weight(path, TJ, TI)[0] > 0.5
+        if SAND_GRAD:   # v35 : dégradé aux 2 bouts : tuiles sable / terre mélangées au hasard, la part de sable passe de 0 à 1 sur SAND_GRAD ft
+            wg_ = sand_weight(path, TJ, TI, fade_s=SAND_GRAD, inset_s=-SAND_GRAD / 2)[0]
+            sand = np.random.default_rng(35).random(wg_.shape) < np.where(wg_ > 0.999, 1.01, wg_ * wg_ * (3 - 2 * wg_))
+            REPORT['sable_degrade'] = SAND_GRAD
         s0_, s1_ = sand_range(path); kk_ = (smp_['s'] >= s0_) & (smp_['s'] <= s1_); SAND_SMP = np.c_[smp_['x'][kk_], smp_['z'][kk_]]
     tiles[sand & (tiles == T_BERM)] = 6; tiles[sand & (tiles == T_JUMP)] = 5; tiles[sand & (tiles == T_MAIN)] = 4
     REPORT['sable_tuiles'] = int(sand.sum())

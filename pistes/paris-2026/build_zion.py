@@ -30,14 +30,17 @@ BP.SAND_V25 = True                 # v25e : sable en bande droite + vaguelettes
 BP.SAND_TL5 = False; BP.SAND_RUTS = False   # v23 : virage après l'arrivée en terre ; sable sans ornières
 BP.SAND_CHOP = 0.0                 # v27 (« le sable pas du tout, retourne sur la version d'avant ») : plus de relief remué ; était 0,7 en v26
 BP.SAND_BED = 0.3                  # v27 (« surélève, un tout petit peu plus haut qu'à côté ») : couche de sable de 0,3 ft (build_paris.sand_waves)
-LP.SAND_HW = 20.0                  # v27 (« vraiment du sable partout, là on dirait de la terre avec une couleur ») : bande de 28 -> 40 ft (toute la piste)
+LP.SAND_HW = 18.5                  # v28 (« que ça dépasse un peu moins sur les côtés ») : bande de 40 -> 37 ft
+# LP.SAND_HW = 20.0                  # v27 (« vraiment du sable partout, là on dirait de la terre avec une couleur ») : bande de 28 -> 40 ft (toute la piste)
 BP.SAND_LD = 0.0                   # v19d (« le virage après le saut d'arrivée en sable, que le virage ») : pas sur la ligne de départ
 ZD = BP.ZD
 ZF = np.load(os.path.join(HERE, "data", "zion_formes.npz"))
 LAT = dict(T=(34.0, 7.0), W=(40.0, 2.2))      # dessus plat, flanc (ft) : obstacles, whoops ; v20 (« la coupe RF, celle d'Anaheim, en
 #   gardant la forme des bosses ») : obstacles à la coupe mesurée sur RF Anaheim 1 (dessus 34 ft, flancs 7 ft ; était 35,1 / 5,2)
 ZION_R = 28.3
-TERRE_RGB = (166, 113, 68)                  # v19d : terre plus orange-marron (ZION : 158 136 85)
+STT_TERRE = True                            # v29c : terre de Saint-Thibéry (texture, couleur, projections, traces) ; False = TERRE_RGB
+TERRE_RGB = (171, 130, 50)                  # v29b (photos de Paris 2025 + capture en jeu : « reprends la texture de Saint-Georges, change juste la couleur ») :
+#   terre réelle ~(150, 114, 44) ; le jeu rend ~0,87 x la tuile (166 113 68 -> 145 98 58 sur la capture) -> tuile (171, 130, 50) ; v19d : (166, 113, 68)
 G, N, S = BP.G, BP.N, BP.S
 
 
@@ -91,6 +94,29 @@ def berm_rf(out, g):
     out[sl] = np.maximum(out[sl], h)
 
 
+def berm_regular(tmp, sl, g, rg):
+    """v35 (« regarde la gueule du virage, pas beau ; fais que ce soit linéaire, en gardant la même hauteur ; la sortie pas belle ; pas
+    différent en roulé ») : le croissant (bosse au milieu, bouts qui fondent chacun à sa façon, petit palier bas coupé net à la sortie)
+    devient un berm régulier : la coupe radiale la plus haute du croissant (même hauteur, même face, même place), gardée tout le long,
+    montée sur rg['rin'] degrés depuis le début du berm d'origine, descente sur rg['rout'] degrés jusqu'à sa fin d'origine."""
+    from engine import turn_mid_angle
+    jj_, ii_ = np.meshgrid(np.arange(N)[sl[1]], np.arange(N)[sl[0]])
+    X_, Z_ = jj_ * S - g['cx'], ii_ * S - g['cz']; r_ = np.hypot(X_, Z_); th_ = np.arctan2(Z_, X_)
+    a0 = turn_mid_angle(g) + np.radians(g['ang']) / 2                              # centre -> début du virage
+    p_ = np.degrees(np.angle(np.exp(1j * (a0 - th_)))) * (1.0 if g['ang'] > 0 else -1.0)   # avancement dans le virage (degrés)
+    T_ = tmp[sl]; hm = T_.max()
+    if hm <= 0:
+        return
+    pb = np.arange(-60.0, abs(g['ang']) + 60.0, 1.0); env = np.array([T_[np.abs(p_ - b) < 0.5].max(initial=0.0) for b in pb])
+    on = pb[env > 0.03 * hm]; pa, pz = float(on.min()), float(on.max()); pm = float(pb[int(np.argmax(env))])
+    rb = np.arange(0.0, r_[np.abs(p_ - pm) < 2.0].max(), 0.25)
+    sel = np.abs(p_ - pm) < 2.0; prof = np.array([T_[sel & (np.abs(r_ - b) < 0.2)].max(initial=0.0) for b in rb])
+    ss = lambda t: (lambda t_: t_ * t_ * (3 - 2 * t_))(np.clip(t, 0, 1))
+    e_ = ss((p_ - pa) / rg['rin']) * ss((pz - p_) / rg['rout'])
+    tmp[sl] = np.interp(r_, rb, prof, right=0.0) * e_
+    BP.REPORT.setdefault('berm_regulier', {})[g['tag'][:4]] = dict(debut=round(pa, 1), fin=round(pz, 1), sommet=round(pm, 1), h=round(float(prof.max()), 2))
+
+
 def fill_berm_dips(berms, path):
     """v20 (« en bas de chaque virage tu as mis une genre de petite ornière bizarre, gênante, retire-la ») : le croissant JGSX décalé
     vers l'extérieur (180 plus larges que 21,5 ft) puis fondu en bas laissait un creux de 0,2 - 0,4 ft au pied de la face du berm, à
@@ -126,14 +152,18 @@ def post_finish(out, path, sm=1.2):
     e1 = ga['L']; e3 = gb['s0'] + gb['L'] - ga['s0']
     smp = path.samples(0.25); sr = smp['s'] - ga['s0']; keep = (sr > -15) & (sr < e3 + 30)
     sx, sz, st_, th = smp['x'][keep], smp['z'][keep], sr[keep], smp['th'][keep]
-    P1 = LP.pts_prof(LP.POST_FIN['b1'], 1.0); P23 = LP.pts_prof(LP.POST_FIN['b23'], 1.0)
+    P1 = LP.pts_prof(LP.POST_FIN['b1'], 1.0); P23 = LP.pts_prof(LP.POST_FIN['b23'], LP.POST_FIN.get('sig23', 1.0))
     P1o = LP.pts_prof(LP.POST_FIN.get('b1o', LP.POST_FIN['b1']), 0.7)            # v23e : extérieur (droite) en appel
     R = 40.0; sl, X, Z = G.window(sx.min() - R, sx.max() + R, sz.min() - R, sz.max() + R)
     tree = cKDTree(np.c_[sx, sz]); d_, i_ = tree.query(np.c_[X.ravel(), Z.ravel()]); i_ = i_.reshape(X.shape)
     dx, dz = X - sx[i_], Z - sz[i_]; v = -dx * np.sin(th[i_]) + dz * np.cos(th[i_]); s_ = st_[i_]
     u0_ = 0.0                                                   # les points de POST_FIN sont déjà en s absolu
-    h1i = np.interp((s_ - u0_) / 0.1, np.arange(len(P1)), P1, left=0, right=0); h1o = np.interp((s_ - u0_) / 0.1, np.arange(len(P1o)), P1o, left=0, right=0)
+    sk_ = LP.POST_FIN.get('skew', 0.0) * np.minimum(v, 0.0)         # v28 : crête plus loin à l'intérieur (v < 0), droite à l'extérieur
+    h1i = np.interp((s_ + sk_ - u0_) / 0.1, np.arange(len(P1)), P1, left=0, right=0); h1o = np.interp((s_ + sk_ - u0_) / 0.1, np.arange(len(P1o)), P1o, left=0, right=0)
     wq = np.clip(v / 10.0 + 0.5, 0, 1); wq = wq * wq * (3 - 2 * wq); h1 = h1i * (1 - wq) + h1o * wq
+    h1 = h1 * (LP.POST_FIN.get('in_k', 1.0) + (1.0 - LP.POST_FIN.get('in_k', 1.0)) * wq)   # v28 : intérieur un peu plus bas
+    if LP.POST_FIN.get('sm1'):                                    # v29 : 1re bosse adoucie à part (fusion avec l'appui du virage)
+        h1 = gaussian_filter(h1, LP.POST_FIN['sm1'] / S)
     u2_ = 0.0
     h23 = np.interp((s_ - u2_) / 0.1, np.arange(len(P23)), P23, left=0, right=0)
     tw = LP.TOP_W; ss = lambda t: (lambda t_: t_ * t_ * (3 - 2 * t_))(np.clip(t, 0, 1))
@@ -147,7 +177,8 @@ def post_finish(out, path, sm=1.2):
     BP.REPORT['apres_arrivee'] = dict(b1=round(float(P1.max()), 2), b23=round(float(P23.max()), 2), plateau=LP.POST_FIN['b23'][3][1])
 
 
-PYLON_IN = {'T_TR': 5.0, 'T_E ': 5.0}   # v25e (« le truc à l'intérieur, décale-le, moins dans la trace » ; carré bleu Yamaha) : ft vers le centre
+PYLON_IN = {'T_TR': 9.0, 'T_E ': 9.0, 'T_Bb': 2.5}   # v29 : Moto Verte 4 ft plus à l'intérieur (« qui gêne moins »), MX Sim 2,5 ft ; v28 : Yamaha
+PYLON_XY = {'T_E ': (4.5, 6.8)}   # v29 (rond blanc vu de dessus) : Yamaha posé à (dx, dz) ft du centre du virage   # v28 (« le plot inter est gênant », cercle rouge) : Yamaha 4 ft plus à l'intérieur   # v25e (« le truc à l'intérieur, décale-le, moins dans la trace » ; carré bleu Yamaha) : ft vers le centre
 
 
 def pylon_spots(path):
@@ -160,8 +191,13 @@ def pylon_spots(path):
             continue
         mid = g.get('pylon_mid', turn_mid_angle(g)); r_ = max(0.0, g['r'] - 15.2 - 1.5 - next((v for k_, v in PYLON_IN.items() if g['tag'].startswith(k_)), 0.0))
         key_ = next((v for k_, v in D22.TURN_SPONSOR.items() if g['tag'].startswith(k_)), 'mxsim')
+        if g['tag'].startswith('T_Bb') and getattr(LP, 'T_B_PYLONS', None):   # v31 : les 2 poteaux aux points de Ryan
+            out += [(x_, z_, mid, key_) for x_, z_ in LP.T_B_PYLONS]; continue
         if g.get('pylon_dxz'):                                # v28u : position donnée à la main
             out.append((g['cx'] + g['pylon_dxz'][0], g['cz'] + g['pylon_dxz'][1], mid, key_)); continue
+        xy_ = next((v for k_, v in PYLON_XY.items() if g['tag'].startswith(k_)), None)
+        if xy_:
+            out.append((g['cx'] + xy_[0], g['cz'] + xy_[1], mid, key_)); continue
         out.append((g['cx'] + r_ * np.cos(mid), g['cz'] + r_ * np.sin(mid), mid, key_))
     return out
 
@@ -177,7 +213,42 @@ def cabin_spot(path):
 
 
 CAB_V, CAB_PAD = 25.0, 3.0         # v25f (« un peu dans l'appui, dans la terre ») : 21 -> 25 ft de l'axe
-CAB_MAN = 5.2                      # v25f (« on voit pas le mec : une plateforme pour qu'il soit en haut, qui dépasse la cabane ») : ft au-dessus du socle
+CAB_MAN = 0.0                      # v29 : guérite (deco_v28.booth) ; le signaleur est placé en hauteur absolue dans flaggers (CAB_PAD + CAB_FLAG)
+CAB_FLAG = 1.2                     # v29 (« un socle dedans qu'on voit pas, que le monsieur dépasse ») : pieds 1,2 ft au-dessus du socle, murs 4,5 ft
+# CAB_MAN = 5.2                      # v25f (« on voit pas le mec : une plateforme pour qu'il soit en haut, qui dépasse la cabane ») : ft au-dessus du socle
+
+
+# v35 (capture après l'arrivée : « le gauche, il y a un à-coup, ça fait un cran, adoucis ») : côté extérieur de T_L5a, l'appui finit
+# et la 1re bosse part juste derrière : creux en V entre les deux (0,4 - 0,6 ft) et pli du pied de l'appui. Le creux est rempli au
+# niveau du plus bas des deux sommets, le long de la trajectoire (comme de l'eau entre deux bosses), fondu sur les côtés, adouci :
+# rien n'est enlevé, l'appui et la bosse gardent leur hauteur. (virage, s début, s fin depuis le début du virage, v min, v max)
+JUNCTIONS = [('T_L5a', 14.0, 33.5, 1.0, 19.0)]
+
+
+def smooth_junctions(H, path):
+    from scipy.ndimage import gaussian_filter, map_coordinates as mc_
+    from scipy.spatial import cKDTree
+    smp = path.samples(0.25); H = H.copy(); rep_ = []
+    ss = lambda t: (lambda t_: t_ * t_ * (3 - 2 * t_))(np.clip(t, 0, 1))
+    for tag, sa, sb, va, vb in JUNCTIONS:
+        g = next(g for g in path.segs if g['tag'].startswith(tag)); sa, sb = g['s0'] + sa, g['s0'] + sb
+        SS = np.arange(sa - 4.0, sb + 4.0, 0.25); VV = np.arange(va - 3.0, vb + 3.0, 0.25)
+        k = np.clip(np.searchsorted(smp['s'], SS), 0, len(smp['s']) - 1); th, xs, zs = smp['th'][k], smp['x'][k], smp['z'][k]
+        X = xs[None, :] - VV[:, None] * np.sin(th)[None, :]; Z = zs[None, :] + VV[:, None] * np.cos(th)[None, :]
+        h = mc_(H, [Z / S, X / S], order=1)
+        inn = (SS >= sa) & (SS <= sb); fill = np.zeros_like(h)
+        for r in range(len(VV)):
+            hr = h[r, inn]; lv = np.minimum(np.maximum.accumulate(hr), np.maximum.accumulate(hr[::-1])[::-1]); fill[r, inn] = lv - hr
+        fill = np.maximum(fill, gaussian_filter(fill, (1.0 / 0.25, 1.0 / 0.25))) * (ss((VV - va) / 3.0) * ss((vb - VV) / 3.0))[:, None]   # adouci sans rien perdre du remplissage
+        tr = cKDTree(np.c_[xs, zs]); pad = vb + 6.0
+        sl, Xw, Zw = G.window(X.min() - 2, X.max() + 2, Z.min() - 2, Z.max() + 2)
+        d_, i_ = tr.query(np.c_[Xw.ravel(), Zw.ravel()]); i_ = i_.reshape(Xw.shape)
+        vw = -(Xw - xs[i_]) * np.sin(th[i_]) + (Zw - zs[i_]) * np.cos(th[i_]); sw = SS[i_]
+        add = mc_(fill, [(vw - VV[0]) / 0.25, (sw - SS[0]) / 0.25], order=1, cval=0.0) * (d_.reshape(Xw.shape) < pad)
+        H[sl] = H[sl] + add
+        rep_.append((tag, round(float(sa), 1), round(float(sb), 1), round(float(add.max()), 2)))
+    BP.REPORT['raccords_adoucis'] = rep_
+    return H
 
 
 def pads(H, path):
@@ -186,13 +257,18 @@ def pads(H, path):
     ss = lambda t: (lambda t_: t_ * t_ * (3 - 2 * t_))(np.clip(t, 0, 1)); H = H.copy()
     for x, z, mid, key in pylon_spots(path):
         sl, X, Z = G.window(x - 6, x + 6, z - 6, z + 6); r = np.hypot(X - x, Z - z); h0 = float(map_coordinates(H, [[z / S], [x / S]], order=1)[0])
-        H[sl] = np.maximum(H[sl], h0 + 0.8 * ss((3.4 - r) / 1.8))   # dessus plat 1,6 ft de rayon, pied à 3,4 ft (le centre du virage reste plat)
+        gc_ = min((g_ for g_ in path.segs if g_['kind'] == 'T'), key=lambda g_: np.hypot(g_['cx'] - x, g_['cz'] - z))
+        kc_ = 1.0 if np.hypot(gc_['cx'] - x, gc_['cz'] - z) < 1.6 else ss((np.hypot(X - gc_['cx'], Z - gc_['cz']) - 1.0) / 1.0)   # poteau AU centre : socle entier ; v29 : le centre du virage (origine du mur) reste plat même si le poteau s'en approche
+        H[sl] = np.maximum(H[sl], h0 + 0.8 * ss((3.4 - r) / 1.8) * kc_)   # dessus plat 1,6 ft de rayon, pied à 3,4 ft (le centre du virage reste plat)
     C, t5, n5, uc = cabin_spot(path); sl, X, Z = G.window(C[0] - 12, C[0] + 12, C[1] - 12, C[1] + 12)
     du, dv = (X - C[0]) * t5[0] + (Z - C[1]) * t5[1], (X - C[0]) * n5[0] + (Z - C[1]) * n5[1]
     d = np.hypot(np.maximum(np.abs(du) - 4.5, 0), np.maximum(np.abs(dv) - 4.0, 0)); H[sl] = np.maximum(H[sl], CAB_PAD * ss((3.5 - d) / 3.5))
-    inn = (np.abs(du) < 1.6) & (np.abs(dv) < 1.6); H[sl] = np.where(inn, np.maximum(H[sl], CAB_PAD + CAB_MAN), H[sl])   # plateforme du signaleur (cachée par la cabane)
+    inn = (np.abs(du) < 1.6) & (np.abs(dv) < 1.6); H[sl] = np.where(inn, np.maximum(H[sl], CAB_PAD + CAB_MAN), H[sl]) if CAB_MAN else H[sl]   # plateforme du signaleur (cachée par la cabane)
     BP.REPORT['socles'] = len(pylon_spots(path)) + 1
     return H
+
+
+BOARD_END_FADE = {'amv': 7.0}
 
 
 def board_cut_layer(lay, g, kind):
@@ -203,7 +279,9 @@ def board_cut_layer(lay, g, kind):
     sl, X, Z = G.window(pts[:, 0].min(), pts[:, 0].max(), pts[:, 1].min(), pts[:, 1].max())
     dx, dz = X - g['x0'], Z - g['z0']; u = dx * c + dz * s_; v = np.abs(-dx * s_ + dz * c)
     ss = lambda t: (lambda t_: t_ * t_ * (3 - 2 * t_))(np.clip(t, 0, 1))
-    m = ss((v - (vb - 1.0)) / 0.8) * ss((u - ua) / 1.5) * ss((ub - u) / 1.5)
+    # v35 (capture du départ : « tu passes au bord du saut AMV, modifie pour qu'on ne prenne pas ce trou ») : au bout du panneau, le flanc
+    # coupé reprenait en 1,5 ft (marche de 0,3 - 0,4 ft au coin, là où passe le départ) ; fondu sur BOARD_END_FADE ft
+    m = ss((v - (vb - 1.0)) / 0.8) * ss((u - ua) / 1.5) * ss((ub - u) / BOARD_END_FADE.get(kind, 1.5))
     lay[sl] *= (1 - m)
 
 
@@ -290,12 +368,15 @@ def render_zion(path, st):
             if sg_:                                          # v27d : berm adouci (face moins raide), même hauteur max
                 from scipy.ndimage import gaussian_filter as _gf
                 m0_ = tmp[sl].max(); tmp[sl] = _gf(tmp[sl], sg_ / S); tmp[sl] *= m0_ / max(tmp[sl].max(), 1e-6)
+            rg_ = getattr(LP, 'BERM_REGULAR', {}).get(g['tag'][:4])
+            if rg_:
+                berm_regular(tmp, sl, g, rg_)
             berms[sl] = np.maximum(berms[sl], tmp[sl] * gain)
     # v19d (capture en jeu : « regarde, il y a encore le trait gradient ») : (1) les croissants JGSX gardent un fond de 0,02 - 0,1 ft
     # coupé net -> petites marches droites au bout des virages : le bas des berms est fondu à zéro ; (2) pieds des bosses arrondis
     # comme la version USLAND (SOFT_FEET) : plus de pli au pied de chaque bosse
     from scipy.ndimage import gaussian_filter
-    if any(g['tag'].startswith('T_L5b') for g in path.segs):    # v28f : plus de T_L5b (traversée B) -> pas de bosses d'après l'arrivée v22d
+    if any(g['tag'].startswith('T_L5b') for g in path.segs) and not LP.ROUND_L5:    # v30 : demi-tour rond et régulier, plus de bosse dans le virage ; v28f : plus de T_L5b (traversée B) -> pas de bosses d'après l'arrivée v22d
         post_finish(jumps, path)                              # v22d : bosses + plateau du virage après l'arrivée
     # v20b (« il y a toujours une petite berme au pied du virage, dans tous les virages ») : le fondu v19d (seuil 0,12 - 0,62 ft) cassait
     # le pied de chaque berm (pente 0 -> 17° en 2 ft = un pli). Fondu doux à la place : h - 0,15 tanh(h / 0,15) (pente continue, le fond
@@ -328,6 +409,7 @@ def render_zion(path, st):
 
 
 SABLE_JAUNE = (226, 196, 118)
+SABLE_GRIS_BAZO = (174, 161, 137)   # Bazo v29 : tuile sable beige-gris comme le grain (v28 : (206, 172, 96))
 HOLESHOT_HP = 10.9                 # v25d : pancarte moins haute (5 -> 3,6 ft), bas remonté, haut inchangé (14,5 ft)
 HOLESHOT_BH = 3.6
 HOLESHOT_V = 22.0                  # v25d (« rapproche-le légèrement de la piste ») : poteau à 22 ft de l'axe (origine sur le plat)
@@ -382,12 +464,33 @@ def zion_ground(OUT, FOLDER):
     # noir gris ») : une tuile de plus, « Paddock » (index PADDOCK_TILE), réglages de la tuile Road, texture dalles_noires.png
     road = next(b for b in pick if re.search(r"name Road", b))
     pad = re.sub(r"name Road", "name Paddock", road); pad = re.sub(r"texture @\S+", "texture @%s/ztile/dalles_noires.png" % FOLDER, pad, count=1)
+    # v29c (« mets la texture et les couleurs de St-Thib ») : tuiles de terre (texture ztile/2.png) = terre de Saint-Thibéry : projections
+    # (roost) et traces de pneus (treadmark) de son bloc Main (fichiers SX1, déjà copiés dans sx1sand/) ; texture : voir plus bas
+    stt_ = open(os.path.join(BP.ROOT, "tracks", "USLAND2026SaintThiberybyBazo", "tileinfo")).read().split("addtile")
+    stt_ = next(b for b in stt_ if re.search(r"name Main\s*$", b, re.M))
+    stt_fx = [l.replace("@USLAND2026SaintThiberybyBazo/ext/USLAND2026SX1/", "@%s/sx1sand/" % FOLDER) for l in stt_.splitlines() if l.startswith(("roost", "treadmark"))]
+    def _stt(b):
+        if "ztile/2.png" not in b:
+            return b
+        ls_ = [l for l in b.splitlines() if not l.startswith(("roost", "treadmark"))]
+        k_ = next(i for i, l in enumerate(ls_) if l.startswith("texture")) + 1
+        return chr(10).join(ls_[:k_] + stt_fx + ls_[k_:]) + (chr(10) if b.endswith(chr(10)) else "")
+    if STT_TERRE:
+        zb = [_stt(b) for b in zb]
     assert len(zb) + len(pick) == PADDOCK_TILE
     open(os.path.join(OUT, "tileinfo"), "w", newline=chr(10)).write("addtile".join(zb + pick + [pad]) + "addtile" + chr(10))
     shutil.copytree(os.path.join(ZD, "tile"), os.path.join(OUT, "ztile"), dirs_exist_ok=True)
     # v19d (« essaie de faire la terre un peu plus orange marron ») : la tuile de terre ZION (couleur unie 158 136 85) -> TERRE_RGB
-    t2 = os.path.join(OUT, "ztile", "2.png"); Image.new("RGB", Image.open(t2).size, TERRE_RGB).save(t2)
+    # v29b : texture de terre de Saint-Georges (tiles/dirt_light.ppm) remise à la couleur de Paris (TERRE_RGB), même taille que la tuile ZION
+    t2 = os.path.join(OUT, "ztile", "2.png"); sg_ = np.asarray(Image.open(os.path.join(BP.ROOT, "tracks", "USLAND2026SaintGeorgesbyBazo", "tiles", "dirt_light.ppm")).convert("RGB"), float)
+    sg_ = np.clip(sg_ * (np.array(TERRE_RGB, float) / sg_.reshape(-1, 3).mean(0)), 0, 255).astype(np.uint8)
+    Image.fromarray(sg_).resize(Image.open(t2).size, Image.LANCZOS).save(t2)
+    if STT_TERRE:   # v29c : texture de terre de Saint-Thibéry telle quelle (SX1 tiles/dirt.ppm, 130 100 60), pas recolorée
+        Image.open(os.path.join(BP.ROOT, "tracks", "USLAND2026SX1", "tiles", "dirt.ppm")).convert("RGB").resize(Image.open(t2).size, Image.LANCZOS).save(t2)
     shutil.copy(os.path.join(BP.ROOT, "tracks", "USLAND2026SX1", "tiles", "sand.ppm"), os.path.join(OUT, "ztile", "sand_usland.ppm"))
+    # Bazo v28-v29 (« la couleur du sable » puis « t'as mis du jaune en dessous qui dépasse, enlève le jaune, laisse la texture sable ») :
+    # tuile sable ZION ramenée au beige-gris du grain (décals SX1)
+    jaunir(os.path.join(OUT, "ztile", "sand.ppm"), SABLE_GRIS_BAZO)
     dalles_texture(os.path.join(OUT, "ztile", "dalles_noires.png"))
     tm = np.fromfile(os.path.join(OUT, "tilemap"), np.uint8)
     remap = np.array([0, 0, 0, 3, 4, 4, 5, 4, 6, 7] + [6] * 246, np.uint8)
@@ -515,12 +618,21 @@ def zion_extras(OUT, FOLDER):
     sdd = os.path.join(OUT, "sx1sand", "decal"); os.makedirs(sdd, exist_ok=True)
     for f_ in ("sand.png", "sand_tnorm.png"):
         shutil.copy(os.path.join(BP.ROOT, "tracks", "USLAND2026SX1", "decal", f_), os.path.join(sdd, f_))
+    # v29 : grain du sable remis tel quel (SX1) ; v28 : teinté (234, 214, 166)
     ns_ = 0
     # v25e (« pas déborder, coupé droit ») : décals de 10 ft (le sable s'arrête net au bord) dont le centre reste à 5 ft du bord
     XX_, ZZ_ = np.meshgrid(np.arange(sx0, sx1, 3.0), np.arange(sz0, sz1, 3.0)); XX_ = XX_ + rng.uniform(-0.8, 0.8, XX_.shape); ZZ_ = ZZ_ + rng.uniform(-0.8, 0.8, ZZ_.shape)
-    wS_, _ = BP.sand_weight(path, XX_, ZZ_, inset=5.0)
-    for x_, z_ in zip(XX_[wS_ > 0.5], ZZ_[wS_ > 0.5]):
-        ov.append("[%.6f %.6f] %.6f 10.000000 1.000000 @%s/sx1sand/decal/sand.png" % (x_, z_, rng.uniform(-np.pi, np.pi), FOLDER)); ns_ += 1
+    # v35 (« pas que ça change de couleur aussi vite : dégradé ») : aux 2 bouts, sur BP.SAND_GRAD ft (comme les tuiles), décals de plus en plus
+    # rares et plus petits (5 ft) ; au plein, comme avant (10 ft, centre à 5 ft du bord)
+    gS_ = lambda X_, Z_, i_: BP.sand_weight(path, X_, Z_, inset=i_, fade_s=BP.SAND_GRAD, inset_s=-BP.SAND_GRAD / 2)[0]
+    wS_ = gS_(XX_, ZZ_, 5.0); pk_ = rng.random(wS_.shape) < wS_ * wS_ * (3 - 2 * wS_)
+    for x_, z_, w_ in zip(XX_[pk_], ZZ_[pk_], wS_[pk_]):
+        ov.append("[%.6f %.6f] %.6f %.6f 1.000000 @%s/sx1sand/decal/sand.png" % (x_, z_, rng.uniform(-np.pi, np.pi), 10.0 if w_ > 0.97 else 5.0, FOLDER)); ns_ += 1
+    # Bazo v28 (« la texture va pas vraiment sur les bords ») : une rangée de décals de 5 ft au bord (centre à 2,5 - 4,5 ft du bord)
+    XE_, ZE_ = np.meshgrid(np.arange(sx0, sx1, 2.0), np.arange(sz0, sz1, 2.0)); XE_ = XE_ + rng.uniform(-0.5, 0.5, XE_.shape); ZE_ = ZE_ + rng.uniform(-0.5, 0.5, ZE_.shape)
+    wE_ = gS_(XE_, ZE_, 2.5); wI_ = gS_(XE_, ZE_, 4.5); pk_ = (rng.random(wE_.shape) < wE_ * wE_ * (3 - 2 * wE_)) & (wI_ < 0.5)
+    for x_, z_ in zip(XE_[pk_], ZE_[pk_]):
+        ov.append("[%.6f %.6f] %.6f 5.000000 1.000000 @%s/sx1sand/decal/sand.png" % (x_, z_, rng.uniform(-np.pi, np.pi), FOLDER)); ns_ += 1
     BP.REPORT['decals_sable'] = ns_
     open(os.path.join(OUT, "decals"), "w", newline=chr(10)).write(chr(10).join(ov + dl) + chr(10))
     # v19 (« le saut d'arrivée, il va pas ; il faut faire les câbles comme sur mon track, avec le finish ») : plus d'arche ZION, le panneau
@@ -563,7 +675,7 @@ START_Y = 15.0
 BALE_V, BALE_STEP, BALE_GAP = 15.5, 9.6, 25.0
 BALE_STEP2, BALE_SLIDE, ARCH_XC = 2 * 9.6, 4.0, 18.0   # v23 : pieds au bord de la piste (était 26)
 BP.BOARD_CUT = False               # v24b : flancs coupés derrière les panneaux ; v25c : coupe faite sur la couche du saut seul (board_cut_layer)
-BP.EXTRA_H = [lambda H_, p_: pads(H_, p_)]   # v25e : socles des poteaux et de la cabane ; v25d (« les virages, une catastrophe : des gros monticules de terre partout ; repars sur les virages de base ») : plus de wall_fill
+BP.EXTRA_H = [lambda H_, p_: smooth_junctions(H_, p_), lambda H_, p_: pads(H_, p_)]   # v25e : socles des poteaux et de la cabane ; v25d (« les virages, une catastrophe : des gros monticules de terre partout ; repars sur les virages de base ») : plus de wall_fill
 BP.ARCH_CUT = None                 # v23c : pas de découpe sous les pieds
     # v21d : 1 sur 2, glissement max, pieds de l'arche   # v21c : ballots comme RF Anaheim 1 (|v| 15-16 ft, pas 9,6 ft)
 
@@ -646,6 +758,10 @@ def deco_v21(OUT, FOLDER, combos):
                         skip_ = g['tag'].startswith('L6') and side_ > 0 and bl is blocks[0] and nk_ < 2
                         mp_ = LP.BOARD_POLY['milwaukee']   # v25d (« un trait noir en plus » : 2 ballots l'un dans l'autre) : pas sur le dessus du Milwaukee
                         skip_ = skip_ or (g['tag'].startswith('LR') and abs(uu[k_] - (mp_[1][0] + mp_[2][0]) / 2) < 5.0)
+                        # v28 (« celle de l'intérieur, tu l'enlèves ; t'en mets 2 là ») : plus la dernière à droite de L2 (intérieur du virage Honda)
+                        skip_ = skip_ or (g['tag'].startswith('L2') and side_ > 0 and uu[k_] > g['L'] - 25.0)
+                        if g['tag'].startswith('LR') and LP.CAMEL_U - 3.0 < uu[k_] < LP.CAMEL_U + 14.0:   # v29 (« coincée dans l'appel du Milwaukee, recule-la »)
+                            k_ = int(np.argmin(np.abs(uu - (LP.CAMEL_U - 5.0))))
                         if bad[k_] < 0.5 and not skip_:
                             key_ = bale_sponsor(g, uu[k_], nb_); fb_ = bale_files.setdefault(key_, DV.bale_u(sd, key_))
                             lines.append(line(P_[k_, 0], P_[k_, 1], yaw, *fb_)); nb_ += 1
@@ -689,9 +805,12 @@ def deco_v21(OUT, FOLDER, combos):
         uc = u0 + it[1] + float(np.argmax(prof[i0_:i1_])) * 0.1; ue = u0 + it[2]
         top_ = np.nonzero(prof[i0_:i1_] >= prof[i0_:i1_].max() - 1.2)[0]; ut0, ut1 = u0 + it[1] + top_[0] * 0.1, u0 + it[1] + top_[-1] * 0.1
         c, s2 = np.cos(g3['t']), np.sin(g3['t']); nrm = np.array([-s2, c]); yaw = float(np.arctan2(-s2, c)); fa = DV.bale_u(sd, 'amv')
-        for u_ in (ut0 + 1.5, ut1 - 1.5):   # v23f (« sur les bords de la bosse, juste avant l'angle, pas au milieu »)
+        # v28 (« les bottes AMV sur le dessus, il en faut pas ; que dans la descente du saut, 2 de chaque côté sur le bord, parallèles ») :
+        # dans la descente, au ras du panneau (|v| = BOARD_VB - 2,5 ft), le jeu les penche comme la pente
+        for f_ in (0.28, 0.58):
+            u_ = ut1 + f_ * (ue - ut1)
             for side_ in (-1, 1):
-                p_ = np.array([g3['x0'] + u_ * c, g3['z0'] + u_ * s2]) + nrm * side_ * BALE_V; lines.append(line(p_[0], p_[1], yaw, *fa))
+                p_ = np.array([g3['x0'] + u_ * c, g3['z0'] + u_ * s2]) + nrm * side_ * (LP.BOARD_VB['amv'] - 2.5); lines.append(line(p_[0], p_[1], yaw, *fa))
     # v23c : bâches drapées sur les flancs : saut Milwaukee (LR) et réception du freestyle (plaque AMV)
     gR = next(g for g in BP.PATH.segs if g['kind'] == 'S' and g['tag'].startswith('LR'))
     for side_, nm_ in ((-1, 'bache_milwaukee_g'), (1, 'bache_milwaukee_d')):
@@ -714,7 +833,8 @@ def deco_v21(OUT, FOLDER, combos):
     Cc, t5_, n5, ucab = cabin_spot(BP.PATH); vcab = CAB_V                              # v25e : près de l'appel, sur son socle (pads)
     fz = n5; fx = np.array([fz[1], -fz[0]])                                          # +z de la cabane = vers la piste
     wp = lambda x, y, z: (fx[0] * x + fz[0] * z, y, fx[1] * x + fz[1] * z)
-    lines.append(line(Cc[0], Cc[1], 0.0, *D22.cabin_v25(sd, wp))); rep_['cabane'] = (round(ucab, 1), vcab)
+    import deco_v28 as D28_
+    lines.append(line(Cc[0], Cc[1], 0.0, *D28_.booth(sd, wp))); rep_['cabane'] = (round(ucab, 1), vcab)   # v29 : guérite noire MX Sim (dessin)
     st_ = BP.START; G0 = np.array(st_['gate']); f0 = np.array([np.cos(np.radians(st_['heading'])), np.sin(np.radians(st_['heading']))]); r0 = np.array([-f0[1], f0[0]])
     # v25c (« pas du tout au niveau du holeshot : le placer au niveau de la 1re bosse après le saut freestyle » ; « trop haut ») : poteau à gauche
     # de L2, au niveau de la crête de sa 1re bosse, sur du sol PLAT (le jeu penche un objet posé en pente), bannière au-dessus de la piste
@@ -736,7 +856,7 @@ def deco_v21(OUT, FOLDER, combos):
     ff = "@%s/ext/2024Bh1Conway/flaggerfiles/" % FOLDER
     open(os.path.join(OUT, "flaggers"), "w", newline=chr(10)).write(chr(10).join([
         "[%.6f 0.000 %.6f]" % tuple(b1), "[%.6f 0.000 %.6f]" % tuple(b2), "8.4 1", "10", "@30sec_30.png", "@30sec_turn.seq", "@30sec_5.png",
-        "@30sec_run.seq", "@%s/billboard/blank.png" % FOLDER, "", "[%.6f 0.000 %.6f]" % tuple(Cc), "10.5 1", ff + "defaultflag.png", ff + "halfway.png",
+        "@30sec_run.seq", "@%s/billboard/blank.png" % FOLDER, "", "[%.6f %.3f %.6f]" % (Cc[0], CAB_PAD + CAB_FLAG, Cc[1]), "10.5 1", ff + "defaultflag.png", ff + "halfway.png",
         ff + "lastlap.png", ff + "rf.flagger_waving.seq", "", "", "", "[0.00000000 0.000 0.00000000]", "9.6 1", "3 4 5 -1", "@flagger_resting.png",
         "@flagger_waving.seq", ""]))
     # v23e : murs INVISIBLES (collision seule), assez hauts pour ne pas gêner un saut normal : (1) entre la petite table et l'appel du
@@ -755,10 +875,123 @@ def deco_v21(OUT, FOLDER, combos):
     inv_wall('invisible_milwaukee', gR, sR[1] + (itR[kM + 1][1] + itR[kM + 1][2]) / 2, 15.0, 40.0)   # v23f : plus haut (« buggés »)
     g5 = next(g for g in BP.PATH.segs if g['kind'] == 'S' and g['tag'].startswith('L5')); s5 = g5['sections'][0]; it5 = combos[s5[2]]['items']
     inv_wall('invisible_arrivee', g5, s5[1] + (it5[1][2] + it5[2][1]) / 2, 13.0, 30.0)   # v23f : « le plus haut pour le saut d'arrivée encore »
+    late_ = deco_v28(OUT, FOLDER, combos, Hf, lines, line, sd, DV, rep_, g3, gR)
+    # v28 : les boudins « tardifs » EN TÊTE de statues et de la variante de nuit (même rang dans les 2 fichiers pour nofrills.js)
+    ls_ = set(late_); rest_ = [l_ for l_ in lines if l_ not in ls_]
     for f in ["statues"] + ["variants/" + v for v in os.listdir(os.path.join(OUT, "variants")) if v.startswith("statues")]:
         p = os.path.join(OUT, f); s0 = open(p).read().rstrip(chr(10)) + chr(10)
-        open(p, "w", newline=chr(10)).write(s0 + chr(10).join(lines) + chr(10))
+        open(p, "w", newline=chr(10)).write(chr(10).join(late_) + chr(10) + s0 + chr(10).join(rest_) + chr(10))
+    import deco_v28 as D28
+    rep_['boudins_20s'] = D28.write_late(OUT, late_)                  # v28 : nofrills.js (rangs définitifs des statues)
     BP.REPORT['deco_v21'] = rep_
+
+
+def deco_v28(OUT, FOLDER, combos, Hf, lines, line, sd, DV, rep_, g3, gR):
+    """v28 (review en jeu de la v27d) : bottes de paille en plus (captures annotées), boudins sponsors qui sortent 20 s après la chute de
+    la grille (ligne de départ, bout du saut AMV vers T_D), poteau de virage après l'arrivée, bâche noire derrière les grilles.
+    Renvoie les lignes « tardives » (nofrills.js)."""
+    import deco_v28 as D28
+    from engine import turn_mid_angle
+    P = D28.Placer(BP.PATH, Hf); L_ = lambda t: P.seg(t)['L']
+    sec_ = lambda g, nm: next(q for q in g['sections'] if q[2] == nm)
+    st3 = next(q for q in g3['sections'] if q[2] != LP.L3_SEC); it3 = combos[st3[2]]['items'][-1]; u_tab = st3[1] + it3[2]   # fin de la petite table
+    s3 = sec_(g3, LP.L3_SEC); u_app = s3[1]                                                     # pied de l'appel du freestyle
+    g5 = P.seg('L5'); u5 = g5['sections'][0][1]; g6 = P.seg('L6'); s6 = g6['sections'][0]; i6 = combos[s6[2]]['items'][0]
+    sR = gR['sections'][0]; itR = combos[sR[2]]['items']; uR2 = sR[1] + next((it[1] for it in itR[1:] if 'roller' in it[0]), LP.CAMEL_U - 10.0 - sR[1])
+    uArc = sR[1] + (itR[0][1] + itR[0][2]) / 2
+    u_tab0 = st3[1] + it3[1]                                                                    # début (appel) de la petite table
+    # v29 (review v28, captures annotées : vert = déplacer, blanc = enlever, rectangle rouge = nouvelle place)
+    spec = [('T_Bb', L_('T_Bb') - 5.0, -17.0, 'mxsim'),          # sortie, extérieur (gardée)
+            ('L3', u_tab0 + 6.0, -BALE_V, 'mxsim'), ('L3', u_tab0 + 6.0, BALE_V, 'mxsim')]   # « une de chaque côté dans la pelle »
+    for u_ in (u_tab + 2.5, u_app + 0.5):                         # « plus d'espace entre les deux, la 2e plus vers la pelle »
+        spec += [('L3', u_, -BALE_V, 'amv'), ('L3', u_, BALE_V, 'amv')]
+    # 1re bosse de L6 côté droit : en face des 2 premières du côté gauche (« pas vraiment alignées »)
+    c6, s6_ = np.cos(g6['t']), np.sin(g6['t'])
+    uL6 = sorted(u_ for u_, v_ in ((((x_ - g6['x0']) * c6 + (z_ - g6['z0']) * s6_), (-(x_ - g6['x0']) * s6_ + (z_ - g6['z0']) * c6))
+                                   for x_, z_ in ((float(l_.split()[0][1:]), float(l_.split()[2][:-1])) for l_ in lines if 'bale_u' in l_))
+                 if abs(v_ + BALE_V) < 1.0 and -2.0 < u_ < s6[1] + i6[2] + 25.0)[:2]
+    if len(uL6) < 2:
+        uL6 = [s6[1] + i6[1] + 8.0, s6[1] + i6[2] - 6.0]
+    spec += [('T1', 6.0, -17.0, 'honda'), ('L1', 1.5, -22.0, 'honda'), ('L1', -7.0, -22.0, 'honda'),   # T1 : entrée extérieure, avant les whoops
+             ('T_E', -11.4, -16.0, 'yamaha'),                                                    # « la verte : au rectangle rouge en dessous »
+             ('L6', uL6[0], BALE_V, 'yamaha'), ('L6', uL6[1], BALE_V, 'yamaha'),
+             ('T_C', 4.0, -16.0, 'five'), ('T_C', L_('T_C') - 6.0, -16.0, 'five')]              # « tu m'en remets une ici »
+    # 1re bosse de L5 : la paire de l'appel enlevée et remise au pied de la bosse (« aligne-les à la piste ») ; descente, plat gardés
+    c5, s5_ = np.cos(g5['t']), np.sin(g5['t']); uu5 = np.arange(u5, u5 + 40.0, 0.25)
+    h5 = np.ravel(Hf(g5['x0'] + uu5 * c5, g5['z0'] + uu5 * s5_)); u_foot = float(uu5[int(np.argmax(h5 > 0.3))])
+    for k_, du in enumerate((u_foot + 3.0 - u5, 19.0, 30.0)):
+        spec += [('L5', u5 + du, -BALE_V, 'five' if k_ % 2 == 0 else 'five5'), ('L5', u5 + du, BALE_V, 'five5' if k_ % 2 == 0 else 'five')]
+    for u_ in np.arange(8.0, uR2 - 8.0, BALE_STEP2):               # « bottes 50 Factory tout le long du sable »
+        if abs(u_ - uArc) > 6.0:
+            spec += [('LR', float(u_), -BALE_V, '50factory'), ('LR', float(u_), BALE_V, '50factory')]
+    Lb = L_('T_L5b')                                               # « au niveau des ballots de paille, un truc comme ça : des Minerva » (2 rangées le long du virage)
+    vM_ = 13.5                                                     # v30 (« les ballots, recentre-les un petit peu ») : |v| 15 -> 13,5 ft
+    spec += [('T_L5b', f_ * Lb, -vM_, 'minerva') for f_ in (0.2, 0.5, 0.8)] + [('T_L5b', f_ * Lb, vM_, 'minerva') for f_ in (0.1, 0.3, 0.5, 0.7, 0.9)]
+    fb = {}
+    for x_, z_, yaw_, key_, r_ in D28.bales(P, spec):
+        lines.append(line(x_, z_, yaw_, *fb.setdefault(key_, DV.bale_u(sd, key_))))
+    # bottes posées vues de dessus (décalage depuis le centre du virage, ft) : intérieur T1 (2 près du poteau), T_E, T_C (2 sous le poteau)
+    cen = lambda t: np.array([P.seg(t)['cx'], P.seg(t)['cz']])
+    xy = [(cen('T1') + (1.2, -2.9), 0.0, 'honda'), (cen('T1') + (4.7, 9.0), 0.0, 'honda'),
+          (cen('T_E') + (-2.6, 16.4), np.pi / 2, 'yamaha'),
+          (cen('T_C') + (1.1, -2.6), 0.0, 'five'), (cen('T_C') + (1.1, 3.9), 0.0, 'five5')]
+    for q_, yaw_, key_ in xy:
+        lines.append(line(q_[0], q_[1], yaw_, *fb.setdefault(key_, DV.bale_u(sd, key_))))
+    rep_['bottes_v29'] = len(spec) + len(xy)
+    # poteau de virage : intérieur du 2e virage après l'arrivée, sur du plat ; v29 : 3,7 ft plus loin (rond rouge), bâton de 8 ft tout rouge
+    gb = P.seg('T_L5b'); mid = turn_mid_angle(gb); cs = D28.corner_stick(sd)
+    flat_ = lambda q: np.ptp([float(np.ravel(Hf(q[0] + a, q[1] + b))[0]) for a in (-1.2, 0, 1.2) for b in (-1.2, 0, 1.2)]) < 0.05
+    r_ = next((r for r in np.arange(gb['r'] - 17.0, 4.0, -0.5) if flat_((gb['cx'] + r * np.cos(mid), gb['cz'] + r * np.sin(mid)))), 6.0)
+    q_ = np.array([gb['cx'] + r_ * np.cos(mid), gb['cz'] + r_ * np.sin(mid)])
+    if flat_(q_ + (3.7, 0.0)):
+        q_ = q_ + (3.7, 0.0)
+    lines.append(line(q_[0], q_[1], 0.0, *cs)); rep_['poteau_virage'] = (round(float(q_[0]), 1), round(float(q_[1]), 1))
+    # bâche noire derrière les grilles (« des grillages noirs comme à Saint-Georges, sans les sponsors »), 35 ft derrière la grille
+    st_ = BP.START; G0 = np.array(st_['gate']); f0 = np.array([np.cos(np.radians(st_['heading'])), np.sin(np.radians(st_['heading']))])
+    T0 = G0 - f0 * 35.0; tj = D28.start_tarp_black(sd, os.path.join(BP.ROOT, "tracks", "USLAND2026SaintGeorgesbyBazo", "statue"))
+    lines.append(line(T0[0], T0[1], float(np.arctan2(-f0[0], -f0[1])), *tj))
+    # boudins sponsors qui sortent 20 s après la chute de la grille
+    PROPS = os.path.join(BP.ROOT, "commun/assets", "props")
+    for f_ in ("boudin_logo3.jm", "boudin_logo3.shp"):
+        shutil.copy(os.path.join(PROPS, f_), os.path.join(sd, f_))
+    # v29 (« catastrophe : ça doit partir de la réception du saut jusqu'au virage, pour définir où passer pendant le tour ; au moins 5-6 de
+    # chaque marque, pas que ça alterne ») : couloir de la réception après l'arrivée (début de LD) jusqu'à l'entrée du virage MX Sim (T_Bb),
+    # d'après les traits rouges des 2 captures : bord nord presque droit vers le début du mur du virage, bord sud qui s'élargit puis va au
+    # poteau intérieur ; les portes de chrono du tour dans ce couloir suivent (sinon « coupé la piste »)
+    # v35 (reprise de Bazo sur le tracé actuel) : Bazo avait posé ces boudins sur SON tracé (traversée en diagonale après l'arrivée) avec des
+    # positions absolues ; ici le tour reprend la ligne de départ LD (vers l'est) puis la boucle T_B, et le départ part vers l'ouest sur
+    # LD puis monte à T_D. Même idée, recalée sur ce tracé (« couloir de la réception jusqu'au virage MX Sim, au moins 5-6 de chaque marque,
+    # pas que ça alterne » ; « boudins Automoto après le saut freestyle, ferme l'arrivée du départ ») ; portes de chrono : celles de LD
+    # suivent déjà le couloir (plus de regate)
+    sLD = P.seg('LD')['s0']; at_ = lambda u, v: P.at(sLD + u, v)[0]; gLD = P.seg('LD'); VC_ = 19.0
+    pyl = {}                                                     # poteau(x) de chaque virage, rattachés au centre de virage le plus proche
+    for x_, z_, _, k_ in pylon_spots(BP.PATH):
+        gt_ = min((g_ for g_ in BP.PATH.segs if g_['kind'] == 'T'), key=lambda g_: np.hypot(g_['cx'] - x_, g_['cz'] - z_))
+        pyl.setdefault(gt_['tag'][:4], []).append(np.array([x_, z_]))
+    A = [at_(14.0, -VC_), at_(gLD['L'] - 17.0, -VC_)]                           # bord nord de LD, jusqu'au début du mur de T_Ba
+    pB = min(pyl['T_Bb'], key=lambda q: q[1]); B2 = at_(gLD['L'] - 25.0, VC_)   # bord sud, puis vers le 1er poteau de T_Bb (points de Ryan)
+    B = [at_(14.0, VC_), B2, pB - (pB - B2) / np.hypot(*(pB - B2)) * 3.0]
+    bl = D28.polyline_boudins(A, ['mxsim'] * 6 + ['honda'] * 6 + ['yamaha'] * 6, True) + D28.polyline_boudins(B, ['five'] * 6 + ['motoverte'] * 6 + ['milwaukee'] * 6, False)
+    rep_['couloir_depart'] = dict(A=[tuple(np.round(q, 1)) for q in A], B=[tuple(np.round(q, 1)) for q in B])
+    # Automoto : (1) du bout du panneau AMV côté L2 au poteau intérieur de T_D ; (2) du bout du panneau AMV côté LD, autour de l'extérieur
+    # du 1er quart de T_D (TD1), 2,5 ft hors piste : coupe la montée du départ vers T_D (le départ est passé à 20 s)
+    sL3 = g3['s0']; uB = LP.BOARD_POLY['amv'][-1][0]
+    e1 = P.at(sL3 + uB, -LP.BOARD_VB['amv'])[0]; e2 = P.at(sL3 + uB, LP.BOARD_VB['amv'])[0]
+    pD = min(pyl.get('T_D ', []) + pyl.get('TD1 ', []), key=lambda q: np.hypot(*(q - e1)))
+    bl += D28.polyline_boudins([e1, pD - (pD - e1) / np.hypot(*(pD - e1)) * 2.5], ['automoto'] * 6, True)
+    gD1 = P.seg('TD1'); cD_ = np.array([gD1['cx'], gD1['cz']]); rD_ = gD1['r'] + LP.TOP_W / 2 + 4.5
+    a_e2 = np.degrees(np.arctan2(e2[1] - cD_[1], e2[0] - cD_[0])); uD_ = lambda a: np.array([np.cos(np.radians(a)), np.sin(np.radians(a))])
+    l2_ = [e2] + [cD_ + rD_ * uD_(a) for a in np.linspace(min(-90.0, a_e2 - 15.0) if a_e2 < 0 else -90.0, -172.0, 5)]
+    l2_ = [q for k, q in enumerate(l2_) if k == 0 or np.hypot(*(q - cD_)) >= rD_ - 0.1]
+    rep_['automoto_ligne2'] = [tuple(np.round(q, 1)) for q in l2_]
+    bl += D28.polyline_boudins(l2_, ['automoto'] * 6, True)
+    late = []
+    for x_, z_, yaw_, key_ in bl:
+        l_ = line(x_, z_, yaw_, "boudin_logo3.jm", D28.boudin_skin(sd, key_, PROPS), "boudin_logo3.shp"); lines.append(l_); late.append(l_)
+    # v29 : bandeau LED du pied des tribunes (USLAND | Supercross Paris | USLAND | MX Sim Racing)
+    D28.led_board_v29(os.path.join(OUT, "tex", "led_board-hrepeat.png"), os.path.join(BP.ROOT, "commun/assets", "logos", "user"), os.path.join(BP.ROOT, "pistes/paris-2026/stade_paris", "src"))
+    rep_['boudins_tardifs'] = len(late)
+    return late
 
 
 def roof_ft(x, z):
