@@ -291,6 +291,11 @@ POST_FIN_V23F = dict(b1=POST_FIN_V23E['b1'], b1o=POST_FIN_V23E['b1o'],
 _sh = lambda pts, d: [(a + d, b) for a, b in pts]
 POST_FIN_V27C = dict(b1=_sh(POST_FIN_V23F['b1'], -4.0), b1o=_sh(POST_FIN_V23F['b1o'], -4.0), b23=_sh(POST_FIN_V23F['b23'], 4.0), out_k=1.0)
 POST_FIN = POST_FIN_V23F          # v27d : remis comme la v25f
+# v28m (croquis vert sur la vue de dessus : le virage T_L5b avec un appui à l'extérieur) : plus de 2e bosse + plateau qui tournait
+# dans T_L5b (la trace passait au milieu) ; T_L5b porte un berm JGSX à l'extérieur (comme T_L5a) ; la 1re bosse (roller dans T_L5a) reste
+L5B_BERM = True
+if L5B_BERM:
+    POST_FIN = dict(POST_FIN_V23F, b23=[(0, 0), (1, 0), (2, 0), (3, 0)])
 CAMEL_V22D = CAMEL
 # v23 (« un peu plus haut ; la face beaucoup plus raide, le bas toujours smooth ; un petit creux avant, que ça redescende presque au sol du stade
 # avant la face ; plus de cran ; la réception moins raide ») : replat de terre 0,4 ft, creux à 0,05, face concave jusqu'à ~60°, 11,6 ft,
@@ -586,7 +591,7 @@ def paris():
         p.turn(-th_, AF_R2, None, tag='T_LBb courbe droite (traversee)')
     else:
         p.straight(zLD - zL5 - RB - RBb, tag='T_L5 milieu')
-        p.turn(90, RBb, None, tag='T_L5b 90 gauche')
+        p.turn(90, RBb, BIG if (ZION and L5B_BERM) else None, tag='T_L5b 90 gauche' + (' (berm)' if (ZION and L5B_BERM) else ''))
         p.straight((xTB - RB) - (xT5 + RB) - (RBb - RB), tag='LD ligne de départ (vers l ouest)')
         p.turn(-90, RB, None, tag='T_Ba 90 droite')
         p.straight(zL3 - zLD - 2 * RB, tag='T_B milieu')
