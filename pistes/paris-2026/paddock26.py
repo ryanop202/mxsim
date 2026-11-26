@@ -912,8 +912,10 @@ def honda_hospitality(D, L=96.0, Dp=28.0):
 
 
 # ================================================================= écran géant + 2 écrans verticaux (mur de scène)
-SCR_W, SCR_Y0, SCR_Y1 = 210.0, 28.5, 100.0                                 # 64 x 21,8 m (1 400 m², bas de la fourchette documentée)
-SIDE_W, SIDE_Y0, SIDE_Y1, SIDE_GAP = 29.5, 33.0, 85.5, 13.0                 # 9 x 16 m, à 4 m du grand écran
+# v28 (photo de Ryan de Paris 2026 : grand écran ~3,8:1, 2 écrans de côté couchés ~1,6:1, presque collés, centrés un peu plus bas
+# que le grand) : grand 64 x 17 m (bas 11 m, haut 28 m, sous la toiture : l'ancien montait à 30,5 m) ; côtés 15 x 9,1 m à 2,7 m
+SCR_W, SCR_Y0, SCR_Y1 = 210.0, 36.1, 91.9
+SIDE_W, SIDE_Y0, SIDE_Y1, SIDE_GAP = 49.2, 45.0, 74.9, 8.9                  # v28 : couchés (étaient 9 x 16 m debout)
 
 
 def _sunset(W, H):
@@ -1249,7 +1251,19 @@ def barriere_num(D, n):
 
 
 # ================================================================= plan (coordonnées du jeu, ft) et pose
-X_WALL = 879.34
+import layout_paris as _LP                                              # noqa: E402
+X_WALL = _LP.OX + 62.0 * _LP.PLAN_K * _LP.FT                            # v28 : mur de scène (était 879,34 ft pour x1,624)
+# v28 (stade x1,52, « essaie que le paddock passe quand même ») : tout le paddock recalé contre le mur de scène (même écart qu'avant)
+# et resserré de 4 % en z autour de l'axe de l'arène (le sol fait 449 ft de large au lieu de 480) ; les objets gardent leur taille
+PAD_DX = X_WALL - 879.34
+# z : le paddock prenait 469 ft (357 -> 826), le sol n'en fait plus que 458 (x1,55) : les 2 bandes vides (passage « croix » 706-715,
+# bande 818-824 avant les barrières numérotées) réduites à 4 ft et 1 ft ; le reste quasi intact (< 1 %), chaque stand bouge d'un bloc
+PAD_ZK = [357.3, 706.0, 715.0, 818.0, 824.0, 826.0]
+def pad_z(z):
+    o = PAD_ZK; h = 45.0 * _LP.PLAN_K * _LP.FT; lo, hi = _LP.OZ - h + 1.0, _LP.OZ + h - 1.0
+    f = min(1.0, ((hi - lo) - 5.0) / ((o[-1] - o[0]) - 15.0))
+    n = [lo]; n.append(n[-1] + (o[1] - o[0]) * f); n.append(n[-1] + 4.0); n.append(n[-1] + (o[3] - o[2]) * f); n.append(n[-1] + 1.0); n.append(n[-1] + (o[5] - o[4]) * f)
+    return float(np.interp(z, o, n))
 YAW = lambda fx, fz: float(np.arctan2(fx, fz))
 E, W_, N_, S_ = (1, 0), (-1, 0), (0, -1), (0, 1)                          # +x (vers le mur), -x (vers la piste), -z, +z (bout whoops)
 
@@ -1380,7 +1394,20 @@ def plan():
         add("moto_kawa", 759.0, z, E, "Bud Racing (motos, vers l'allée)")
     add("caisses", 760.0, 404.0, S_, "Bud Racing")
     # ======================= écran
-    add("ecran_geant", X_WALL - 2.5, 593.5, W_, "écran géant")
+    # v28 : recalé (PAD_DX, pad_z) ; chaque stand (1er mot du commentaire) bouge d'un bloc : rien ne se resserre à l'intérieur d'un stand
+    #   (Ryan, v22k : les bus Honda ne doivent pas empiéter sur la moquette rouge)
+    KW_ = ('Honda', 'Suzuki', 'Triumph', 'YCF', 'Stark', 'KTM', 'RBT', 'Milwaukee', 'Monster', 'Bud', 'GSM', 'Sedna', 'VHR', 'USLAND', 'Airstream',
+           'box motos (côté photo 2)', 'box motos', 'barrière numérotée')
+    grp = lambda k, c: next((w for w in KW_ if w in c), c or k)
+    zc = {}
+    for k, x, z, f, c in P:
+        zc.setdefault(grp(k, c), []).append(z)
+    dz = {g: pad_z(float(np.mean(v))) - float(np.mean(v)) for g, v in zc.items()}
+    P = [(k, x + PAD_DX, z + dz[grp(k, c)], f, c) for k, x, z, f, c in P]
+    # v28 : la remorque Suzuki dépassait de 5 ft dans le mur de scène (déjà 5 ft avant) : stand Suzuki
+    #   5,5 ft plus près de l'allée
+    P = [(k, x - (5.5 if c.startswith('Suzuki') else 0.0), z, f, c) for k, x, z, f, c in P]
+    add("ecran_geant", X_WALL - 2.5, _LP.OZ, W_, "écran géant")
     return P
 
 

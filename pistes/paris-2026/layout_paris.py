@@ -23,11 +23,14 @@ from compose import lane, unit, whoops   # noqa: E402
 D = json.load(open(os.path.join(HERE, "lecture_photos.json"), encoding="utf-8"))
 S = D["echelle_ft_par_px"]
 FT = 3.28084
-PLAN_K = 1.624                    # agrandissement en plan de l'arène (pistes/paris-2026/stade_paris/src/build.py) ; v5 : 1,35 -> 1,45 (paddock) ; v10 : x1,12 -> 1,624
+PLAN_K = 1.55                     # v28 (« le stade plus autour de la piste » ; x1,52 demandé, x1,55 pour que le paddock tienne sans serrer les stands) ; avant 1,624 ; agrandissement en plan de l'arène (pistes/paris-2026/stade_paris/src/build.py) ; v5 : 1,35 -> 1,45 (paddock) ; v10 : x1,12 -> 1,624
 FLOOR_X_SOUTH = -60.0 * PLAN_K    # m (dims.FLOOR_X_SOUTH x K)
 OX, OZ = 549.0, 593.5             # origine du repère de l'arène dans le terrain (ft) : bâtiment centré sur 1187 ft
-X0 = OX + FLOOR_X_SOUTH * FT
-Z0 = OZ
+# v28 (stade x1,55) : piste centrée en z dans le sol (68 ft entre la ligne de course et la tribune en haut et en bas) ; 35 ft
+# côté sable (était 48,5) pour garder la place du paddock derrière les virages Ouest
+TRACK_DX, TRACK_DZ = -13.5, -24.69
+X0 = OX + FLOOR_X_SOUTH * FT + TRACK_DX
+Z0 = OZ + TRACK_DZ
 BIG, BIG2 = 'big_det_a', 'big_cle'
 RB = 21.5
 ZION = os.environ.get('PARIS_ZION') == '1'      # v15 : « version Zion » (pistes/paris-2026/build_zion.py)

@@ -2,7 +2,7 @@
 
 Coupe type (distance d au bord du sol, hauteur z) [PHO P5, P7, P9, P10 + coupe ACDP] :
   0,0–2,0   circulation au pied des tribunes (niveau sol)
-  2,0       mur de front (1,10 m) + panneaux LED
+  2,0       mur de front (2,50 m) + panneaux LED
   2,0–21,2  tribune basse : 24 rangs de 0,80 m, contremarches 0,36 -> 0,46 m (≈ 27°)
   21,2–23,0 coursive haute de la tribune basse ; vitrage des loges à d = 23,0 (z 11,4–14,2)
   19,4      nez de la tribune haute (bandeau blanc + anneau LED, z 14,2–15,6), en surplomb
@@ -23,7 +23,9 @@ ROW_DEPTH = 0.80
 AISLE_W = 1.20
 AISLE_SPACING = 8.0
 
-LOWER = dict(d0=2.0, z0=1.10, rows=24, r0=0.36, r1=0.46)
+# v28 Paris (photo de Ryan : « en bas des places il y a une hauteur, pas au sol ») : mur de front 1,10 -> 2,50 m ; 21 rangs au lieu
+# de 24 pour garder le haut de la tribune basse à ~11 m (coursive, loges et tribune haute inchangées)
+LOWER = dict(d0=2.0, z0=2.50, rows=21, r0=0.36, r1=0.46)
 UPPER = dict(d0=19.8, z0=15.60, rows=19, r0=0.55, r1=0.62)
 FRONT_UPPER_D = 19.4
 SOFFIT_Z = 14.2

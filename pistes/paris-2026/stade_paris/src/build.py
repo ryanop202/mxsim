@@ -41,7 +41,7 @@ def ground(scene):
 
 NOSEATS = False
 # Agrandissement en plan (Paris 2026 : sol 90 x 122 m -> 121,5 x 164,7 m pour le tracé ; 1 = arène réelle)
-PLAN_K = 1.624    # v10 : stade x1,12 de plus (plus de sièges) ; v5 (Ryan : agrandir pour le paddock) : 1,45 ; était 1,35
+PLAN_K = 1.55    # v28 Paris (« le stade plus autour de la piste » ; x1,55 pour le paddock) ; v10 : 1,624 ; : stade x1,12 de plus (plus de sièges) ; v5 (Ryan : agrandir pour le paddock) : 1,45 ; était 1,35
 
 
 def build(only=None):
