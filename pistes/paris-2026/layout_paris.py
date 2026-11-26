@@ -915,9 +915,10 @@ L3_SHIFT, L2_SHIFT = 12.0, 10.0          # v13 (« plus d'espace entre chaque en
 #                                         -> couloir Est 22 ft plus long, 180 L3 -> L2 de rayon 37 ft
 EXIT_U0 = 6.0 if ZION else 10.0          # v23 Zion (« moins d'élan sur toutes les sorties de virage ») : 10 -> 6 ft ; v13 : 1re bosse à 10 ft de la sortie des virages (plus de marque berm / appel)
 L2_U0_V13 = 10.0
-BERM_END_FADE = {'T_D ': (8.0, 35.0)}     # v20c (« le virage à gauche avant l'enchaînement finit dans la bosse, il y a un trait ; le faire
+BERM_END_FADE = {'T_D ': (12.0, 40.0)}   # v28k (« adoucis l'angle du virage ») : 8 -> 12°, fondu 35 -> 40° (la 1re bosse de L2 part dans la courbe)
+#     # v20c (« le virage à gauche avant l'enchaînement finit dans la bosse, il y a un trait ; le faire
 #   finir un peu plus tôt, en restant doux, limite moins haut ») : berm à zéro 8° avant la sortie, fondu sur les 35° d'avant
-BERM_SOFT_TAG = {'T_D ': 2.5} if ZION else {}   # v27d : berm adouci (flou de 2,5 ft, même hauteur max) -> face moins raide
+BERM_SOFT_TAG = {'T_D ': 4.0} if ZION else {}   # v28k : flou 2,5 -> 4 ft   # v27d : berm adouci (flou de 2,5 ft, même hauteur max) -> face moins raide
 BERM_GAIN_TAG = {'T_D ': 1.05 if ZION else 0.95, **({'T_Bb': 1.15} if ZION else {})}   # v27d (« le virage à la même hauteur qu'avant mais moins d'angle ; remets l'après-arrivée comme avant ») : T_D 1,05 adouci (BERM_SOFT_TAG), T_L5 comme la v25f ; v27c (« on passe trop vite dans le virage avant L2 ») : T_D 1,05 -> 0,8 ; v27b (« baisse un petit peu l'appui ») : T_L5a 1,3 -> 1,15 ; v26 Zion : T_L5a (après l'arrivée) en cuvette plus haute comme en vrai (vidéos) ; v23 Zion : T_D plus haut ; T_Bb entrée plus haute   # v13 : appui après le saut du milieu un peu moins haut (était 1,15) ; v22 Zion : « plus bas » 0,95 -> 0,75
 LD_SHIFT = 5.0                          # v10 : ligne de départ 5 ft plus loin du saut du milieu (place pour les tremplins FMX ;
 #                                         plus loin, le bout des 22 grilles monte sur le pied du berm T_C : grilles plus plates)
@@ -1006,7 +1007,9 @@ RF_BERM_TAGS = ()         # v28 : virages au berm RF mesuré (build_zion.berm_rf
 # v28h (« 1re bosse 3,5 ft à droite, 2 ft à gauche ; 36 ft entre chaque ; les autres 5 ft ; l'enchaînement commence plus près du
 # virage ») : 1re sans face étirée et pied coupé (crête plus tôt), écart fixe 36 ft
 # v28j (« avance l'enchaînement de 15 ft », choix « tout avancer ») : start -15 = la 1re bosse commence 15 ft avant la sortie de T_D (dans la courbe), 15 ft de plat avant T1
-L2_V28 = dict(fill=dict(start=-15.0, end=4.0, pitch=36.0), front1=None, toe=0.3,   # v28 : bosses RF (voir paris()) ; None = v27d
+# v28k (« recule l'enchaînement de 6 ft et adoucis l'angle du virage et la bosse pour que ça rentre plus smooth ») : crêtes 6 ft plus
+# loin (1re à la sortie de T_D), face avant de la 1re étirée x1,4 sans pied coupé (pente douce qui part dans la courbe)
+L2_V28 = dict(fill=dict(start=-16.6, end=4.0, pitch=36.0), front1=1.4, toe=None,   # v28 : bosses RF (voir paris()) ; None = v27d
               bumps=[(3.5, 'single', 0.8)] + [(5.0, 'single', 1.0)] * 6 + [(5.0, 'single', 0.85)],
               smooth=1.5,          # v28e : forme RF de longueur normale, lissage léger
               left1=2.0 / 3.5)
