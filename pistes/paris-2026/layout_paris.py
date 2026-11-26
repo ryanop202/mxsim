@@ -296,6 +296,12 @@ POST_FIN = POST_FIN_V23F          # v27d : remis comme la v25f
 L5B_BERM = False   # v28n (« pas du tout, remets comme avant ») : False = comme la v25f
 if L5B_BERM:
     POST_FIN = dict(POST_FIN_V23F, b23=[(0, 0), (1, 0), (2, 0), (3, 0)])
+# v28o (« la 2e bosse un angle légèrement plus doux, avec l'intérieur ça fait un à-coup ; la petite ligne droite doit faire 21 ft, le plateau ») :
+# montée de la 2e bosse sur 12 ft au lieu de 9 (crête au même endroit, 4,4 ft), plateau 2,9 ft sur 21 ft au lieu de 24, descente identique
+POST_FIN_V28O = dict(POST_FIN_V23F, b23=[(52, 0), (55.5, 0.7), (59.5, 2.8), (62.3, 4.1), (64, 4.4), (66, 4.1), (69, 3.2), (72, 2.9), (93, 2.9),
+                                         (99, 1.8), (105, 0.4), (110, 0)])
+if not L5B_BERM:
+    POST_FIN = POST_FIN_V28O
 CAMEL_V22D = CAMEL
 # v23 (« un peu plus haut ; la face beaucoup plus raide, le bas toujours smooth ; un petit creux avant, que ça redescende presque au sol du stade
 # avant la face ; plus de cran ; la réception moins raide ») : replat de terre 0,4 ft, creux à 0,05, face concave jusqu'à ~60°, 11,6 ft,
