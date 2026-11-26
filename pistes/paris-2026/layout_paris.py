@@ -1010,7 +1010,8 @@ RF_BERM_TAGS = ()         # v28 : virages au berm RF mesuré (build_zion.berm_rf
 # v28k (« recule l'enchaînement de 6 ft et adoucis l'angle du virage et la bosse pour que ça rentre plus smooth ») : crêtes 6 ft plus
 # loin (1re à la sortie de T_D), face avant de la 1re étirée x1,4 sans pied coupé (pente douce qui part dans la courbe)
 L2_V28 = dict(fill=dict(start=-16.6, end=4.0, pitch=36.0), front1=1.4, toe=None,   # v28 : bosses RF (voir paris()) ; None = v27d
-              bumps=[(3.5, 'single', 0.8)] + [(5.0, 'single', 1.0)] * 6 + [(5.0, 'single', 0.85)],
+              bumps=[(3.5, 'single', 0.8), (4.7, 'single', 1.0), (4.8, 'single', 1.0), (5.0, 'single', 1.0), (5.0, 'single', 1.0),   # v28l : 2e 4,7, 3e 4,8, 6e 4,8, dernière 4,7
+                     (4.8, 'single', 1.0), (5.0, 'single', 1.0), (4.7, 'single', 0.85)],
               smooth=1.5,          # v28e : forme RF de longueur normale, lissage léger
               left1=2.0 / 3.5)
 L2_V27 = True     # v27 : L2 = bosses de L6 (voir paris())
