@@ -71,6 +71,26 @@ def berm_zion(out, g):
     out[sl] = np.maximum(out[sl], val * w)
 
 
+def berm_rf(out, g):
+    """v28 : virage RF (copie de build_rf.berm_rf) : profil radial mesuré sur RF Anaheim 1 (normalisé) x hauteur de crête selon
+    l'avancement dans le virage (entrée -> sortie), ligne de course de A1 calée sur la nôtre ; fondu au-delà des bouts du virage."""
+    from engine import turn_mid_angle
+    RFF = LP.RFF
+    k = 'b180' if abs(g['ang']) > 135 else 'b90'
+    rr, P, tt, cc, ride = (np.asarray(RFF[k + s_], float) for s_ in ('_r', '_p', '_t', '_c', '_ride'))
+    P = np.maximum(P, 0.0) / P.max()
+    gb = BP.berm_seg(g); mid = turn_mid_angle(gb); half_a = np.radians(abs(gb['ang'])) / 2
+    rs = g['r'] - float(ride); R = rr.max() + max(rs, 0.0) + 2.0
+    sl, X, Z = G.window(g['cx'] - R, g['cx'] + R, g['cz'] - R, g['cz'] + R)
+    dx, dz = X - g['cx'], Z - g['cz']; rp = np.hypot(dx, dz) - rs
+    rel = np.angle(np.exp(1j * (np.arctan2(dz, dx) - mid)))
+    t = rel * -np.sign(gb['ang']) / half_a
+    crest = np.interp(np.clip(t, -1, 1), tt, cc)
+    over = np.clip((np.abs(t) - 1.0) / np.where(t > 0, 0.40, 0.15), 0, 1); crest = crest * (1 - over * over * (3 - 2 * over))
+    h = np.interp(rp, rr, P, left=0.0, right=0.0) * crest * (rp > 0)
+    out[sl] = np.maximum(out[sl], h)
+
+
 def fill_berm_dips(berms, path):
     """v20 (« en bas de chaque virage tu as mis une genre de petite ornière bizarre, gênante, retire-la ») : le croissant JGSX décalé
     vers l'extérieur (180 plus larges que 21,5 ft) puis fondu en bas laissait un creux de 0,2 - 0,4 ft au pied de la face du berm, à
@@ -244,6 +264,9 @@ def render_zion(path, st):
             gain = LP.BERM90_GAIN if abs(abs(gb['ang']) - 90) < 1 else LP.BERM180_GAIN
             gain = LP.BERM_GAIN_TAG.get(g['tag'][:4], gain)
             tmp = np.zeros((N, N))
+            if g['tag'][:4] in LP.RF_BERM_TAGS:              # v28 : berm RF mesuré (profil radial + crête selon l'avancement)
+                berm_rf(tmp, g); berms[:] = np.maximum(berms, tmp)
+                continue
             sl = render_berm_stamp(G, tmp, g['berm'], g['cx'], g['cz'], turn_mid_angle(gb),
                                    ang_scale=berm_ang_scale(g['berm'], gb['ang']), r_shift=max(0.0, g['r'] - LP.RB))
             fe_ = LP.BERM_END_FADE.get(g['tag'][:4])

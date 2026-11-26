@@ -527,6 +527,8 @@ def paris():
     zL5, zLD, zL3, zL2 = px_z(481.0), px_z(370.0) - LD_SHIFT, px_z(226.5) + L3_SHIFT, px_z(130.0) + L3_SHIFT + L2_SHIFT
     if ZION:   # v23c (« le virage plus tôt, rapprocher le virage de la bosse » ; déjà « plus serré ») : L3 12 ft plus près de L2 (180 de rayon -6 ft)
         zL3 += 12.0 if zL2 > zL3 else -12.0
+        if T_D_RF:   # v28 (« le virage, mets un virage de la RF, ça passe trop vite ») : 180 au rayon de la RF (A1 : 24,4 ft), L3 plus près de L2
+            zL3 = zL2 - 2 * T_D_RF if zL2 > zL3 else zL2 + 2 * T_D_RF
     zL1, zL6 = zL2 + 2 * R180, zL5 - 2 * R180        # 180° JGSX : couloirs voisins à 43 ft (v19 Zion : 55 ft)
     xW = px_x(312.0) + XW_SHIFT                        # virages Ouest (T1, T_C) : x des sorties de 180°
     xLR, xC, xT5 = px_x(860.0) - XLR_SHIFT, px_x(778.0), px_x(785.0)
@@ -566,7 +568,7 @@ def paris():
     # un seul bloc à l'intérieur ») : T_C3 + colonne + T_D -> UN 180 à gauche de rayon (zL2 - zL3) / 2 = 32 ft, sommet 6 ft plus
     # loin que l'ancienne colonne, saut du milieu avancé de 8 ft (place pour poser puis tourner). Berm (gros croissant JGSX, décalé
     # au rayon 32 ft) sur la 2e moitié seulement : le départ arrive par l'extérieur de la 1re moitié (comme avant par la colonne).
-    x_end3 = xC - X_APEX_SHIFT + R3
+    x_end3 = xC - X_APEX_SHIFT + R3 - (T_D_EAST if ZION else 0.0)   # v28b : T_D reculé vers le sable (LR)
     toks, u0 = from_render('L3', x3, 'x', -1, {(1, 2): Z25_MILIEU}, lane_len=x3 - x_end3)
     u0 -= L3_ADVANCE
     if ZION:   # v23 (« baisse légèrement la hauteur de la réception » du saut freestyle) : butte x0,93
@@ -716,7 +718,33 @@ def paris():
             for g__, b_ in zip(gaps_, bb_[1:]):
                 toks += [('gap', round(g__, 1)), b_]
             u0z = 0.5; SPLIT_Z[L2_NAME] = sp27; LOG['L2_v27'] = [round(x, 1) for x in gaps_]
-    u0 = u0z if ZION else L2_U0                            # v18 (RF) : même écart partout comme la version USLAND (~8,5 ft, A1 : 8 - 13)
+        if L2_V28:
+            # v28 (« mets les bosses de la RF ; 1re bosse dès la sortie du virage ; double sans pouvoir faire triple d'entrée ; à gauche
+            # simple, double ; le but : extérieur double - triple - triple sans pouvoir faire autre chose, genre un quadruple ») : formes
+            # MESURÉES sur RF Anaheim 1 (bosse 26 ft / 3,4 ft, grosse bosse 40 ft / 5,5 ft, mesure_rf.py), mises à l'échelle ; les 2 appels
+            # des triples = grosse bosse RF, bosses du milieu plus basses ; crêtes réglées avec sim_rythme.py (ESTIMATION, pas le jeu)
+            def rfb(h, key):
+                p_ = np.asarray(RFF[key], float); k_ = float(np.clip(np.sqrt(h / p_.max()), 0.9, 1.2))
+                q_ = np.interp(np.linspace(0, len(p_) - 1, max(2, int(round(len(p_) * k_)))), np.arange(len(p_)), p_) * (h / p_.max())
+                return np.maximum(q_, 0.0)
+            spec_ = L2_V28
+            pl_ = []                                                     # [début (ft depuis la sortie du 180), profil, nom]
+            for c_, (h_, key_) in zip(spec_['crest'], spec_['bumps']):
+                p_ = rfb(h_, key_); st_ = round(c_ - float(np.argmax(p_)) * 0.1, 1); nm_ = '%s RF %.1f ft' % ('grosse bosse' if key_ == 'big' else 'bosse', h_)
+                if pl_ and st_ < pl_[-1][0] + len(pl_[-1][1]) * 0.1 - 0.05:   # pieds qui se chevauchent : comme un max des deux
+                    a0, pa = pl_[-1][0], pl_[-1][1]; i_a = int(round((st_ - a0) / 0.1)); n_ = len(pa) - i_a
+                    cut = next(j for j in range(n_) if p_[j] >= pa[i_a + j])
+                    pl_[-1][1] = pa[:i_a + cut]; p_ = p_[cut:]; st_ = round(st_ + cut * 0.1, 1)
+                pl_.append([st_, p_, nm_])
+            assert pl_[0][0] >= 0.0 and pl_[-1][0] + len(pl_[-1][1]) * 0.1 <= (xWt - x_end3) - END_GAP + 0.05, pl_[-1][0]
+            toks = []; u0z = pl_[0][0]
+            for i_, (st_, p_, nm_) in enumerate(pl_):
+                if i_:
+                    toks += [('gap', round(st_ - (pl_[i_ - 1][0] + len(pl_[i_ - 1][1]) * 0.1), 1))]
+                toks += [('raw', nm_, p_, 'T')]
+            SPLIT_Z[L2_NAME] = [(0.0, len(pl_[0][1]) * 0.1, spec_['left1'], 1.0)]   # 1re bosse plus basse à gauche
+            LOG['L2_v28'] = [round(t[1], 1) for t in toks if t[0] == 'gap']
+    u0 = u0z if ZION else L2_U0                           # v18 (RF) : même écart partout comme la version USLAND (~8,5 ft, A1 : 8 - 13)
     sec2 = lane_sec(L2_NAME if ZION else 'PAR-L2 triple, triple (7 bosses, meme ecart)', toks, u0)
     if False:  # v23c : creux remontés (v23e : retiré, « des petits étages, des escaliers entre chaque bosse »)
         from scipy.ndimage import gaussian_filter1d
@@ -886,6 +914,16 @@ def fmx_ramps(path=None):
 L2_NAME = 'PAR-L2 double triple triple (8 bosses)'
 # v26 : L2 refait d'après les vidéos (voir le bloc L2 dans paris()) ; crêtes en ft depuis la sortie du 180, hauteur construite (côté le
 # plus haut), longueur (x forme ZION), coupe gauche / droite (facteurs kl, kr) ; None = L2 v25f
+T_D_RF = 24.5 if ZION else None   # v28 : rayon du 180 avant L2 (None = (zL2 - zL3) / 2 = 31 ft, v27d)
+# v28b (« il est trop en avant, il doit être plus reculé vers le sable, qu'on tourne et qu'on sorte pas au milieu du terrain ») :
+# 180 avant L2 décalé vers LR ; limite = le berm RF (46 ft du centre) ne doit pas toucher les bosses de LR
+T_D_EAST = 15.0
+RF_BERM_TAGS = ('T_D ',)         # v28 : virages au berm RF mesuré (build_zion.berm_rf) au lieu du croissant JGSX
+# v28b (« les 2 premières un tout petit peu plus petites, limite ça se voit pas ; ensuite les autres même distance et même hauteur ») :
+# bosse RF à 5,8 ft partout (les 2 premières 5,4 ft), crête à crête 36 ft entre les 2 premières puis 30 ft
+L2_V28 = dict(crest=[17.0, 53.0, 83.0, 113.0, 143.0, 173.0, 203.0, 233.0],   # v28 : bosses RF (voir paris()) ; None = v27d
+              bumps=[(5.4, 'single')] * 2 + [(5.8, 'single')] * 6,
+              left1=2.0 / 3.0)
 L2_V27 = True     # v27 : L2 = bosses de L6 (voir paris())
 L2_V27D = True    # v27d : 8 bosses, 1re 20°, 2e 4,3 ft, 3e 21°
 L2_V27C = True    # v27c : 3,5 / 4 / 4,5 x5, formes L6

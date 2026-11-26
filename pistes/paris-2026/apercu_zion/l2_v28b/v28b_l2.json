@@ -1,0 +1,90 @@
+{
+ "marges": {
+  "double - triple - triple (voulu)": [
+   2.0,
+   1.3,
+   9.4
+  ],
+  "double - quadruple (non voulu)": [
+   2.0,
+   -9.2
+  ],
+  "triple d'entrée (non voulu)": [
+   -10.9
+  ],
+  "simple puis double": [
+   14.6
+  ],
+  "simple puis triple": [
+   1.1
+  ]
+ },
+ "crêtes": [
+  17.1,
+  53.1,
+  83.1,
+  113.1,
+  143.1,
+  173.2,
+  203.2,
+  233.2
+ ],
+ "H_droite": [
+  5.4,
+  5.4,
+  5.8,
+  5.8,
+  5.8,
+  5.8,
+  5.8,
+  5.8
+ ],
+ "H_gauche": [
+  3.6,
+  5.4,
+  5.8,
+  5.8,
+  5.8,
+  5.8,
+  5.8,
+  5.8
+ ],
+ "L2": 300.4,
+ "checks": [
+  {
+   "name": "boucle fermée (écart de fin de tour)",
+   "ok": true,
+   "detail": "0.000 ft"
+  },
+  {
+   "name": "obstacles dans leur ligne droite, sans chevauchement",
+   "ok": true,
+   "detail": "ok"
+  },
+  {
+   "name": "relief entièrement sur le sol de l'arène",
+   "ok": true,
+   "detail": "0 points hors sol"
+  },
+  {
+   "name": "bosses <= 25 ft (gros saut rond ZION 2025 24,2 ft)",
+   "ok": true,
+   "detail": "22.43 ft"
+  },
+  {
+   "name": "berms <= 10 ft (90° x1,4 comme Saint-Thibéry)",
+   "ok": true,
+   "detail": "7.94 ft"
+  },
+  {
+   "name": "couloir de départ sur le sol",
+   "ok": true,
+   "detail": "0 points hors sol"
+  },
+  {
+   "name": "ligne de départ plate (grilles)",
+   "ok": true,
+   "detail": "max 0.00 ft"
+  }
+ ]
+}
