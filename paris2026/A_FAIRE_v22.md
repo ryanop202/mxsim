@@ -135,3 +135,50 @@ Décor
 - Poteaux gonflables sur un socle de terre (0,8 ft) ; Moto Verte et Yamaha 4 ft plus à l'intérieur.
 - Cabane : près de l'appel (4 ft avant la crête, 21 ft de l'axe), sur un socle de terre de 3 ft, sans toit, murs 6,5 ft ; signaleur dedans.
 - À faire ensuite : placer des bottes de paille (selon l'utilisateur).
+
+## Review en jeu de la v27d (2026-11-26) -> v28
+- Paddock : canettes Monster au bord de la piste (x 731, z 575 / 640), logo vers la piste ; gant Five tourné vers la piste ; avant du
+  camion HRC (tracteur) blanc ; bâche noire de Saint-Georges (bannière en noir uni) 35 ft derrière les grilles de départ.
+- Après l'arrivée : 1re bosse ronde pareille des 2 côtés, intérieur x0,9 et crête décalée vers l'intérieur (0,2 ft / ft) ; réception
+  4 ft plus loin ; 2e virage rayon 32 -> 36 ft. Poteau de virage (bâton rouge sur socle, collision dure) à l'intérieur du 2e virage.
+  INTERPRÉTATION des traits rouges de la capture vue de dessus : à faire valider.
+- Boudins sponsors qui sortent 20 s après la chute de la grille (nofrills.js) : ligne de départ des 2 côtés (|v| 17 ft), 2 boudins
+  Automoto au bout du saut AMV vers T_D.
+- Bottes de paille : T_Bb (intérieur près de la table, sortie extérieure), 2 x 2 AMV entre la petite table et l'appel du freestyle,
+  AMV dans la DESCENTE du freestyle (plus sur le dessus), T1 Honda (2 à l'intérieur, entrée extérieure, sortie ; la dernière de L2 à
+  droite enlevée ; 2 avant les whoops), T_E Yamaha (entrée gauche, intérieur ; poteau 4 ft plus à l'intérieur), 1re bosse de L6
+  (montée, réception, côté droit), T_C Five (entrée gauche, intérieur, sortie), 1re bosse de L5 (appel, descente, plat, 2 côtés),
+  50 Factory tout le long du sable.
+- Carton AMV gauche (et Milwaukee gauche) : dessin à l'envers par rapport à la forme (UV inversés pour lire le texte) -> corrigé.
+- L2 : 1re bosse 2,6 ft (intérieur 2,2), montée courte (crête ~7 ft de la sortie au lieu de 13) ; écarts 4,4 / 8,8 (cuvette double ->
+  triple) / 4,9 / 4,9 / 6,4 / 4,9 / 4,9 ft (3,7 avant) ; réception de la dernière bosse raccourcie (x0,65).
+- Sable : couche de 0,3 ft montée sur 5 ft (rebord), bande 40 -> 37 ft, décals de grain jusqu'au bord (rangée de 5 ft), arrêt net
+  au pied du Milwaukee (plus de taches dans l'appel), tuile et grain plus jaunes ; sable 8 ft plus court et L3 / L2 / L1 8 ft plus au
+  nord (piste compactée, écarts de couloirs inchangés).
+- En attente : cabane du saut d'arrivée (l'utilisateur va la dessiner) ; virage après le freestyle plus serré (« je sais pas »).
+
+## Review en jeu de la v28 (2026-11-26) -> v29 (captures : vert = déplacer, blanc = enlever, rouge = nouvelle place)
+- Boudins 20 s : plus le long de la ligne de départ ; COULOIR de la réception après l'arrivée (début de LD) jusqu'à l'entrée du virage
+  MX Sim (T_Bb) d'après les traits rouges (bord nord presque droit vers le début du mur, bord sud qui s'élargit puis va au poteau) ;
+  6 boudins par marque (MX Sim, Honda, Yamaha / Five, Moto Verte, Milwaukee). Les 5 portes de chrono de ce passage suivent le couloir
+  (sinon « coupé la piste »). Automoto : 2 lignes comme les traits (bout du panneau AMV sud -> poteau de T_D ; bout du panneau AMV nord ->
+  au-delà du bord extérieur de T_D).
+- Bottes : T1 (2 intérieures près du poteau, posées vue de dessus), T_E (verte reculée, blanche -> intérieur sud), 1re bosse L6 en face
+  de celles d'en face, T_C (2 sous le poteau, sortie extérieure), 1re bosse de L5 (paire au pied de la bosse), T_Bb (une enlevée ; 2 MX Sim
+  dans la pelle de la petite table), AMV entre table et freestyle plus écartées, Minerva le long du 2e virage après l'arrivée (3 + 5),
+  50 Factory coincées dans l'appel du Milwaukee reculées.
+- Poteaux : Moto Verte et MX Sim plus à l'intérieur, Yamaha posé vue de dessus. Poteau de virage : 8 ft, tout rouge, 3,7 ft plus loin.
+- Sable : tuile plus jaune (le jaune dépassait) -> beige-gris comme le grain ; grain SX1 d'origine ; sable jusqu'au bas de l'appel du
+  Milwaukee (+3 ft, décals jusqu'au bout).
+- Après l'arrivée : 1re bosse droite (plus de décalage), même hauteur partout, x1,25 (3,25 ft), adoucie (fusion avec l'appui).
+- L2 : 1re bosse = roller doux 2,1 ft (gauche 1,8), 3e bosse normale.
+- Cabane du saut d'arrivée -> guérite noire MX Sim 4,5 x 4 x 4,5 ft (dessin) ; signaleur à 1,2 ft au-dessus du socle (hauteur ABSOLUE
+  dans flaggers : avant il était à y = 0, enterré dans le socle de 3 ft -> invisible).
+- Bandeau LED du stade : USLAND | Supercross Paris (logo paris26) | USLAND | MX Sim Racing, fond uni.
+
+## Review en jeu de la v29 (2026-11-26) -> v30
+- Après l'arrivée : 1re bosse 3 ft plus loin (sortie du virage, plus dans l'appui), adoucie (flou 3,2 ft) ; table en travers 1 ft plus
+  près, sa bosse d'entrée plus ronde. Bottes Minerva du 2e virage recentrées (|v| 15 -> 13,5).
+- Automoto : la ligne en diagonale suit le bord extérieur de T_D (48,5-50 ft du centre) au lieu d'une droite.
+- L2 : 1re bosse moins longue, double serré (2,7 ft), 1er triple écarté (6,7 / 6,7 ft) « pour pas faire double 4 ».
+- Plus tard : bottes de la ligne droite (« un peu gênantes, on verra »).

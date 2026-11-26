@@ -1,8 +1,8 @@
 {
  "apres_arrivee": {
-  "b1": 2.32,
-  "b23": 4.24,
-  "plateau": 4.2
+  "b1": 2.9,
+  "b23": 3.91,
+  "plateau": 3.8
  },
  "sections": [
   {
@@ -71,48 +71,48 @@
    "lane": "L2 singles",
    "name": "PAR-L2 double triple triple (8 bosses)",
    "u0": 0.5,
-   "L": 273.4,
+   "L": 273.7,
    "H": 4.5,
    "items": [
     [
-     "bosse ZION 3.5 ft 20°",
+     "bosse ZION 2,1 ft (roller doux)",
      0.0,
-     27.9
+     28.1
     ],
     [
      "bosse ZION 4.3 ft",
-     31.6,
-     61.4
-    ],
-    [
-     "bosse ZION 4.5 ft 21°",
-     65.1,
-     102.3
+     30.8,
+     60.6
     ],
     [
      "bosse ZION 4.5 ft",
-     106.0,
-     136.5
+     68.6,
+     99.1
     ],
     [
      "bosse ZION 4.5 ft",
-     140.2,
-     170.7
+     105.8,
+     136.3
     ],
     [
      "bosse ZION 4.5 ft",
-     174.4,
-     204.9
+     143.0,
+     173.5
     ],
     [
      "bosse ZION 4.5 ft",
-     208.6,
-     239.1
+     178.9,
+     209.4
     ],
     [
      "bosse ZION 4.5 ft",
-     242.8,
-     273.3
+     213.9,
+     244.4
+    ],
+    [
+     "bosse ZION 4.5 ft (réception courte)",
+     248.9,
+     273.6
     ]
    ]
   },
@@ -149,7 +149,7 @@
    "lane": "LR tribune Est",
    "name": "PAR-LR sable, saut Milwaukee, triple",
    "u0": 6.0,
-   "L": 281.7,
+   "L": 273.7,
    "H": 12.96,
    "items": [
     [
@@ -159,28 +159,28 @@
     ],
     [
      "roller sable 1,3 ft",
-     89.7,
-     121.8
+     81.7,
+     113.8
     ],
     [
      "saut Milwaukee 11,6 ft",
-     124.8,
-     175.9
+     116.8,
+     167.9
     ],
     [
      "bosse ZION 4.0 ft",
-     189.4,
-     216.5
+     181.4,
+     208.5
     ],
     [
      "bosse ZION 4.1 ft",
-     222.0,
-     249.4
+     214.0,
+     241.4
     ],
     [
      "bosse ZION 3.9 ft",
-     254.9,
-     281.6
+     246.9,
+     273.6
     ]
    ]
   },
@@ -235,12 +235,15 @@
   }
  ],
  "sable_s": [
-  1877.3,
-  2030.9
+  1867.6,
+  2016.1
  ],
- "sable_couche": 0.3,
+ "sable_couche": [
+  0.3,
+  5.0
+ ],
  "socles": 7,
- "sable_tuiles": 17852,
+ "sable_tuiles": 15747,
  "tuiles_zion": [
   "texture @USLANDParis/ztile/2.png",
   "roost texture=@USLANDParis/ztile/roost.png count=0.1 slow_angle=1.0 vscale=0.2 size=.2 r=150 g=150 b=150 fade_a=0",
@@ -253,7 +256,7 @@
  "objets": {
   "objets": {
    "retirés (v13) : boudins FLY Racing (whoops)": 28,
-   "retirés (v13) : ballots ZION (unis)": 212,
+   "retirés (v13) : ballots ZION (unis)": 210,
    "retirés (v13) : poteaux ronds": 7,
    "retirés (v13) : tuffs de virage ZION (unis)": 72,
    "retirés (v13) : filets": 42,
@@ -303,7 +306,7 @@
   "tuiles": 8,
   "ombrage_plat": 228
  },
- "decals_sable": 472,
+ "decals_sable": 579,
  "zion_v19": {
   "paddock": [
    776,
@@ -313,7 +316,7 @@
   ],
   "dalles_tuiles": 246446,
   "x_paddock": 706.7,
-  "overlay": 5533,
+  "overlay": 5604,
   "decals_gardes": 0,
   "start": [
    671.5,
@@ -328,7 +331,7 @@
   "lignes": 268,
   "modeles": 104,
   "fichiers": 197,
-  "triangles": 401682
+  "triangles": 46450
  },
  "deco_v21": {
   "murs": [
@@ -422,7 +425,7 @@
   "ballots": 116,
   "arche": [
    277.8,
-   741.3,
+   733.3,
    1.19
   ],
   "poteaux": 6,
@@ -431,15 +434,15 @@
    25.0
   ],
   "holeshot": [
-   380.8,
-   702.9,
-   13.3,
+   381.0,
+   694.9,
+   13.5,
    27.0
   ],
   "murs_invisibles": [
    [
     "invisible_milwaukee",
-    208.9,
+    200.9,
     18.9,
     43.9
    ],
@@ -449,9 +452,35 @@
     13.0,
     30.0
    ]
-  ]
+  ],
+  "bottes_v29": 42,
+  "poteau_virage": [
+   368.6,
+   516.1
+  ],
+  "portes_couloir_depart": 5,
+  "automoto_ligne2": [
+   [
+    396.8,
+    631.7
+   ],
+   [
+    347.0,
+    646.8
+   ],
+   [
+    331.3,
+    657.7
+   ],
+   [
+    320.5,
+    673.7
+   ]
+  ],
+  "boudins_tardifs": 41,
+  "boudins_20s": 41
  },
- "lap_ft": 2659.9,
+ "lap_ft": 2642.2,
  "start": {
   "gate": [
    683.5099504,
@@ -459,9 +488,9 @@
   ],
   "merge": [
    336.3649504,
-   698.79375
+   690.79375
   ],
-  "length": 493.4
+  "length": 485.4
  },
  "checks": [
   {

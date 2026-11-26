@@ -217,10 +217,11 @@ def whoops_zion(n=10, k=1.15, launch_m=0.60, pitch_m=6.20):   # v20 (« minimum 
 # (pentes droites, plateau), sinon la terre traverse la bâche
 BOARD_POLY = dict(milwaukee=[(142.0, 0.0), (153.5, 13.1), (163.5, 13.1), (181.0, 0.0)],   # v25e : haut au ras du saut (13,1 ft)
                   amv=[(133.0, 0.0), (163.8, 23.4), (184.0, 23.4), (232.0, 0.0)])
+BOARD_POLY['milwaukee'] = [(u - 8.0, y) for u, y in BOARD_POLY['milwaukee']]   # v28 : suit le saut Milwaukee (CAMEL_U -8 ft)
 BOARD_LANE = dict(milwaukee='LR', amv='L3')
 BOARD_VB = dict(milwaukee=18.5, amv=28.0)
 BOARD_TH = 1.0
-RB_L5B = 32.0   # v27d : remis comme la v25f (« remets comme avant l'après-arrivée ») ; v27b (« après l'arrivée, que ça aille plus loin, la partie gauche un peu plus longue, et tourne à gauche ») : 32 -> 26 ft, ligne droite entre les 2 virages 6 ft plus longue ; v23f (« l'angle du virage encore un peu plus ouvert ») : 26 -> 32 ft
+RB_L5B = 36.0   # v28 (« le virage un peu plus large ») : 32 -> 36 ft ; v27d : remis comme la v25f (« remets comme avant l'après-arrivée ») ; v27b (« après l'arrivée, que ça aille plus loin, la partie gauche un peu plus longue, et tourne à gauche ») : 32 -> 26 ft, ligne droite entre les 2 virages 6 ft plus longue ; v23f (« l'angle du virage encore un peu plus ouvert ») : 26 -> 32 ft
 XW_BOT = 8.0 if ZION else 0.0   # v23f (« avant le saut d'arrivée, après l'enchaînement, le virage est trop loin ») : L5 et L6 8 ft plus courts
 XW_TOP = 9.0 if ZION else 0.0   # v23e (« les whoops commencent encore trop tard après le virage ; le virage encore trop loin de l'enchaînement ») : L2 et L1 10 ft plus courts
 END_GAP = 4.0 if ZION else 8.0   # v23 Zion (« entre la dernière bosse de chaque enchaînement et le virage, réduis l'écart ») : 8 -> 4 ft
@@ -291,6 +292,21 @@ POST_FIN_V23F = dict(b1=POST_FIN_V23E['b1'], b1o=POST_FIN_V23E['b1o'],
 _sh = lambda pts, d: [(a + d, b) for a, b in pts]
 POST_FIN_V27C = dict(b1=_sh(POST_FIN_V23F['b1'], -4.0), b1o=_sh(POST_FIN_V23F['b1o'], -4.0), b23=_sh(POST_FIN_V23F['b23'], 4.0), out_k=1.0)
 POST_FIN = POST_FIN_V23F          # v27d : remis comme la v25f
+# v28 (capture vue de dessus, traits bleu / rouge : « la bosse doit être aussi ronde à l'extérieur qu'à l'intérieur, légèrement plus basse
+# à l'intérieur, pas droite : décalée à l'intérieur (elle arrive direct à l'intérieur) ; éloigne la réception, pas trop en travers ; le virage
+# un peu plus large ») : même bosse ronde des 2 côtés (b1o = b1), intérieur x0,9 et 2,4 ft plus loin (skew : crête décalée de 0,2 ft par ft
+# vers l'intérieur), réception (b23) 4 ft plus loin, 2e virage rayon 32 -> 36 ft (RB_L5B)
+POST_FIN = dict(b1=POST_FIN_V23F['b1'], b1o=POST_FIN_V23F['b1'], b23=_sh(POST_FIN_V23F['b23'], 4.0), out_k=1.0, in_k=0.9, skew=0.2)
+# v29 (« la 1re bosse plus grosse ; tu l'as vraiment pas faite droite : un boudin droit, la même hauteur partout, bonne fusion avec l'appui ») :
+# plus de décalage ni d'intérieur plus bas, bosse x1,25 (2,6 -> 3,25 ft) ; adoucie à part (flou plus large, fusion avec le berm)
+POST_FIN = dict(b1=[(a_, 1.25 * b_) for a_, b_ in POST_FIN_V23F['b1']], b1o=[(a_, 1.25 * b_) for a_, b_ in POST_FIN_V23F['b1']], b23=_sh(POST_FIN_V23F['b23'], 4.0),
+                out_k=1.0, in_k=1.0, skew=0.0, sm1=2.2)
+# v30 (« la bosse un peu plus loin après le virage, là elle est trop dans le virage : ça fait une marque, un angle qui gêne ; smooth
+# l'angle ; ça rapprochera de la petite table en travers, un peu trop loin ; la bosse de la table en travers plus ronde ») : 1re bosse 3 ft
+# plus loin, adoucie plus (flou 3,2 ft) ; table 1 ft plus près, sa bosse d'entrée arrondie (crête plus large, profil lissé à 2 ft)
+POST_FIN = dict(b1=_sh(POST_FIN['b1'], 3.0), b1o=_sh(POST_FIN['b1o'], 3.0),
+                b23=_sh([(55, 0), (57.5, 0.7), (60, 2.4), (62.5, 3.8), (65, 4.3), (67.5, 3.9), (70.5, 3.1), (73, 2.9), (96, 2.9), (102, 1.8), (108, 0.4), (113, 0)], 3.0),
+                out_k=1.0, in_k=1.0, skew=0.0, sm1=3.2, sig23=2.0)
 CAMEL_V22D = CAMEL
 # v23 (« un peu plus haut ; la face beaucoup plus raide, le bas toujours smooth ; un petit creux avant, que ça redescende presque au sol du stade
 # avant la face ; plus de cran ; la réception moins raide ») : replat de terre 0,4 ft, creux à 0,05, face concave jusqu'à ~60°, 11,6 ft,
@@ -310,7 +326,7 @@ CAMEL_V23C = CAMEL
 CAMEL = pts_prof([(0, 0), (2, 0.35), (7, 0.4), (9.5, 0.05), (11, 0.15), (13, 0.9), (14.6, 2.6), (15.8, 4.6), (16.8, 6.0), (17.6, 6.4),
                   (19.6, 6.6), (20.6, 7.6), (21.6, 10.0), (22.4, 12.0), (23.2, 12.8), (24.2, 13.0), (30, 13.0), (31.2, 12.7), (34.5, 10.6),
                   (38.5, 7.6), (42.5, 4.4), (46.5, 1.6), (49.5, 0.3), (51, 0)], 0.45)
-CAMEL_U = 131.0   # v22d (« mets le saut Milwaukee plus centré vers mon trait », trait à ~158 ft) : centre du saut à 158 ft (était 118 -> 134)
+CAMEL_U = 123.0   # v28 (« enlève 2-3 m de la partie sable, ça compacte la piste en largeur ») : 131 -> 123 (sable 8 ft plus court) ; v22d (« mets le saut Milwaukee plus centré vers mon trait », trait à ~158 ft) : centre du saut à 158 ft (était 118 -> 134)
 # v22 (dessin sur L1) : « après les whoops, comme une whoops en plus, sauf que ça fait une table plate d'à peu près la longueur d'une
 # table normale ; ça redescend »
 TABLE_PLATE_L1_V23C = pts_prof([(0, 0), (3, 1.0), (6, 2.9), (8.5, 3.4), (19, 3.6), (29, 4.25), (31.5, 4.4), (34.5, 3.6), (39, 0.9), (42, 0)], 0.8)
@@ -712,6 +728,29 @@ def paris():
                     free_ = (xWt - x_end3) - 0.5 - END_GAP - sum(tlen(b) for b in bb_); gaps_ = [free_ / 7] * 7
                     sp27 = [(0.0, tlen(bb_[0]), 2.6 / 3.5, 1.0)]                 # 1re bosse : gauche 2,6 ft
                 sp27 = [(0.0, tlen(bb_[0]), 2.6 / 3.5, 1.0)]                 # 1re bosse : gauche 2,6 ft, droite 3,5 ft
+                if L2_V28:
+                    # v28 (review v27d : « la 1re bosse bien plus près du virage, vraiment en sortie : réduis de moitié l'écart ; la taille qu'elle a
+                    # à l'intérieur, à l'extérieur, et l'intérieur un petit peu plus bas ; espace un peu plus tout, surtout la cuvette entre le 1er
+                    # double et le 1er triple, et allonge le triple ; gratte des mètres à la réception de la dernière bosse avant le virage Honda »)
+                    def squeeze(q, ka, kb):                               # montée x ka, descente x kb (crête gardée)
+                        q = np.asarray(q, float); ic = int(np.argmax(q))
+                        return np.r_[resample(q[:ic + 1], ka)[:-1], resample(q[ic:], kb)]
+                    q0_ = np.asarray(zsingle(2.6 / ZH)[2], float)
+                    b0_ = ('raw', 'bosse ZION 2,6 ft (montée courte)', squeeze(q0_, 0.6, 1.0), 'T')   # crête ~7 ft après la sortie (13 ft en v27d)
+                    if L2_V29:
+                        # v29 (« la 1re est raide : très douce, plus plate, plus ronde, comme un roller vers le virage ; adoucis la pente de la pelle ;
+                        # la 3e, une bosse normale, je sais pas pourquoi elle est plate ») : 1re = roller 2,1 ft (montée x1,35, descente x1,1), 3e normale
+                        q1_ = np.asarray(zsingle(2.1 / ZH)[2], float); b0_ = ('raw', 'bosse ZION 2,1 ft (roller doux)', squeeze(q1_, 1.35 if not L2_V30 else 1.12, 1.1), 'T')
+                        bb_[2] = ('raw', 'bosse ZION 4.5 ft', np.asarray(zsingle(4.5 / ZH)[2], float), 'T')
+                    bl_ = bb_[-1]; bl_ = ('raw', bl_[1] + ' (réception courte)', squeeze(bl_[2], 1.0, 0.65), 'T')
+                    bb_ = [b0_] + bb_[1:-1] + [bl_]
+                    wt_ = np.array([4.5, 9.0, 5.0, 5.0, 6.5, 5.0, 5.0])         # double | cuvette | triple | entre-deux | triple
+                    if L2_V30:   # v30 (« rapproche le 1er double du virage ; plus d'écart dans le triple qui suit : là ça fait double 4 ») : 1re bosse moins longue, double serré, 1er triple écarté
+                        wt_ = np.array([3.0, 9.0, 7.5, 7.5, 6.0, 5.0, 5.0])
+                    free_ = (xWt - x_end3) - 0.5 - END_GAP - sum(tlen(b) for b in bb_); gaps_ = list(free_ * wt_ / wt_.sum())
+                    sp27 = [(0.0, tlen(bb_[0]), 2.2 / 2.6, 1.0)]                 # 1re bosse : droite (extérieur) 2,6 ft, gauche (intérieur) 2,2 ft
+                    if L2_V29:
+                        sp27 = [(0.0, tlen(bb_[0]), 1.8 / 2.1, 1.0)]             # v29 : droite 2,1 ft, gauche 1,8 ft (« la droite un peu plus haute, c'est bien »)
             toks = [bb_[0]]
             for g__, b_ in zip(gaps_, bb_[1:]):
                 toks += [('gap', round(g__, 1)), b_]
@@ -785,7 +824,7 @@ def paris():
         assert g1 > 15.0, free
         toks = [r1, ('gap', g1), r2, ('gap', creux), cam, ('gap', 13.5)] + tri_   # v23e : triple un peu plus près du virage (8 -> 12 ft) ; v25 : +1,5 ft
         SAND_LR = (0.0, u0 + tlen([r1]) + g1 + tlen([r2]) + creux + 2.0)
-        SAND_LR = (0.0, CAMEL_U + 9.0)   # v25e (« arrête la sortie au trait rouge, au bas de la pelle Milwaukee »)
+        SAND_LR = (0.0, CAMEL_U + 12.0)   # v29 (« pas de texture, terre en bas de l'appel du Milwaukee ») : +9 -> +12 ; v25e (« arrête la sortie au trait rouge, au bas de la pelle Milwaukee »)
     p.straight((zL1 - RB) - (zL6 + RB), [lane_sec('PAR-LR sable, saut Milwaukee, triple' if ZION else 'PAR-LR saut de sortie, bosse, table, 3 bosses', toks, u0)], tag='LR tribune Est')
     p.turn(-90, RB, BIG, tag='T_E 90 droite (berm)')
     # v10 (« triple : 3 bosses, 2 bosses, une table, 2 bosses ») : bosses de Saint-Thibéry, même écart partout, 8 ft du virage
@@ -830,7 +869,7 @@ def paris():
 # ---------------------------------------------------------------- départ (22 grilles, comme JGSX)
 N_GATES, GATE_PITCH = 22, 4.0
 X_APEX_SHIFT, L3_ADVANCE = 6.0, 8.0     # v9 : sommet du 180 après le saut du milieu / avance du saut (ft)
-L3_SHIFT, L2_SHIFT = 12.0, 10.0          # v13 (« plus d'espace entre chaque enchaînement ») : L3 12 ft et L2 / L1 22 ft plus au sud
+L3_SHIFT, L2_SHIFT = 4.0, 10.0           # v28 (« tu récupères sur la ligne droite de départ, tu fais moins large ; ça change pas l'écart de piste ») : L3 / L2 / L1 8 ft plus au nord (zone de départ et couloir sable 8 ft plus courts) ; était 12          # v13 (« plus d'espace entre chaque enchaînement ») : L3 12 ft et L2 / L1 22 ft plus au sud
 #                                         -> couloir Est 22 ft plus long, 180 L3 -> L2 de rayon 37 ft
 EXIT_U0 = 6.0 if ZION else 10.0          # v23 Zion (« moins d'élan sur toutes les sorties de virage ») : 10 -> 6 ft ; v13 : 1re bosse à 10 ft de la sortie des virages (plus de marque berm / appel)
 L2_U0_V13 = 10.0
@@ -887,6 +926,9 @@ L2_NAME = 'PAR-L2 double triple triple (8 bosses)'
 # v26 : L2 refait d'après les vidéos (voir le bloc L2 dans paris()) ; crêtes en ft depuis la sortie du 180, hauteur construite (côté le
 # plus haut), longueur (x forme ZION), coupe gauche / droite (facteurs kl, kr) ; None = L2 v25f
 L2_V27 = True     # v27 : L2 = bosses de L6 (voir paris())
+L2_V30 = True     # v30 : double plus près du virage, 1er triple plus écarté
+L2_V29 = True     # v29 : 1re bosse = roller doux 2,1 ft (gauche 1,8), 3e bosse normale
+L2_V28 = True     # v28 : 1re bosse 2,6 ft (intérieur 2,2) au ras du virage, écarts agrandis (cuvette double -> triple), réception de la dernière raccourcie
 L2_V27D = True    # v27d : 8 bosses, 1re 20°, 2e 4,3 ft, 3e 21°
 L2_V27C = True    # v27c : 3,5 / 4 / 4,5 x5, formes L6
 L2_V27B = 3.8     # v27b : hauteur des 6 bosses après 3,5 / 4,7 (None = v27)

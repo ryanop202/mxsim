@@ -907,11 +907,14 @@ def _cut_bg(img, keep_bottom=True):
     a[kill, 3] = 0; return Image.fromarray(a, 'RGBA')
 
 
-def _board_side_v25(kind, W, H, px_u, px_v, ua, inner, top=None):
-    """dessin d'une face (W x H) ; inner : face côté piste, coordonnées u en miroir (lue à l'endroit depuis la piste)."""
+def _board_side_v25(kind, W, H, px_u, px_v, ua, inner, top=None, mir=None):
+    """dessin d'une face (W x H) ; inner : face côté piste ; mir : coordonnées u en miroir (par défaut = inner). v28 (« le côté gauche du
+    carton AMV pas bien fait ») : le panneau de GAUCHE a ses UV inversés (texte lisible) -> le dessin doit l'être aussi, sinon la forme
+    imprimée (contour de la bosse) part à l'envers du panneau."""
+    mir = inner if mir is None else mir
     import sponsors as SP
     from PIL import ImageFont
-    X = (lambda u: int(W - (u - ua) * px_u)) if inner else (lambda u: int((u - ua) * px_u)); Y = lambda y: int(H - y * px_v)
+    X = (lambda u: int(W - (u - ua) * px_u)) if mir else (lambda u: int((u - ua) * px_u)); Y = lambda y: int(H - y * px_v)
     sq = lambda img: img.resize((img.size[0], max(1, int(img.size[1] * px_v / px_u))), Image.LANCZOS)
     (u0, _), (u1, yt), (u2, _), (u3, _) = BOARD_POLY[kind]
     if top is not None and kind == 'amv':                                               # v25e : contour = la forme de la bosse
@@ -1028,8 +1031,8 @@ def board_v25b(out, name, Hf, g, side, kind, th=None):
     kk = np.nonzero(ys >= ytop - 1.2)[0]; bu0, bu1 = float(us[kk[0]]), float(us[kk[-1]])
     ymax = ytop + (hb_ + 0.2 if kind == 'amv' else 0.0); L = ub - ua; W = 2048; Ht = int(min(1024, max(256, round(W * ymax / L / 32) * 32)))
     px_u, px_v = W / L, Ht / ymax
-    outer = _board_side_v25(kind, W, Ht, px_u, px_v, ua, False, top if kind == 'amv' else None)
-    inner = _board_side_v25(kind, W, Ht, px_u, px_v, ua, True, top if kind == 'amv' else None)
+    outer = _board_side_v25(kind, W, Ht, px_u, px_v, ua, False, top if kind == 'amv' else None, mir=side < 0)   # v28 : UV de la face = 1 - fu à gauche
+    inner = _board_side_v25(kind, W, Ht, px_u, px_v, ua, True, top if kind == 'amv' else None, mir=side > 0)
     im = Image.new('RGB', (W, 2 * Ht)); im.paste(outer, (0, 0)); im.paste(inner, (0, Ht))
     im = _fabric(im, (0, 0, W, 2 * Ht), 3, seed=24); im = K.grain(im, 0.8)
     ImageDraw.Draw(im).rectangle([0, 0, 4, 4], fill=(16, 16, 18)); png = name + '.png'; _save(im, os.path.join(out, png))

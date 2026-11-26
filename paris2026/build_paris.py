@@ -286,7 +286,7 @@ def sand_range(path):
     return gT['s0'] + LP.SAND_TURN_F * gT['L'], gR['s0'] + LP.SAND_LR[1]
 
 
-def sand_weight(path, X, Z, inset=0.0):
+def sand_weight(path, X, Z, inset=0.0, fade=1.0, inset_s=0.0):
     """v25e : poids 0..1 du sable aux points (X, Z) : bande de SAND_HW ft autour de la trajectoire entre les 2 abscisses, bords nets
     (fondu 1 ft), bouts coupés droit (perpendiculaires à la trajectoire)."""
     from scipy.spatial import cKDTree
@@ -294,7 +294,9 @@ def sand_weight(path, X, Z, inset=0.0):
     tr = cKDTree(np.c_[smp['x'][k], smp['z'][k]]); d, i = tr.query(np.c_[np.ravel(X), np.ravel(Z)], distance_upper_bound=LP.SAND_HW + 6)
     ok = np.isfinite(d); i = np.where(ok, i, 0); s = smp['s'][k][i]; d = np.where(ok, d, 99.0)
     ss = lambda t: (lambda t_: t_ * t_ * (3 - 2 * t_))(np.clip(t, 0, 1))
-    w = ss((LP.SAND_HW - inset - d) / 1.0) * ss((s - s0) / 1.0) * ss((s1 - s) / 1.0) * ok
+    # v28 : fade (largeur du fondu, ft) et inset_s (retrait aux 2 bouts) ; défaut = v25e
+    i0_, i1_ = (inset_s, inset_s) if np.isscalar(inset_s) else inset_s          # v29 : retrait différent au début / à la fin
+    w = ss((LP.SAND_HW - inset - d) / fade) * ss((s - s0 - i0_) / fade) * ss((s1 - i1_ - s) / fade) * ok
     return w.reshape(np.shape(X)), s.reshape(np.shape(X))
 
 
@@ -313,7 +315,9 @@ def sand_waves(H, path):
     # v25f (« remets le sable comme avant, sans ornière, sans truc comme ça ») : plus de vaguelettes ni d'ornières
     REPORT['sable_s'] = [round(s0, 1), round(s1, 1)]
     if SAND_BED:                     # v27 : couche de sable surélevée (bords nets de sand_weight)
-        H = H.copy(); H[sl] = H[sl] + SAND_BED * w; REPORT['sable_couche'] = SAND_BED
+        # v28 (« au niveau du sable il y a un petit rebord gênant tout le long ») : la couche monte sur SAND_BED_FADE ft (était 1 ft)
+        wb_ = sand_weight(path, X, Z, fade=SAND_BED_FADE)[0]
+        H = H.copy(); H[sl] = H[sl] + SAND_BED * wb_; REPORT['sable_couche'] = (SAND_BED, SAND_BED_FADE)
     if SAND_CHOP:
         # v26 (« dans la partie sable, mets la texture ; là c'est tout plat, c'est bizarre ») : sable remué, sans ornières ni vagues
         # régulières : petites bosses irrégulières (bruit lissé à 1,6 ft, +-0,12 ft) sur des ondulations plus larges (6 ft, +-0,08 ft),
@@ -373,6 +377,7 @@ def arch_cut(H, path):
 
 EXTRA_H = []
 SAND_WAVES = False
+SAND_BED_FADE = 5.0              # v28 : fondu du bord de la couche de sable (ft)
 SAND_BED = 0.0                   # v27 (version Zion) : épaisseur de la couche de sable (ft)
 SAND_CHOP = 0.0                  # v26 (version Zion) : relief du sable remué (facteur ; 0 = plat)
 SAND_V25 = False                 # v25e (version Zion) : sable en bande droite (sand_weight) + vaguelettes discrètes
