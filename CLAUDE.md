@@ -1,10 +1,24 @@
 # CLAUDE.md — reprendre le projet mxsimtrack
 
-Tu reprends un projet commencé dans une autre conversation. Lis dans cet ordre :
-1. ce fichier ;
-2. `docs/07_journal_conversation.md` (ce qui a été demandé, dit, livré, dans l'ordre) ;
-3. `docs/05_compound_sx.md` (les 3 pistes actuelles et pourquoi elles sont comme ça) ;
-4. `docs/06_pipeline.md` (comment le code marche, comment ajouter un couloir).
+Le dépôt est un **kit pour faire des pistes de supercross** MX Simulator, partagé par l'équipe (Ryan, bazo…) :
+chacun y ajoute ce qu'il crée (pistes, objets, logos, mesures) et les autres le récupèrent par `git pull`.
+
+Lis dans cet ordre :
+1. ce fichier, puis `README.md` (arborescence, liste des pistes, faire une nouvelle piste) ;
+2. la fiche de la piste concernée : `pistes/<nom>/README.md` ;
+3. `docs/guide/06_pipeline.md` (comment le code marche) ;
+4. pour SX 1-3 : `docs/pistes/07_journal_conversation.md` et `docs/pistes/05_compound_sx.md`.
+
+## Organisation (réorganisée le 2026-11-26)
+
+- `commun/` = le kit partagé : `lib/` (mesures), `scripts/` (moteur, export, contrôles, objets, tracés `layouts_*.py`),
+  `assets/`, `analysis/`, `build/`, `viewer/`, `tools/`.
+- `pistes/<nom>/` = une fiche par piste ; Paris a aussi son code dedans (`pistes/paris-2026/`, arène dans `stade_paris/`).
+- `tracks/` = les dossiers prêts à jouer (sortie des scripts) ; `docs/guide/` (général) et `docs/pistes/` (par piste) ;
+  `refs/` = références ; `anciens/` = abandonné (v1 MX).
+- Les commandes se lancent depuis la racine. Dans `commun/scripts`, `ROOT` = racine du dépôt (3 `dirname`) ;
+  dans `pistes/paris-2026`, `ROOT = dirname(dirname(HERE))`.
+- Un ajout réutilisable va dans `commun/`, un ajout propre à une piste dans `pistes/<nom>/`.
 
 ## L'utilisateur
 
@@ -16,10 +30,10 @@ Tu reprends un projet commencé dans une autre conversation. Lis dans cet ordre 
 - **Attention** : d'autres personnes de l'équipe travaillent aussi sur ce dépôt (v12 : objets USLAND, paddock, arche, départ).
   Ne pas supposer que la personne est Ryan ; ne pas lui attribuer les retours des autres.
 
-## Objets 3D / décor (v12) — lire `docs/12_objets_usland.md` AVANT de dessiner quoi que ce soit
+## Objets 3D / décor (v12) — lire `docs/guide/12_objets_usland.md` AVANT de dessiner quoi que ce soit
 
-- Générateur : `scripts/props_usland.py` (specs contrôlées automatiquement), placement : `scripts/props_place.py`,
-  aperçu 3D : `scripts/preview_props.py` → toujours montrer l'aperçu et le vérifier soi-même avant de mettre en jeu.
+- Générateur : `commun/scripts/props_usland.py` (specs contrôlées automatiquement), placement : `commun/scripts/props_place.py`,
+  aperçu 3D : `commun/scripts/preview_props.py` → toujours montrer l'aperçu et le vérifier soi-même avant de mettre en jeu.
 - Règles de design (retours de l'utilisateur) : pas de formes carrées (arrondir), réaliste et épuré, logos peu nombreux /
   centrés / même taille / jamais déformés, logos noirs sur vitres grises, jamais deux USLAND côte à côte, vraies roues,
   volumes creux crédibles, pas de treillis inutile, objets alignés, drapeaux pointe vers l'avant (câble), bord haut légèrement arqué,
@@ -28,9 +42,10 @@ Tu reprends un projet commencé dans une autre conversation. Lis dans cet ordre 
 ## Règles du projet (non négociables)
 
 - **Ne jamais dire qu'une piste marche / a été testée en jeu.** Ce qu'on sait = contrôles automatiques. Dire « non testé en jeu ».
-- **Fidélité** : toute géométrie vient des mesures (`lib/`). Pas d'obstacle inventé « à l'œil ». Si on crée une forme nouvelle, le dire.
+- **Fidélité** : toute géométrie vient des mesures (`commun/lib/`). Pas d'obstacle inventé « à l'œil ». Si on crée une forme nouvelle, le dire.
 - **Garder les dimensions** des références (Ryan l'a demandé) : grille 0,28975 ft, couloirs 30,4 ft, espacement 43 ft, berms JGSX.
 - Les archives de référence ne vont **pas** sur GitHub (taille + ce n'est pas à nous). Elles sont dans `refs/archives/` en local.
+  Exception demandée par Ryan (2026-11-10, dépôt privé) : `pistes/paris-2026/refs/` (photos de Paris + ZION 2025 extraite) est versionné.
 - Après tout changement : `./make_all.sh build` → doit finir sur `43 / 43` (ou plus si on ajoute des contrôles). Montrer les vues de dessus.
 
 ## Ce que Ryan a validé / rejeté (résumé)
@@ -58,14 +73,14 @@ Tu reprends un projet commencé dans une autre conversation. Lis dans cet ordre 
 | Portes | 1 par virage + 2-3 par couloir |
 | « Ça fait 4 d'entrée » | trop d'élan / bosses trop serrées à l'entrée d'un enchaînement → coller au virage, écarter, ou 1re bosse petite |
 
-## État actuel (v12, branche `v12-camions-arche`)
+## État de SX 1-3 (v12, branche `v12-camions-arche`) — les autres pistes : voir leur fiche dans `pistes/`
 
 - 3 pistes SX dans `tracks/` + habillage (doc 11) ; v12 : objets USLAND faits maison posés à la place des objets JGSX
   (doc 12) : hospitality, pick-ups + vélos, grilles + grates + portique de départ, arche FINISH, bannières.
 - SX1 : arrivée déplacée sur la 1re bosse du step-up du couloir D (1er tour plus court : jonction -> arrivée).
 - v3 à v10 testées en jeu ; v11 et **v12 pas encore testées en jeu**. Contrôles v12 faits sans les archives (portes, comptage
   des tours, objets) ; `./make_all.sh build` complet à relancer sur le PC qui a les archives.
-- Pistes d'amélioration notées dans `docs/10_suite_et_idees.md`.
+- Pistes d'amélioration notées dans `docs/pistes/10_suite_et_idees.md`.
 
 ## Pièges connus
 
@@ -74,7 +89,7 @@ Tu reprends un projet commencé dans une autre conversation. Lis dans cet ordre 
 - `timing_gates` : la grille regarde f = (−sin a, −cos a). Porte `half [centre] [vecteur]` : le vecteur va **dans le sens de la course** (longueur = half), la ligne de la porte est perpendiculaire (erreur de la v10).
 - Un gros berm (croissant 130°, fait pour 180°) posé sur un virage de 90° dépasse sur les lignes droites → « rebord ». `engine.berm_ang_scale` le resserre (×130/angle). Les petits berms (105°, faits pour 90°) ne sont jamais modifiés.
 - Un berm posé à la jonction départ/tour bloque toujours la ligne de départ derrière lui : la ligne de départ est parallèle/décalée.
-- Les RAR sont en RAR5 : `unar` et `7z` ratent des fichiers → `node-unrar-js@2.0.2` (`tools/extract_refs.sh`).
+- Les RAR sont en RAR5 : `unar` et `7z` ratent des fichiers → `node-unrar-js@2.0.2` (`commun/tools/extract_refs.sh`).
 - Le sable Glendale est un **stamp exact** (on copie le terrain tel quel avec sa ligne de course), pas un modèle.
 - `shading.ppm` est calculé (Lambert calibré sur Detroit), pas copié.
 

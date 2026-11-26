@@ -1,0 +1,24 @@
+{
+ "source": "ZION.2025.SupercrossParis (terrain 0,37 ft), mesures v15",
+ "single": "couloir x=134,5 ft, bosse 4,27 ft",
+ "table": "couloir x=496,7 ft, table 7,04 ft",
+ "whoop": "couloir des whoops x=399 ft, whoop 3,14 ft (pas 22,6 ft, 3,7 ft de plat entre)",
+ "whoops_hauteurs": [
+  2.58,
+  3.14,
+  3.14,
+  3.14,
+  3.14,
+  3.14,
+  3.14,
+  2.87,
+  2.34,
+  1.17
+ ],
+ "berm": "U bas-gauche, centre (159,2 ; 482,9) ft, crête à 52 ft du centre, rayon du couloir 28,3 ft",
+ "lane_radius_180": 28.3,
+ "lane_spacing_180": 56.6,
+ "shading": "294,2 x lambert(soleil ZION) + 41,3",
+ "top_width_single": 33.0,
+ "top_width_whoops": 39.0
+}

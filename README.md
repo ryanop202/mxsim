@@ -1,76 +1,120 @@
-# USLAND 2026 SX Test Tracks (repo mxsim)
+# mxsim — kit pour faire des pistes de supercross MX Simulator (USLAND)
 
-Base de travail pour faire des pistes **MX Simulator** à partir de mesures réelles :
+Ce dépôt contient **tout ce qu'il faut pour faire une piste SX** dans MX Simulator :
 
-- **toutes les mesures** des 3 archives de référence (JGMX Desert Sand, JGMX Dr. Dew, JGSX 2026 Test Tracks) : bosses, singles, doubles, tables, on-off, step-up, whoops, berms, sable, départs, profils en travers ;
-- le **compound SX** (3 pistes sur un même terrain) prêt à copier dans MX Simulator ;
-- les **scripts** qui refont tout (mesures → bibliothèque → pistes → contrôles → figures) ;
-- la **doc complète** : formats de fichiers, méthode, décisions, retours de Ryan, historique v1 → v9 ; habillage JGSX (grilles, grillages, paddock, decals, drapeaux).
+- les **mesures** de vraies pistes : bosses, singles, doubles, tables, whoops, berms, sable, départs ;
+- le **moteur** qui assemble ces mesures en piste et l'exporte au format du jeu ;
+- les **objets, logos et textures** faits maison : tuff blocks, grilles, arches, boudins, public…
+- les **pistes déjà faites**, prêtes à copier dans le jeu, avec le code qui les reconstruit ;
+- la **doc** : formats de fichiers, méthode, règles de design, historique.
 
-> ⚠️ **État : v3 à v10 testées en jeu par Ryan, v11 pas encore testée.** Tout ce qui est « validé » l'est par des contrôles automatiques
-> (relecture des fichiers exportés, géométrie, profils). Checklist de test : `docs/08_installation_et_test.md`.
+Le principe : **chacun ajoute au dépôt ce qu'il crée**, comme une piste, un objet ou un logo. Les autres le récupèrent avec
+`git pull`. On se complète comme ça et chacun garde ses pistes à jour.
 
-## Démarrage rapide (nouveau PC)
-
-```bash
-git clone https://github.com/ryanop202/mxsim.git
-cd mxsim
-```
-
-**Juste jouer** : tout est dans Git (dépôt privé : textures et modèles JGSX/JGMX inclus). Après le clone, copier `tracks/USLAND2026SX1`, `USLAND2026SX2`, `USLAND2026SX3` dans le dossier des pistes de MX Simulator
-(sans les renommer : les textures sont partagées via `@USLAND2026SX1/...`). En jeu : « USLAND: 2026 SX 1 / SX 2 / SX 3 (sand) ».
-
-**Modifier / reconstruire** :
-
-```bash
-python3 -m pip install -r requirements.txt          # numpy, scipy, pillow, matplotlib, scikit-image
-# mettre les 3 .rar dans refs/archives/ puis :
-npm install && ./tools/extract_refs.sh               # -> refs/extracted/ (voir refs/README.md)
-./make_all.sh build                                  # reconstruit tracks/ + contrôles + figures (~2 min)
-./make_all.sh                                        # refait AUSSI toutes les mesures depuis les archives (~5 min)
-```
-
-Sous Windows : Git Bash ou WSL pour les `.sh` (les scripts Python marchent partout).
-
-## Les 3 pistes (v11)
-
-| Piste | Tour | Estimation* | Départ → jonction | Ce qu'il y a |
-|---|---|---|---|---|
-| SX 1 | 2931 ft (893 m) | ~1:04 | 368 ft | triple écarté + triple à grosse bosse + quad, 12 whoops + single, triple sur table / off quad, step-up + triple sur table off, on-off Detroit, quad, triple + on-off d'arrivée ; 7 virages à berm |
-| SX 2 | 2717 ft (828 m) | ~1:03 | 278 ft | départ au milieu, rythmique Arlington, bosse-bosse-table-bosse-table-bosse, gros double + triple, triple sur table, 8 whoops, S-gros-S-table-S-gros-S, table 9 ft, triple d'arrivée |
-| SX 3 (sand) | 3349 ft (1021 m) | ~1:07 | 279 ft | sable Glendale (J + virage en S), hauteurs mélangées + triple Detroit, 10 whoops, on-off, step-up, triple sur table off quad, gros double |
-
-\* modèle point-masse grossier (`scripts/laptime.py`), **pas** un chrono mesuré en jeu.
-
-Vues de dessus : `viewer/figures/01_top_SX*.jpg` · profils : `viewer/figures/02_lanes_SX*.jpg` · visionneuse 3D : `viewer/index.html`.
+> ⚠️ Rien n'est « validé en jeu » par le code : les contrôles sont automatiques. Ce qui a été testé en jeu est noté dans la fiche de chaque piste.
 
 ## Arborescence
 
 ```
-README.md               ce fichier
-CLAUDE.md               consignes pour l'assistant IA qui reprend le projet (à lire en 1er par une IA)
-make_all.sh             reconstruit tout (all | build | analysis | mx)
-requirements.txt        versions Python utilisées
-package.json            node-unrar-js (extraction des RAR5 uniquement)
-docs/                   LA DOC (commencer par docs/00_INDEX.md)
-lib/                    bibliothèque mesurée (JSON + stamps .npy) = « la base »
-scripts/                tout le code (analyse, moteur, layouts, export, validation, figures)
-tracks/                 les 3 dossiers MX Simulator prêts à jouer (sortie de make_all.sh build)
-build/                  rapports de build (JSON) ; H.npy / tiles.npy régénérés, non versionnés
-analysis/               figures d'analyse (références, aperçus)
-viewer/                 page de rapport + visionneuse 3D + figures
-refs/                   archives de référence (NON versionnées, voir refs/README.md)
-tools/                  extraction des archives
-legacy_mx/              notes sur la v1 MX abandonnée
+README.md          ce fichier
+CLAUDE.md          consignes pour l'IA (Claude) qui reprend le projet
+make_all.sh        reconstruit les pistes SX 1-3 et refait les mesures
+requirements.txt   Python (numpy, scipy, pillow, matplotlib, scikit-image)
+package.json       node-unrar-js (extraction des archives RAR5)
+
+commun/            LE KIT, partagé par toutes les pistes
+  lib/               bibliothèque mesurée (JSON + stamps .npy) : unités SX, whoops, berms, sable
+  scripts/           moteur, export MX Simulator, contrôles, objets 3D, tracés (layouts_*.py)
+  assets/            logos, objets (props), public, herbe, textures, cartes
+  analysis/          figures et JSON des mesures sur les pistes de référence
+  build/             sorties de calcul (rapports JSON ; les .npy sont régénérés, pas versionnés)
+  viewer/            rapport HTML + visionneuse 3D + figures
+  tools/             extraction des archives (.rar, .saf)
+
+pistes/            une fiche par piste : ce qu'elle est, où est son code, comment la reconstruire
+  sx-test-jgsx/      SX 1, SX 2, SX 3 (la base de départ du projet)
+  saint-georges/     Saint-Georges-de-Montaigu (bazo)
+  saint-thibery/     Saint-Thibéry (bazo)
+  paris-2026/        Supercross Paris 2026 : code du tracé et de l'habillage, photos de référence, arène (stade_paris/)
+
+tracks/            les pistes PRÊTES À JOUER (dossiers MX Simulator, à copier tels quels dans le jeu)
+docs/              la doc (commencer par docs/00_INDEX.md)
+  guide/             comment ça marche : formats, mesures, pipeline, installation, objets
+  pistes/            notes et historique de chaque piste
+refs/              pistes de référence (RBT, RF ; les archives JGSX/JGMX restent en local, voir refs/README.md)
+anciens/           ce qui n'est plus utilisé (v1 MX abandonnée)
 ```
 
-## Mettre à jour sur plusieurs PC
+## Les pistes
+
+| Piste (nom du dossier dans `tracks/`) | Fiche | Qui |
+|---|---|---|
+| `USLAND2026SX1`, `SX2`, `SX3` | [pistes/sx-test-jgsx](pistes/sx-test-jgsx/README.md) | Ryan |
+| `USLAND2026SaintGeorgesbyBazo` | [pistes/saint-georges](pistes/saint-georges/README.md) | bazo |
+| `USLAND2026SaintThiberybyBazo` | [pistes/saint-thibery](pistes/saint-thibery/README.md) | bazo |
+| `USLANDParis` (version Zion, la plus récente), `USLAND2026SupercrossParis`, `USLAND2026SupercrossParisRF`, `ParisLaDefenseArena` (arène seule) | [pistes/paris-2026](pistes/paris-2026/README.md) | Ryan + équipe |
+
+**Juste jouer** : copier le dossier voulu de `tracks/` dans le dossier des pistes de MX Simulator **sans le renommer**,
+car certaines pistes partagent des textures via `@USLAND2026SX1/...`. Pour Paris, copier aussi `USLAND2026SX1`.
+
+## Démarrage (nouveau PC)
 
 ```bash
-git pull                     # récupérer
-# ... modifier scripts/layouts_sx.py, etc.
-./make_all.sh build          # reconstruire + 43 contrôles
-git add -A && git commit -m "SX2 : ..." && git push
+git clone https://github.com/ryanop202/mxsim.git
+cd mxsim
+py -3.12 -m pip install -r requirements.txt     # Windows ; ailleurs : python3 -m pip ...
+npm install                                      # seulement pour extraire des .rar
 ```
 
-Puis recopier `tracks/USLAND2026SX*` dans MX Simulator sur chaque PC.
+Les commandes se lancent **depuis la racine du dépôt**. Sous Windows, utiliser Git Bash pour les `.sh`.
+Les scripts Python marchent partout.
+
+## Faire une nouvelle piste SX
+
+1. **Créer sa fiche** : `pistes/<nom>/README.md`, avec ce qu'est la piste, qui la fait, comment la reconstruire et son état
+   (testée en jeu ou non). Partir d'une fiche existante.
+2. **Le tracé**, deux façons qui existent déjà :
+   - comme SX 1-3 ou Saint-Georges / Saint-Thibéry : un fichier `commun/scripts/layouts_<nom>.py`, construit par le moteur commun
+     (`build_sx.py` / `export_sx.py`, ou `build_stt.py` / `export_stt.py` avec `MX_LAYOUT=layouts_<nom>`) ;
+   - comme Paris : un dossier `pistes/<nom>/` avec son propre script de construction, qui importe `commun/scripts`.
+3. **La géométrie vient des mesures** (`commun/lib/`) : les couloirs, les berms et le sable sont repris des pistes de référence,
+   pas dessinés à l'œil. Recettes : [docs/guide/06_pipeline.md](docs/guide/06_pipeline.md).
+4. **Le décor** : réutiliser les objets de `commun/assets/props` (générés par `commun/scripts/props_usland.py` et compagnie).
+   Les règles de design sont dans [docs/guide/12_objets_usland.md](docs/guide/12_objets_usland.md).
+5. **La sortie** va dans `tracks/<NomDuDossier>/`. Contrôler, regarder les vues de dessus, puis tester en jeu
+   ([docs/guide/08_installation_et_test.md](docs/guide/08_installation_et_test.md)).
+
+## Ajouter au kit commun
+
+Ce qui peut servir à d'autres pistes va dans `commun/` :
+
+| Ce que tu ajoutes | Où |
+|---|---|
+| un objet 3D (script générateur) | `commun/scripts/<objet>.py` → modèles dans `commun/assets/props/` |
+| un logo, une texture, du public | `commun/assets/logos/`, `commun/assets/crowd/`… |
+| une mesure d'une nouvelle piste de référence | `commun/lib/` (voir « Mesurer une nouvelle piste de référence » dans le doc 06) |
+| une explication, une règle | `docs/guide/` |
+
+Ce qui ne sert qu'à une piste reste dans `pistes/<nom>/`.
+
+## Travailler à plusieurs
+
+```bash
+git pull                                   # TOUJOURS avant de commencer
+# ... modifier ...
+git add -A && git commit -m "Paris : ..."  # message court, en français, qui dit quelle piste
+git push
+```
+
+- Une piste = une branche si c'est un gros chantier, comme `paris-2026`. On fusionne dans `main` quand c'est prêt.
+- Ne pas modifier les pistes des autres sans leur dire, car vous travaillez sur les mêmes fichiers.
+- Les archives de référence lourdes (JGSX, JGMX) ne vont pas sur GitHub : voir [refs/README.md](refs/README.md).
+
+## Reconstruire SX 1-3 (exemple complet)
+
+```bash
+# mettre les 3 .rar JGSX/JGMX dans refs/archives/ puis :
+./commun/tools/extract_refs.sh     # -> refs/extracted/
+./make_all.sh build                # reconstruit tracks/USLAND2026SX1..3 + contrôles + figures (~2 min)
+./make_all.sh                      # refait AUSSI toutes les mesures (~5 min)
+```

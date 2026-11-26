@@ -36,4 +36,4 @@ Sources pour :
 
 ## JGSX
 
-Les whoops, berms et textures JGSX sont déjà mesurés et versionnés dans `lib/` (pas besoin des archives ici).
+Les whoops, berms et textures JGSX sont déjà mesurés et versionnés dans `commun/lib/` (pas besoin des archives ici).

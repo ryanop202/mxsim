@@ -4,15 +4,15 @@ node_modules/
 __pycache__/
 *.pyc
 # heavy intermediate arrays: rebuilt by ./make_all.sh build (~1 min)
-build/*.npy
-build/*.npz
-legacy_mx/build/
-analysis/H_*.npy
+commun/build/*.npy
+commun/build/*.npz
+anciens/legacy_mx/build/
+commun/analysis/H_*.npy
 *.zip
 .DS_Store
 Thumbs.db
-legacy_mx/tracks/
-legacy_mx/deliver/
+anciens/legacy_mx/tracks/
+anciens/legacy_mx/deliver/
 refs/extracted
 refs/archives
 # v11b: third-party JGSX/JGMX assets ARE versioned now (repo private since 2026-10-24, asked by Ryan)
@@ -20,9 +20,13 @@ refs/archives
 # v12: reference photos sent for the paddock objects (third-party, not ours): kept locally only
 docs/img/refs_paddock/
 
-# stade_paris : intermédiaires et export régénérés par src/build.py (la piste versionnée est tracks/ParisLaDefenseArena)
-stade_paris/build/
-stade_paris/export/
+# arène de Paris : intermédiaires et export régénérés par src/build.py (la piste versionnée est tracks/ParisLaDefenseArena)
+pistes/paris-2026/stade_paris/build/
+pistes/paris-2026/stade_paris/export/
 
-# paris2026 : visuels de référence du Supercross Paris (pas à nous) : en local seulement
-paris2026/refs/
+# paris2026 : photos + archive ZION 2025 extraite VERSIONNÉES depuis le 2026-11-10 (demandé par Ryan : un pote n'a que GitHub) ;
+# Superpole pas utilisée
+pistes/paris-2026/refs/zion25_full/ZION.2025.SupercrossParisSuperpole/
+
+# vraies motos du jeu (modèles d autres auteurs) : recréées par pistes/paris-2026/motos_jeu.py, pas sur GitHub
+tracks/*/statue/paris/pad/vraie_*
