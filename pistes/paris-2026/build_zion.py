@@ -285,7 +285,8 @@ def render_zion(path, st):
     # coupé net -> petites marches droites au bout des virages : le bas des berms est fondu à zéro ; (2) pieds des bosses arrondis
     # comme la version USLAND (SOFT_FEET) : plus de pli au pied de chaque bosse
     from scipy.ndimage import gaussian_filter
-    post_finish(jumps, path)                                  # v22d : bosses + plateau du virage après l'arrivée
+    if any(g['tag'].startswith('T_L5b') for g in path.segs):    # v28f : plus de T_L5b (traversée B) -> pas de bosses d'après l'arrivée v22d
+        post_finish(jumps, path)                              # v22d : bosses + plateau du virage après l'arrivée
     # v20b (« il y a toujours une petite berme au pied du virage, dans tous les virages ») : le fondu v19d (seuil 0,12 - 0,62 ft) cassait
     # le pied de chaque berm (pente 0 -> 17° en 2 ft = un pli). Fondu doux à la place : h - 0,15 tanh(h / 0,15) (pente continue, le fond
     # de 0,02 - 0,1 ft tombe sous 0,013 ft, le berm ne baisse que de 0,15 ft)
@@ -651,13 +652,14 @@ def deco_v21(OUT, FOLDER, combos):
     aj, ap, as_ = D22.arche_50f(sd, drop=ha, xc=ARCH_XC)
     lines.append(line(pa[0], pa[1], float(np.arctan2(c, s2)), aj, ap, as_)); rep_['arche'] = (round(pa[0], 1), round(pa[1], 1), round(ha, 2))
     # v23 (« à l'intérieur, mets un truc pour pas que ça puisse couper ») : un boudin noir de 18 ft entre les centres des 2 virages après l'arrivée
-    ga_ = next(g for g in BP.PATH.segs if g['tag'].startswith('T_L5a')); gb_ = next(g for g in BP.PATH.segs if g['tag'].startswith('T_L5b'))
-    for f_ in ("boudin_logo3.jm", "boudin_logo3.shp"):
-        shutil.copy(os.path.join(BP.ROOT, "commun/assets", "props", f_), os.path.join(sd, f_))
-    bk_ = np.asarray(Image.open(os.path.join(BP.ROOT, "commun/assets", "props", "boudin_fly3.png")).convert('RGB')).copy(); hb_ = int(bk_.shape[0] * 0.915)
-    bk_[:hb_] = (22, 22, 24); Image.fromarray(bk_).save(os.path.join(sd, "boudin_noir3.png"))
-    d_ = np.array([gb_['cx'] - ga_['cx'], gb_['cz'] - ga_['cz']]); d_ /= np.linalg.norm(d_)
-    lines.append(line((ga_['cx'] + gb_['cx']) / 2, (ga_['cz'] + gb_['cz']) / 2, float(np.arctan2(d_[1], -d_[0])), "boudin_logo3.jm", "boudin_noir3.png", "boudin_logo3.shp"))
+    if any(g['tag'].startswith('T_L5b') for g in BP.PATH.segs):   # v28f : boudin anti-coupe seulement avec l'ancien après-arrivée
+        ga_ = next(g for g in BP.PATH.segs if g['tag'].startswith('T_L5a')); gb_ = next(g for g in BP.PATH.segs if g['tag'].startswith('T_L5b'))
+        for f_ in ("boudin_logo3.jm", "boudin_logo3.shp"):
+            shutil.copy(os.path.join(BP.ROOT, "commun/assets", "props", f_), os.path.join(sd, f_))
+        bk_ = np.asarray(Image.open(os.path.join(BP.ROOT, "commun/assets", "props", "boudin_fly3.png")).convert('RGB')).copy(); hb_ = int(bk_.shape[0] * 0.915)
+        bk_[:hb_] = (22, 22, 24); Image.fromarray(bk_).save(os.path.join(sd, "boudin_noir3.png"))
+        d_ = np.array([gb_['cx'] - ga_['cx'], gb_['cz'] - ga_['cz']]); d_ /= np.linalg.norm(d_)
+        lines.append(line((ga_['cx'] + gb_['cx']) / 2, (ga_['cz'] + gb_['cz']) / 2, float(np.arctan2(d_[1], -d_[0])), "boudin_logo3.jm", "boudin_noir3.png", "boudin_logo3.shp"))
     # v23c (« les trucs gonflables qu'on mettait aux intérieurs de virage ») : poteau rond de Saint-Georges à l'intérieur de chaque virage,
     # aux couleurs du sponsor du virage (pas dans les 2 virages après l'arrivée : boudin anti-coupe)
     from engine import turn_mid_angle

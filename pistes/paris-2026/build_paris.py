@@ -677,7 +677,7 @@ def main():
     # (4 Sand Straight, 5 Sand Bump Straight, 6 Sand Exit) sur les 2 virages après l'arrivée et les 70 premiers ft de LD
     from scipy.spatial import cKDTree
     smp_ = path.samples(1.0); tags_ = [path.segs[int(k)]['tag'] for k in smp_['seg']]
-    s_ld = next(g['s0'] for g in path.segs if g['tag'].startswith('LD'))
+    s_ld = next((g['s0'] for g in path.segs if g['tag'].startswith('LD')), -1e9)   # v28f : plus de LD dans le tour (traversée B)
     s_lr = next(g['s0'] for g in path.segs if g['tag'].startswith('LR'))
     sel_ = [i for i, tg in enumerate(tags_) if (SAND_TL5 and tg.startswith('T_L5')) or (tg.startswith('LD') and smp_['s'][i] < s_ld + SAND_LD)
             or (LP.SAND_LR and tg.startswith('LR') and smp_['s'][i] - s_lr <= LP.SAND_LR[1])]   # v22 : sable de LR
