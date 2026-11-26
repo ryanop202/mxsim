@@ -726,7 +726,13 @@ def paris():
             def rfb(h, key, k_=None):
                 p_ = np.asarray(RFF[key], float); k_ = k_ or float(np.clip(np.sqrt(h / p_.max()), 0.9, 1.2))
                 q_ = np.interp(np.linspace(0, len(p_) - 1, max(2, int(round(len(p_) * k_)))), np.arange(len(p_)), p_) * (h / p_.max())
-                return np.maximum(q_, 0.0)
+                q_ = np.maximum(q_, 0.0)
+                sm_ = L2_V28.get('smooth')
+                if sm_:   # v28d (« trop d'angles, pas smooth ») : profil lissé (gaussienne de sm_ ft), même hauteur, pieds qui partent de 0
+                    from scipy.ndimage import gaussian_filter1d
+                    pad_ = int(round(3 * sm_ / 0.1)); q_ = gaussian_filter1d(np.r_[np.zeros(pad_), q_, np.zeros(pad_)], sm_ / 0.1)
+                    q_ = q_[np.nonzero(q_ > 0.01)[0][0]:np.nonzero(q_ > 0.01)[0][-1] + 1] - 0.01; q_ = np.maximum(q_, 0.0) * (h / q_.max())
+                return q_
             spec_ = dict(L2_V28)
             if spec_.get('fill'):
                 # v28c (« l'enchaînement commence juste à la sortie du virage et finit juste avec le virage d'après, comme L6 ») :
@@ -883,7 +889,19 @@ def start(p):
     xm = ln['x_end3'] - ln['R3']                                       # v9 : sommet du 180 L3 -> L2 (sur le tour)
     merge = (xm, (ln['zL3'] + ln['zL2']) / 2)
     route = [('S', gx - (xm + RB)), ('T', 90, RB, None), ('TO', merge)]
-    S0 = dict(gate=(gx, gz), heading=180.0, route=route, narrow=[(150.0, None), (gx - xm, 30.0)],
+    xv_ = xm
+    if ZION and T_D_RF and not T_D_BERM_FROM:
+        # v28d (« le virage comme celui avant LR, avec le RF ») : berm RF sur tout T_D -> le départ ne peut plus arriver par
+        # l'extérieur de la 1re moitié (7 ft de berm dessus). Il monte entre la réception du freestyle et T_D, tourne à droite
+        # et rejoint L3 juste avant T_D : les pilotes du départ prennent tout le virage, comme un vrai 1er virage.
+        g3 = next(g for g in p.segs if g['kind'] == 'S' and g['tag'].startswith('L3'))
+        u_end = max(u0_ + np.nonzero(np.asarray(pr_) > 0.05)[0][-1] * 0.1 for pr_, u0_, nm_ in g3['sections'])
+        x_land = g3['x0'] - u_end                                       # bout de la réception du freestyle (x du monde)
+        xv_ = x_land - START_CLEAR                                       # montée du départ, dégagée de la réception
+        zj_ = ln['zL3']; xj_ = ln['x_end3'] + 1.0
+        assert xv_ - RB > xj_ + 2.0, (xv_, xj_)
+        route = [('S', gx - (xv_ + RB)), ('T', 90, RB, None), ('S', (zj_ - RB) - (gz + RB)), ('T', -90, RB, None), ('TO', (xj_, zj_))]
+    S0 = dict(gate=(gx, gz), heading=180.0, route=route, narrow=[(150.0, None), (gx - xv_, 30.0)],
               finish=(FINISH_SEC, 2))
     from starts import StartRoute
     R = StartRoute(S0, N_GATES, GATE_PITCH)
@@ -924,7 +942,8 @@ T_D_RF = 24.5 if ZION else None   # v28 : rayon du 180 avant L2 (None = (zL2 - z
 # v28b (« il est trop en avant, il doit être plus reculé vers le sable, qu'on tourne et qu'on sorte pas au milieu du terrain ») :
 # 180 avant L2 décalé vers LR ; limite = le berm RF (46 ft du centre) ne doit pas toucher les bosses de LR
 T_D_EAST = 15.0
-T_D_BERM_FROM = 0.4              # v28c : berm sur tout le 180 essayé -> la ligne de départ montait sur 7 ft avant la jonction ; 2e partie seulement
+T_D_BERM_FROM = 0.0              # v28d (« comme le virage avant LR, avec le RF ») : berm RF sur tout le 180 ; le départ rejoint L3 avant T_D (start())
+START_CLEAR = 4.0                # v28d : écart entre la réception du freestyle et la montée du départ (ft)
 RF_BERM_TAGS = ('T_D ',)         # v28 : virages au berm RF mesuré (build_zion.berm_rf) au lieu du croissant JGSX
 # v28b (« les 2 premières un tout petit peu plus petites, limite ça se voit pas ; ensuite les autres même distance et même hauteur ») :
 # bosse RF à 5,8 ft partout (les 2 premières 5,4 ft), crête à crête 36 ft entre les 2 premières puis 30 ft
@@ -932,7 +951,8 @@ RF_BERM_TAGS = ('T_D ',)         # v28 : virages au berm RF mesuré (build_zion.
 # bosses RF un peu plus courtes (x0,85 = 22 ft, face plus raide), 5,0 / 5,0 puis 5,4 ft, même écart partout de la sortie de T_D à
 # 5 ft de T1 ; estimation (sim_rythme) : double - triple - triple tout juste, quadruple et triple d'entrée impossibles
 L2_V28 = dict(fill=dict(start=3.0, end=5.0),   # v28 : bosses RF (voir paris()) ; None = v27d
-              bumps=[(5.0, 'single', 0.85)] * 2 + [(5.4, 'single', 0.85)] * 6,
+              bumps=[(5.3, 'single', 1.0)] * 2 + [(5.6, 'single', 1.0)] * 6,   # v28e (« adoucis, moins d'angles, comme L6 ») : 5,3 / 5,6 ft
+              smooth=0.8,          # v28e : forme RF de longueur normale, lissage léger (face 33° ; L6 41-43°) ; estimation : 1er triple limite
               left1=2.0 / 3.0)
 L2_V27 = True     # v27 : L2 = bosses de L6 (voir paris())
 L2_V27D = True    # v27d : 8 bosses, 1re 20°, 2e 4,3 ft, 3e 21°
