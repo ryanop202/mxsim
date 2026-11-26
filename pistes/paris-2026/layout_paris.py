@@ -298,7 +298,7 @@ if L5B_BERM:
     POST_FIN = dict(POST_FIN_V23F, b23=[(0, 0), (1, 0), (2, 0), (3, 0)])
 # v28o (« la 2e bosse un angle légèrement plus doux, avec l'intérieur ça fait un à-coup ; la petite ligne droite doit faire 21 ft, le plateau ») :
 # montée de la 2e bosse sur 12 ft au lieu de 9 (crête au même endroit, 4,4 ft), plateau 2,9 ft sur 21 ft au lieu de 24, descente identique
-POST_FIN_V28O = dict(POST_FIN_V23F, b23=[(52, 0), (55.5, 0.7), (59.5, 2.8), (62.3, 4.1), (64, 4.4), (66, 4.1), (69, 3.2), (72, 2.9), (93, 2.9),
+POST_FIN_V28O = dict(POST_FIN_V23F, b23=[(48, 0), (52, 0.6), (57, 2.4), (61, 3.8), (64, 4.4), (66, 4.1), (69, 3.2), (72, 2.9), (93, 2.9),   # v28p : montée sur 16 ft
                                          (99, 1.8), (105, 0.4), (110, 0)])
 if not L5B_BERM:
     POST_FIN = POST_FIN_V28O
@@ -322,6 +322,10 @@ CAMEL = pts_prof([(0, 0), (2, 0.35), (7, 0.4), (9.5, 0.05), (11, 0.15), (13, 0.9
                   (19.6, 6.6), (20.6, 7.6), (21.6, 10.0), (22.4, 12.0), (23.2, 12.8), (24.2, 13.0), (30, 13.0), (31.2, 12.7), (34.5, 10.6),
                   (38.5, 7.6), (42.5, 4.4), (46.5, 1.6), (49.5, 0.3), (51, 0)], 0.45)
 CAMEL_U = 131.0   # v22d (« mets le saut Milwaukee plus centré vers mon trait », trait à ~158 ft) : centre du saut à 158 ft (était 118 -> 134)
+# v28p (croquis : 2 traits sur le sable de LR, « coupe, toute la partie du bas remonte, le reste identique ») : 32 ft de sable plat
+# enlevés dans LR (entre u 48 et 80, avant le 2e roller) ; tout le bas (L5, après-arrivée, LD + départ, L6, T_C, T_E) remonte de 32 ft
+SAND_CUT = 32.0
+CAMEL_U -= SAND_CUT
 # v22 (dessin sur L1) : « après les whoops, comme une whoops en plus, sauf que ça fait une table plate d'à peu près la longueur d'une
 # table normale ; ça redescend »
 TABLE_PLATE_L1_V23C = pts_prof([(0, 0), (3, 1.0), (6, 2.9), (8.5, 3.4), (19, 3.6), (29, 4.25), (31.5, 4.4), (34.5, 3.6), (39, 0.9), (42, 0)], 0.8)
@@ -536,6 +540,7 @@ def paris():
     """Le tour (sens de course), départ du tour au début de L5 (sortie de T_C)."""
     LS.COMBOS.clear(); LS.SPLITS.clear(); SPLIT_Z.clear()
     zL5, zLD, zL3, zL2 = px_z(481.0), px_z(370.0) - LD_SHIFT, px_z(226.5) + L3_SHIFT, px_z(130.0) + L3_SHIFT + L2_SHIFT
+    zL5 += SAND_CUT if zL3 > zL5 else -SAND_CUT; zLD += SAND_CUT if zL3 > zLD else -SAND_CUT   # v28p : le bas remonte (vers L3)
     if ZION:   # v23c (« le virage plus tôt, rapprocher le virage de la bosse » ; déjà « plus serré ») : L3 12 ft plus près de L2 (180 de rayon -6 ft)
         zL3 += 12.0 if zL2 > zL3 else -12.0
         if T_D_RF:   # v28 (« le virage, mets un virage de la RF, ça passe trop vite ») : 180 au rayon de la RF (A1 : 24,4 ft), L3 plus près de L2
