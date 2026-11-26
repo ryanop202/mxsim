@@ -648,13 +648,14 @@ def paris():
         assert EXIT_U0 + tlen(rl_) + 13.0 < u0, u0
         secs3.append(LS.sec('PAR-L3 petite table creusee', rl_, EXIT_U0))
     if ZION and T_D_CUT:   # v28q (« coupe le début du virage pour qu'il commence plus tard, on est obligé de tourner plus avant d'y rentrer ») :
-        #   L3 T_D_CUT ft plus long, 90° serré (rayon R3 - T_D_CUT), petite ligne droite de T_D_CUT ft, puis le 90° à berm de rayon R3 :
-        #   même sommet, même sortie sur L2 qu'avant ; le départ rejoint toujours au même point (fin de la petite ligne droite)
         p.straight(x3 - x_end3 + T_D_CUT, secs3, tag='L3 grande table')
-        p.turn(90, R3 - T_D_CUT, None, tag='TD1 90 gauche serre (avant T_D)')
-        p.straight(T_D_CUT, tag='TD milieu')
-        p.turn(90, R3, BIG, tag='T_D 90 gauche (berm)')
-        gm_ = p.segs[-2]; p.segs[-1]['pylon_mid'] = float(np.arctan2(gm_['z0'] + gm_['L'] * np.sin(gm_['t']) - p.segs[-1]['cz'], gm_['x0'] + gm_['L'] * np.cos(gm_['t']) - p.segs[-1]['cx']))   # poteau au sommet, comme avant
+        # v28r (« remets le virage qu'on avait au début, mais juste court comme maintenant ») : plus de ligne droite ni de 90° serré :
+        #   une seule courbe continue (comme le 180 d'origine), 90° de rayon R3 - cut/2 puis 90° à berm de rayon R3 + cut/2 ;
+        #   même sortie sur L2 ; sommet 7,5 ft plus loin vers le sable (le départ y rejoint)
+        p.turn(90, R3 - T_D_CUT / 2, None, tag='TD1 90 gauche (1re moitie de T_D)')
+        apex_TD = (p.x, p.z)
+        p.turn(90, R3 + T_D_CUT / 2, BIG, tag='T_D 90 gauche (berm 2e moitie)')
+        p.segs[-1]['pylon_mid'] = float(np.arctan2(apex_TD[1] - p.segs[-1]['cz'], apex_TD[0] - p.segs[-1]['cx']))   # poteau au sommet, comme avant
     else:
         p.straight(x3 - x_end3, secs3, tag='L3 grande table')
         p.turn(180, R3, BIG, tag='T_D 180 gauche (berm 2e moitié)'); p.segs[-1]['berm_from'] = T_D_BERM_FROM if (ZION and T_D_RF) else (0.4 if ZION else 0.5)   # v23 : appui qui commence plus tôt
@@ -934,7 +935,7 @@ def paris():
         SPLIT_Z['PAR-L6 triple, double, table, double'] = [(0.0, tlen(toks[:1]), 1.0, 0.8)]   # v23 : intérieur (droite) relevé 0,55 -> 0,8
     p.straight(xWb - (xLR + RB), [lane_sec('PAR-L6 triple, double, table, double', toks, u0)], tag='L6 tribune Sud')
     p.turn(-180, R180, BIG, tag='T_C 180 droite (berm)')
-    p.lanes = dict(x_end3=x_end3, R3=R3, zL5=zL5, zLD=zLD, zL3=zL3, zL2=zL2, zL1=zL1, zL6=zL6, xW=xW, xLR=xLR, xC=xC, xT5=xT5, xTB=xTB)
+    p.lanes = dict(apex_TD=(apex_TD if (ZION and T_D_CUT) else None), x_end3=x_end3, R3=R3, zL5=zL5, zLD=zLD, zL3=zL3, zL2=zL2, zL1=zL1, zL6=zL6, xW=xW, xLR=xLR, xC=xC, xT5=xT5, xTB=xTB)
     return p
 
 
@@ -960,6 +961,8 @@ def start(p):
     gx, gz = px_x(D["depart"]["grilles_x"]), ln['zLD']
     xm = ln['x_end3'] - ln['R3']                                       # v9 : sommet du 180 L3 -> L2 (sur le tour)
     merge = (xm, (ln['zL3'] + ln['zL2']) / 2)
+    if ln.get('apex_TD'):                                              # v28r : sommet du T_D raccourci
+        merge = tuple(float(v) for v in ln['apex_TD']); xm = merge[0]
     route = [('S', gx - (xm + RB)), ('T', 90, RB, None), ('TO', merge)]
     if ZION and AF_V28:   # v28f (croquis, traits A / C) : grilles plus haut, virage du départ plus large vers T_D
         gz = ln['zLD'] + START_DZ
