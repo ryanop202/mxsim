@@ -983,7 +983,7 @@ L2_NAME = 'PAR-L2 double triple triple (8 bosses)'
 # plus haut), longueur (x forme ZION), coupe gauche / droite (facteurs kl, kr) ; None = L2 v25f
 # v28f (croquis de Ryan : « B la nouvelle ligne pour traverser le départ en roulant ; A et C sont les lignes qui font le départ ») :
 # le tour après l'arrivée traverse la zone de départ en diagonale (B) ; départ : grilles sur le trait A (plus haut), entonnoir vers T_D
-AF_V28 = True
+AF_V28 = False   # v28i (« après l'arrivée remets comme la version d'hier ») ; True = traversée B (v28f-g)
 AF_R1, AF_R2 = 40.0, 30.0          # B : grande courbe à gauche en sortie de T_L5a, courbe à droite avant T_Bb (ft)
 AF_SECS = lambda L: []             # B : diagonale plate (elle traverse le couloir de départ)
 AF_BUMPS = dict(h=[3.4] * 4, pitch=34.0, u0=2.0)   # v28g : 4 bosses RF (la 5e tombait sur la ligne de départ) sur le début de la diagonale   # B : bosses RF en sortie de T_L5a (traits bleus) ; pitch = crête à crête
@@ -1005,8 +1005,8 @@ RF_BERM_TAGS = ()         # v28 : virages au berm RF mesuré (build_zion.berm_rf
 # v28h (« 1re bosse 3,5 ft à droite, 2 ft à gauche ; 36 ft entre chaque ; les autres 5 ft ; l'enchaînement commence plus près du
 # virage ») : 1re sans face étirée et pied coupé (crête plus tôt), écart fixe 36 ft
 L2_V28 = dict(fill=dict(start=0.0, end=4.0, pitch=36.0), front1=None, toe=0.3,   # v28 : bosses RF (voir paris()) ; None = v27d
-              bumps=[(3.5, 'single', 1.0)] + [(5.0, 'single', 1.0)] * 6 + [(5.0, 'single', 0.85)],
-              smooth=0.8,          # v28e : forme RF de longueur normale, lissage léger
+              bumps=[(3.5, 'single', 0.8)] + [(5.0, 'single', 1.0)] * 6 + [(5.0, 'single', 0.85)],
+              smooth=1.5,          # v28e : forme RF de longueur normale, lissage léger
               left1=2.0 / 3.5)
 L2_V27 = True     # v27 : L2 = bosses de L6 (voir paris())
 L2_V27D = True    # v27d : 8 bosses, 1re 20°, 2e 4,3 ft, 3e 21°
