@@ -599,7 +599,7 @@ def paris():
         assert EXIT_U0 + tlen(rl_) + 13.0 < u0, u0
         secs3.append(LS.sec('PAR-L3 petite table creusee', rl_, EXIT_U0))
     p.straight(x3 - x_end3, secs3, tag='L3 grande table')
-    p.turn(180, R3, BIG, tag='T_D 180 gauche (berm 2e moitié)'); p.segs[-1]['berm_from'] = 0.4 if ZION else 0.5   # v23 : appui qui commence plus tôt
+    p.turn(180, R3, BIG, tag='T_D 180 gauche (berm 2e moitié)'); p.segs[-1]['berm_from'] = T_D_BERM_FROM if (ZION and T_D_RF) else (0.4 if ZION else 0.5)   # v23 : appui qui commence plus tôt
     # v7 (Ryan : « ça fait 4 d'entrée, ça doit faire 3, 4 et le 4 dur où faut pousser ») : les 7 bosses du visuel = un triple
     # serré (écarts 3 ft, bosses Arlington x1,2) puis un quad dur (écarts 7 ft, bosses x1,35), 20 ft entre les deux ;
     # près de la sortie du virage (pas d'élan trop long) - unités et réglages de Saint-Thibéry (up, rounded)
@@ -723,14 +723,20 @@ def paris():
             # simple, double ; le but : extérieur double - triple - triple sans pouvoir faire autre chose, genre un quadruple ») : formes
             # MESURÉES sur RF Anaheim 1 (bosse 26 ft / 3,4 ft, grosse bosse 40 ft / 5,5 ft, mesure_rf.py), mises à l'échelle ; les 2 appels
             # des triples = grosse bosse RF, bosses du milieu plus basses ; crêtes réglées avec sim_rythme.py (ESTIMATION, pas le jeu)
-            def rfb(h, key):
-                p_ = np.asarray(RFF[key], float); k_ = float(np.clip(np.sqrt(h / p_.max()), 0.9, 1.2))
+            def rfb(h, key, k_=None):
+                p_ = np.asarray(RFF[key], float); k_ = k_ or float(np.clip(np.sqrt(h / p_.max()), 0.9, 1.2))
                 q_ = np.interp(np.linspace(0, len(p_) - 1, max(2, int(round(len(p_) * k_)))), np.arange(len(p_)), p_) * (h / p_.max())
                 return np.maximum(q_, 0.0)
-            spec_ = L2_V28
+            spec_ = dict(L2_V28)
+            if spec_.get('fill'):
+                # v28c (« l'enchaînement commence juste à la sortie du virage et finit juste avec le virage d'après, comme L6 ») :
+                # 1re bosse à fill['start'] ft de la sortie, dernière à fill['end'] ft de T1 (L6 : 4,7 ft), même écart partout
+                F_ = spec_['fill']; q0_, q1_ = (rfb(*spec_['bumps'][i]) for i in (0, -1))
+                c0_ = F_['start'] + float(np.argmax(q0_)) * 0.1; c1_ = (xWt - x_end3) - F_['end'] - (len(q1_) - float(np.argmax(q1_))) * 0.1
+                spec_['crest'] = list(np.linspace(c0_, c1_, len(spec_['bumps'])))
             pl_ = []                                                     # [début (ft depuis la sortie du 180), profil, nom]
-            for c_, (h_, key_) in zip(spec_['crest'], spec_['bumps']):
-                p_ = rfb(h_, key_); st_ = round(c_ - float(np.argmax(p_)) * 0.1, 1); nm_ = '%s RF %.1f ft' % ('grosse bosse' if key_ == 'big' else 'bosse', h_)
+            for c_, bsp_ in zip(spec_['crest'], spec_['bumps']):
+                h_, key_ = bsp_[0], bsp_[1]; p_ = rfb(h_, key_, bsp_[2] if len(bsp_) > 2 else None); st_ = round(c_ - float(np.argmax(p_)) * 0.1, 1); nm_ = '%s RF %.1f ft' % ('grosse bosse' if key_ == 'big' else 'bosse', h_)
                 if pl_ and st_ < pl_[-1][0] + len(pl_[-1][1]) * 0.1 - 0.05:   # pieds qui se chevauchent : comme un max des deux
                     a0, pa = pl_[-1][0], pl_[-1][1]; i_a = int(round((st_ - a0) / 0.1)); n_ = len(pa) - i_a
                     cut = next(j for j in range(n_) if p_[j] >= pa[i_a + j])
@@ -918,11 +924,15 @@ T_D_RF = 24.5 if ZION else None   # v28 : rayon du 180 avant L2 (None = (zL2 - z
 # v28b (« il est trop en avant, il doit être plus reculé vers le sable, qu'on tourne et qu'on sorte pas au milieu du terrain ») :
 # 180 avant L2 décalé vers LR ; limite = le berm RF (46 ft du centre) ne doit pas toucher les bosses de LR
 T_D_EAST = 15.0
+T_D_BERM_FROM = 0.4              # v28c : berm sur tout le 180 essayé -> la ligne de départ montait sur 7 ft avant la jonction ; 2e partie seulement
 RF_BERM_TAGS = ('T_D ',)         # v28 : virages au berm RF mesuré (build_zion.berm_rf) au lieu du croissant JGSX
 # v28b (« les 2 premières un tout petit peu plus petites, limite ça se voit pas ; ensuite les autres même distance et même hauteur ») :
 # bosse RF à 5,8 ft partout (les 2 premières 5,4 ft), crête à crête 36 ft entre les 2 premières puis 30 ft
-L2_V28 = dict(crest=[17.0, 53.0, 83.0, 113.0, 143.0, 173.0, 203.0, 233.0],   # v28 : bosses RF (voir paris()) ; None = v27d
-              bumps=[(5.4, 'single')] * 2 + [(5.8, 'single')] * 6,
+# v28c (« l'enchaînement est trop serré : il commence à la sortie du virage et finit juste avec le virage d'après, comme L6 ») :
+# bosses RF un peu plus courtes (x0,85 = 22 ft, face plus raide), 5,0 / 5,0 puis 5,4 ft, même écart partout de la sortie de T_D à
+# 5 ft de T1 ; estimation (sim_rythme) : double - triple - triple tout juste, quadruple et triple d'entrée impossibles
+L2_V28 = dict(fill=dict(start=3.0, end=5.0),   # v28 : bosses RF (voir paris()) ; None = v27d
+              bumps=[(5.0, 'single', 0.85)] * 2 + [(5.4, 'single', 0.85)] * 6,
               left1=2.0 / 3.0)
 L2_V27 = True     # v27 : L2 = bosses de L6 (voir paris())
 L2_V27D = True    # v27d : 8 bosses, 1re 20°, 2e 4,3 ft, 3e 21°
