@@ -1259,6 +1259,7 @@ PAD_DX = X_WALL - 879.34
 # z : le paddock prenait 469 ft (357 -> 826), le sol n'en fait plus que 458 (x1,55) : les 2 bandes vides (passage « croix » 706-715,
 # bande 818-824 avant les barrières numérotées) réduites à 4 ft et 1 ft ; le reste quasi intact (< 1 %), chaque stand bouge d'un bloc
 PAD_ZK = [357.3, 706.0, 715.0, 818.0, 824.0, 826.0]
+MUR_DOWN = 5.0
 def pad_z(z):
     o = PAD_ZK; h = 45.0 * _LP.PLAN_K * _LP.FT; lo, hi = _LP.OZ - h + 1.0, _LP.OZ + h - 1.0
     f = min(1.0, ((hi - lo) - 5.0) / ((o[-1] - o[0]) - 15.0))
@@ -1403,7 +1404,9 @@ def plan():
     for k, x, z, f, c in P:
         zc.setdefault(grp(k, c), []).append(z)
     dz = {g: pad_z(float(np.mean(v))) - float(np.mean(v)) for g, v in zc.items()}
-    P = [(k, x + PAD_DX, z + dz[grp(k, c)], f, c) for k, x, z, f, c in P]
+    # v28y (croquis : « pousse cette partie vers le bas pour garder le passage entre Honda et Suzuki ») : rangée du fond (x >= 785),
+    #   de Honda à YCF, MUR_DOWN ft plus bas : le passage « croix » retrouve ses 9 ft de ce côté
+    P = [(k, x + PAD_DX, z + dz[grp(k, c)] - (MUR_DOWN if (x >= 785.0 and z < 706.0) else 0.0), f, c) for k, x, z, f, c in P]
     # v28 : la remorque Suzuki dépassait de 5 ft dans le mur de scène (déjà 5 ft avant) : stand Suzuki
     #   5,5 ft plus près de l'allée
     P = [(k, x - (5.5 if c.startswith('Suzuki') else 0.0), z, f, c) for k, x, z, f, c in P]
