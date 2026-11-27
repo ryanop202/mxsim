@@ -1,3 +1,7 @@
+[684.576889 19.710622 582.636602] 24.000000 1.000000 @USLANDParisbyRyan/js/pyro/flamme_start_0.seq
+[684.576871 19.710622 528.543398] 24.000000 1.000000 @USLANDParisbyRyan/js/pyro/flamme_start_1.seq
+[536.754076 24.248394 503.821610] 24.000000 1.000000 @USLANDParisbyRyan/js/pyro/flamme_finish_0.seq
+[536.754064 24.247321 469.728406] 24.000000 1.000000 @USLANDParisbyRyan/js/pyro/flamme_finish_1.seq
 [862.5073 8.4021 798.1260] 3.9007 1.0000 @USLANDParisbyRyan/billboard/crowd_Crowd2_b12.png
 [857.6431 8.4021 798.1260] 4.0807 1.0000 @USLANDParisbyRyan/billboard/crowd_Crowd2_b12.png
 [852.8978 8.4021 798.1260] 4.4287 1.0000 @USLANDParisbyRyan/billboard/crowd_Crowd6_b12.png
@@ -5988,7 +5992,6 @@
 [849.0637 71.8033 306.6037] 3.9314 1.0000 @USLANDParisbyRyan/billboard/crowd_Crowd2_b02.png
 [855.3035 71.8033 306.6037] 4.3510 1.0000 @USLANDParisbyRyan/billboard/crowd_Crowd1_b02.png
 [861.1709 71.8033 306.6037] 3.9087 1.0000 @USLANDParisbyRyan/billboard/crowd_Crowd6_b02.png
-
 [863.4715 73.7033 888.0209] 3.9667 1.0000 @USLANDParisbyRyan/billboard/crowd_Crowd6_b02.png
 [857.0868 73.7033 888.0209] 3.9289 1.0000 @USLANDParisbyRyan/billboard/crowd_Crowd9_b02.png
 [852.4040 73.7033 888.0209] 4.2019 1.0000 @USLANDParisbyRyan/billboard/crowd_Crowd8_b02.png

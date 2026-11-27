@@ -146,3 +146,77 @@ function lateTuff2(seconds) {
 
 var lateTuff2Prev = mx.frame_handler;
 mx.frame_handler = lateTuff2;
+
+/*
+USLAND Paris v41e - flammes : panneau START (billboards 0, 1) a chaque chute de grille ; panneau FINISH (billboards 2, 3) quand le
+premier finit le 1er tour et quand il finit la course. Texte ASCII expres.
+*/
+var FL_POS = [[684.58, 19.71, 582.64], [684.58, 19.71, 528.54], [536.75, 33.71, 503.82], [536.75, 33.71, 469.73]];
+var FL_TEX = [mx.read_texture("@USLANDParisbyRyan/js/pyro/flamme_start_0.seq"), mx.read_texture("@USLANDParisbyRyan/js/pyro/flamme_start_1.seq"),
+              mx.read_texture("@USLANDParisbyRyan/js/pyro/flamme_finish_0.seq"), mx.read_texture("@USLANDParisbyRyan/js/pyro/flamme_finish_1.seq")];
+var FL_SND = [];
+var FL_N = 41, FL_FPS = 32.0;
+var FL_FIN_TOURS = mx.get_finish_laps(), FL_FIN_TEMPS = mx.get_finish_time();
+var fl_k;
+for (fl_k = 0; fl_k < 4; fl_k++) {
+    FL_SND[fl_k] = mx.add_sound("@USLANDParisbyRyan/js/sounds/flamme.raw");
+    mx.set_sound_freq(FL_SND[fl_k], 44100);
+    mx.set_sound_vol(FL_SND[fl_k], 1.0);
+    mx.set_sound_pos(FL_SND[fl_k], FL_POS[fl_k][0], FL_POS[fl_k][1], FL_POS[fl_k][2]);
+    mx.color_billboard(fl_k, 1, 1, 1, 0);
+}
+var fl_img = [-1, -1], fl_t = [-1.0, -1.0];
+var fl_grille = -1, fl_tour = 0, fl_tour_fin_temps = -1, fl_prec_s = -1.0;
+
+function fl_montre(g, a) {
+    mx.color_billboard(2 * g, 1, 1, 1, a);
+    mx.color_billboard(2 * g + 1, 1, 1, 1, a);
+}
+function fl_tire(g) {
+    fl_img[g] = 0; fl_t[g] = -1.0;
+    mx.start_sound(FL_SND[2 * g]);
+    mx.start_sound(FL_SND[2 * g + 1]);
+}
+function fl_tours_course() {
+    if (FL_FIN_TEMPS > 0) return fl_tour_fin_temps >= 0 ? fl_tour_fin_temps + 1 + FL_FIN_TOURS : 1000000;
+    return FL_FIN_TOURS > 0 ? FL_FIN_TOURS : 1000000;
+}
+function fl_image(seconds) {
+    try {
+        var d = mx.get_gate_drop_time(), g, k, o, tour;
+        if (mx.seconds < fl_prec_s) { fl_img = [-1, -1]; fl_montre(0, 0); fl_montre(1, 0); }      /* retour en arriere (replay) */
+        fl_prec_s = mx.seconds;
+        if (d < 0 || mx.seconds < d) {
+            fl_grille = -1; fl_tour = 0; fl_tour_fin_temps = -1;
+        } else {
+            if (fl_grille != d && mx.seconds < d + 3.0) { fl_grille = d; fl_tour = 0; fl_tour_fin_temps = -1; fl_tire(0); }
+            o = mx.get_running_order();
+            if (o.length > 0 && o[0].position >= 1) {
+                tour = mx.index_to_lap(o[0].position);
+                if (FL_FIN_TEMPS > 0 && fl_tour_fin_temps < 0 && mx.seconds - d >= FL_FIN_TEMPS) fl_tour_fin_temps = tour;
+                if (tour > fl_tour) {
+                    if (tour == 1 || tour == fl_tours_course()) fl_tire(1);
+                    fl_tour = tour;
+                }
+            }
+        }
+        for (g = 0; g < 2; g++) {
+            if (fl_img[g] < 0 || (fl_t[g] >= 0 && mx.seconds - fl_t[g] < 1.0 / FL_FPS)) continue;
+            fl_t[g] = mx.seconds;
+            if (fl_img[g] < FL_N) {
+                for (k = 2 * g; k < 2 * g + 2; k++) {
+                    mx.begin_custom_frame(FL_TEX[k]);
+                    mx.paste_custom_frame(FL_TEX[k], fl_img[g], 0.0, 0.0, 0.0, 0.0, 1.0, 1.0);
+                    mx.end_custom_frame(FL_TEX[k]);
+                }
+                if (fl_img[g] == 0) fl_montre(g, 1);
+                fl_img[g]++;
+            } else {
+                fl_montre(g, 0); fl_img[g] = -1;
+            }
+        }
+    } catch (e) { mx.message("flammes : " + e.toString()); }
+    if (fl_prev) fl_prev(seconds);
+}
+var fl_prev = mx.frame_handler;
+mx.frame_handler = fl_image;

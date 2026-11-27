@@ -327,6 +327,13 @@
   "tuiles": 8,
   "ombrage_plat": 228
  },
+ "traces_sgm": {
+  "single": 25,
+  "table": 1,
+  "tripleface": 4,
+  "whoops": 12,
+  "virages": 6
+ },
  "decals_sable": 440,
  "decals_sable_voiles": 280,
  "bordure_a1": {
@@ -351,7 +358,7 @@
   ],
   "dalles_tuiles": 147628,
   "x_paddock": 736.3,
-  "overlay": 6499,
+  "overlay": 6547,
   "decals_gardes": 0,
   "start": [
    684.6,
@@ -700,6 +707,38 @@
  "cameras_tv": {
   "cameras": 8,
   "portes": 29
+ },
+ "minimap": {
+  "px_par_ft": 0.863,
+  "objets": 0,
+  "arene_px": 403
+ },
+ "flammes": {
+  "start": [
+   [
+    684.6,
+    19.7,
+    582.6
+   ],
+   [
+    684.6,
+    19.7,
+    528.5
+   ]
+  ],
+  "finish": [
+   [
+    536.8,
+    33.7,
+    503.8
+   ],
+   [
+    536.8,
+    33.7,
+    469.7
+   ]
+  ],
+  "scripts": 2
  },
  "lap_ft": 2528.5,
  "start": {

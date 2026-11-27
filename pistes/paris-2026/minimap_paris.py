@@ -17,6 +17,7 @@ CADRE_MARGE, CADRE_R = 6.0, 18.0           # marge autour du sol, rayon des coin
 OBJ_HAUT, OBJ_LONG = 30.0, 120.0           # objets dessinés : sommet < 30 ft, longueur < 120 ft (pas le stade, ni les bannières)
 LUM = np.array([-0.55, 0.75, -0.35])       # lumière (x, y, z) pour l'ombrage du relief
 START_BOX = (652.0, 505.0, 676.0, 597.0)   # START devant la grille, le long de la ligne (x0, z0, x1, z1 en ft) ; v41e (« un entre-deux ») : 24 x 92 ft (v41c 16 x 74, v41d 32 x 110)
+LOGO_PLEINE_LARGEUR, LOGO_ECART = True, 8.0   # v41e : logo aussi large que la carte, 8 ft au-dessus
 DECOUPE_RECT = 32.0                         # v41e : découpe = rectangle calé sur la terre, coins arrondis de 32 ft (0 = suit le bord de la terre)
 OBJETS = False                              # v41d (« simplifie la minimap, sans objet ») : plus de boudins / rampes / grilles dessinés
 SOL_PAS_TERRE = ('Road', 'Beton', 'Paddock', 'Grass')   # v41d (« découpe autour du terrain ») : la carte = la terre seulement (pas le béton)
@@ -143,7 +144,10 @@ def make_map(OUT, folder, fl, start, logo_src):
     tb = ImageDraw.Draw(Image.new('L', (1, 1))).textbbox((0, 0), 'START', font=fnt, stroke_width=sw)
     tx = Image.new('RGBA', (tb[2] - tb[0], tb[3] - tb[1]), (0, 0, 0, 0))
     ImageDraw.Draw(tx).text((-tb[0], -tb[1]), 'START', font=fnt, fill=(255, 255, 255, 255), stroke_width=sw, stroke_fill=(0, 0, 0, 255))
-    for img, (X0, Z0, X1, Z1), rot in ((tx, START_BOX, 90), (logo_usland(logo_src), LOGO_BOX, 0)):
+    lg_ = logo_usland(logo_src); box_ = LOGO_BOX
+    if SOL_PAS_TERRE and DECOUPE_RECT and LOGO_PLEINE_LARGEUR:   # v41e (« le logo USLAND aussi large que la minimap ») : largeur du cadre
+        hl_ = (rx1 - rx0) * lg_.height / lg_.width; box_ = (rx0, rz0 - LOGO_ECART - hl_, rx1, rz0 - LOGO_ECART)
+    for img, (X0, Z0, X1, Z1), rot in ((tx, START_BOX, 90), (lg_, box_, 0)):
         img = img.rotate(rot, expand=True); f_ = min((X1 - X0) * k / img.width, (Z1 - Z0) * k / img.height)
         img = img.resize((max(1, int(img.width * f_)), max(1, int(img.height * f_))), Image.LANCZOS)
         im.alpha_composite(img, (int(round((X0 + X1) / 2 * k - img.width / 2)), int(round((Z0 + Z1) / 2 * k - img.height / 2))))

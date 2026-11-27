@@ -626,6 +626,63 @@ def jaunir(path, target=SABLE_JAUNE):
     Image.fromarray(res.astype(np.uint8), 'RGBA' if has_a else 'RGB').save(path)
 
 
+SGM_TRACES = True   # v41d : décals d'obstacle et de virage de Saint-Georges (traces de tracteur), posés comme à Saint-Georges
+TRACE_H, TRACE_FUSION = 0.4, 3.0   # une bosse = suite de points de l'axe > 0,4 ft ; deux bosses à moins de 3 ft = une seule
+
+
+def sgm_traces(OUT, FOLDER, path, sand_t):
+    """v41d : comme export_stt.obstacle_and_turn_decals (Saint-Georges) : sur chaque ligne droite, une décal par bosse / table au
+    milieu, dans le sens du couloir (single_lt 47,5 ft de contenu, table_lt si >= 52 ft, tripleface_lt si >= 6,6 ft de haut ; décal de
+    max(110, 110 (L + 14) / contenu) ft) ; les whoops (>= 5 bosses courtes à la suite) : 12 décals whoops_lt réparties ; sur chaque
+    virage à berm : 180_lt / 90_lt au milieu de l'arc. Bosses lues sur le terrain (l'axe du couloir). Fichiers de Saint-Georges tels quels."""
+    from engine import turn_mid_angle
+    sgd = os.path.join(BP.ROOT, "tracks", "USLAND2026SaintGeorgesbyBazo", "decal"); zd = os.path.join(OUT, "zdecal")
+    for n_ in ("single", "table", "tripleface", "whoops", "90", "180"):
+        shutil.copy(os.path.join(sgd, n_ + "_lt.png"), os.path.join(zd, "sgm_" + n_ + "_lt.png"))
+    t = open(os.path.join(OUT, "terrain.hf")).read().split(); s_, lo, hi = float(t[1]), float(t[2]), float(t[3])
+    Hm = np.asarray(Image.open(os.path.join(OUT, "terrain.png")), float) / 65535 * (hi - lo) + lo
+    from scipy.ndimage import map_coordinates
+    hz = lambda x, z: map_coordinates(Hm, [np.asarray(z) / s_, np.asarray(x) / s_], order=1)
+    ang_of = lambda fx, fz: float(np.arctan2(-fx, -fz))
+    dec = lambda x, z, a, size, tex: "[%.6f %.6f] %.6f %.6f 1.000000 @%s/zdecal/sgm_%s_lt.png" % (x, z, a, size, FOLDER, tex)
+    out = []; nb = dict(single=0, table=0, tripleface=0, whoops=0, virages=0)
+    for g in path.segs:
+        if g['kind'] == 'S':
+            c, sn = np.cos(g['t']), np.sin(g['t']); a = ang_of(c, sn); u = np.arange(0.0, g['L'], 1.0)
+            h = hz(g['x0'] + u * c, g['z0'] + u * sn); up = h > TRACE_H; runs = []
+            for k in np.nonzero(np.diff(np.r_[0, up.astype(int), 0]))[0].reshape(-1, 2):
+                if runs and k[0] - runs[-1][1] < TRACE_FUSION:
+                    runs[-1][1] = k[1]
+                else:
+                    runs.append([k[0], k[1]])
+            runs = [(u[a0], u[min(a1, len(u) - 1)], float(h[a0:a1].max())) for a0, a1 in runs if a1 - a0 >= 4]
+            court = [r for r in runs if r[1] - r[0] < 26.0 and r[2] < 4.5]
+            k = 0
+            while k < len(runs):                                         # whoops : >= 5 bosses courtes à la suite
+                j = k
+                while j < len(runs) and runs[j] in court and (j == k or runs[j][0] - runs[j - 1][1] < 12.0):
+                    j += 1
+                if j - k >= 5:
+                    u0, u1 = runs[k][0], runs[j - 1][1]
+                    for m in range(12):
+                        uu = u0 + (m + 0.5) * (u1 - u0) / 12; x_, z_ = g['x0'] + uu * c, g['z0'] + uu * sn
+                        if sand_t.query([x_, z_])[0] > 30.0:
+                            out.append(dec(x_, z_, a, 110.0, 'whoops')); nb['whoops'] += 1
+                    k = j; continue
+                st_, en_, hh = runs[k]; L = en_ - st_; uu = (st_ + en_) / 2; x_, z_ = g['x0'] + uu * c, g['z0'] + uu * sn
+                tex, cl = ('tripleface', 79.1) if hh >= 6.6 else (('table', 63.4) if L >= 52 else ('single', 47.5))
+                if sand_t.query([x_, z_])[0] > 30.0:
+                    out.append(dec(x_, z_, a, max(110.0, 110.0 * (L + 14) / cl), tex)); nb[tex] += 1
+                k += 1
+        elif g['kind'] == 'T' and g.get('berm'):
+            m = turn_mid_angle(g); fx, fz = np.cos(m), np.sin(m)
+            big = abs(g['ang']) > 120; off = 9.0 if big else 14.0; x_, z_ = g['cx'] + fx * off, g['cz'] + fz * off
+            if sand_t.query([x_, z_])[0] > 40.0:
+                out.append(dec(x_, z_, ang_of(fx, fz), 110.0, '180' if big else '90')); nb['virages'] += 1
+    BP.REPORT['traces_sgm'] = nb
+    return out
+
+
 def zion_ground(OUT, FOLDER):
     """après l'export : tileinfo ZION (6 tuiles) + Road / Grass de la version USLAND, tilemap renuméroté, éclairage + ciel ZION,
     ombrage recalculé avec le soleil ZION et sa formule."""
@@ -822,6 +879,8 @@ def zion_extras(OUT, FOLDER):
             x_, z_ = xx + rng.uniform(-2.5, 2.5), zz + rng.uniform(-2.5, 2.5)
             if inside(np.array([[x_, z_]]), fl)[0] and x_ < XPAD - 4.0 and sand_t.query([x_, z_])[0] > 34.0                     and ride_t.query([x_, z_])[0] > 12.0:
                 put_(x_, z_)
+    if SGM_TERRE and SGM_TRACES:   # v41d (« la terre : la couleur de Saint-Georges mais pas la texture ; il n'y a pas les traces, de tracteur »)
+        ov = ov + sgm_traces(OUT, FOLDER, path, sand_t)
     ov = ov + (sand if RF_SAND_DECALS else [])           # v23 (« pas un sable blanc avec des taches ») : plus de décals sable RF
     # v25d (« le sable : toujours pas de texture ; va revoir les pistes USLAND avec du sable ») : sur SX1 / SX3, le grain du sable vient des
     # décals decal/sand.png (+ sand_tnorm.png, relief) de 26 ft posés tous les ~4,5 ft avec une rotation au hasard (1141 sur SX1), pas de la
@@ -1597,6 +1656,8 @@ def export_zion(*a, **k):
     import minimap_paris as MM                                          # v41c : minimap (arène détourée, START, logo USLAND)
     BP.REPORT['minimap'] = MM.make_map(BP.OUT, BP.FOLDER, np.asarray(BP.mx_poly(BP.arena_dims().floor_outline(1.0)), float), BP.START,
                                        os.path.join(BP.ROOT, "commun", "assets", "usland_logo.png"))
+    import flammes_paris as FLP                                         # v41e : flammes START (chute de grille) et FINISH (1er tour, arrivée)
+    BP.REPORT['flammes'] = FLP.flammes(BP.OUT, BP.FOLDER, BP.ROOT)
 
 
 CHANT_VOL = 0.7    # volume du chant (le public de ZION est à 0,4)

@@ -440,8 +440,8 @@ SGM_GRATES = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.pat
 GRATE_CROP = (22, 22, 400, 624)   # losanges d'une grate de Saint-Georges (start_grids.png, 1024 px) sans le cadre alu
 
 
-GRATE_PAS = (0.40, 0.25)    # v41 : pas des losanges (ft) en travers / en long
-GRATE_FIL = 0.055            # v41 : demi-largeur du fil (ft) -> ~60 % de métal (la transparence moyennée de loin reste > 50 % : visible)
+GRATE_PAS = (4.0 / 7, 4.0 / 11)   # v41e (« les grilles sont complètement floues ») : losanges x 1,45 (0,57 x 0,36 ft ; v41 : 0,40 x 0,25),
+GRATE_FIL = 0.08                  # moins fins, mieux lisibles en vue rasante ; 7 x 11 losanges par carré de 4 ft (périodique) ; ~60 % de métal
 GRATE_Y = 0.10               # v41 : à plat, 0,1 ft au-dessus du sol
 
 
@@ -498,12 +498,12 @@ def grate_panel_texture(d_, S, W, L, name='grate_panneau.png', n=1024):
     vertical de l'image) au centre d'un carré transparent de S ft ; losanges noirs comme grate_texture (grand axe en travers du roulage,
     comme les grates de Saint-Georges), sans cadre."""
     p = os.path.join(d_, name)
-    t = Image.open(os.path.join(d_, grate_texture(d_, name='grate_decal.png', W=4.0, L=4.0, ppf=128))).convert('RGBA')
-    wp, lp = int(round(W / S * n)), int(round(L / S * n)); tw = int(round(4.0 / S * n))
-    t = t.resize((tw, tw), Image.LANCZOS); pl = Image.new('RGBA', (wp, lp), (0, 0, 0, 0))
-    for yy in range(0, lp, tw):
-        for xx in range(0, wp, tw):
-            pl.paste(t, (xx, yy))
+    # v41e (« floues ») : losanges dessinés directement à la résolution finale (v41c : carré de 4 ft redimensionné = flou)
+    tmp_ = '_grate_panneau_tmp.png'
+    if os.path.exists(os.path.join(d_, tmp_)):
+        os.remove(os.path.join(d_, tmp_))
+    pl = Image.open(os.path.join(d_, grate_texture(d_, name=tmp_, W=W, L=L, ppf=n / S))).convert('RGBA'); os.remove(os.path.join(d_, tmp_))
+    wp, lp = pl.size
     # v41c (« fais un cadre noir autour des grates de départ uniquement, comme les bordures des grates de Saint-Georges ») : cadre plein
     # de GRATE_CADRE ft tout autour de la plaque (Saint-Georges : cornière alu de ~0,1 ft ; ici noire, un peu plus large pour se voir)
     c_ = max(2, int(round(GRATE_CADRE / S * n))); d = ImageDraw.Draw(pl)
@@ -519,6 +519,8 @@ def grate_decals(OUT, folder, quads):
     planches), ajoutées à la fin du fichier decals (par-dessus la terre). quads = [(centre (x, z), sens de roulage (dx, dz), côté ft, texture)] :
     l'axe vertical de l'image suit le sens de roulage (statues / décals : +z local -> (sin a, cos a)), losanges en travers."""
     d_ = os.path.join(OUT, 'rfborder'); os.makedirs(d_, exist_ok=True)
+    if os.path.exists(os.path.join(d_, 'grate_decal.png')):   # v41e : toujours refaite (losanges changés)
+        os.remove(os.path.join(d_, 'grate_decal.png'))
     grate_texture(d_, name='grate_decal.png', W=4.0, L=4.0, ppf=128)
     out = []
     for (x, z), (dx, dz), s, tex in quads:
