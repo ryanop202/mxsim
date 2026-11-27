@@ -361,3 +361,18 @@ allée parallèle au mur (x 772-800 ft).
 - Après l'arrivée : remis comme la v25f (appui, rayon 32 ft, bosses).
 - Sable : comme la v27 (v25f + couche de 0,3 ft, bande de 40 ft).
 - Contrôles 7 / 7, `validate_mx` 0 problème. **Non testé en jeu.**
+
+## v37 (2026-11-27) : stade resserré, paddock recalé, couloir des rampes, fabrication automatique
+
+- Ryan : « les tribunes sont trop loin sur le côté, 3-4 m max entre la piste et le stade ; tout le stade doit bouger pour garder la
+  forme ». Le stade garde x1,55 le long de la piste et passe à x1,3124 en travers (`stade_paris/src/build.py` PLAN_KY, PLAN_DY ;
+  `layout_paris.py` PLAN_KZ, ARENA_DY ; `stade_paris/src/arena/plan_scale.py`) : coque, toit et tribunes transformés ensemble,
+  décalé de 2,5 ft pour être centré sur la piste. Mur de front des tribunes Nord / Sud à 3,53 m du bord de la piste. Sol 189 x 116 m.
+- Paddock (« si t'as pas de place enlève USLAND et RBT, garde le passage Honda / Suzuki, les 2 rangées avec l'allée au centre, serré
+  comme avant ») : `paddock26.v37_repack` recale les positions v35 dans le sol resserré, chaque stand d'un bloc (taille réelle des
+  modèles), écarts réduits à 2 ft, programme linéaire ; USLAND et RBT enlevés ; van blanc et tente arche au nord du couloir.
+- Couloir des rampes freestyle (dessin de Ryan) de (747, 685) à la rampe (567, 675), 16 ft, libre ; 2 canettes Monster au plus près
+  des points de Ryan, sans toucher un camion.
+- Fabrication automatique : `commun/tools/maj_paris.ps1` + hook `.githooks/post-merge` (voir README racine) ; `build_zion.py --out`.
+- Contrôles 7 / 7 ; non testé en jeu.
+

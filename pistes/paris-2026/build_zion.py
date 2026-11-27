@@ -1115,7 +1115,8 @@ def roof_ft(x, z):
     """hauteur du toit (ft) au-dessus d'un point du jeu (champ lissé de stade_paris, plan agrandi x PLAN_K)."""
     sys.path.insert(0, os.path.join(BP.ROOT, "pistes/paris-2026/stade_paris", "src"))
     from arena import roof
-    f = roof.field(); X = (x - LP.OX) / LP.FT / LP.PLAN_K; Y = (LP.OZ - z) / LP.FT / LP.PLAN_K
+    f = roof.field(); f = getattr(f, "f", f)                                  # champ à la taille réelle (sans _ScaledField)
+    X = (x - LP.OX) / LP.FT / LP.PLAN_K; Y = ((LP.OZ - z) / LP.FT - LP.ARENA_DY) / LP.PLAN_KZ   # v37 : stade resserré en z
     i = int(np.clip(round((X - f.xs[0]) / (f.xs[1] - f.xs[0])), 0, len(f.xs) - 1)); j = int(np.clip(round((Y - f.ys[0]) / (f.ys[1] - f.ys[0])), 0, len(f.ys) - 1))
     return float(f.h[i, j]) * LP.FT
 
@@ -1199,5 +1200,10 @@ def _open_retry():
 
 
 if __name__ == "__main__":
+    # v37 (« quand il pull git, que ça lance directement la fabrication et que ça mette dans son jeu ») : --out DOSSIER construit la piste
+    # ailleurs que dans le dépôt (commun/tools/maj_paris.ps1 : dossier temporaire puis copie dans MX Simulator) ; aperçus à côté
+    if "--out" in sys.argv:
+        BP.OUT = os.path.abspath(sys.argv[sys.argv.index("--out") + 1]); BP.AP = BP.OUT + "_apercu"
+        os.makedirs(BP.AP, exist_ok=True)
     _open_retry()
     BP.main()

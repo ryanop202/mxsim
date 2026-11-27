@@ -1267,7 +1267,7 @@ PAD_DX = X_WALL - 879.34
 PAD_ZK = [357.3, 706.0, 715.0, 818.0, 824.0, 826.0]
 MUR_DOWN = 20.0   # v28z (« descends de 15 ft encore ») : 5 -> 20 ft
 def pad_z(z):
-    o = PAD_ZK; h = 45.0 * _LP.PLAN_K * _LP.FT; lo, hi = _LP.OZ - h + 1.0, _LP.OZ + h - 1.0
+    o = PAD_ZK; h = 45.0 * _LP.PLAN_K * _LP.FT; lo, hi = _LP.OZ - h + 1.0, _LP.OZ + h - 1.0   # sol v35 (v37 : recalé ensuite, voir v37_repack)
     f = min(1.0, ((hi - lo) - 5.0) / ((o[-1] - o[0]) - 15.0))
     n = [lo]; n.append(n[-1] + (o[1] - o[0]) * f); n.append(n[-1] + 4.0); n.append(n[-1] + (o[3] - o[2]) * f); n.append(n[-1] + 1.0); n.append(n[-1] + (o[5] - o[4]) * f)
     return float(np.interp(z, o, n))
@@ -1430,6 +1430,141 @@ def plan():
     return P
 
 
+# ================================================================= v37 : stade resserré en travers, paddock recalé
+# Ryan : « tout le stade doit bouger pour garder la forme, du coup il faut resize le paddock » ; « si t'as pas de place enlève USLAND et
+# RBT et resserre en gardant le passage entre Honda et Suzuki, la ligne de droite et de gauche avec le passage au centre, tout doit être
+# assez serré comme c'était déjà » ; « la ligne où ça doit passer avec la rampe au bout, les 2 points verts = les canettes, mais pas sur un
+# camion, arrange-les à côté ».
+# Les positions v35 (plan()) sont recalées en z dans le sol resserré : chaque stand bouge d'un bloc (taille réelle des modèles), l'ordre et
+# les x (rangées et allée du milieu) sont gardés, les écarts entre stands réduits à 2 ft au plus (sauf le passage Honda / Suzuki, gardé),
+# au plus près de la place proportionnelle (programme linéaire) ; le van blanc et la tente arche passent au nord du couloir (pas la place
+# au sud) ; couloir des rampes freestyle libre ; canettes au plus près des points de Ryan, sans toucher un objet ni le couloir.
+V37_DROP = ("USLAND", "RBT")
+V37_GAP = 2.0
+V37_KEEP_GAP = (("Honda", "Suzuki"),)
+V37_KEY = {"van blanc": 640.0, "tente arche noire": 640.0}
+V37_COULOIR = ((747.0, 685.0), (567.0, 675.0), 8.0)          # début, bout (rampe freestyle), demi-largeur (ft)
+V37_COULOIR_BOX = (676.0, 694.0, 695.0, 765.0)                # z0, z1, x0, x1 réservés dans la rangée côté piste
+V37_CANETTES = ((741.7, 648.3), (741.7, 718.3))               # points verts de Ryan
+_KW37 = ('Honda', 'Suzuki', 'Triumph', 'YCF', 'Stark', 'KTM', 'RBT', 'Milwaukee', 'Monster', 'Bud', 'GSM', 'Sedna', 'VHR', 'USLAND', 'Airstream',
+         'box motos (côté photo 2)', 'box motos', 'barrière numérotée')
+
+
+def _grp37(k, c):
+    if k == "canette_geante":
+        return "canette"
+    if k == "ecran_geant":
+        return "ecran"
+    if k in ("caisses", "groupe_electrogene", "table_haute") and c == "":
+        return "Milwaukee"                                                 # posés avec le camion Milwaukee
+    return next((w for w in _KW37 if w in c), c or k)
+
+
+def jm_ext(path):
+    """emprise (xmin, xmax, zmin, zmax) d'un modèle .jm (repère local)."""
+    L = open(path).read().split("\n"); i = next(j for j, l in enumerate(L) if j > 0 and len(l.split()) == 2); nv = int(L[i].split()[0])
+    V = np.array([[float(v) for v in L[i + 1 + j].split()[:3]] for j in range(nv)])
+    return V[:, 0].min(), V[:, 0].max(), V[:, 2].min(), V[:, 2].max()
+
+
+def _poly37(e, x, z, f):
+    yaw = YAW(*f); c, s = np.cos(yaw), np.sin(yaw)
+    Q = np.array([(e[0], e[2]), (e[1], e[2]), (e[1], e[3]), (e[0], e[3])])
+    return np.c_[x + Q[:, 0] * c + Q[:, 1] * s, z - Q[:, 0] * s + Q[:, 1] * c]
+
+
+def _inter37(a, b, m=0.3):
+    for P_ in (a, b):
+        for i in range(len(P_)):
+            e = P_[(i + 1) % len(P_)] - P_[i]; nn = np.array([-e[1], e[0]]); ln = np.linalg.norm(nn)
+            if ln < 1e-9:
+                continue
+            nn = nn / ln; u, v = a @ nn, b @ nn
+            if u.max() < v.min() + m or v.max() < u.min() + m:
+                return False
+    return True
+
+
+def v37_repack(P, ext):
+    """P = plan() (positions v35), ext(k) -> emprise locale du modèle k (ou None) ; renvoie P recalé + rapport."""
+    from scipy.optimize import linprog
+    zc = _LP.OZ - _LP.ARENA_DY * _LP.FT; h = 45.0 * _LP.PLAN_KZ * _LP.FT; LO, HI = zc - h + 1.0, zc + h - 1.0
+    it = []
+    for k, x, z, f, c in P:
+        g = _grp37(k, c)
+        if g in V37_DROP:
+            continue
+        e = ext(k) or (-1.5, 1.5, -1.5, 1.5)
+        it.append([k, x, z, f, c, g, _poly37(e, x, z, f), e])
+    G = {}
+    for t in it:
+        G.setdefault(t[5], []).append(t)
+    gs = [g for g in G if g not in ("canette", "ecran")]
+    Z0 = {g: min(t[6][:, 1].min() for t in G[g]) for g in gs}; Z1 = {g: max(t[6][:, 1].max() for t in G[g]) for g in gs}
+    L = {g: Z1[g] - Z0[g] for g in gs}; key = {g: V37_KEY.get(g, (Z0[g] + Z1[g]) / 2) for g in gs}
+
+    def xconf(a, b):
+        return any(t[6][:, 0].min() < u[6][:, 0].max() - 0.5 and u[6][:, 0].min() < t[6][:, 0].max() - 0.5 for t in G[a] for u in G[b])
+    za, zb = min(Z0.values()), max(Z1.values()); fz = (HI - LO) / (zb - za)
+    tgt = {g: LO + (key[g] - L[g] / 2 - za) * fz for g in gs}
+    n = len(gs); idx = {g: i for i, g in enumerate(gs)}
+    A, b, Ae, be = [], [], [], []
+
+    def row(pairs):
+        r = np.zeros(2 * n)
+        for i, v in pairs:
+            r[i] += v
+        return r
+    for g in gs:
+        i = idx[g]; A.append(row([(i, 1), (n + i, -1)])); b.append(tgt[g]); A.append(row([(i, -1), (n + i, -1)])); b.append(-tgt[g])
+    for a_ in range(n):
+        for b_ in range(a_ + 1, n):
+            a, bb = gs[a_], gs[b_]
+            if not xconf(a, bb):
+                continue
+            i, j = (a, bb) if key[a] <= key[bb] else (bb, a)
+            og = Z0[j] - Z1[i]
+            if og < -0.5 and a not in V37_KEY and bb not in V37_KEY:           # imbriqués à l'origine : bougent ensemble
+                Ae.append(row([(idx[i], 1), (idx[j], -1)])); be.append(Z0[i] - Z0[j]); continue
+            gap = og if ((i, j) in V37_KEEP_GAP or (j, i) in V37_KEEP_GAP) else min(max(og, 0.0), V37_GAP)
+            A.append(row([(idx[i], 1), (idx[j], -1)])); b.append(-(L[i] + gap))
+    c0, c1, cx0, cx1 = V37_COULOIR_BOX
+    for g in gs:
+        if any(t[6][:, 0].min() < cx1 and t[6][:, 0].max() > cx0 for t in G[g]):
+            if key[g] < (c0 + c1) / 2:
+                A.append(row([(idx[g], 1)])); b.append(c0 - V37_GAP - L[g])
+            else:
+                A.append(row([(idx[g], -1)])); b.append(-(c1 + V37_GAP))
+    res = linprog(np.r_[np.zeros(n), np.ones(n)], A_ub=np.array(A), b_ub=np.array(b), A_eq=np.array(Ae) if Ae else None,
+                  b_eq=np.array(be) if be else None, bounds=[(LO, HI - L[g]) for g in gs] + [(0, None)] * n, method="highs")
+    assert res.status == 0, "v37 : le paddock ne tient pas dans le sol resserré (%s)" % res.message
+    dz = {g: float(res.x[idx[g]] - Z0[g]) for g in gs}
+    for t in it:
+        d_ = dz.get(t[5], 0.0); t[2] += d_; t[6] = t[6] + np.array([0.0, d_])
+    # canettes : au plus près des points de Ryan, sans toucher un objet ni le couloir
+    (A0, B0, hw) = V37_COULOIR; A0, B0 = np.array(A0), np.array(B0); d0 = (B0 - A0) / np.linalg.norm(B0 - A0); n0 = np.array([-d0[1], d0[0]])
+    cor = np.array([A0 + n0 * hw, B0 + n0 * hw, B0 - n0 * hw, A0 - n0 * hw])
+    obst = [t[6] for t in it if t[5] not in ("canette", "ecran") and "tapis" not in t[0]] + [cor]
+    cans = [t for t in it if t[5] == "canette"]; pos = []
+    for t, (px, pz) in zip(sorted(cans, key=lambda t: t[2]), V37_CANETTES):
+        best = None
+        for r_ in np.arange(0.0, 40.0, 0.5):
+            for a_ in np.linspace(0, 2 * np.pi, max(1, int(r_ * 2)), endpoint=False):
+                x_, z_ = px + r_ * np.cos(a_), pz + r_ * np.sin(a_)
+                q = _poly37(t[7], x_, z_, t[3])
+                if q[:, 1].min() < LO or q[:, 1].max() > HI:
+                    continue
+                if not any(_inter37(q, o, -0.8) for o in obst + [p_[1] for p_ in pos]):
+                    best = (x_, z_, q); break
+            if best:
+                break
+        assert best, "v37 : pas de place pour une canette"
+        t[1], t[2], t[6] = best[0], best[1], best[2]; pos.append((t, best[2]))
+    rep = dict(enleves=list(V37_DROP), sol=[round(LO, 1), round(HI, 1)], canettes=[(round(t[1], 1), round(t[2], 1)) for t, _ in pos],
+               decalages={g: round(v, 1) for g, v in dz.items()})
+    return [(t[0], t[1], t[2], t[3], t[4]) for t in it], rep
+
+
 def build_models(D):
     import shutil
     os.makedirs(D, exist_ok=True); out = {}
@@ -1492,7 +1627,8 @@ def apply(OUT, FOLDER):
     if os.path.isdir(D):
         shutil.rmtree(D)
     models = build_models(D); lines = []; missing = []
-    for k, x, z, f, c in plan():
+    P37, rep37 = v37_repack(plan(), lambda k: jm_ext(os.path.join(D, models[k][0])) if k in models and models[k][0].endswith(".jm") else None)
+    for k, x, z, f, c in P37:
         if k not in models:
             missing.append(k); continue
         jm, png, _ = models[k]
@@ -1518,7 +1654,7 @@ def apply(OUT, FOLDER):
     for fn in files:                                                       # contrôles de format
         if fn.endswith(".png"):
             im = Image.open(os.path.join(D, fn)); assert im.size[0] == im.size[1] and im.size[0] & (im.size[0] - 1) == 0, fn
-    return dict(lignes=len(lines), modeles=len(models), fichiers=len(files),
+    return dict(v37=rep37, lignes=len(lines), modeles=len(models), fichiers=len(files),
                 triangles=sum(v[2] or 0 for v in models.values()))
 
 

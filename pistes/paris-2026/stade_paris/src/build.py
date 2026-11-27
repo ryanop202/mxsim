@@ -42,6 +42,12 @@ def ground(scene):
 NOSEATS = False
 # Agrandissement en plan (Paris 2026 : sol 90 x 122 m -> 121,5 x 164,7 m pour le tracé ; 1 = arène réelle)
 PLAN_K = 1.55    # v28 Paris (« le stade plus autour de la piste » ; x1,55 pour le paddock) ; v10 : 1,624 ; : stade x1,12 de plus (plus de sièges) ; v5 (Ryan : agrandir pour le paddock) : 1,45 ; était 1,35
+# v37 Paris (« les tribunes sont trop loin sur le côté : 3-4 m max entre la piste et le stade ; tout le stade doit bouger pour garder la
+# forme ») : en travers de la piste (Y), x PLAN_KY au lieu de x PLAN_K, puis décalé de PLAN_DY (m) pour être centré sur la piste :
+# mur de front des tribunes Nord / Sud à ~3,5 m du bord de la piste (z 400 / 792 dans le jeu) ; le long de la piste, x1,55 inchangé.
+# Mêmes valeurs dans pistes/paris-2026/layout_paris.py (PLAN_KZ, ARENA_DZ)
+PLAN_KY = 1.3124
+PLAN_DY = -0.762
 
 
 def build(only=None):
@@ -49,7 +55,7 @@ def build(only=None):
     want = lambda k: only is None or k in only
     log("textures")
     from arena import branding
-    branding.PLAN_K = PLAN_K          # visuels dessinés au ratio final des écrans agrandis
+    branding.PLAN_K = PLAN_K          # visuels (écrans des entrées : sur les façades Nord / Sud, le long de X) dessinés au ratio final des écrans agrandis
     textures.build_all(TEX)
     textures.build_terrain_tiles(TEX)
     from PIL import Image
@@ -82,13 +88,15 @@ def build(only=None):
     if want("interior"):
         log("mur de scène, charpente, équipements")
         info["interior"] = interior.build(scene, rm)
-    if PLAN_K != 1:
+    KXYD = (PLAN_K, PLAN_KY, PLAN_DY)
+    if KXYD != (1, 1, 0):
         # Paris 2026 : arène agrandie en plan pour faire tenir le tracé (hauteurs inchangées)
-        log("agrandissement en plan x%.3f (coque), tribunes reconstruites à la nouvelle taille" % PLAN_K)
-        plan_scale.scale_scene(scene, PLAN_K)
-        plan_scale.scale_dims(PLAN_K)
-    info["plan_scale"] = PLAN_K
-    info["floor_m"] = [round(dims.X_STAGE - dims.FLOOR_X_SOUTH, 1), round(2 * dims.FLOOR_HALF_W, 1)]
+        log("agrandissement en plan X x%.3f, Y x%.4f puis Y %+.3f m (coque), tribunes reconstruites à la nouvelle taille" % KXYD)
+        plan_scale.scale_scene(scene, KXYD)
+        plan_scale.scale_dims(KXYD)
+    info["plan_scale"] = list(KXYD)
+    fl_ = dims.floor_outline(1.0)
+    info["floor_m"] = [round(float(np.ptp(fl_[:, 0])), 1), round(float(np.ptp(fl_[:, 1])), 1)]
     if want("bowl"):
         log("tribunes et sièges")
         info["bowl"] = bowl.build(scene, with_seats=not NOSEATS)

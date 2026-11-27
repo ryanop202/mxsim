@@ -1,0 +1,10 @@
+#!/bin/sh
+# Après « git pull » : si Paris (ou le kit commun) a changé, fabrique la piste USLANDParis et la met dans MX Simulator.
+# Activer une fois sur chaque PC :  git config core.hooksPath .githooks
+# Passer pour un pull :             MXSIM_SANS_MAJ=1 git pull
+[ -n "$MXSIM_SANS_MAJ" ] && exit 0
+changed=$(git diff-tree -r --name-only --no-commit-id ORIG_HEAD HEAD 2>/dev/null)
+echo "$changed" | grep -qE '^(pistes/paris-2026/|commun/|tracks/USLANDParis/|tracks/USLAND2026SX1/|requirements.txt)' || exit 0
+echo "Paris a changé : fabrication de la piste et copie dans MX Simulator (quelques minutes)..."
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File commun/tools/maj_paris.ps1
+exit 0

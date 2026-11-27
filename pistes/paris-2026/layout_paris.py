@@ -25,6 +25,12 @@ S = D["echelle_ft_par_px"]
 FT = 3.28084
 PLAN_K = 1.55                     # v28 (« le stade plus autour de la piste » ; x1,52 demandé, x1,55 pour que le paddock tienne sans serrer les stands) ; avant 1,624 ; agrandissement en plan de l'arène (pistes/paris-2026/stade_paris/src/build.py) ; v5 : 1,35 -> 1,45 (paddock) ; v10 : x1,12 -> 1,624
 FLOOR_X_SOUTH = -60.0 * PLAN_K    # m (dims.FLOOR_X_SOUTH x K)
+# v37 (« les tribunes sont trop loin sur le côté, 3-4 m max entre la piste et le stade ; tout le stade doit bouger pour garder la forme ») :
+# en travers (z), stade x PLAN_KZ au lieu de x PLAN_K puis décalé de ARENA_DY m (repère arène ; +2,5 ft en z dans le jeu) : mur de front
+# des tribunes Nord / Sud à z 400 / 792, ~3,5 m du bord de la piste ; mêmes valeurs dans stade_paris/src/build.py (PLAN_KY, PLAN_DY)
+PLAN_KZ = 1.3124
+ARENA_DY = -0.762
+PLAN_KXYD = (PLAN_K, PLAN_KZ, ARENA_DY)
 OX, OZ = 549.0, 593.5             # origine du repère de l'arène dans le terrain (ft) : bâtiment centré sur 1187 ft
 # v28 (stade x1,55) : piste centrée en z dans le sol (68 ft entre la ligne de course et la tribune en haut et en bas) ; 35 ft
 # côté sable (était 48,5) pour garder la place du paddock derrière les virages Ouest

@@ -73,7 +73,8 @@ def tile(z, x, y):
 def photo(gx, gz, OX, OZ, K, FT):
     """couleur IGN aux points du jeu (gx, gz en ft) : jeu -> repère local réel (m) -> L93 -> lon/lat -> pixel WebMercator."""
     from arena.survey import local_to_l93
-    Xr, Yr = (gx - OX) / (K * FT), (OZ - gz) / (K * FT)
+    KX, KY, DY = (K, K, 0.0) if np.isscalar(K) else K               # v37 : stade resserré en travers (X x KX, Y x KY + DY)
+    Xr, Yr = (gx - OX) / (KX * FT), ((OZ - gz) / FT - DY) / KY
     E, N = local_to_l93(Xr, Yr); lon, lat = l93_to_lonlat(E, N); px, py = merc_px(lon, lat)
     tx0, ty0 = int(np.floor(px.min() / 256)), int(np.floor(py.min() / 256)); tx1, ty1 = int(px.max() // 256), int(py.max() // 256)
     M = np.zeros(((ty1 - ty0 + 1) * 256, (tx1 - tx0 + 1) * 256, 3), np.uint8)
@@ -125,5 +126,5 @@ def add(OUT, FOLDER, H, S, poly_mx, OX, OZ, K, FT):
     for f in ["statues"] + ["variants/" + v for v in os.listdir(os.path.join(OUT, "variants")) if v.startswith("statues")]:
         p = os.path.join(OUT, f); s = open(p).read().rstrip("\n") + "\n"
         open(p, "w", newline="\n").write(s + "\n".join(lines) + "\n")
-    print("quartier IGN : %d dalles de %.0f ft autour du bâtiment (x%.3f comme l'arène), origine %s" % (nt, TILE, K, org))
+    print("quartier IGN : %d dalles de %.0f ft autour du bâtiment (x%s comme l'arène), origine %s" % (nt, TILE, K, org))
     return nt

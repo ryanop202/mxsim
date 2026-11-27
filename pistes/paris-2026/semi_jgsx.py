@@ -16,7 +16,11 @@ import numpy as np
 from PIL import Image, ImageDraw
 
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
-SRC = r"C:/Program Files (x86)/MX Simulator/JGSX2026Scuttle/statue"        # piste installée (pas dans le dépôt : pas à nous)
+# piste installée (pas dans le dépôt : pas à nous) ; v37 : cherchée aussi dans le dossier perso du jeu et dans MXSIM_DIR
+_MX = [os.environ.get("MXSIM_DIR", ""), r"C:/Program Files (x86)/MX Simulator", r"C:/Program Files/MX Simulator",
+       os.path.join(os.environ.get("LOCALAPPDATA", ""), "MX Simulator")]
+SRC = next((os.path.join(d, "JGSX2026Scuttle", "statue") for d in _MX if d and os.path.isdir(os.path.join(d, "JGSX2026Scuttle", "statue"))),
+           r"C:/Program Files (x86)/MX Simulator/JGSX2026Scuttle/statue")
 CACHE = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(HERE))), "jgsx_semi")   # copie locale hors dépôt
 DX, DZ = 5.0, -6.6 - 12.0                                                  # centre de la remorque / avant de la remorque
 PANELS = ((450, 921, 2030, 1233), (450, 1337, 2030, 1648))                 # flancs (px de la peau 2048)

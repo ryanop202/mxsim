@@ -57,6 +57,22 @@ anciens/           ce qui n'est plus utilisé (v1 MX abandonnée)
 **Juste jouer** : copier le dossier voulu de `tracks/` dans le dossier des pistes de MX Simulator **sans le renommer**,
 car certaines pistes partagent des textures via `@USLAND2026SX1/...`. Pour Paris, copier aussi `USLAND2026SX1`.
 
+**Paris à jour tout seul après chaque `git pull`** (v37) : une fois sur le PC, depuis la racine du dépôt :
+
+```powershell
+git config core.hooksPath .githooks
+```
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File commun/tools/maj_paris.ps1
+```
+
+Ensuite, chaque `git pull` qui touche Paris refait le stade et la piste `USLANDParis` (dans un dossier temporaire, le dépôt
+reste propre) et les copie avec `USLAND2026SX1` dans le dossier des pistes de MX Simulator (celui qui contient déjà `USLANDParis`
+ou `JGSX2026Scuttle` ; sinon `-MxDir "C:\...\MX Simulator"` ou la variable `MXSIM_DIR`). Il faut Python 3.12 et la piste
+JGSX2026Scuttle installée (semi-remorques du paddock). Journal : `%TEMP%\maj_paris.log`. Pour un pull sans fabrication :
+`MXSIM_SANS_MAJ=1 git pull` (Git Bash).
+
 ## Démarrage (nouveau PC)
 
 ```bash

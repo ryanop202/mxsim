@@ -42,14 +42,9 @@ REPORT = {}
 
 def arena_dims():
     """cotes de l'arène agrandie (mêmes valeurs que le build de stade_paris)."""
-    from arena import dims
-    if getattr(dims, "PLAN_SCALE", 1) != LP.PLAN_K:
-        for name in ("HALF_W", "X_SOUTH", "R_CORNER", "X_CORNER", "Y_CORNER", "X_STAGE", "X_RIBBON_END",
-                     "X_OFFICE_N", "NORTH_X0", "FLOOR_HALF_W", "FLOOR_X_SOUTH", "FLOOR_R"):
-            setattr(dims, name, getattr(dims, name) * LP.PLAN_K)
-        dims.OUTLINE = [(x * LP.PLAN_K, y * LP.PLAN_K) for x, y in dims.OUTLINE]
-        dims.OUTLINE_R = [r * LP.PLAN_K for r in dims.OUTLINE_R]
-        dims.PLAN_SCALE = LP.PLAN_K
+    from arena import dims, plan_scale
+    if getattr(dims, "PLAN_SCALE", 1) != LP.PLAN_KXYD:          # v37 : X x PLAN_K, Y x PLAN_KZ + ARENA_DY (comme stade_paris)
+        plan_scale.scale_dims(LP.PLAN_KXYD)
     return dims
 
 
@@ -608,7 +603,7 @@ def export(H, tiles, gates_txt, floor_mx, inside_mx):
     # v10 : le vrai quartier autour du bâtiment (photo IGN, agrandie comme l'arène) - ajouté en fin de fichier (indices ci-dessus inchangés)
     import ign_ville as IV
     poly_ = mx_poly(np.asarray(arena_dims().outline(offset=1.0)["p"], float))
-    REPORT['quartier_ign_dalles'] = IV.add(OUT, FOLDER, H, S, poly_, LP.OX, LP.OZ, LP.PLAN_K, LP.FT)
+    REPORT['quartier_ign_dalles'] = IV.add(OUT, FOLDER, H, S, poly_, LP.OX, LP.OZ, LP.PLAN_KXYD, LP.FT)
     shutil.copytree(os.path.join(ARENA, "tex"), os.path.join(OUT, "tex"))
     gl = gates_txt.split("\n"); i_ = gl.index("startinggate:"); j_ = gl.index("checkpoints:")
     for k_ in range(i_ + 1, j_):                         # le cadre rouge de Saint-Georges sur chaque grille
