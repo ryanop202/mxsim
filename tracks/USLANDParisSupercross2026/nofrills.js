@@ -7,8 +7,8 @@ USP_CHARGE = 1;
 USLAND Paris by Ryan v39b - classement en direct sur tout l'ecran geant (DA de la retransmission Supercross Paris).
 Fait comme la tour de classement de ZION 2025 Supercross Paris (pages 256 x 512, dessin a chaque image). Texte ASCII expres.
 */
-var TD_A = mx.read_texture("@USLANDParisbyRyan/statue/paris/direct/direct_a.seq");
-var TD_B = mx.read_texture("@USLANDParisbyRyan/statue/paris/direct/direct_b.seq");
+var TD_A = mx.read_texture("@USLANDParisSupercross2026/statue/paris/direct/direct_a.seq");
+var TD_B = mx.read_texture("@USLANDParisSupercross2026/statue/paris/direct/direct_b.seq");
 var TD_W = 256, TD_H = 512;
 var TD_N = { h: 26, c: {"A": [1, 0, 16], "B": [18, 0, 15], "C": [34, 0, 15], "D": [50, 0, 15], "E": [66, 0, 14], "F": [81, 0, 13], "G": [95, 0, 16], "H": [112, 0, 16], "I": [129, 0, 9], "J": [139, 0, 13], "K": [153, 0, 17], "L": [171, 0, 13], "M": [185, 0, 18], "N": [204, 0, 16], "O": [221, 0, 16], "P": [238, 0, 14], "Q": [1, 26, 16], "R": [18, 26, 16], "S": [35, 26, 14], "T": [50, 26, 14], "U": [65, 26, 16], "V": [82, 26, 16], "W": [99, 26, 21], "X": [121, 26, 16], "Y": [138, 26, 16], "Z": [155, 26, 14], "0": [170, 26, 13], "1": [184, 26, 13], "2": [198, 26, 13], "3": [212, 26, 13], "4": [226, 26, 13], "5": [240, 26, 13], "6": [1, 52, 13], "7": [15, 52, 13], "8": [29, 52, 13], "9": [43, 52, 13], "-": [57, 52, 8], "'": [66, 52, 7], ".": [74, 52, 8]} };
 var TD_P = { h: 26, c: {"0": [1, 78, 13], "1": [15, 78, 13], "2": [29, 78, 13], "3": [43, 78, 13], "4": [57, 78, 13], "5": [71, 78, 13], "6": [85, 78, 13], "7": [99, 78, 13], "8": [113, 78, 13], "9": [127, 78, 13], ".": [141, 78, 8]} };
@@ -157,14 +157,14 @@ USLAND Paris v41e - flammes : panneau START (billboards 0, 1) a chaque chute de 
 premier finit le 1er tour et quand il finit la course. Texte ASCII expres.
 */
 var FL_POS = [[484.58, 19.71, 326.64], [484.58, 19.71, 272.54], [336.75, 33.71, 247.82], [336.75, 33.71, 213.73]];
-var FL_TEX = [mx.read_texture("@USLANDParisbyRyan/js/pyro/flamme_start_0.seq"), mx.read_texture("@USLANDParisbyRyan/js/pyro/flamme_start_1.seq"),
-              mx.read_texture("@USLANDParisbyRyan/js/pyro/flamme_finish_0.seq"), mx.read_texture("@USLANDParisbyRyan/js/pyro/flamme_finish_1.seq")];
+var FL_TEX = [mx.read_texture("@USLANDParisSupercross2026/js/pyro/flamme_start_0.seq"), mx.read_texture("@USLANDParisSupercross2026/js/pyro/flamme_start_1.seq"),
+              mx.read_texture("@USLANDParisSupercross2026/js/pyro/flamme_finish_0.seq"), mx.read_texture("@USLANDParisSupercross2026/js/pyro/flamme_finish_1.seq")];
 var FL_SND = [];
 var FL_N = 41, FL_FPS = 32.0;
 var FL_FIN_TOURS = mx.get_finish_laps(), FL_FIN_TEMPS = mx.get_finish_time();
 var fl_k;
 for (fl_k = 0; fl_k < 4; fl_k++) {
-    FL_SND[fl_k] = mx.add_sound("@USLANDParisbyRyan/js/sounds/flamme.raw");
+    FL_SND[fl_k] = mx.add_sound("@USLANDParisSupercross2026/js/sounds/flamme.raw");
     mx.set_sound_freq(FL_SND[fl_k], 44100);
     mx.set_sound_vol(FL_SND[fl_k], 1.0);
     mx.set_sound_pos(FL_SND[fl_k], FL_POS[fl_k][0], FL_POS[fl_k][1], FL_POS[fl_k][2]);
