@@ -1,13 +1,14 @@
 """v28-v30 de Bazo (branche usland-paris-by-bazo, reprise en v35 sans le terrain) - v28 (review en jeu de la v27d, 2026-11-26) : objets en plus, posés par build_zion.deco_v21 (fin du fichier statues).
 
-- bottes de paille aux endroits montrés sur les captures (virages : entrée, intérieur, sortie ; abords des sauts) ;
+- tuff blocks (tunnels en U, appelés « bottes » / « ballots » dans l'historique ; v36 : « nos bottes de paille sont des tuff blocks,
+  remplace leur nom ») aux endroits montrés sur les captures (virages : entrée, intérieur, sortie ; abords des sauts) ;
 - boudins aux couleurs des sponsors qui SORTENT DU SOL 20 s après la chute de la grille (« de 0 à 20 s il n'y a rien, à 20 s ils
   apparaissent ») : le long de la ligne de départ (des 2 côtés) et un boudin Automoto au bout du saut AMV, vers le virage T_D ;
   nofrills.js les déplace (mx.move_statue), comme le long tuff block de la version USLAND et les boudins de Saint-Thibéry ;
 - poteau de virage (bâton rouge sur socle, on tombe si on le touche ; forme créée, façon poteaux de RF) à l'intérieur du 2e virage
   après l'arrivée ;
 - bâche noire derrière les grilles de départ (celle de Saint-Georges, bannière passée en noir, sans sponsor).
-Repère des bottes : s le long du tour, v > 0 = droite du sens de course (comme build_paris)."""
+Repère des tuff blocks : s le long du tour, v > 0 = droite du sens de course (comme build_paris)."""
 import os
 import shutil
 import numpy as np
@@ -18,6 +19,7 @@ from hab_kit import Mesh, fit
 
 LATE_S = 20.0
 BOUDIN_KEYS = ['mxsim', 'five', 'honda', 'yamaha', 'automoto', 'motoverte', 'minerva', 'amv', 'milwaukee', '50factory']
+BOUDIN_COURT = 6.0      # v36 (photo du vrai Paris : boudins plus courts, « collés ») : boudins de 6 ft bout à bout au lieu de 18 ft
 
 
 class Placer:
@@ -72,13 +74,54 @@ def boudin_skin(sd, key, props):
     return name
 
 
-def boudins_line(P, tag, u0, u1, v, keys, step=18.0):
+def boudins_line(P, tag, u0, u1, v, keys, step=BOUDIN_COURT):
     """boudins de 18 ft bout à bout le long du tour entre u0 et u1 (centres), face à la piste ; -> [(x, z, yaw, clé)]."""
     g = P.seg(tag); out = []; n = max(1, int(round((u1 - u0) / step)) + 1)
     for k, u in enumerate(np.linspace(u0, u1, n)):
         Q, th = P.at(g['s0'] + u, v); f = -np.array([-np.sin(th), np.cos(th)]) * np.sign(v)
         out.append((float(Q[0]), float(Q[1]), float(np.arctan2(f[0], f[1])), keys[k % len(keys)]))
     return out
+
+
+
+
+def boudin_court(sd, props, L=BOUDIN_COURT):
+    """v36 : boudin_logo3 (18 ft le long de x local) raccourci à L ft (x x L / 18, même section, mêmes u v) ; collision : boules du
+    modèle de 18 ft ramenées sur L ft (une sur trois). -> noms jm, shp."""
+    k = L / 18.0; out = []
+    for l in open(os.path.join(props, 'boudin_logo3.jm')).read().split('\n'):
+        v = l.split()
+        if len(v) == 8:
+            v[0] = '%.6f' % (float(v[0]) * k); l = ' '.join(v)
+        out.append(l)
+    open(os.path.join(sd, 'boudin_court.jm'), 'w', newline='\n').write('\n'.join(out))
+    S = [l.split() for l in open(os.path.join(props, 'boudin_logo3.shp')).read().split('\n')[1:] if l.split()]
+    S = S[::3] + ([S[-1]] if (len(S) - 1) % 3 else [])
+    S = ['%.4f %s' % (float(v[0]) * k, ' '.join(v[1:])) for v in S]
+    open(os.path.join(sd, 'boudin_court.shp'), 'w', newline='\n').write('\n'.join([str(len(S))] + S) + '\n')
+    return 'boudin_court.jm', 'boudin_court.shp'
+
+
+def boudin_court_skin(sd, key, props, L=BOUDIN_COURT, rgb=None):
+    """v36 : peau du boudin court. Le modèle garde les u de 18 ft : la texture est écrasée x 18 / L le long du boudin ; on la dessine
+    donc aux vraies proportions (largeur W x L / 18) puis on l'étire à W (logo jamais déformé une fois en jeu). Bouts gardés.
+    rgb : couleur unie sans logo (boudins tricolores)."""
+    name = 'boudin_court_%s.png' % (key if rgb is None else 'uni_%02x%02x%02x' % rgb); p = os.path.join(sd, name)
+    if os.path.exists(p):
+        return name
+    base = Image.open(os.path.join(props, 'boudin_flyrouge3.png')).convert('RGB').copy(); W, H = base.size; hb = int(H * 0.915)
+    Wt = max(64, int(round(W * L / 18.0)))
+    if rgb is None:
+        import sponsors as SP
+        bg, lg = SP.panel(key)
+    else:
+        bg, lg = rgb, None
+    top = Image.new('RGB', (Wt, hb), bg)
+    if lg is not None:
+        for yc in (0.245, 0.705):
+            fit(top, lg, (int(0.08 * Wt), int((yc - 0.115) * H), int(0.92 * Wt), int((yc + 0.115) * H)), 0.0)
+    base.paste(top.resize((W, hb), Image.LANCZOS), (0, 0)); base.save(p, optimize=True)
+    return name
 
 
 def corner_stick(sd):
@@ -89,11 +132,24 @@ def corner_stick(sd):
     d.rectangle([0, 0, 31, W - 1], fill=(206, 24, 30))
     im.save(os.path.join(sd, 'poteau_virage.png'))
     m = Mesh(); red = K.R((0, 0, 32, W), W, W); base = K.R((40, 40, 60, 60), W, W)
-    m.tube((0, 0.0, 0), (0, 0.45, 0), 1.1, base, 16)
-    m.tube((0, 0.45, 0), (0, 8.45, 0), 0.17, red, 10)
+    # v36k (photo du vrai Paris : piquet rouge sur un gros socle ; « prends la base de la RF si tu l'as, sinon un plus grand ; rouge c'est
+    # la bonne couleur ») : le modèle RF (sx2026/models/corners/corner_post.jm) n'est pas dans nos archives (paquet sx2026 du jeu) ->
+    # forme créée plus grande : socle rond 3,6 ft de diamètre, 0,55 ft, bord arrondi (2 anneaux qui rentrent), bâton rouge 0,5 ft de
+    # diamètre, 8 ft au-dessus du socle
+    m.tube((0, 0.0, 0), (0, 0.45, 0), 1.8, base, 24)
+    m.tube((0, 0.45, 0), (0, 0.55, 0), 1.7, base, 24)
+    m.tube((0, 0.55, 0), (0, 0.62, 0), 1.5, base, 24)
+    # v36n (pack d'objets RF sx2026 envoyé par l'utilisateur : « reprends le piquet, fais-le tout rouge ; mets-le dans le terrain » ; socle
+    # gardé) : bâton = modèle RF sx2026/models/corners/corner_post (0,25 ft de diamètre, 10 ft, 0,25 ft sous le sol) et sa collision,
+    # copiés dans commun/assets/props/rf_corner_post.* (accord de l'utilisateur), texture rouge unie à nous (l'original est jaune / blanc) ;
+    # socle = le nôtre (rond noir 3,6 ft, bord arrondi) ; 2 statues au même point
     m.write(os.path.join(sd, 'poteau_virage.jm'))
-    K.shp(os.path.join(sd, 'poteau_virage.shp'), [(0, y, 0) for y in np.arange(0.9, 8.3, 0.55)], 0.35, par=(1.5, 1000, 200))
-    return 'poteau_virage.jm', 'poteau_virage.png', 'poteau_virage.shp'
+    K.shp(os.path.join(sd, 'poteau_virage.shp'), [(x, 0.35, z) for x, z in ((0.9, 0), (-0.9, 0), (0, 0.9), (0, -0.9))], 0.4, par=(1.5, 1000, 200))
+    props = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '..', 'commun', 'assets', 'props')
+    for f_ in ('rf_corner_post.jm', 'rf_corner_post.shp'):
+        shutil.copy(os.path.join(props, f_), os.path.join(sd, f_))
+    Image.new('RGB', (64, 64), (206, 24, 30)).save(os.path.join(sd, 'rf_corner_post_rouge.png'))
+    return [('poteau_virage.jm', 'poteau_virage.png', 'poteau_virage.shp'), ('rf_corner_post.jm', 'rf_corner_post_rouge.png', 'rf_corner_post.shp')]
 
 
 def start_tarp_black(sd, sgm_statue):
@@ -167,7 +223,7 @@ def booth(sd, wp, key='mxsim', X=2.25, Z=2.0, Hc=4.5):
     return 'guerite_%s.jm' % key, 'guerite_%s.png' % key, 'guerite_%s.shp' % key
 
 
-def polyline_boudins(pts, keys, face_right, step=18.0):
+def polyline_boudins(pts, keys, face_right, step=BOUDIN_COURT):
     """boudins de 18 ft bout à bout le long d'une ligne brisée (points monde x, z) ; face_right : le logo regarde à droite de la ligne
     (sens des points) ; -> [(x, z, yaw, clé)]."""
     pts = np.asarray(pts, float); seg = np.diff(pts, axis=0); ls = np.hypot(seg[:, 0], seg[:, 1]); cum = np.r_[0, np.cumsum(ls)]
@@ -177,6 +233,11 @@ def polyline_boudins(pts, keys, face_right, step=18.0):
         f = np.array([-d[1], d[0]]) * (1 if face_right else -1)
         out.append((float(P[0]), float(P[1]), float(np.arctan2(f[0], f[1])), keys[min(k, len(keys) - 1)] if k < len(keys) else keys[k % len(keys)]))
     return out
+
+
+def n_boudins(pts, step=BOUDIN_COURT):
+    """nombre de boudins que polyline_boudins pose sur cette ligne brisée."""
+    pts = np.asarray(pts, float); return max(1, int(np.ceil(np.hypot(*np.diff(pts, axis=0).T).sum() / step)))
 
 
 def poly_at(pts, t):

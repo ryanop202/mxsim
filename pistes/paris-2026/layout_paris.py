@@ -312,6 +312,9 @@ AF_EXT = 6.0 if ZION else 0.0     # v32 (« beaucoup trop long, 36 ft, mets 21 �
 # v32 (« l'arrivée est un peu trop longue : l'appel tu touches rien, les 2 bosses du triple avance-les de ~10 ft, le virage aussi ; la ligne du
 # freestyle, du saut jusqu'au virage, recule-la de 10 ft (les plots avec) ; comme ça la ligne LR (sable) rentre de 10 ft vers l'intérieur »)
 FIN_SHORT = 10.0 if ZION else 0.0
+L5_CUT = 5.0 if ZION else 0.0      # v36j (traits rouges sur le zoom du virage en U : « coupe 5 ft ici ; toute la zone va aller 5 ft vers la gauche ») :
+#                                    5 ft enlevés dans le plat entre la réception du triple d'arrivée et T_L5a ; le triple ne bouge pas, le
+#                                    virage en U (et tout ce qui est autour) avance de 5 ft vers la bosse ; la ligne de départ raccourcit d'autant
 # v33 (capture depuis le début de LR : « le virage entouré (T_D), pousse-le un peu ; la ligne LR (sable), bouge-la au maximum jusqu'à ce
 # que ça touche l'appui ; ça va décaler toute la partie jusqu'au départ ») : T_D (+ freestyle, L2, T1) 5 ft de plus ; LR 12 ft de plus
 # (bord de LR au pied de l'appui de T_D) ; tout le bas (L6, T_C, L5, après-arrivée) suit LR : mêmes distances, la ligne de départ raccourcit
@@ -585,7 +588,7 @@ def paris():
     xW = px_x(312.0) + XW_SHIFT                        # virages Ouest (T1, T_C) : x des sorties de 180°
     xLR, xC, xT5 = px_x(860.0) - XLR_SHIFT, px_x(778.0), px_x(785.0)
     if ZION:   # v32 : ligne LR (sable) LR_WEST ft vers l'intérieur ; virage après l'arrivée FIN_SHORT ft plus tôt (triple raccourci)
-        xLR += LR_WEST; xT5 += FIN_SHORT + LR_WEST - TC_EAST   # v33 : le bas suit LR (après-arrivée décalé d'autant) ; v34 : L5 suit T_C (mêmes distances)
+        xLR += LR_WEST; xT5 += FIN_SHORT + LR_WEST - TC_EAST + L5_CUT   # v33 : le bas suit LR (après-arrivée décalé d'autant) ; v34 : L5 suit T_C (mêmes distances)
     xTB = px_x(315.0) - (L3_EAST if ZION else 0.0)   # v28q : T_Bb + L3 avancés de L3_EAST ft vers T_D (la ligne de départ raccourcit d'autant)
     R3 = (zL2 - zL3) / 2
     xWb = xW - XW_BOT + (LR_WEST - TC_EAST if ZION else 0.0)   # v33 : T_C suit LR -> L6 et L5 gardent leur longueur ; v34 : T_C TC_EAST ft plus près
@@ -613,7 +616,7 @@ def paris():
             toks = toks[:i_t] + [(toks[i_t][0], toks[i_t][1], a_[:len(a_) - na_], toks[i_t][3]), toks[i_t + 1],
                                  (toks[i_t + 2][0], toks[i_t + 2][1], r_[nr_:], toks[i_t + 2][3])] + toks[i_t + 3:]
             LOG['finish_cut'] = (round(na_ * 0.1, 1), round(nr_ * 0.1, 1))
-        u_app = (xWb - (xT5 + RB)) - END_GAP - tlen(toks[i_t:]) - TRIPLE_EARLY   # v19d (« la pointe de l'appel du triple au trait orange,
+        u_app = (xWb - (xT5 + RB)) - END_GAP - tlen(toks[i_t:]) - TRIPLE_EARLY + L5_CUT   # v36j : le triple reste en place   # v19d (« la pointe de l'appel du triple au trait orange,
         #   là il est un peu trop dans le virage ») : 20 ft plus tôt
     toks = pre + [('gap', round(u_app - ue - tlen(pre), 1))] + toks[i_t:]; u0 = ue
     if ZION:   # v22c (« le triple du saut d'arrivée comme à Saint-Georges : la bosse du milieu et la réception, une fusion entre les deux »)
