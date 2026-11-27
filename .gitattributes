@@ -9,3 +9,5 @@ tracks/** -text
 *.jpg binary
 tracks/**/tilemap binary
 *.jm -text
+# v37 : le hook git doit garder des fins de ligne LF (sh), même avec core.autocrlf
+.githooks/* text eol=lf
