@@ -40,6 +40,7 @@ LAT = dict(T=(34.0, 7.0), W=(40.0, 2.2))      # dessus plat, flanc (ft) : obstac
 #   gardant la forme des bosses ») : obstacles à la coupe mesurée sur RF Anaheim 1 (dessus 34 ft, flancs 7 ft ; était 35,1 / 5,2)
 ZION_R = 28.3
 GRATE_W = 3.1                               # v41c : largeur d'une grate de départ (Saint-Georges : 3,1 ft, pas 4 ft)
+GRATES_SGM = True                           # v42 : le modèle de grates de Saint-Georges (start_grids) posé par-dessus les décals
 SGM_TERRE = True                            # v41b (« remplace la texture de la terre par exactement celle de Saint-Georges ») : tuile dirt_light.ppm, décals track_lt.png, projections de SGM
 STT_TERRE = True                            # v29c : terre de Saint-Thibéry (texture, couleur, projections, traces) ; False = TERRE_RGB
 TERRE_RGB = (171, 130, 50)                  # v29b (photos de Paris 2025 + capture en jeu : « reprends la texture de Saint-Georges, change juste la couleur ») :
@@ -1201,6 +1202,9 @@ def deco_v21(OUT, FOLDER, combos):
     # signaleurs : panneau 30 s derrière les grilles + signaleur animé (drapeau) dans la cabane ; fichiers repris de Saint-Georges
     shutil.copytree(os.path.join(BP.ROOT, "tracks", "USLAND2026SaintGeorgesbyBazo", "ext", "2024Bh1Conway", "flaggerfiles"),
                     os.path.join(OUT, "ext", "2024Bh1Conway", "flaggerfiles"), dirs_exist_ok=True)
+    # v42 : le .seq du drapeau nommait ses images dans le dossier de Saint-Georges (pas forcément installé) -> celles de cette piste
+    sq_f = os.path.join(OUT, "ext", "2024Bh1Conway", "flaggerfiles", "rf.flagger_waving.seq")
+    open(sq_f, "w", newline=chr(10)).write(open(sq_f).read().replace("@USLAND2026SaintGeorgesbyBazo/", "@%s/" % FOLDER))
     os.makedirs(os.path.join(OUT, "billboard"), exist_ok=True); Image.new('RGBA', (64, 64), (0, 0, 0, 0)).save(os.path.join(OUT, "billboard", "blank.png"))
     half_ = (LP.N_GATES - 1) / 2 * LP.GATE_PITCH; b1 = G0 - f0 * 25 + r0 * (half_ - 15); b2 = G0 - f0 * 25 - r0 * (half_ - 15)
     ff = "@%s/ext/2024Bh1Conway/flaggerfiles/" % FOLDER
@@ -1421,6 +1425,12 @@ def deco_v28(OUT, FOLDER, combos, Hf, lines, line, sd, DV, rep_, g3, gR):
     gtx_ = D28.grate_panel_texture(os.path.join(OUT, 'rfborder'), sq_, GRATE_W, D28.GRATES_D)
     gq_ = [(tuple(G0 - f0 * (D28.GRATES_D / 2) + pg_ * (j - (LP.N_GATES - 1) / 2) * LP.GATE_PITCH), tuple(f0), sq_, gtx_) for j in range(LP.N_GATES)]
     rep_['grates_depart'] = dict(ligne=tuple(np.round(G0, 1)), plaques=len(gq_))
+    # v42 (« les grates de Saint-Georges sont vraiment parfaites : prends exactement les mêmes et pose-les ») : le modèle start_grids de
+    # Saint-Georges posé comme là-bas (origine au milieu de la ligne des grilles, +x local derrière la ligne = -f0) ; les décals v41c restent
+    # dessous : ce sont elles qu'on voit de loin si le terrain simplifié recouvre le modèle (vidéo v41b)
+    if GRATES_SGM:
+        lines.append(line(G0[0], G0[1], float(np.arctan2(f0[1], -f0[0])), *D28.grates_sgm(sd)))
+        rep_['grates_depart']['modele'] = 'start_grids de Saint-Georges'
     # boudins sponsors qui sortent 20 s après la chute de la grille
     PROPS = os.path.join(BP.ROOT, "commun/assets", "props")
     bcj, bcs = D28.boudin_court(sd, PROPS)                       # v36 (photo du vrai Paris) : boudins de 6 ft collés, mêmes sponsors
@@ -1653,11 +1663,14 @@ def export_zion(*a, **k):
     deco_v21(BP.OUT, BP.FOLDER, LS.COMBOS)                             # v21 : murs bâchés + filets, ballots en U, arche 50 Factory
     BP.REPORT['chant_grille'] = chant_grille(BP.OUT, BP.FOLDER)       # v39b : chant sur la grille de départ ; v39c : dans nofrills.js (après deco_v21 qui l'écrit)
     BP.REPORT['cameras_tv'] = cameras_tv(BP.OUT)                      # v37 : caméras TV (comme la RF)
-    import minimap_paris as MM                                          # v41c : minimap (arène détourée, START, logo USLAND)
+    BP.REPORT['terre_couleur'] = terre_couleur(BP.OUT)                # v42 : terre plus sombre (comme Saint-Georges), plus de plaques
+    import minimap_paris as MM                                         # v41c : minimap (arène détourée, START, logo USLAND)
     BP.REPORT['minimap'] = MM.make_map(BP.OUT, BP.FOLDER, np.asarray(BP.mx_poly(BP.arena_dims().floor_outline(1.0)), float), BP.START,
                                        os.path.join(BP.ROOT, "commun", "assets", "usland_logo.png"))
     import flammes_paris as FLP                                         # v41e : flammes START (chute de grille) et FINISH (1er tour, arrivée)
     BP.REPORT['flammes'] = FLP.flammes(BP.OUT, BP.FOLDER, BP.ROOT)
+    BP.REPORT['scripts'] = scripts_uniques(BP.OUT)                    # v42 : un seul script, dans frills.js et nofrills.js
+    BP.REPORT['taille'] = alleger(BP.OUT, BP.FOLDER)                  # v42 : < 200 Mo (fichiers inutilisés enlevés, .jm -> .jm.gz)
 
 
 CHANT_VOL = 0.7    # volume du chant (le public de ZION est à 0,4)
@@ -1670,13 +1683,19 @@ def chant_grille(OUT, FOLDER):
     fondu de sortie sur les 2 dernières secondes, mono 44,1 kHz, normalisé) copié dans OUT/sounds ; frills.js le lance UNE fois quand on
     arrive sur la grille (avant la chute de la grille ; en entraînement libre, à l'arrivée), à la position de la caméra (comme le public de
     ZION 2025 : mx.add_sound / set_sound_pos / start_sound)."""
+    global CHANT_JS
     src = os.path.join(HERE, "sons", "chant_grille.wav")
     if not os.path.exists(src):
         return None
-    os.makedirs(os.path.join(OUT, "sounds"), exist_ok=True); shutil.copy(src, os.path.join(OUT, "sounds", "chant_grille.wav"))
+    # v42 (« on n'entend pas le son ») : en .raw (16 bits mono 44,1 kHz sans en-tête), le format du son des flammes de Saint-Thibéry
+    import wave
+    os.makedirs(os.path.join(OUT, "sounds"), exist_ok=True)
+    with wave.open(src) as w_:
+        assert (w_.getnchannels(), w_.getsampwidth(), w_.getframerate()) == (1, 2, 44100)
+        open(os.path.join(OUT, "sounds", "chant_grille.raw"), "wb").write(w_.readframes(w_.getnframes()))
     js = r"""
 /* USLAND Paris by Ryan v39b - chant sur la grille de depart (une fois, avant la chute de la grille). Texte ASCII expres. */
-var CG_SON = mx.add_sound("@%s/sounds/chant_grille.wav");
+var CG_SON = mx.add_sound("@%s/sounds/chant_grille.raw");
 mx.set_sound_freq(CG_SON, 44100);
 mx.set_sound_vol(CG_SON, %.2f);
 var cg_fait = false, cg_p = [], cg_r = [], cg_t0 = -1, CG_AVANT = %.1f;
@@ -1698,8 +1717,123 @@ mx.frame_handler = cg_image;
 """ % (FOLDER, CHANT_VOL, CHANT_AVANT)
     # v39c (« le chant ne marche pas ») : dans nofrills.js (toujours lancé, même frills coupés) et plus au chargement : CHANT_AVANT s avant
     # la chute de la grille (course) ou 2 s après l'arrivée (entraînement libre, sans grille)
-    open(os.path.join(OUT, "nofrills.js"), "a", newline="\n", encoding="ascii").write(js)
-    return dict(fichier="sounds/chant_grille.wav", volume=CHANT_VOL)
+    # v42 : plus écrit ici ; scripts_uniques() le met avec tout le reste dans frills.js ET nofrills.js
+    CHANT_JS = js
+    return dict(fichier="sounds/chant_grille.raw", volume=CHANT_VOL)
+
+
+CHANT_JS = ""
+
+
+def scripts_uniques(OUT):
+    """v42 (« on n'a pas le son des flammes », et le chant ne s'entend pas) : le jeu lance frills.js (frills activés) ou nofrills.js ;
+    jusqu'ici les deux fichiers différaient (le chant seulement dans nofrills.js, l'écran géant seulement dans frills.js) et les flammes
+    étaient dans les deux (si les deux tournent, la 2e copie rebranche la chaîne des frame_handler sur elle-même). Maintenant : UN script
+    (frills.js : écran géant, boudins tardifs, flammes ; + le chant) écrit à l'identique dans les deux fichiers, dans une fonction, et
+    un verrou USP_CHARGE : si le jeu lance les deux, la 2e copie ne fait rien."""
+    f_ = open(os.path.join(OUT, "frills.js"), encoding="ascii").read() + CHANT_JS
+    js = ("/* USLAND Paris by Ryan v42 - meme script dans frills.js et nofrills.js ; verrou si le jeu lance les deux. Texte ASCII expres. */\n"
+          "var USP_CHARGE;\nif (!USP_CHARGE) {\nUSP_CHARGE = 1;\n(function () {\n" + f_ + "\n})();\n}\n")
+    for n_ in ("frills.js", "nofrills.js"):
+        open(os.path.join(OUT, n_), "w", newline="\n", encoding="ascii").write(js)
+    return dict(lignes=js.count("\n"), chant=bool(CHANT_JS), flammes="flamme_start_0" in js, ecran="td_image" in js)
+
+
+TERRE_SOMBRE = (0.555, 0.555, 0.59)   # v42 : captures en jeu, terre de Paris ~(146, 117, 86), de Saint-Georges ~(81, 65, 51)
+TERRE_DECALS = ("zdecal/terre_stt.png", "zdecal/sgm_90_lt.png", "zdecal/sgm_180_lt.png", "zdecal/sgm_tripleface_lt.png",
+                "zdecal/sgm_table_lt.png", "zdecal/sgm_single_lt.png", "zdecal/sgm_whoops_lt.png", "rfborder/a1_offtrack.png")
+
+
+def terre_couleur(OUT):
+    """v42 (« la terre : les traces c'est parfait, le seul problème c'est la couleur, trop claire ; reprends exactement la couleur de
+    Saint-Georges » ; « des endroits où ce n'est pas la même couleur ») : (1) la tuile de terre (seule visible là où il n'y a pas de décal de
+    grain : entre les couloirs, au bord) remise à la couleur moyenne du grain (track_lt de Saint-Georges) -> plus de plaques plus jaunes ;
+    (2) tuile + décals de terre x TERRE_SOMBRE (la terre de Paris rendue comme celle de Saint-Georges sur les captures)."""
+    k_ = np.array(TERRE_SOMBRE)
+    g_ = np.asarray(Image.open(os.path.join(OUT, "zdecal", "terre_stt.png")).convert("RGBA"), float); w_ = g_[..., 3:] / 255.0
+    mg_ = (g_[..., :3] * w_).sum((0, 1)) / w_.sum()
+    t2 = os.path.join(OUT, "ztile", "2.png"); a_ = np.asarray(Image.open(t2).convert("RGB"), float)
+    a_ = a_ / a_.reshape(-1, 3).mean(0) * mg_ * k_
+    Image.fromarray(np.clip(np.round(a_), 0, 255).astype(np.uint8)).save(t2)
+    n_ = 0
+    for f_ in TERRE_DECALS:
+        p_ = os.path.join(OUT, f_)
+        if os.path.exists(p_):
+            b_ = np.asarray(Image.open(p_).convert("RGBA"), float); b_[..., :3] *= k_
+            Image.fromarray(np.clip(np.round(b_), 0, 255).astype(np.uint8), "RGBA").save(p_); n_ += 1
+    return dict(tuile=tuple(int(v) for v in np.round(mg_ * k_)), decals=n_)
+
+
+ALLEGER_SANS_X2 = True   # v42 : pas de shadingx2.ppm (copie de shading.ppm / 2)
+ALLEGER_MOTOS_PX = 1024  # v42 : textures des motos du paddock (2048 -> 1024 px)
+
+
+def alleger(OUT, FOLDER):
+    """v42 (« le but : qu'elle ne dépasse pas 200 Mo, en gardant sa beauté ») : rien de visible ne change.
+    (1) fichiers que rien n'utilise enlevés (anciennes décals SX1 / ZION, sable SX1, textures remplacées...) : un fichier reste s'il est
+    nommé dans un fichier texte de la piste (statues, decals, billboards, tileinfo, js, .seq...), ou si c'est le relief / la brillance
+    (_norm, _tnorm, _spec, _tspec) d'un fichier nommé, le ciel (sky/), ou les images d'une séquence .seq nommée ;
+    (2) modèles .jm compressés en .jm.gz (le jeu les lit tels quels : déjà le cas des 414 modèles du stade)."""
+    import gzip
+    import re as re_
+    txt = []
+    for r_, ds_, fs_ in os.walk(OUT):
+        for f_ in fs_:
+            p_ = os.path.join(r_, f_)
+            if f_.lower().endswith((".png", ".ppm", ".jpg", ".raw", ".wav", ".gz", ".jm", ".shp", ".sw", ".webp", ".hf")) or f_ == "tilemap":
+                continue
+            if os.path.getsize(p_) < 30e6:
+                txt.append(open(p_, encoding="latin-1").read())
+    refs = set(m.lower().rstrip(",;)") for m in re_.findall(r"@" + re_.escape(FOLDER) + r"/([^\s\"'\]]+)", "\n".join(txt)))
+    seqd = tuple(r[:-4] + "/" for r in refs if r.endswith(".seq"))
+    av = sum(os.path.getsize(os.path.join(r_, f_)) for r_, _, fs_ in os.walk(OUT) for f_ in fs_)
+    n_rm = 0
+    for r_, ds_, fs_ in os.walk(OUT):
+        for f_ in fs_:
+            p_ = os.path.join(r_, f_); rl = os.path.relpath(p_, OUT).replace(os.sep, "/").lower()
+            if "/" not in rl or not rl.endswith((".png", ".ppm", ".jpg", ".raw", ".wav", ".jm", ".gz", ".shp")):
+                continue                                                 # fichiers texte (variants/, .seq...) gardés
+            b_ = re_.sub(r"_(t?norm|t?spec)(?=(-repeat)?\.png$)", "", rl)
+            if rl in refs or b_ in refs or (rl.endswith(".gz") and rl[:-3] in refs) or rl.startswith(seqd):
+                continue
+            os.remove(p_); n_rm += 1
+    n_gz = 0
+    for r_, ds_, fs_ in os.walk(OUT):
+        for f_ in fs_:
+            if f_.endswith(".jm"):
+                p_ = os.path.join(r_, f_)
+                with open(p_, "rb") as i_, gzip.open(p_ + ".gz", "wb", 6) as o_:
+                    o_.write(i_.read())
+                os.remove(p_); n_gz += 1
+    # (3) shadingx2.ppm = shading.ppm / 2 (même ombre, max 127 : pas de sur-éclairage) : on garde seulement shading.ppm (pistes du jeu
+    # livrées sans shadingx2.ppm : le jeu prend alors shading.ppm) -> 50 Mo
+    sx2 = os.path.join(OUT, "shadingx2.ppm")
+    if ALLEGER_SANS_X2 and os.path.exists(sx2) and os.path.exists(os.path.join(OUT, "shading.ppm")):
+        os.remove(sx2)
+    # (4) PNG recompressés sans perte (zlib max) ; textures d'objets opaques (alpha partout 255) en RGB
+    from concurrent.futures import ThreadPoolExecutor
+
+    def png_(p_):
+        im_ = Image.open(p_); im_.load(); rl_ = os.path.relpath(p_, OUT).replace(os.sep, "/")
+        # (5) motos exposées au paddock (vraie_*, 2048 px, vues de loin depuis la piste) : 1024 px -> ~16 Mo
+        if rl_.startswith("statue/paris/pad/vraie_") and max(im_.size) > ALLEGER_MOTOS_PX:
+            f_ = ALLEGER_MOTOS_PX / max(im_.size); im_ = im_.resize((round(im_.size[0] * f_), round(im_.size[1] * f_)), Image.LANCZOS)
+            im_.save(p_, optimize=True); return
+        if im_.mode == "RGBA" and rl_.startswith(("statue/", "tex/")) and im_.getchannel("A").getextrema()[0] == 255:
+            im_ = im_.convert("RGB")
+        tmp_ = p_ + ".tmp.png"; im_.save(tmp_, optimize=True)
+        if os.path.getsize(tmp_) < os.path.getsize(p_):
+            os.replace(tmp_, p_)
+        else:
+            os.remove(tmp_)
+    pngs = [os.path.join(r_, f_) for r_, _, fs_ in os.walk(OUT) for f_ in fs_ if f_.lower().endswith(".png")]
+    with ThreadPoolExecutor(8) as ex_:
+        list(ex_.map(png_, pngs))
+    for r_, ds_, fs_ in sorted(os.walk(OUT), reverse=True):
+        if r_ != OUT and not os.listdir(r_):
+            os.rmdir(r_)
+    ap =sum(os.path.getsize(os.path.join(r_, f_)) for r_, _, fs_ in os.walk(OUT) for f_ in fs_)
+    return dict(avant_mo=round(av / 1e6, 1), apres_mo=round(ap / 1e6, 1), enleves=n_rm, jm_gz=n_gz)
 
 
 def classement_direct(OUT, FOLDER):

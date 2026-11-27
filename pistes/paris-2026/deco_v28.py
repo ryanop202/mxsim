@@ -542,6 +542,29 @@ def start_grates(sd, L=88.0):
     return 'grates_depart.jm', tex, None
 
 
+GRATE_LEVE = 0.06   # v42 : grates de Saint-Georges montées de 0,06 ft (le stade de Paris, bien plus grand, rend le sol moins précis de loin)
+
+
+def grates_sgm(sd, name='start_grids_sgm'):
+    """v42 (« les grates de Saint-Georges sont vraiment parfaites : prends exactement les mêmes et pose-les ») : modèle start_grids de
+    Saint-Georges tel quel (22 grates de 4 ft encadrées alu, 88 x 10 ft ; origine au milieu de la ligne des grilles, +x local = derrière),
+    texture et collision comprises, seulement monté de GRATE_LEVE ft."""
+    src = os.path.join(os.path.dirname(SGM_GRATES), 'start_grids')
+    L = open(src + '.jm').read().split(chr(10)); nv = int(L[2].split()[0])
+    for i in range(3, 3 + nv):
+        v = L[i].split(); v[1] = '%.6f' % (float(v[1]) + GRATE_LEVE); L[i] = ' '.join(v)
+    open(os.path.join(sd, name + '.jm'), 'w', newline=chr(10)).write(chr(10).join(L))
+    S_ = open(src + '.shp').read().split(chr(10)); out = [S_[0]]
+    for l in S_[1:]:
+        v = l.split()
+        if len(v) >= 4:
+            v[1] = '%.4f' % (float(v[1]) + GRATE_LEVE)
+        out.append(' '.join(v))
+    open(os.path.join(sd, name + '.shp'), 'w', newline=chr(10)).write(chr(10).join(out))
+    shutil.copy(src + '.png', os.path.join(sd, name + '.png'))
+    return name + '.jm', name + '.png', name + '.shp'
+
+
 def post_shifted(sd, dx, dy, dz, name='rf_corner_post_v40'):
     """v40 (« enlève le socle du bâtonnet rouge, place-le au point rouge, enterré, bien droit : perpendiculaire au sol à plat, pas à la
     bosse ») : le jeu penche une statue selon le sol sous son ORIGINE -> origine posée sur du plat, bâton RF (x 4/3) décalé de (dx, dy, dz)
@@ -763,7 +786,7 @@ def border_a1_textures(rf_tex, out_dir, dirt_png, beton_png=None):
     return [round(float(v)) for v in zm]
 
 
-BETON_MOY = np.array([84.0, 84.0, 82.0])   # v39b (Ryan : « le béton plus foncé et avec de la texture ») : gris moyen de la tuile
+BETON_MOY = np.array([132.0, 132.0, 129.0])   # v42 (« le béton est trop foncé, fais-le plus clair », même texture) : 84 -> 132 ; v39b : « plus foncé »
 BETON_CONTRASTE = 2.2                       # grain du béton d'A1 x 2,2 autour de la moyenne
 BETON_TACHES = 30.0                         # taches (variations douces, +/- gris) ; v39c (« le béton n'a pas de texture ») : 14 -> 30
 BETON_MOYEN, BETON_GRAIN = 16.0, 14.0       # v39c : grain moyen (~6 px) et fin (~1 px), +/- gris
