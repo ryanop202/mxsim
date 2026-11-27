@@ -30,18 +30,43 @@ def _monster(box_w, box_h):
     return im
 
 
-def texture():
+def _user_logo(kind):
+    """v38 (« une grille sur 2 : le logo Venum que je te remets, en blanc ; et le logo Monster, celui que je t'envoie ») : logos de
+    l'utilisateur (commun/assets/logos/user/), fond blanc / transparent enlevé ; Venum passé en blanc."""
+    from scipy import ndimage
+    U = os.path.join(ROOT, "commun/assets", "logos", "user")
+    if kind == 'venum':
+        im = Image.open(os.path.join(U, "logo venum full.webp")).convert("RGBA"); a = np.asarray(im).astype(float)
+        dark = a[..., :3].mean(-1) < 128; al = (a[..., 3] / 255.0) * dark
+        out = np.dstack([np.full(al.shape + (3,), 245.0), al * 255]).astype(np.uint8)
+    else:
+        a = np.asarray(Image.open(os.path.join(U, "logo monster energy.jpg")).convert("RGB")).astype(int)
+        bg = (a.min(-1) > 215) & ((a.max(-1) - a.min(-1)) < 30); lab, _ = ndimage.label(bg)
+        edge = set(np.unique(np.r_[lab[0], lab[-1], lab[:, 0], lab[:, -1]])) - {0}
+        al = np.where(np.isin(lab, list(edge)), 0, 255).astype(np.uint8); out = np.dstack([a.astype(np.uint8), al])
+    im = Image.fromarray(out, "RGBA"); return im.crop(im.getbbox())
+
+
+def texture(kind=None):
     img = Image.new('RGB', (1024, 1024), BLACK)
 
     def plate(im):
         W, H = im.size; im.paste(BLACK, (0, 0, W, H))
-        lg = _monster(W, H); s = min(W * 0.62 / lg.width, H * 0.80 / lg.height)
+        lg = _user_logo(kind) if kind else _monster(W, H); s = min(W * 0.62 / lg.width, H * 0.80 / lg.height)
         lg = lg.resize((max(1, int(lg.width * s)), max(1, int(lg.height * s))), Image.LANCZOS)
         base = im.convert("RGBA"); base.alpha_composite(lg, ((W - lg.width) // 2, (H - lg.height) // 2)); im.paste(base.convert("RGB"))
     img.paste(PU.panel((PU.GATE['w'] - 0.26, PU.GATE['h'] - 0.3), 1008, plate).resize((1008, 464), Image.LANCZOS), (8, 8))
     pal = PU.palette(img, ['black', 'red'], [BLACK, TUBE])          # 'red' = la couleur des tubes du modèle USLAND -> noir
     pal.update(plate=('r', (8, 8, 1016, 472)))
     return img, pal
+
+
+def make_pair(out):
+    """v38 : modèle commun, 2 textures (Monster de l'utilisateur / Venum blanc) -> jm, png_monster, png_venum."""
+    jm, _ = make(out)
+    for kind in ('monster', 'venum'):
+        img, _ = texture(kind); img.save(os.path.join(out, 'start_gate_%s.png' % kind))
+    return jm, 'start_gate_monster.png', 'start_gate_venum.png'
 
 
 def make(out):

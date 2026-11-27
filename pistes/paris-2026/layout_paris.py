@@ -334,7 +334,8 @@ if AF_EXT:
     POST_FIN = dict(POST_FIN, b23=[(s_ + AF_EXT, h_) for s_, h_ in POST_FIN['b23']])
 # v31 (2 points orange de Ryan sur sa capture en jeu, projetés sur le plan : grille de départ + panneaux AMV comme repères, ±5 ft) :
 # 2 poteaux gonflables dans le U du bout de la ligne de départ (T_Ba / T_Bb), à la place du poteau automatique de T_Bb
-T_B_PYLONS = [(608.5, 600.2), (608.3, 622.0)] if ZION else []   # 2e point projeté à z 630 = sur le flanc de L3 (socle pas à plat) : 8 ft vers l'intérieur du U
+T_B_PYLONS = [(607.0, 605.6)] if ZION else []   # v38 (capture : « celui entouré en rouge, enlève-le ; celui au point blanc, décale-le ici ») ; v31 : [(608.5, 600.2), (608.3, 622.0)]
+#    # 2e point projeté à z 630 = sur le flanc de L3 (socle pas à plat) : 8 ft vers l'intérieur du U
 CAMEL_V22D = CAMEL
 # v23 (« un peu plus haut ; la face beaucoup plus raide, le bas toujours smooth ; un petit creux avant, que ça redescende presque au sol du stade
 # avant la face ; plus de cran ; la réception moins raide ») : replat de terre 0,4 ft, creux à 0,05, face concave jusqu'à ~60°, 11,6 ft,
@@ -622,7 +623,15 @@ def paris():
             toks = toks[:i_t] + [(toks[i_t][0], toks[i_t][1], a_[:len(a_) - na_], toks[i_t][3]), toks[i_t + 1],
                                  (toks[i_t + 2][0], toks[i_t + 2][1], r_[nr_:], toks[i_t + 2][3])] + toks[i_t + 3:]
             LOG['finish_cut'] = (round(na_ * 0.1, 1), round(nr_ * 0.1, 1))
-        u_app = (xWb - (xT5 + RB)) - END_GAP - tlen(toks[i_t:]) - TRIPLE_EARLY + L5_CUT   # v36j : le triple reste en place   # v19d (« la pointe de l'appel du triple au trait orange,
+        if L5_V38:
+            # v38b (« l'enchaînement avant l'arrivée : l'appel le plus haut, même raideur mais plus court et plus bas, moins de différence
+            # entre les deux ; plus d'écart entre la 3e et la 4e bosse, ~4 ft, que tu gagnes sur l'élan avant le virage, trop long : le virage
+            # sera plus proche ») : 2e bosse avant l'arrivée x0,85 en hauteur ET en longueur (même pente) ; 4 ft de plus entre l'appel
+            # d'arrivée et la suite du triple ; l'appel ne bouge pas, la fin du triple se rapproche du virage de 4 ft
+            kr_ = [k for k, t in enumerate(pre) if t[0] == 'raw']; k2_ = kr_[-1]
+            pre = list(pre); q_ = np.asarray(pre[k2_][2], float); pre[k2_] = (pre[k2_][0], pre[k2_][1] + ' x0,85', resample(q_, 0.85) * 0.85, pre[k2_][3])
+            toks = toks[:i_t + 1] + [('gap', toks[i_t + 1][1] + L5_GAP34)] + toks[i_t + 2:]
+        u_app = (xWb - (xT5 + RB)) - END_GAP - tlen(toks[i_t:]) - TRIPLE_EARLY + L5_CUT + (L5_GAP34 if L5_V38 else 0.0)   # v36j : le triple reste en place   # v19d (« la pointe de l'appel du triple au trait orange,
         #   là il est un peu trop dans le virage ») : 20 ft plus tôt
     toks = pre + [('gap', round(u_app - ue - tlen(pre), 1))] + toks[i_t:]; u0 = ue
     if ZION:   # v22c (« le triple du saut d'arrivée comme à Saint-Georges : la bosse du milieu et la réception, une fusion entre les deux »)
@@ -709,9 +718,9 @@ def paris():
         rl_ = [('raw', 'petite table creusee 4,4 ft', TABLE_CREUSEE, 'T')]   # v22 : à la place du roller
         # v23 (« un peu moins raide, l'appel un peu plus haut, longueur x2,25 ») : x2,25 si ça tient avant l'appel du freestyle (22 ft d'élan)
         # v23c (« rallonge-le de la moitié ; la réception un peu plus haute ») : x1,74 -> x2,6 si ça tient (14 ft d'élan avant l'appel du freestyle)
-        kL = min(2.6, (u0 - 14.0 - EXIT_U0) / tlen(rl_)); rl_ = [('raw', 'petite table creusee x%.2f' % kL, table_creusee(kL, 5.6), 'T')]
+        kL = min(2.6, (u0 - L3_RUN - EXIT_U0) / tlen(rl_)); rl_ = [('raw', 'petite table creusee x%.2f' % kL, table_creusee(kL, 5.6), 'T')]
         LOG['table_creusee_k'] = round(kL, 2)
-        assert EXIT_U0 + tlen(rl_) + 13.0 < u0, u0
+        assert EXIT_U0 + tlen(rl_) + L3_RUN - 1.0 < u0, u0
         secs3.append(LS.sec('PAR-L3 petite table creusee', rl_, EXIT_U0))
     if ZION and T_D_CUT:   # v28q (« coupe le début du virage pour qu'il commence plus tard, on est obligé de tourner plus avant d'y rentrer ») :
         p.straight(x3 - x_end3 + T_D_CUT, secs3, tag='L3 grande table')
@@ -1040,15 +1049,16 @@ def paris():
         B_[ib_] = zionize([B_[ib_ + 0] if False else L6B[ib_]])[0]   # v23 (« la 4e bosse, refais une bosse normale ; garde cet écart ») 
         B_[it_] = table_stt(7.0, extra=TABLE_PLUS)
         adj_ = {ib_ - 1: -d_b, it_ - 1: eb_ - TABLE_PLUS / 2, it_: ea_ - TABLE_PLUS / 2}
-        g_ = (xWb - (xLR + RB) - EXIT_U0 - END_GAP - sum(tlen(b) for b in B_) - sum(adj_.values())) / (len(B_) - 1)
+        adj_[2] = adj_.get(2, 0.0) + L6_PULL   # v38 (« entre la 3e et la 4e, quelques feet d'écart ; tu les gagnes : trop d'élan avant ») : +L6_PULL ft, le début de L6 avance d'autant
+        g_ = (xWb - (xLR + RB) - (EXIT_U0 - L6_PULL) - END_GAP - sum(tlen(b) for b in B_) - sum(adj_.values())) / (len(B_) - 1)
         toks = []
         for k, b in enumerate(B_):
             toks.append(b)
             if k < len(B_) - 1:
                 toks.append(('gap', round(g_ + adj_.get(k, 0.0), 1)))
     if ZION:   # v22 (« baisse le 1er appel, plus bas à droite, comme Saint-Thibéry, voire encore plus bas ») : droite 55 %
-        SPLIT_Z['PAR-L6 triple, double, table, double'] = [(0.0, tlen(toks[:1]), 1.0, 0.8)]   # v23 : intérieur (droite) relevé 0,55 -> 0,8
-    p.straight(xWb - (xLR + RB), [lane_sec('PAR-L6 triple, double, table, double', toks, u0)], tag='L6 tribune Sud')
+        SPLIT_Z['PAR-L6 triple, double, table, double'] = [(0.0, tlen(toks[:1]), 0.86, 0.8, 0.86, 1.0)]   # v38c (« la partie gauche du 1er appel plus basse, presque la hauteur de la droite mais un peu plus haute, même raideur ; garde les distances ») : gauche x0,86 en hauteur ET en longueur ; v38b : (1,0 / 0,8) ; v38 (« l'appel le plus haut, un peu plus bas : moins de différence entre les deux ») : 1,0 -> 0,9   # v23 : intérieur (droite) relevé 0,55 -> 0,8
+    p.straight(xWb - (xLR + RB), [lane_sec('PAR-L6 triple, double, table, double', toks, u0 - (L6_PULL if ZION else 0.0))], tag='L6 tribune Sud')
     p.turn(-180, R180, BIG, tag='T_C 180 droite (berm)')
     p.lanes = dict(apex_TD=(apex_TD if (ZION and T_D_CUT) else None), x_end3=x_end3, R3=R3, zL5=zL5, zLD=zLD, zL3=zL3, zL2=zL2, zL1=zL1, zL6=zL6, xW=xW, xLR=xLR, xC=xC, xT5=xT5, xTB=xTB)
     return p
@@ -1059,6 +1069,9 @@ N_GATES, GATE_PITCH = 22, 4.0
 X_APEX_SHIFT, L3_ADVANCE = 6.0, 8.0     # v9 : sommet du 180 après le saut du milieu / avance du saut (ft)
 L3_SHIFT, L2_SHIFT = 12.0, 10.0          # v13 (« plus d'espace entre chaque enchaînement ») : L3 12 ft et L2 / L1 22 ft plus au sud
 #                                         -> couloir Est 22 ft plus long, 180 L3 -> L2 de rayon 37 ft
+L6_PULL = 0.0      # v38b (« je parlais de l'enchaînement avant l'arrivée ») : L6 remis comme la v37 ; v38 : L6 commence 4 ft plus près de T_E, 4 ft de plus entre sa 3e et sa 4e bosse (la suite ne bouge pas)
+L5_V38, L5_GAP34 = True, 4.0   # v38b : ligne d'arrivée (2e bosse plus courte et plus basse, +4 ft après l'appel d'arrivée)
+L3_RUN = 8.0       # v38 (« rallonge de quelques mètres le double avant le saut de freestyle, il est trop petit ») : élan avant l'appel du freestyle 14 -> 8 ft (table +6 ft)
 EXIT_U0 = 6.0 if ZION else 10.0          # v23 Zion (« moins d'élan sur toutes les sorties de virage ») : 10 -> 6 ft ; v13 : 1re bosse à 10 ft de la sortie des virages (plus de marque berm / appel)
 L2_U0_V13 = 10.0
 BERM_END_FADE = {'T_D ': (12.0, 40.0), **({'T1 1': (-1.0, 15.0)} if ZION else {})}   # v35 (capture : « corrige ce cran », début de L1) : la queue du berm de T1 touchait le pied du 1er whoop (pli) -> berm fondu sur ses 15 derniers degrés ; T_D :   # v28k (« adoucis l'angle du virage ») : 8 -> 12°, fondu 35 -> 40° (la 1re bosse de L2 part dans la courbe)
@@ -1129,7 +1142,18 @@ def fmx_ramps(path=None):
     for du, v in ((-22.0, -24.0), (-38.0, -30.0)):
         lip = P(ub + du, v); d = tgt - lip
         out.append(dict(lip=(float(lip[0]), float(lip[1])), heading=float(np.arctan2(d[1], d[0]))))
+    if FMX_V38:
+        # v38 (plan de l'utilisateur, rectangles noirs sur la vue de dessus : « une à gauche entre l'enchaînement et l'appel, 2 à droite ; pas
+        # collées, un peu reculées ; l'inclinaison que j'ai mise ») : centres lus sur la capture (calée sur les tuff blocks AMV), cap vers
+        # l'ouest (vers la butte) incliné comme les rectangles ; lèvre = centre + demi-longueur du modèle
+        out = []
+        for (cx_, cz_), hd_ in FMX_V38:
+            h_ = np.radians(hd_); d = np.array([np.cos(h_), np.sin(h_)]); lip = np.array([cx_, cz_]) + d * FMX_MODEL['model_len'] / 2
+            out.append(dict(lip=(float(lip[0]), float(lip[1])), heading=float(h_)))
     return out
+
+
+FMX_V38 = [((509.0, 617.5), 170.0), ((543.6, 621.5), 170.0), ((600.0, 676.5), 180.0)] if ZION else None   # 3e : 6 ft vers l'ouest, son pied sortait sur le berm de T_Bb
 
 
 # ---------------------------------------------------------------- v15 : version Zion

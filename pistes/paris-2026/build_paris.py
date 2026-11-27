@@ -288,6 +288,10 @@ def sand_weight(path, X, Z, inset=0.0, fade=1.0, inset_s=0.0, fade_s=None):
     s0, s1 = sand_range(path); smp = path.samples(0.4); k = (smp['s'] > s0 - 30) & (smp['s'] < s1 + 30)
     tr = cKDTree(np.c_[smp['x'][k], smp['z'][k]]); d, i = tr.query(np.c_[np.ravel(X), np.ravel(Z)], distance_upper_bound=LP.SAND_HW + 6)
     ok = np.isfinite(d); i = np.where(ok, i, 0); s = smp['s'][k][i]; d = np.where(ok, d, 99.0)
+    # v38 (« le virage Automoto, il y a des stries : remets la texture normale ») : pas de sable là où un autre morceau du tour (hors de la
+    # partie sable +-30 ft) est plus près que la trajectoire de la partie sable (berm de T_D collé au couloir LR)
+    smA = path.samples(1.0); dA, iA = cKDTree(np.c_[smA['x'], smA['z']]).query(np.c_[np.ravel(X), np.ravel(Z)])
+    sA = smA['s'][iA]; autre = (dA < d - 1.0) & ((sA < s0 - 30) | (sA > s1 + 30)); ok = ok & ~autre
     ss = lambda t: (lambda t_: t_ * t_ * (3 - 2 * t_))(np.clip(t, 0, 1))
     # v35 (repris de Bazo v28-v29) : fade = largeur du fondu (ft), inset_s = retrait aux 2 bouts (début, fin) ; fade_s = fondu des bouts
     # seulement (le dégradé du sable : centré sur le bout d'origine quand inset_s = -fade_s / 2) ; défaut = v25e
@@ -408,7 +412,7 @@ def render(path, st):
         if g['kind'] == 'S':
             for prof, u0, name in g['sections']:
                 pm_ = prof
-                for a_, b_, kl_, kr_ in LP.SPLIT_Z.get(name, []):        # v22 : 1re bosse plus basse d'un côté
+                for a_, b_, kl_, kr_ in (q_[:4] for q_ in LP.SPLIT_Z.get(name, [])):        # v22 : 1re bosse plus basse d un côté (v38c : 6 valeurs possibles)
                     i0_, i1_ = int(round(a_ / 0.1)), min(len(prof), int(round(b_ / 0.1)) + 1); q_ = prof[i0_:i1_]
                     pm_ = pm_.copy(); pm_[i0_:i1_] = 0.0
                     split_blend(jumps, g, (i0_ * 0.1, q_ * kl_, q_ * kr_), u0, TW)

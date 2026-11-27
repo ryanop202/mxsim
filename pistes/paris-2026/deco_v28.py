@@ -19,7 +19,8 @@ from hab_kit import Mesh, fit
 
 LATE_S = 20.0
 BOUDIN_KEYS = ['mxsim', 'five', 'honda', 'yamaha', 'automoto', 'motoverte', 'minerva', 'amv', 'milwaukee', '50factory']
-BOUDIN_COURT = 6.0      # v36 (photo du vrai Paris : boudins plus courts, « collés ») : boudins de 6 ft bout à bout au lieu de 18 ft
+BOUDIN_COURT = 12.0      # v38d (« 2 boudins font 1, un seul gros logo sur les 2 ») : 6 -> 12 ft ;
+BOUDIN_COURT_V36 = 6.0      # v36 (photo du vrai Paris : boudins plus courts, « collés ») : boudins de 6 ft bout à bout au lieu de 18 ft
 
 
 class Placer:
@@ -148,6 +149,20 @@ def corner_stick(sd):
     props = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '..', 'commun', 'assets', 'props')
     for f_ in ('rf_corner_post.jm', 'rf_corner_post.shp'):
         shutil.copy(os.path.join(props, f_), os.path.join(sd, f_))
+    # v38 (« le piqué à l'intérieur, fais-le monter un tiers plus haut ») : bâton RF x4/3 en hauteur (sommets et boules de collision)
+    kY = 4.0 / 3.0; L_ = open(os.path.join(sd, 'rf_corner_post.jm')).read().split(chr(10))
+    for i_, l_ in enumerate(L_):
+        v_ = l_.split()
+        if len(v_) == 8 and float(v_[1]) > 0:
+            v_[1] = '%.6f' % (float(v_[1]) * kY); L_[i_] = ' '.join(v_)
+    open(os.path.join(sd, 'rf_corner_post.jm'), 'w', newline=chr(10)).write(chr(10).join(L_))
+    S_ = open(os.path.join(sd, 'rf_corner_post.shp')).read().split(chr(10)); out_ = [S_[0]]
+    for l_ in S_[1:]:
+        v_ = l_.split()
+        if len(v_) >= 4 and float(v_[1]) > 0:
+            v_[1] = '%.4f' % (float(v_[1]) * kY)
+        out_.append(' '.join(v_))
+    open(os.path.join(sd, 'rf_corner_post.shp'), 'w', newline=chr(10)).write(chr(10).join(out_))
     Image.new('RGB', (64, 64), (206, 24, 30)).save(os.path.join(sd, 'rf_corner_post_rouge.png'))
     return [('poteau_virage.jm', 'poteau_virage.png', 'poteau_virage.shp'), ('rf_corner_post.jm', 'rf_corner_post_rouge.png', 'rf_corner_post.shp')]
 
@@ -158,8 +173,38 @@ def start_tarp_black(sd, sgm_statue):
     shutil.copy(os.path.join(sgm_statue, 'start_tarp.jm'), os.path.join(sd, 'start_tarp_noir.jm'))
     im = Image.open(os.path.join(sgm_statue, 'start_tarp.png')).convert('RGBA'); a = np.asarray(im).copy()
     a[:1302, :, :3] = (16, 16, 18); a[:1302, :, 3] = 255
-    Image.fromarray(a, 'RGBA').save(os.path.join(sd, 'start_tarp_noir.png'))
+    im = Image.fromarray(a, 'RGBA')
+    if TARP_LOGOS:
+        # v38d (« 6 logos, le même espace entre chaque : Venum (tête + logo), Monster (griffe + Monster Energy, comme les grilles), Supercross
+        # Paris rose (comme les bandeaux du stade), puis Venum, Monster, Supercross Paris ») : bannière de 90 ft à 80 px / ft dessinée d'un
+        # bloc (7200 x 320 px) puis découpée dans les 4 bandes de 2048 px de la texture (rangées k x 326), comme le START de Saint-Georges
+        import gate_monster as GM
+        ROOT_ = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        lg = {'venum': GM._user_logo('venum'), 'monster': GM._user_logo('monster'), 'paris': paris_logo(os.path.join(ROOT_, 'commun', 'assets', 'logos', 'user'))}
+        PPF, BH = 80, 320; V = Image.new('RGBA', (4 * 2048, BH), (16, 16, 18, 255))
+        for i, k in enumerate(['venum', 'monster', 'paris'] * 2):
+            c = (7.5 + 15.0 * i) * PPF; w = 11.0 * PPF
+            fit(V, lg[k], (int(c - w / 2), int(BH * 0.10), int(c + w / 2), int(BH * 0.90)), 0.02)
+        for k in range(4):
+            im.paste(V.crop((k * 2048, 0, (k + 1) * 2048, BH)), (0, k * (BH + 6)))
+        # v38e (« du côté des grilles, tout noir complet ; de l'autre côté les logos, à l'endroit ») : tout le reste (filet, cadre) en noir plein
+        a2 = np.asarray(im).copy(); a2[1302:, :, :3] = (16, 16, 18); a2[1302:, :, 3] = 255; im = Image.fromarray(a2, 'RGBA')
+    im.save(os.path.join(sd, 'start_tarp_noir.png'))
     return 'start_tarp_noir.jm', 'start_tarp_noir.png', None
+
+
+TARP_LOGOS = True
+
+
+def paris_logo(logo_dir):
+    """logo Supercross Paris de l'utilisateur (logo paris26.jpg) détouré (fond blanc enlevé depuis les bords)."""
+    from scipy import ndimage
+    from PIL import ImageFilter
+    ph = Image.open(os.path.join(logo_dir, 'logo paris26.jpg')).convert('RGB'); a = np.asarray(ph, int)
+    bgm = (a.min(-1) > 205) & ((a.max(-1) - a.min(-1)) < 40); lab, _ = ndimage.label(bgm)
+    edge = set(np.unique(np.r_[lab[0], lab[-1], lab[:, 0], lab[:, -1]])) - {0}; out_ = np.isin(lab, list(edge))
+    al = np.asarray(Image.fromarray(np.where(out_, 0, 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(1.2)))
+    pr = Image.fromarray(np.dstack([a.astype(np.uint8), al]), 'RGBA'); return pr.crop(pr.getbbox())
 
 
 def nofrills_js(rows):
@@ -193,10 +238,14 @@ def write_late(OUT, late_lines):
     for i, l in zip(idx, late_lines):
         v_ = l.split(']')[0][1:].split(); rows.append((i, float(v_[0]), float(v_[2]), float(l.split(']')[1].split()[0])))
     open(os.path.join(OUT, "nofrills.js"), "w", newline="\n", encoding="ascii").write(nofrills_js(rows))
+    fj = os.path.join(OUT, "frills.js")
+    if os.path.exists(fj):   # v38c : la v37 ajoute frills.js (classement) : même code des boudins tardifs, noms à part (ne se gênent pas)
+        js2 = nofrills_js(rows).replace('g_lt', 'g_lt2').replace('LATE_AFTER', 'LATE_AFTER2').replace('ltSet', 'ltSet2').replace('lateTuff', 'lateTuff2')
+        open(fj, "a", newline="\n", encoding="ascii").write("\n" + js2)
     return len(rows)
 
 
-def booth(sd, wp, key='mxsim', X=2.25, Z=2.0, Hc=4.5):
+def booth(sd, wp, key='mxsim', X=2.25, Z=2.0, Hc=4.5, y0=0.0):
     """v29 (dessin de l'utilisateur sur la capture : « une cabane noire avec le logo ; dedans juste un socle qu'on voit pas, pour que le
     monsieur dépasse avec son drapeau ») : guérite fermée 4,5 x 4 ft, murs 4,5 ft, logo du sponsor sur les 4 faces (lu à l'endroit de
     l'extérieur), dedans noir ; le signaleur (fichier flaggers) a les pieds 1,2 ft au-dessus du socle : il dépasse à partir de la taille.
@@ -218,6 +267,13 @@ def booth(sd, wp, key='mxsim', X=2.25, Z=2.0, Hc=4.5):
         uv = [(pan[0], pan[1]), (pan[2], pan[1]), (pan[2], pan[3]), (pan[0], pan[3])]
         D22._face(m, [wp(*p) for p in P], uv, [nw(n)] * 4)
         D22._face(m, [wp(*p) for p in P[::-1]], [(blk[0], blk[1])] * 4, [nw(-n_)] * 4)       # dedans noir
+        if y0 < 0:   # v38c (« mets du noir jusqu'au sol autour du plot de terre, qu'on voie pas la terre, une longue cabane ») : jupe noire
+            Q = [c - r * half + up * y0, c + r * half + up * y0, c + r * half, c - r * half]
+            D22._face(m, [wp(*p) for p in Q], [(blk[0], blk[1])] * 4, [nw(n)] * 4)
+    if y0 < 0:   # v38e (« qu'on ne voie pas la terre du tout dans la cabane ») : fond noir posé sur le socle (vu d'en haut, les 2 faces)
+        F = [np.array(p_, float) for p_ in ((-X, 0.03, -Z), (X, 0.03, -Z), (X, 0.03, Z), (-X, 0.03, Z))]
+        D22._face(m, [wp(*p) for p in F], [(blk[0], blk[1])] * 4, [nw(up)] * 4)
+        D22._face(m, [wp(*p) for p in F[::-1]], [(blk[0], blk[1])] * 4, [nw(up)] * 4)
     m.write(os.path.join(sd, 'guerite_%s.jm' % key), D22.MAT_MAT)
     K.shp(os.path.join(sd, 'guerite_%s.shp' % key), [wp(x, 1.8, z) for x in (-1.2, 1.2) for z in (-1.0, 1.0)], 1.3, par=(1.5, 1000, 200))
     return 'guerite_%s.jm' % key, 'guerite_%s.png' % key, 'guerite_%s.shp' % key
@@ -294,3 +350,198 @@ def led_board_v29(path_png, logo_dir, stade_src):
     fit(im, mx, (3 * q + 40, 14, 4 * q - 40, H - 14), 0.04)
     im.save(path_png)
     return path_png
+
+
+RAMP_HEAD_U = 0.11      # v38e : centre de la tête de serpent sur la bande du dessus de la rampe (u, 0,005 = lèvre)
+
+
+def ramp_black_venum(statue_dir, logo_dir):
+    """v38 (« les rampes de freestyle : fais-les toutes noires, avec un logo Venum en haut de la rampe, là où roule la moto ») : texture
+    du tremplin ramp_50 passée en noir (relief gardé), logo Venum blanc sur la bande du dessus (UV u 0,005 (lèvre) - 0,997 (pied) = le long de la rampe,
+    v 0,81-0,992 = en travers ; u croît vers le pied) ; logo tourné de 180° : il se lit du pied vers la lèvre, jamais en miroir vu du dessus."""
+    p = os.path.join(statue_dir, 'ramp_50.png'); im = Image.open(p).convert('RGBA'); a = np.asarray(im).astype(float)
+    lum = a[..., :3].mean(-1, keepdims=True); a[..., :3] = 14.0 + 0.16 * lum
+    im = Image.fromarray(a.clip(0, 255).astype(np.uint8), 'RGBA'); W, H = im.size
+    lg = Image.open(os.path.join(logo_dir, 'logo venum full.webp')).convert('RGBA'); b = np.asarray(lg).astype(float)
+    al = (b[..., 3] / 255.0) * (b[..., :3].mean(-1) < 128); lg = Image.fromarray(np.dstack([np.full(al.shape + (3,), 245.0), al * 255]).astype(np.uint8), 'RGBA')
+    lg = lg.crop(lg.getbbox())
+    # v38c (« enlève le logo Venum, mets juste la tête du serpent, même taille, pivotée dans le sens de la rampe, les dents vers le bas de
+    # la rampe ») : la tête = la partie gauche du logo (avant la 1re colonne vide) ; dents (bas de l'image) vers le pied (u croissant) :
+    # rotation de +90° (le haut de la tête vers la lèvre)
+    al_ = np.asarray(lg)[..., 3] > 20; cols = al_.any(0); x_ = 0
+    while x_ < len(cols) and cols[x_]: x_ += 1
+    while x_ < len(cols) and not cols[x_]: x_ += 1
+    tete = lg.crop((0, 0, max(1, x_ - 2), lg.size[1])); tete = tete.crop(tete.getbbox()).rotate(90, expand=True)
+    # v38e (« la tête plus haut, là où j'ai entouré en gris, sur les 3 rampes ») : la bande du dessus va de u 0,005 (lèvre, 9 ft) à 0,997
+    # (pied) ; la tête était à u 0,318-0,40 (~3,5 ft, 40 % de la hauteur) ; ronds gris de la capture = ~80 % de la hauteur -> centre à
+    # u = RAMP_HEAD_U (~7,3 ft), même taille
+    hv = int((0.985 - 0.82) * H); wv = int(hv * tete.size[0] / tete.size[1]) + 8; x0_ = int(RAMP_HEAD_U * W) - wv // 2
+    box = (x0_, int((1 - 0.985) * H), x0_ + wv, int((1 - 0.82) * H))
+    fit(im, tete, box, 0.04); im.save(p)
+    return p
+
+
+def ramp_tall(statue_dir, k=1.4, name='ramp_50_haut'):
+    """v38c (« fais-la plus haute, plus raide, qu'elle kick plus, uniquement celle-là, la plus proche de la bosse ») : tremplin x k en
+    hauteur (même longueur : plus raide), collision aussi ; même texture."""
+    L = open(os.path.join(statue_dir, 'ramp_50.jm')).read().split(chr(10))
+    for i, l in enumerate(L):
+        v = l.split()
+        if len(v) == 8:
+            v[1] = '%.6f' % (float(v[1]) * k); L[i] = ' '.join(v)
+    open(os.path.join(statue_dir, name + '.jm'), 'w', newline=chr(10)).write(chr(10).join(L))
+    S_ = open(os.path.join(statue_dir, 'ramp_50.shp')).read().split(chr(10)); out = [S_[0]]
+    for l in S_[1:]:
+        v = l.split()
+        if len(v) >= 4:
+            v[1] = '%.4f' % (float(v[1]) * k)
+        out.append(' '.join(v))
+    open(os.path.join(statue_dir, name + '.shp'), 'w', newline=chr(10)).write(chr(10).join(out))
+    return name + '.jm', name + '.shp'
+
+
+def mesh_mat(sd, L, W=4.0, name=None):
+    """v38c (« derrière la rampe, une grille métallique en losanges posée au sol, gris noir comme la rampe, petits losanges fins ») :
+    plaque au ras du sol (0,06 ft), W x L ft, le long de x local, centrée sur l'origine ; texture : métal déployé gris foncé, losanges
+    de ~0,5 ft (répétés par les UV), bords en cornière. Forme créée."""
+    name = name or 'grille_rampe_%d' % int(round(L))
+    # v38d (« pas ouf : une grille comme les grilles de départ, couleur métal ; les mailles noires, pas de fond noir dessous, la couleur de
+    # la rampe ») : seulement les fils (gris foncé métal), les trous transparents (on voit le sol)
+    T = 256; im = Image.new('RGBA', (T, T), (0, 0, 0, 0)); d = ImageDraw.Draw(im); n = 4; c = T // n
+    # v38e : fil de métal foncé (gris-noir de la rampe) avec un reflet clair au milieu (aspect métal, comme les grilles de départ)
+    for wd_, col_ in ((8, (30, 30, 33, 255)), (3, (92, 92, 98, 255))):
+        for i in range(n + 1):
+            for j in range(n + 1):
+                x, y = i * c, j * c
+                d.polygon([(x, y - c // 2), (x + c // 2, y), (x, y + c // 2), (x - c // 2, y)], outline=col_, width=wd_)
+    im.save(os.path.join(sd, 'grille_losanges-repeat.png'))      # « -repeat » : le jeu ne répète une texture que si son nom le dit (comme RF)
+    m = Mesh(); y = 0.06; rep_ = 2.0                                  # une tuile de texture = 2 ft
+    P = [(-L / 2, y, W / 2), (L / 2, y, W / 2), (L / 2, y, -W / 2), (-L / 2, y, -W / 2)]
+    m.quad(P, (0, 0, L / rep_, W / rep_), two=True)
+    m.write(os.path.join(sd, name + '.jm'))
+    return name + '.jm', 'grille_losanges-repeat.png'
+
+
+def rf_border(path, floor_poly, xpad, rng, folder, dist_edge=(4.0, 14.0, (18.0, 60.0)), wall_max=50.0):
+    """v38c (« reprends les planches et le béton de la RF entre la piste et le stade, mêmes distances, même dégradé ») : comme RF
+    Anaheim 1 (décals mesurés : terre « offtrack » 28 ft tous les ~7 ft au bord de la piste, planches « ply » 22 ft tous les ~8,6 ft
+    ~10 ft plus loin, disques de béton 35 ft tous les ~13 ft de là jusqu'au mur) ; ici seulement côté stade (sol à moins de wall_max ft
+    du bord du sol), pas sur le paddock. -> lignes de décals (@folder/rfborder/...)."""
+    from scipy.spatial import cKDTree
+    from geo_tools import inside
+    sm = path.samples(1.0); P = np.c_[sm['x'], sm['z']]; th = np.array(sm['th']); tr = cKDTree(P)
+    fl = np.asarray(floor_poly, float); seg = np.diff(np.vstack([fl, fl[:1]]), axis=0)
+    def d_wall(q):
+        a = fl; b = fl + seg; ab = b - a; t = np.clip(((q - a) * ab).sum(1) / (ab * ab).sum(1), 0, 1); return float(np.min(np.hypot(*(a + ab * t[:, None] - q).T)))
+    def ok(q, e_min):
+        dt, _ = tr.query(q); return (inside(q[None, :], fl)[0] and q[0] < xpad - 4.0 and dt - 15.2 >= e_min - 1.0 and d_wall(q) < wall_max and d_wall(q) > 3.0)
+    out = []; f = lambda x, z, a, s_, t_: out.append("[%.6f %.6f] %.6f %.6f 1.000000 @%s/rfborder/%s" % (x, z, a, s_, folder, t_))
+    def ring(e, step, size, tex, jit):
+        placed = []
+        for sg in (-1, 1):
+            for k in range(0, len(P), 1):
+                q = P[k] + sg * (15.2 + e) * np.array([-np.sin(th[k]), np.cos(th[k])])
+                if not ok(q, e) or any(np.hypot(*(q - p_)) < step for p_ in placed[-40:]):
+                    continue
+                placed.append(q); f(q[0], q[1], th[k] + rng.normal(0, jit), size, tex)
+        return len(placed)
+    n1 = ring(dist_edge[0], 7.2, 28.0, 'offtrack.png', 3.0)
+    n2 = ring(dist_edge[1], 8.6, 22.0, 'ply.png', 0.12)
+    e0, e1 = dist_edge[2]; n3 = 0; pts = []
+    xs, zs = fl[:, 0], fl[:, 1]
+    for _ in range(6000):
+        q = np.array([rng.uniform(xs.min(), xs.max()), rng.uniform(zs.min(), zs.max())]); dt, _ = tr.query(q)
+        if not (e0 <= dt - 15.2 <= e1) or not ok(q, e0) or any(np.hypot(*(q - p_)) < 13.0 for p_ in pts):
+            continue
+        pts.append(q); f(q[0], q[1], rng.uniform(-np.pi, np.pi), 35.0, 'concrete.png'); n3 += 1
+    return out, (n1, n2, n3)
+
+
+def border_textures(rf_tex, out_dir, terre_png=None):
+    """v38e : textures de la bordure.
+    - planches.png : UNE plaque OSB de RF (4 x 8 ft) au milieu d'une décal carrée de 8 ft (moitié gauche / droite transparentes),
+      long côté vertical = le long de la piste, joints sombres aux bouts ;
+    - terre_bord.png : la terre du sol (terre_stt, même grain, même couleur, même échelle : 26 ft pour toute l'image) en décal de 16 ft,
+      opaque sur 2 ft en travers, fondue sur 2 ft de chaque côté (nulle au bord des planches), fondue sur 3 ft aux bouts (tous les 8 ft)."""
+    ply = Image.open(os.path.join(rf_tex, 'ply.png')).convert('RGB').crop((80, 667, 1120, 1187)).rotate(90, expand=True).resize((512, 1024), Image.LANCZOS)
+    P = Image.new('RGBA', (1024, 1024), (0, 0, 0, 0)); P.paste(ply, (256, 0))
+    d = ImageDraw.Draw(P); d.rectangle([256, 0, 767, 5], fill=(58, 48, 36, 255)); d.rectangle([256, 1018, 767, 1023], fill=(58, 48, 36, 255))
+    P.save(os.path.join(out_dir, 'planches.png'))
+    n = 1024; src = Image.open(terre_png).convert('RGB'); w_ = src.size[0]; k = int(round(w_ * 16.0 / 26.0)); c = w_ // 2
+    T = src.crop((c - k // 2, c - k // 2, c - k // 2 + k, c - k // 2 + k)).resize((n, n), Image.LANCZOS)
+    u = (np.arange(n) + 0.5) / n * 16.0 - 8.0                     # ft depuis le centre
+    sst = lambda t: (lambda t_: t_ * t_ * (3 - 2 * t_))(np.clip(t, 0, 1))
+    au = sst((3.0 - np.abs(u)) / 2.0)                              # v38e (« la terre s'arrête juste autour du terrain, avant le bois ») : 1 sur |a| <= 1, 0 à |a| = 3 (= bord des planches)
+    av = sst((8.0 - np.abs(u)) / 3.0)                              # le long : fondu sur 3 ft aux bouts
+    A = (np.outer(av, au) * 255).astype(np.uint8)
+    T = T.convert('RGBA'); T.putalpha(Image.fromarray(A)); T.save(os.path.join(out_dir, 'terre_bord.png'))
+    return 'planches.png', 'terre_bord.png'
+
+
+BORD_E0, BORD_PW, BORD_BERM = 10.0, 4.0, 4.0    # v38e : planches de 10 à 14 ft du bord du couloir ; à 4 ft au moins du pied des appuis (relief > 1 ft)
+
+
+def border_v2(OUT, path, fl, xpad, folder, wall_max=32.0, e0=BORD_E0, pw=BORD_PW, berm=BORD_BERM):
+    """v38e (review v38d, photo du tour du stade avec un trait jaune et un trait gris : « les planches commencent au trait jaune et
+    s'arrêtent vers le trait gris, voire un peu après ; après c'est du béton, couleur de mon trait ; le béton est sous les planches, pas de
+    dégradé entre les deux ; un dégradé avec la terre, régulier, surtout long, pas des taches ; tout le tour en U, rien au paddock ») :
+    mesuré sur la photo (ligne des tuff blocks = bord du couloir, à 20 ft du bord du sol) : trait jaune à ~10 ft, trait gris à ~13 ft.
+    Grille de 1 ft ; f = min(distance au bord du couloir - e0, distance au relief (> 1 ft : appuis) - berm), lissée (4 ft) :
+    f = 0 = bord intérieur des planches. Planches : une plaque de 4 x 8 ft (f de 0 à pw), bout à bout le long de f = pw / 2 ; terre :
+    bande le long de f = -3 (opaque de f = -4 à -2, nulle à f = 0 : la terre s'arrête avant le bois) ; béton (tuile Beton) partout où f >= 0
+    dans la zone en U, et sur tout le béton hors du sol de terre côté tribunes (x < paddock). -> (décals, filtre des taches de terre,
+    nombres)."""
+    import contourpy
+    from scipy.ndimage import distance_transform_edt, map_coordinates, gaussian_filter
+    from scipy.spatial import cKDTree
+    from matplotlib.path import Path as MPath
+    t = open(os.path.join(OUT, 'terrain.hf')).read().split(); s_, lo, hi = float(t[1]), float(t[2]), float(t[3])
+    Hm = np.asarray(Image.open(os.path.join(OUT, 'terrain.png')), float) / 65535 * (hi - lo) + lo
+    fl = np.asarray(fl, float); x0, x1, z0, z1 = fl[:, 0].min() - 2, fl[:, 0].max() + 2, fl[:, 1].min() - 2, fl[:, 1].max() + 2
+    xs, zs = np.arange(x0, x1, 1.0), np.arange(z0, z1, 1.0); X, Z = np.meshgrid(xs, zs)
+    h = map_coordinates(Hm, [Z / s_, X / s_], order=1)
+    sm = path.samples(0.5); dp, _ = cKDTree(np.c_[sm['x'], sm['z']]).query(np.c_[X.ravel(), Z.ravel()]); dp = dp.reshape(X.shape)
+    dl = dp - 15.2                                                       # distance au bord du couloir (30,4 ft)
+    dh = distance_transform_edt(~((h > 1.0) | (dl < 0)))                 # distance au relief (appuis ; le pied bas des bosses ne compte pas)
+    f = gaussian_filter(np.minimum(dl - e0, dh - berm), 4.0)          # lissée : courbes rondes aux raccords appui / ligne droite
+    floor = MPath(fl).contains_points(np.c_[X.ravel(), Z.ravel()]).reshape(X.shape); dw = distance_transform_edt(floor)
+    U = floor & (X < xpad - 4.0) & (dw < wall_max)
+    # aux coins arrondis du sol, la courbe des planches sort du sol de 1-3 ft (sur le béton, à 6 ft au moins des tribunes) : gardée
+    Ux = (floor | (distance_transform_edt(~floor) <= 3.5)) & (X < xpad - 4.0) & (dw < wall_max)
+    ij = lambda x, z: (int(np.clip(round(z - z0), 0, len(zs) - 1)), int(np.clip(round(x - x0), 0, len(xs) - 1)))
+    zone = lambda x, z: bool(U[ij(x, z)])
+    fval = lambda x, z: float(f[ij(x, z)])
+    gen = contourpy.contour_generator(xs, zs, f); out_p, out_t = [], []          # courbes entières, coupées par la zone en U
+    def walk(level, step, size, tex, out, ends=False):
+        n = 0
+        for ln in gen.lines(level):
+            ln = np.asarray(ln); seg = np.diff(ln, axis=0); L = np.hypot(*seg.T); cum = np.r_[0, np.cumsum(L)]
+            if cum[-1] < 4.0:
+                continue
+            for tt in np.arange(step / 2, cum[-1], step):
+                i = min(int(np.searchsorted(cum, tt, side='right')) - 1, len(seg) - 1)
+                if L[i] < 1e-6:
+                    continue
+                q = ln[i] + seg[i] / L[i] * (tt - cum[i])
+                if not Ux[ij(*q)]:
+                    continue
+                # direction lissée sur ± 3 ft de la courbe (pas de plaque de travers sur un petit cran)
+                a_, b_ = np.searchsorted(cum, tt - 4.0), min(np.searchsorted(cum, tt + 4.0), len(ln) - 1)
+                dv = ln[b_] - ln[max(a_, 0)]; th = np.arctan2(dv[1], dv[0])
+                out.append("[%.6f %.6f] %.6f %.6f 1.000000 @%s/rfborder/%s" % (q[0], q[1], -(th + np.pi / 2), size, folder, tex)); n += 1
+        return n
+    n_p = walk(pw / 2.0, 7.9, 8.0, 'planches.png', out_p)
+    n_t = walk(-3.0, 8.0, 16.0, 'terre_bord.png', out_t)
+    # béton : tuile Beton sur la zone en U où f >= 0 (sous les planches et au-delà) + tout le béton (Road) hors du sol côté tribunes
+    names = [__import__('re').search(r'name ([^\r\n]+)', b_) for b_ in open(os.path.join(OUT, 'tileinfo')).read().split('addtile')]
+    ix = {m.group(1).strip(): i for i, m in enumerate(names) if m}
+    beton, road = ix.get('Beton', ix['Road']), ix['Road']
+    tm = np.fromfile(os.path.join(OUT, 'tilemap'), np.uint8); TN = int(np.sqrt(tm.size)); tm = tm.reshape(TN, TN); S2 = 2 * 0.28975
+    jj, ii = np.meshgrid(np.arange(TN), np.arange(TN)); cx, cz = (jj + 0.5) * S2, (ii + 0.5) * S2
+    m = (cx >= x0) & (cx < x1 - 1) & (cz >= z0) & (cz < z1 - 1)
+    gi, gj = np.clip(np.round(cz - z0).astype(int), 0, len(zs) - 1), np.clip(np.round(cx - x0).astype(int), 0, len(xs) - 1)
+    fi = map_coordinates(f, [cz - z0, cx - x0], order=1, mode='nearest')
+    conc = m & U[gi, gj] & (fi >= 0.0)
+    hors = (tm == road) & (cx < xpad - 4.0)
+    tm[conc | hors] = beton; tm.astype(np.uint8).tofile(os.path.join(OUT, 'tilemap'))
+    return out_p + out_t, (lambda x, z, r=9.5: zone(x, z) and fval(x, z) > -r), (n_t, n_p, int(conc.sum()), int(hors.sum()))

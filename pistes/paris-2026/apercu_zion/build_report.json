@@ -17,7 +17,7 @@
    "lane": "L5 arrivée",
    "name": "PAR-L5 petit double, triple d arrivee (ZION 2025)",
    "u0": 1.0,
-   "L": 260.9,
+   "L": 264.9,
    "H": 11.15,
    "items": [
     [
@@ -26,9 +26,9 @@
      24.6
     ],
     [
-     "double USLAND",
+     "double USLAND x0,85",
      52.5,
-     94.7
+     88.4
     ],
     [
      "appel arrivee ZION 2025 (10,0)",
@@ -37,8 +37,8 @@
     ],
     [
      "triple arrivee ZION 2025 (6,0 / 11,2) fusionne",
-     142.9,
-     260.8
+     146.9,
+     264.8
     ]
    ]
   },
@@ -65,13 +65,13 @@
    "lane": "L3 grande table",
    "name": "PAR-L3 petite table creusee",
    "u0": 6.0,
-   "L": 50.5,
-   "H": 5.46,
+   "L": 56.5,
+   "H": 5.47,
    "items": [
     [
-     "petite table creusee x1.53",
+     "petite table creusee x1.71",
      0.0,
-     50.4
+     56.4
     ]
    ]
   },
@@ -243,44 +243,49 @@
   }
  ],
  "sable_s": [
-  1802.9,
-  1924.4
+  1792.9,
+  1914.4
  ],
  "sable_couche": [
   0.3,
   8.0
  ],
- "raccords_adoucis": [
+ "raccords_adoucis": [],
+ "zones_lissees": [
   [
-   "T_L5a",
-   292.0,
-   311.5,
-   1.24
+   "T_D ",
+   0.51
   ]
  ],
- "socles": 8,
- "sable_degrade": 14.0,
- "sable_tuiles": 13031,
+ "raccord_appui_bosse": [
+  [
+   "T_L5a",
+   0.4
+  ]
+ ],
+ "grilles_a_plat": 3,
+ "socles": 7,
+ "sable_tuiles": 12843,
  "tuiles_zion": [
-  "texture @USLANDParis/ztile/2.png",
-  "roost texture=@USLANDParis/ztile/roost.png count=0.1 slow_angle=1.0 vscale=0.2 size=.2 r=150 g=150 b=150 fade_a=0",
-  "roost texture=@USLANDParis/ztile/roost.png count=1 grow=1.5 slow_angle=1.0 drag=10 size=1.0 fade_a=0.1",
-  "treadmark texture=@USLANDParis/ztile/darkdirt_lroost2x4.png size=4 aspect=0.5 spacing=1.5 slip_threshold=4.0 speed_threshold=-20",
-  "treadmark texture=@USLANDParis/ztile/darkdirt_lroost2x8.png size=8 aspect=0.25 spacing=3 slip_threshold=4.0",
-  "treadmark texture=@USLANDParis/ztile/darkdirt_trackfade1x4.png size=4 aspect=0.25 spacing=1.5 speed_threshold=-20",
-  "treadmark texture=@USLANDParis/ztile/darkdirt_trackfade1x8.png size=8 aspect=0.125 spacing=3"
+  "texture @USLANDParisbyRyan/ztile/2.png",
+  "roost texture=@USLANDParisbyRyan/ztile/roost.png count=0.1 slow_angle=1.0 vscale=0.2 size=.2 r=150 g=150 b=150 fade_a=0",
+  "roost texture=@USLANDParisbyRyan/ztile/roost.png count=1 grow=1.5 slow_angle=1.0 drag=10 size=1.0 fade_a=0.1",
+  "treadmark texture=@USLANDParisbyRyan/ztile/darkdirt_lroost2x4.png size=4 aspect=0.5 spacing=1.5 slip_threshold=4.0 speed_threshold=-20",
+  "treadmark texture=@USLANDParisbyRyan/ztile/darkdirt_lroost2x8.png size=8 aspect=0.25 spacing=3 slip_threshold=4.0",
+  "treadmark texture=@USLANDParisbyRyan/ztile/darkdirt_trackfade1x4.png size=4 aspect=0.25 spacing=1.5 speed_threshold=-20",
+  "treadmark texture=@USLANDParisbyRyan/ztile/darkdirt_trackfade1x8.png size=8 aspect=0.125 spacing=3"
  ],
  "objets": {
   "objets": {
    "retirés (v13) : boudins FLY Racing (whoops)": 28,
-   "retirés (v13) : ballots ZION (unis)": 200,
+   "retirés (v13) : ballots ZION (unis)": 202,
    "retirés (v13) : poteaux ronds": 8,
    "retirés (v13) : tuffs de virage ZION (unis)": 71,
    "retirés (v13) : filets": 42,
    "panneau FINISH suspendu": 1,
-   "retirés (de travers) : cage du drapeau": 1,
+   "cage du drapeau": 1,
    "retirés (v13) : boudins Thor": 6,
-   "retirés (v13) : habillage Venum des tremplins": 2,
+   "retirés (v13) : habillage Venum des tremplins": 3,
    "retirés (v13) : arche 50 Factory": 1,
    "grilles de départ": 1,
    "retirés (v13) : bandeau START + mur de fond": 1,
@@ -290,15 +295,15 @@
    "retirés (v13) : long boudin noir FLY / RBT / SX TOUR (dans le U)": 2,
    "camions du paddock": 10
   },
-  "total": 12,
+  "total": 13,
   "amv_pied_ft": {},
   "arche": {
-   "crete_ft": 4.15,
+   "crete_ft": 3.83,
    "sol_pieds_ft": [
-    0.3,
+    0.26,
     0.22
    ],
-   "libre_sous_poutre_ft": 20.3
+   "libre_sous_poutre_ft": 20.7
   },
   "finish": {
    "crete_ft": 9.47
@@ -311,19 +316,27 @@
  },
  "long_tuff_apres_depart": 0,
  "quartier_ign_dalles": 36,
- "public": 6072,
+ "public": 6151,
  "export": {
   "hmin": -0.5,
   "hmax": 22.93475760838552,
   "statues_relevees": 72,
-  "decals": 85,
+  "decals": 84,
   "decals_terre": 0
  },
  "sol_zion": {
   "tuiles": 8,
   "ombrage_plat": 228
  },
- "decals_sable": 500,
+ "decals_sable": 447,
+ "decals_sable_voiles": 280,
+ "bordure_v2": {
+  "terre": 118,
+  "planches": 158,
+  "cases_beton": 59055,
+  "cases_beton_hors_sol": 2034609,
+  "taches_enlevees": 211
+ },
  "zion_v19": {
   "paddock": [
    761,
@@ -331,24 +344,67 @@
    397,
    777
   ],
-  "dalles_tuiles": 174590,
+  "dalles_tuiles": 147628,
   "x_paddock": 736.3,
-  "overlay": 5374,
+  "overlay": 5402,
   "decals_gardes": 0,
   "start": [
-   672.6,
+   684.6,
    555.6,
-   150.5
+   150.0
   ],
-  "toit_finish": 147.0,
+  "toit_finish": 145.5,
   "grilles": 22
  },
  "boudins_whoops": 22,
  "paddock_2026": {
-  "lignes": 268,
+  "v37": {
+   "enleves": [
+    "USLAND",
+    "RBT"
+   ],
+   "sol": [
+    403.2,
+    788.8
+   ],
+   "canettes": [
+    [
+     744.0,
+     659.6
+    ],
+    [
+     739.7,
+     718.3
+    ]
+   ],
+   "decalages": {
+    "Triumph": -28.2,
+    "Airstream": -28.2,
+    "box motos": -21.3,
+    "Suzuki": -28.2,
+    "Honda": -28.2,
+    "Automoto": -28.2,
+    "box motos (côté photo 2)": -23.3,
+    "GSM": -25.6,
+    "Sedna": 17.6,
+    "VHR": 19.4,
+    "YCF": 28.7,
+    "barrière numérotée": -32.6,
+    "gant gonflable Five": -29.9,
+    "van blanc": -160.1,
+    "tente arche noire": -162.4,
+    "KTM": -18.2,
+    "ACCÈS PISTE (croix)": -17.0,
+    "Milwaukee": 25.5,
+    "Monster": 25.5,
+    "Stark": 35.0,
+    "Bud": 35.1
+   }
+  },
+  "lignes": 261,
   "modeles": 104,
   "fichiers": 197,
-  "triangles": 401682
+  "triangles": 46450
  },
  "deco_v21": {
   "murs": [
@@ -445,7 +501,7 @@
    716.6,
    1.19
   ],
-  "poteaux": 7,
+  "poteaux": 6,
   "cabane": [
    119.1,
    25.0
@@ -458,6 +514,12 @@
   ],
   "murs_invisibles": [
    [
+    "invisible_freestyle",
+    66.6,
+    12.5,
+    35.0
+   ],
+   [
     "invisible_milwaukee",
     176.9,
     18.9,
@@ -465,39 +527,104 @@
    ],
    [
     "invisible_arrivee",
-    99.6,
+    96.5,
     13.0,
     30.0
    ]
   ],
   "bottes_v29": 40,
+  "poteau_virage_axe": 22.5,
   "poteau_virage": [
-   390.5,
-   535.6
+   391.1,
+   536.3
   ],
   "couloir_depart": {
    "A": [
     [
-     406.8,
-     542.6
+     646.0,
+     518.7
     ],
     [
-     597.8,
-     542.6
+     633.0,
+     519.4
+    ],
+    [
+     620.0,
+     520.2
+    ],
+    [
+     607.0,
+     521.1
+    ],
+    [
+     594.0,
+     522.0
+    ],
+    [
+     581.0,
+     523.1
+    ],
+    [
+     568.0,
+     524.2
+    ],
+    [
+     555.0,
+     525.4
+    ],
+    [
+     542.0,
+     526.8
+    ],
+    [
+     529.0,
+     528.2
+    ],
+    [
+     516.0,
+     529.7
+    ],
+    [
+     503.0,
+     531.3
+    ],
+    [
+     490.0,
+     532.9
+    ],
+    [
+     477.0,
+     534.7
+    ],
+    [
+     464.0,
+     536.6
+    ],
+    [
+     451.0,
+     538.5
+    ],
+    [
+     438.0,
+     540.5
+    ],
+    [
+     425.0,
+     542.7
+    ],
+    [
+     412.5,
+     544.8
     ]
    ],
    "B": [
     [
-     406.8,
-     580.6
+     606.0,
+     600.0
     ],
     [
-     589.8,
-     580.6
-    ],
-    [
-     607.1,
-     619.3
+     396.0,
+     600.0
     ]
    ]
   },
@@ -527,10 +654,44 @@
     664.0
    ]
   ],
-  "boudins_tardifs": 32,
-  "boudins_20s": 32
+  "rampes_v38c": {
+   "k": 1.4,
+   "grilles": [
+    25.0,
+    25.0,
+    88.0
+   ],
+   "jupe": null
+  },
+  "personne_public": [
+   500.5011,
+   9.5832,
+   800.7507
+  ],
+  "boudins_tardifs": 35,
+  "v36_enleves": 7,
+  "v36p_tuff_oter": 7,
+  "v36_virage_U": {
+   "tuff": 12,
+   "dist_axe_min": 15.2,
+   "poteau_pente": 0.28
+  },
+  "v38": {
+   "oter": 6,
+   "poses": 8,
+   "courbe_tbb": 6
+  },
+  "rider_gate": [
+   705.0,
+   615.6
+  ],
+  "boudins_20s": 35
  },
- "lap_ft": 2538.5,
+ "cameras_tv": {
+  "cameras": 8,
+  "portes": 29
+ },
+ "lap_ft": 2528.5,
  "start": {
   "gate": [
    684.5768800000001,

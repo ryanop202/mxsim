@@ -965,8 +965,7 @@ def _board_side_v25(kind, W, H, px_u, px_v, ua, inner, top=None, mir=None):
     uR_, uL_ = u2 + 0.64 * (u3 - u2), u0 + 0.50 * (u1 - u0)
     if top is not None:                                                                 # v25e : là où la bosse fait au moins 8 ft (pas coupé par le bord)
         uL_, uR_ = u0 + 0.40 * (u1 - u0), u2 + 0.64 * (u3 - u2)                        # v25f : entre le pied et chaque perso
-    d.text((X(uR_), Y(3.4)), 'AMV.FR', font=ft, fill=G_, anchor='mm')                  # au-dessus de la bande verte (« touche pas le sol »)
-    d.text((X(uL_), Y(3.4)), 'AMV', font=ft, fill=G_, anchor='mm')
+    # v38d (« le AMV.fr mord dans le vert, décale-le dans le blanc ou enlève-le, des 2 côtés ») : enlevés
     return im
 
 

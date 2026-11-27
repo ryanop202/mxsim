@@ -73,7 +73,7 @@ def lane_sides(tag='L2'):
     sides = []
     for k_ in (0, 1):                                    # 0 gauche (kl), 1 droite (kr) du sens de course
         f = np.ones_like(h)
-        for a, b, kl, kr in LP.SPLIT_Z.get(name, []):
+        for a, b, kl, kr in (q[:4] for q in LP.SPLIT_Z.get(name, [])):
             f[(u >= u0 + a - 0.05) & (u <= u0 + b + 0.05)] = (kl, kr)[k_]
         sides.append(h * f)
     import layouts_sx as LS
