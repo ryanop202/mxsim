@@ -1135,7 +1135,57 @@ def export_zion(*a, **k):
     # écran géant refait devant le mur de scène
     import paddock26 as PD
     BP.REPORT['paddock_2026'] = PD.apply(BP.OUT, BP.FOLDER)
+    BP.REPORT['classement_direct'] = classement_direct(BP.OUT, BP.FOLDER)   # v37 : classement en direct sur l'écran géant
     deco_v21(BP.OUT, BP.FOLDER, LS.COMBOS)                             # v21 : murs bâchés + filets, ballots en U, arche 50 Factory
+    BP.REPORT['cameras_tv'] = cameras_tv(BP.OUT)                      # v37 : caméras TV (comme la RF)
+
+
+def classement_direct(OUT, FOLDER):
+    """v37 : dalle « classement en direct » devant l'écran géant (tableau_direct.py) + frills.js ; ligne ajoutée aux statues
+    (jour et variantes), à la même place et dans le même sens que l'écran géant posé par paddock26."""
+    import re
+    import tableau_direct as TD
+    L = open(os.path.join(OUT, "statues")).read().splitlines()
+    e = [l for l in L if "/ecran_geant.jm " in l]; assert len(e) == 1, "classement : écran géant introuvable"
+    m = re.match(r"\[(\S+) \S+ (\S+)\] (\S+)", e[0]); line, rep = TD.make(OUT, FOLDER, float(m.group(1)), float(m.group(2)), float(m.group(3)))
+    for f in ["statues"] + ["variants/" + v for v in os.listdir(os.path.join(OUT, "variants")) if v.startswith("statues")]:
+        p_ = os.path.join(OUT, f); L_ = [l for l in open(p_).read().splitlines() if l.strip() and "/direct/dalle.jm" not in l]
+        open(p_, "w", newline="\n").write("\n".join(L_ + [line]) + "\n")
+    return rep
+
+
+# v37 (« sur la RF il y a une cam broadcast, fais les caméras TV ») : fichier « cameras » comme RF / ZION : par caméra « autofovsize »
+# (largeur cadrée, ft), « gate » = portes de chrono (indices des checkpoints de timing_gates) où le jeu passe sur cette caméra, puis
+# « addcamera x y z » (y = hauteur, ft). Caméras en haut des tribunes basses (Nord z 372, Sud z 822, Est x 215) et au-dessus de la
+# paddock (x 800, 60 ft : au-dessus des camions), une par enchaînement dans l'ordre du tour (pas la plus proche : ça sauterait d'une caméra à l'autre à chaque porte).
+# Chaque porte a une caméra ; contrôlé sur la position des portes (± 30 ft).
+CAMERAS_TV = [  # (nom, (x, y, z), autofovsize, [(porte, x attendu, z attendu), ...])
+    ("départ, derrière les grilles (au-dessus du paddock)", (800.0, 60.0, 575.0), 35, [(27, 526, 556)]),
+    ("1er virage et ligne droite Est", (215.0, 40.0, 600.0), 30, [(28, 345, 623), (18, 301, 642), (19, 301, 550), (20, 307, 444)]),
+    ("tribune Nord, ligne droite du haut", (560.0, 45.0, 372.0), 30, [(21, 407, 438), (22, 491, 438), (23, 576, 438), (24, 685, 462)]),
+    ("tribune Nord, L5 et virages en U", (450.0, 45.0, 372.0), 30, [(25, 569, 487), (26, 537, 487), (0, 478, 487), (1, 372, 493),
+                                                                   (2, 375, 552), (3, 470, 562)]),
+    ("virages Ouest (au-dessus du paddock)", (800.0, 60.0, 615.0), 35, [(4, 542, 562), (5, 630, 568), (6, 630, 643)]),
+    ("tribune Sud, centre", (480.0, 45.0, 822.0), 30, [(7, 532, 649), (8, 448, 649), (15, 500, 754)]),
+    ("tribune Sud, côté Est", (360.0, 45.0, 822.0), 30, [(9, 351, 655), (10, 355, 695), (11, 479, 705), (16, 411, 754), (17, 307, 748)]),
+    ("tribune Sud, côté Ouest", (640.0, 45.0, 822.0), 30, [(12, 578, 705), (13, 701, 730), (14, 588, 754)]),
+]
+
+
+def cameras_tv(OUT):
+    import re
+    tg = open(os.path.join(OUT, "timing_gates")).read()
+    cp = tg.split("checkpoints:")[1].split("firstlap:")[0].strip().splitlines()
+    G = [tuple(float(v) for v in re.findall(r"\[(\S+) \S+ (\S+)\]", l)[0]) for l in cp]
+    vues = sorted(g for _, _, _, gl in CAMERAS_TV for g, _, _ in gl)
+    assert vues == list(range(len(G))), "caméras TV : chaque porte doit avoir une caméra (%d portes)" % len(G)
+    out = []
+    for nom, (x, y, z), fov, gl in CAMERAS_TV:
+        for g, xe, ze in gl:
+            assert abs(G[g][0] - xe) < 30 and abs(G[g][1] - ze) < 30, ("caméras TV : la porte %d a bougé" % g, G[g])
+        out += ["autofovsize %d" % fov, "gate " + " ".join(str(g) for g, _, _ in gl), "addcamera %.1f %.1f %.1f" % (x, y, z), ""]
+    open(os.path.join(OUT, "cameras"), "w", newline="\n").write("\n".join(out))
+    return dict(cameras=len(CAMERAS_TV), portes=len(G))
 
 
 def semis_jgsx(OUT, FOLDER):

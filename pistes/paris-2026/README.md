@@ -375,4 +375,10 @@ allée parallèle au mur (x 772-800 ft).
   des points de Ryan, sans toucher un camion.
 - Fabrication automatique : `commun/tools/maj_paris.ps1` + hook `.githooks/post-merge` (voir README racine) ; `build_zion.py --out`.
 - Contrôles 7 / 7 ; non testé en jeu.
+- Caméras TV (« sur la RF il y a une cam broadcast ») : fichier `cameras` (`build_zion.CAMERAS_TV`) : 8 caméras en haut des tribunes
+  et au-dessus du paddock, une par enchaînement dans l'ordre du tour ; chacune des 29 portes de chrono a sa caméra.
+- Classement en direct sur l'écran géant (« les noms des pilotes qui défilent, fais les nôtres ») : `tableau_direct.py` -> dalle
+  devant l'écran central + `direct.seq` + `frills.js` (même principe que la tour de classement RF, refait à nous, style Supercross
+  Paris) : temps / tours restants, top 5, bande à la couleur de la marque, numéro + nom qui défilent. Vérifié avec un faux jeu
+  (mêmes appels mx.*, image recomposée), PAS dans le jeu : le format du .seq et les fonctions mx.* viennent de la RF.
 
