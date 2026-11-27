@@ -30,7 +30,14 @@ FLOOR_X_SOUTH = -60.0 * PLAN_K    # m (dims.FLOOR_X_SOUTH x K)
 # des tribunes Nord / Sud à z 400 / 792, ~3,5 m du bord de la piste ; mêmes valeurs dans stade_paris/src/build.py (PLAN_KY, PLAN_DY)
 PLAN_KZ = 1.3124
 ARENA_DY = -0.762
-PLAN_KXYD = (PLAN_K, PLAN_KZ, ARENA_DY)
+# v39 (Ryan, vue de dessus : « le côté ouest à la même distance que le sud et le nord ») : bord du couloir -> sol = 20,3 ft au Nord et au
+# Sud, 41,8 ft à l'Ouest : le front de tribune Ouest (bout Sud de l'arène) avance de 21,5 ft, le mur de scène (paddock) ne bouge pas :
+# en x, stade x PLAN_KX puis + ARENA_DX m. La piste ne bouge pas : X0 reste calé sur l'ancien sol (FLOOR_X_SOUTH x 1,55).
+# Mêmes valeurs dans stade_paris/src/build.py (PLAN_KX, PLAN_DX)
+WEST_SHIFT_FT = 21.5
+PLAN_KX = (62.0 * PLAN_K - (-60.0 * PLAN_K + WEST_SHIFT_FT / FT)) / (62.0 + 60.0)
+ARENA_DX = 62.0 * PLAN_K - 62.0 * PLAN_KX
+PLAN_KXYD = (PLAN_KX, PLAN_KZ, ARENA_DY, ARENA_DX)
 OX, OZ = 549.0, 593.5             # origine du repère de l'arène dans le terrain (ft) : bâtiment centré sur 1187 ft
 # v28 (stade x1,55) : piste centrée en z dans le sol (68 ft entre la ligne de course et la tribune en haut et en bas) ; 35 ft
 # côté sable (était 48,5) pour garder la place du paddock derrière les virages Ouest
@@ -369,6 +376,12 @@ CAMEL_U -= SAND_CUT
 # v29b (capture en jeu : « le saut Milwaukee est complètement buggé ») : en v28p le saut a reculé de 32 ft mais pas ses panneaux
 # (BOARD_POLY, utilisé aussi pour les bâches, les ballots du dessus et la coupe) -> panneaux 32 ft devant la terre ; décalés avec lui
 BOARD_POLY['milwaukee'] = [(u_ - SAND_CUT, y_) for u_, y_ in BOARD_POLY['milwaukee']]
+# v39b (Ryan, photo de Paris : sur l'appel du saut du milieu (freestyle), de chaque côté, un triangle noir avec le logo Venum centré en
+# haut, « bien collé comme les panneaux AMV et Milwaukee ») : panneau « venum » sur l'appel de L3 (crête ~8,5 ft à u ~102 ft, dessus plat
+# sur ±14 ft) ; seuls ua / ub comptent ici (le contour suit l'appel, deco_v22.board_v25b) ; la terre au-delà du panneau est coupée
+BOARD_POLY['venum'] = [(84.0, 0.0), (101.0, 8.6), (103.0, 8.6), (118.0, 0.0)]
+BOARD_LANE['venum'] = 'L3'
+BOARD_VB['venum'] = 14.5
 # v22 (dessin sur L1) : « après les whoops, comme une whoops en plus, sauf que ça fait une table plate d'à peu près la longueur d'une
 # table normale ; ça redescend »
 TABLE_PLATE_L1_V23C = pts_prof([(0, 0), (3, 1.0), (6, 2.9), (8.5, 3.4), (19, 3.6), (29, 4.25), (31.5, 4.4), (34.5, 3.6), (39, 0.9), (42, 0)], 0.8)
@@ -1041,7 +1054,10 @@ def paris():
         free = lLR - u0 - END_GAP - tlen([r1]) - tlen([r2]) - tlen([cam]) - tlen(tri_); creux = 3.0
         g1 = round(CAMEL_U - u0 - tlen([r1]) - tlen([r2]) - creux, 1)   # v22c : le saut commence à CAMEL_U ft du virage
         assert g1 > 15.0, free
-        toks = [r1, ('gap', g1), r2, ('gap', creux), cam, ('gap', 13.5)] + tri_   # v23e : triple un peu plus près du virage (8 -> 12 ft) ; v25 : +1,5 ft
+        # v39b (Ryan, capture du triple après le Milwaukee : « mets-le 2 ft plus tard, mais entre chaque bosse enlève 1 ft : on ne change
+        # rien à la réception, il est un peu plus court, avec un peu plus de vitesse ») : élan 13,5 -> 15,5 ft, écarts 5,5 -> 4,5 ft (fin inchangée)
+        tri_ = [tri_[0], ('gap', TRI_LR_GAP), tri_[2], ('gap', TRI_LR_GAP), tri_[4]]
+        toks = [r1, ('gap', g1), r2, ('gap', creux), cam, ('gap', TRI_LR_ELAN)] + tri_   # v23e : triple un peu plus près du virage (8 -> 12 ft) ; v25 : +1,5 ft ; v39b : 15,5
         SAND_LR = (0.0, u0 + tlen([r1]) + g1 + tlen([r2]) + creux + 2.0)
         SAND_LR = (0.0, CAMEL_U + 9.0)   # v25e (« arrête la sortie au trait rouge, au bas de la pelle Milwaukee »)
     p.straight((zL1 - RB) - (zL6 + RB), [lane_sec('PAR-LR sable, saut Milwaukee, triple' if ZION else 'PAR-LR saut de sortie, bosse, table, 3 bosses', toks, u0)], tag='LR tribune Est')
@@ -1096,6 +1112,7 @@ L6_PULL = 0.0      # v38b (« je parlais de l'enchaînement avant l'arrivée »)
 L5_RECEP_K = 1.5   # v39 : montée de la réception du petit double avant l'arrivée x1,5 (moins raide, plus ronde)
 L5_V38, L5_GAP34 = True, 4.0   # v38b : ligne d'arrivée (2e bosse plus courte et plus basse, +4 ft après l'appel d'arrivée)
 L3_APP_FWD = 4.9   # v39 : crête de l'appel du freestyle 4,9 ft plus près de la butte (trait rouge)
+TRI_LR_ELAN, TRI_LR_GAP = 15.5, 4.5   # v39b : triple de LR (après le Milwaukee) 2 ft plus tard, écarts 5,5 -> 4,5 ft (réception au même endroit)
 L3_RUN = 8.0       # v38 (« rallonge de quelques mètres le double avant le saut de freestyle, il est trop petit ») : élan avant l'appel du freestyle 14 -> 8 ft (table +6 ft)
 EXIT_U0 = 6.0 if ZION else 10.0          # v23 Zion (« moins d'élan sur toutes les sorties de virage ») : 10 -> 6 ft ; v13 : 1re bosse à 10 ft de la sortie des virages (plus de marque berm / appel)
 L2_U0_V13 = 10.0
@@ -1111,7 +1128,7 @@ if ZION and T_D_CUT:
     BERM_SOFT_TAG['T_D '] = 0.0   # v29b (« on dirait un gros bout de tas de terre, c'est pas carré ») : plus de flou, croissant JGSX net comme T_Bb
     BERM_END_FADE['T_D '] = (4.0, 20.0)
     BERM_START_FADE = {'T_D ': (6.0, 28.0)}   # v28w (« adoucis, ça fait carré ») : fondu 8 -> 28°, commence à 6° ; v28v (trait vert : « coupe le début du virage ») : berm coupé sur les 11 premiers degrés (au trait), fondu sur 8°
-BERM_REGULAR = {'T_D ': dict(rin=12.0, rout=14.0)} if ZION else {}   # v39 (« une patate : pas un vrai virage ») : pleine hauteur sur 21-68° au lieu de 39-62°, bouts plus nets ; v35 : rin 28 / rout 20   # v35 (« la gueule du virage pas belle, fais que ce soit linéaire, même hauteur ; la sortie pas belle ») : berm régulier (build_zion.berm_regular), montée / descente = fondus d'avant
+BERM_REGULAR = {'T_D ': dict(rin=20.0, rout=20.0)} if ZION else {}   # v39b (Ryan : « horrible, fais un truc beau et roulant ») : montée / descente 20° (plus douces, sans plateau) ; v39 Bazo : rin 12 / rout 14 (« une patate : pas un vrai virage ») : pleine hauteur sur 21-68° au lieu de 39-62°, bouts plus nets ; v35 : rin 28 / rout 20   # v35 (« la gueule du virage pas belle, fais que ce soit linéaire, même hauteur ; la sortie pas belle ») : berm régulier (build_zion.berm_regular), montée / descente = fondus d'avant
 LD_SHIFT = 5.0                          # v10 : ligne de départ 5 ft plus loin du saut du milieu (place pour les tremplins FMX ;
 #                                         plus loin, le bout des 22 grilles monte sur le pied du berm T_C : grilles plus plates)
 L2_GAP, L2_U0 = 5.0, 10.0               # v9 : écart identique entre les 7 bosses de L2 ; v13 : 1re bosse à 10 ft du 180 (était 3 : marque)

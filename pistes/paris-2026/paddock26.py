@@ -929,19 +929,40 @@ def _sunset(W, H):
     return Image.fromarray(a.clip(0, 255).astype(np.uint8)).convert("RGBA")
 
 
+SCREEN_LIVE = True     # v39b : le grand écran = classement en direct sur toute sa surface (tableau_direct.py), plus d'image fixe dessous
+
+
+def _frame(lit, BK, x0, x1, y0, y1, b):
+    """cadre noir AUTOUR d'une image (4 bandes à z 1,0), sans rien derrière l'image elle-même (v39b : avant, une boîte noire à 0,02 ft
+    derrière l'image : de loin le jeu affichait la boîte -> écrans noirs)."""
+    for (cx, w, ya, yb) in (((x0 + x1) / 2, x1 - x0 + 2 * b, y1, y1 + b), ((x0 + x1) / 2, x1 - x0 + 2 * b, y0 - b, y0),
+                            (x0 - b / 2, b, y0, y1), (x1 + b / 2, b, y0, y1)):
+        lit.panel((cx, 1.0), (0, 1), w, yb - ya, ya, BK)
+
+
 def screen(D):
     A = Atlas(2048); un, lit = M(), M(); BK = A.s((14, 14, 16))
     hW = 2048; hH = int(hW * (SCR_Y1 - SCR_Y0) / SCR_W)
-    main = _sunset(hW, hH); fitc(main, lg("sxparis").filter(ImageFilter.SMOOTH), (int(hW * 0.2), int(hH * 0.08), int(hW * 0.8), int(hH * 0.8)), 0.02)
-    rM = A.put(main)
-    sw = 700; sh = int(sw * (SIDE_Y1 - SIDE_Y0) / SIDE_W)
-    side = _sunset(sw, sh); fitc(side, lg("sxparis"), (20, int(sh * 0.25), sw - 20, int(sh * 0.6)), 0.03); rS = A.put(side)
-    un.panel((0, 1.02), (0, 1), SCR_W, SCR_Y1 - SCR_Y0, SCR_Y0, rM)
-    box(lit, (-SCR_W / 2 - 1.5, SCR_Y0 - 1.5, 0), (SCR_W / 2 + 1.5, SCR_Y1 + 1.5, 1.0), BK, faces="xXyYZ")
+    # v39b (Ryan : « sur les 2 petits écrans : Supercross de Paris, USLAND, avec les graphismes rose de Supercross Paris ») : coucher de
+    # soleil rose, logo Supercross Paris en haut, logo USLAND blanc en dessous
+    sw = 1024; sh = int(sw * (SIDE_Y1 - SIDE_Y0) / SIDE_W)
+    side = _sunset(sw, sh); fitc(side, lg("sxparis"), (40, int(sh * 0.06), sw - 40, int(sh * 0.56)), 0.02)
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "stade_paris", "src"))
+    from arena import branding as BR_
+    u_ = BR_.logo_rgba(); us = Image.fromarray(np.dstack([np.clip(u_[..., :3], 0, 255), np.clip(u_[..., 3] * 255, 0, 255)]).astype(np.uint8), "RGBA")
+    fitc(side, us.crop(us.getbbox()), (int(sw * 0.2), int(sh * 0.60), int(sw * 0.8), int(sh * 0.86)), 0.02); rS = A.put(side)
+    if not SCREEN_LIVE:
+        main = _sunset(hW, hH); fitc(main, lg("sxparis").filter(ImageFilter.SMOOTH), (int(hW * 0.2), int(hH * 0.08), int(hW * 0.8), int(hH * 0.8)), 0.02)
+        un.panel((0, 1.02), (0, 1), SCR_W, SCR_Y1 - SCR_Y0, SCR_Y0, A.put(main))
+    # grand écran : cadre autour, fond noir 1 ft derrière l'image (visible seulement si le direct ne s'affiche pas), côtés de la boîte
+    _frame(lit, BK, -SCR_W / 2, SCR_W / 2, SCR_Y0, SCR_Y1, 1.5)
+    lit.panel((0, 0.0), (0, 1), SCR_W, SCR_Y1 - SCR_Y0, SCR_Y0, BK)
+    box(lit, (-SCR_W / 2 - 1.5, SCR_Y0 - 1.5, 0), (SCR_W / 2 + 1.5, SCR_Y1 + 1.5, 1.0), BK, faces="xXyY")
     for sx in (-1, 1):
         cx = sx * (SCR_W / 2 + SIDE_GAP + SIDE_W / 2)
         un.panel((cx, 1.02), (0, 1), SIDE_W, SIDE_Y1 - SIDE_Y0, SIDE_Y0, rS)
-        box(lit, (cx - SIDE_W / 2 - 1.0, SIDE_Y0 - 1.0, 0), (cx + SIDE_W / 2 + 1.0, SIDE_Y1 + 1.0, 1.0), BK, faces="xXyYZ")
+        _frame(lit, BK, cx - SIDE_W / 2, cx + SIDE_W / 2, SIDE_Y0, SIDE_Y1, 1.0)
+        box(lit, (cx - SIDE_W / 2 - 1.0, SIDE_Y0 - 1.0, 0), (cx + SIDE_W / 2 + 1.0, SIDE_Y1 + 1.0, 1.0), BK, faces="xXyY")
     nt = write_jm(os.path.join(D, "ecran_geant.jm"), [(UNLIT, un), (LIT, lit)]); A.save(os.path.join(D, "ecran_geant.png"))
     return "ecran_geant.jm", "ecran_geant.png", nt
 
@@ -1461,8 +1482,9 @@ def _grp37(k, c):
 
 
 def jm_ext(path):
-    """emprise (xmin, xmax, zmin, zmax) d'un modèle .jm (repère local)."""
-    L = open(path).read().split("\n"); i = next(j for j, l in enumerate(L) if j > 0 and len(l.split()) == 2); nv = int(L[i].split()[0])
+    """emprise (xmin, xmax, zmin, zmax) d'un modèle .jm (repère local) ; lit aussi le .jm.gz s'il n'y a que lui."""
+    import gzip
+    L = (open(path) if os.path.exists(path) else gzip.open(path + ".gz", "rt")).read().split("\n"); i = next(j for j, l in enumerate(L) if j > 0 and len(l.split()) == 2); nv = int(L[i].split()[0])
     V = np.array([[float(v) for v in L[i + 1 + j].split()[:3]] for j in range(nv)])
     return V[:, 0].min(), V[:, 0].max(), V[:, 2].min(), V[:, 2].max()
 

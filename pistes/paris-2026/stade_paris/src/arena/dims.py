@@ -56,7 +56,8 @@ CROWN_TOP_CORNER = 29.6    # dans les arcs d'angle
 # ---------------------------------------------------------------- intérieur
 FLOOR_HALF_W = 45.0        # [DOC] sol 90 m de large (dUCKS)
 FLOOR_X_SOUTH = -60.0      # [LID]/[DOC] front de tribune Sud (sol ≈ 122 m de long)
-FLOOR_R = 18.0             # [PHO] rayon des angles du bol côté Sud (P7, P10)
+FLOOR_R = 12.0             # v39 Paris : 18 -> 12 m (côté Ouest du jeu rapproché de 21,5 ft : avec 18 m les 2 coins arrivaient à 9,6 ft du bord de
+                           # la piste ; avec 12 m, 20,1 ft au plus près, comme le Nord et le Sud) ; [PHO] réel : 18 m (P7, P10)
 ROOF_SOFFIT_MIN = 28.5     # [HYP] sous-face de toiture en rive (bord 31 m - 2,5 m)
 TRUSS_BOTTOM = 30.5        # [DOC] membrure basse (45 m - 14 m de charpente)
 

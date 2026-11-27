@@ -907,6 +907,21 @@ def _cut_bg(img, keep_bottom=True):
     a[kill, 3] = 0; return Image.fromarray(a, 'RGBA')
 
 
+def venum_head():
+    """tête de serpent du logo Venum de l'utilisateur (partie gauche du logo, avant la 1re colonne vide), en blanc, détourée (comme le
+    dessus des rampes FMX, deco_v28.ramp_black_venum, mais à l'endroit : dents en bas)."""
+    import sponsors as SP
+    b = np.asarray(Image.open(os.path.join(SP.U, 'logo venum full.webp')).convert('RGBA')).astype(float)
+    al = (b[..., 3] / 255.0) * (b[..., :3].mean(-1) < 128)
+    lg = Image.fromarray(np.dstack([np.full(al.shape + (3,), 245.0), al * 255]).astype(np.uint8), 'RGBA'); lg = lg.crop(lg.getbbox())
+    al_ = np.asarray(lg)[..., 3] > 20; cols = al_.any(0); x_ = 0
+    while x_ < len(cols) and cols[x_]:
+        x_ += 1
+    while x_ < len(cols) and not cols[x_]:
+        x_ += 1
+    t = lg.crop((0, 0, max(1, x_ - 2), lg.size[1])); return t.crop(t.getbbox())
+
+
 def _board_side_v25(kind, W, H, px_u, px_v, ua, inner, top=None, mir=None):
     """dessin d'une face (W x H) ; inner : face côté piste ; mir : coordonnées u en miroir (par défaut = inner). v28 (« le côté gauche du
     carton AMV pas bien fait ») : le panneau de GAUCHE a ses UV inversés (texte lisible) -> le dessin doit l'être aussi, sinon la forme
@@ -920,6 +935,21 @@ def _board_side_v25(kind, W, H, px_u, px_v, ua, inner, top=None, mir=None):
     if top is not None and kind == 'amv':                                               # v25e : contour = la forme de la bosse
         tu, ty = np.array([q[0] for q in top]), np.array([q[1] for q in top]); yt = float(ty.max()); kk = np.nonzero(ty >= yt - 1.2)[0]
         u0, u1, u2, u3 = float(tu[0]), float(tu[kk[0]]), float(tu[kk[-1]]), float(tu[-1])
+    if kind == 'venum':
+        # v39b (photo de Paris : triangle noir, tête de serpent Venum blanche centrée en haut, sans sortir du triangle)
+        tu, ty = np.array([q[0] for q in top]), np.array([q[1] for q in top]); ia = int(np.argmax(ty)); ua_, yt_ = float(tu[ia]), float(ty[ia])
+        wl = lambda y: float(np.interp(y, ty[ia:][::-1], tu[ia:][::-1]) - np.interp(y, ty[:ia + 1], tu[:ia + 1]))   # largeur du triangle à la hauteur y
+        im = Image.new('RGB', (W, H), (14, 14, 16)); hd = venum_head()
+        hh = 0.30 * yt_; asp = hd.size[0] / hd.size[1]
+        for _ in range(40):                                                             # le plus grand logo dont le haut tient dans le triangle
+            yb_ = 0.78 * yt_ - hh; ww = hh * asp
+            if ww <= 0.80 * wl(yb_ + hh) or hh < 0.5:
+                break
+            hh *= 0.95
+        uc = (np.interp(yb_ + hh / 2, ty[:ia + 1], tu[:ia + 1]) + np.interp(yb_ + hh / 2, ty[ia:][::-1], tu[ia:][::-1])) / 2
+        xa, xb = sorted((X(uc - ww / 2), X(uc + ww / 2)))
+        fit(im, sq(hd), (xa, Y(yb_ + hh), xb, Y(yb_)), 0.0)
+        return im
     if kind == 'milwaukee':
         bg, lg = SP.panel('milwaukee'); im = Image.new('RGB', (W, H), bg); d = ImageDraw.Draw(im); ysk = 2.3
         d.rectangle([0, Y(ysk), W, H], fill=(16, 16, 18))                               # noir du sol jusqu'à la forme rouge
@@ -1024,14 +1054,25 @@ def board_v25b(out, name, Hf, g, side, kind, th=None):
         iL = int(np.nonzero(ys[:i1 + 1] >= 2.0)[0][0]); iR = i2 + int(np.nonzero(ys[i2:] <= 2.0)[0][0])
         ku = [us[0], us[iL], us[i1], us[i2], us[iR], us[-1]]; ky = [0.3, ys[iL], ytp, ytp, ys[iR], 0.3]
         ys = np.interp(us, ku, ky)
+    elif kind == 'venum':
+        # v39b : triangle aux bords droits qui suit l'appel : enveloppe convexe du dessus de la bosse (+0,1 ft) -> jamais de terre au-dessus
+        us = np.arange(ua, ub + 0.01, 0.5); ys = np.array([max(0.0, H1(base(u)) - h0) + 0.1 for u in us]); k = np.nonzero(ys > 0.45)[0]
+        us, ys = us[k[0]:k[-1] + 1], ys[k[0]:k[-1] + 1]
+        hull = []
+        for q in zip(us.tolist(), ys.tolist()):
+            while len(hull) >= 2 and (hull[-1][0] - hull[-2][0]) * (q[1] - hull[-2][1]) - (hull[-1][1] - hull[-2][1]) * (q[0] - hull[-2][0]) >= 0:
+                hull.pop()
+            hull.append(q)
+        ys = np.interp(us, [q[0] for q in hull], [q[1] for q in hull])
+        ua, ub = float(us[0]), float(us[-1]); um = (ua + ub) / 2
     else:
         us = np.arange(ua, ub + 0.01, 0.5); ys = np.interp(us, [q[0] for q in poly], [q[1] for q in poly])
     top = list(zip(us.tolist(), ys.tolist())); ytop = float(ys.max()); hb_ = AMV_BARRIER[3] - AMV_BARRIER[2]
     kk = np.nonzero(ys >= ytop - 1.2)[0]; bu0, bu1 = float(us[kk[0]]), float(us[kk[-1]])
     ymax = ytop + (hb_ + 0.2 if kind == 'amv' else 0.0); L = ub - ua; W = 2048; Ht = int(min(1024, max(256, round(W * ymax / L / 32) * 32)))
     px_u, px_v = W / L, Ht / ymax
-    outer = _board_side_v25(kind, W, Ht, px_u, px_v, ua, False, top if kind == 'amv' else None, mir=side < 0)   # v28 : UV de la face = 1 - fu à gauche
-    inner = _board_side_v25(kind, W, Ht, px_u, px_v, ua, True, top if kind == 'amv' else None, mir=side > 0)
+    outer = _board_side_v25(kind, W, Ht, px_u, px_v, ua, False, top if kind in ('amv', 'venum') else None, mir=side < 0)   # v28 : UV de la face = 1 - fu à gauche
+    inner = _board_side_v25(kind, W, Ht, px_u, px_v, ua, True, top if kind in ('amv', 'venum') else None, mir=side > 0)
     im = Image.new('RGB', (W, 2 * Ht)); im.paste(outer, (0, 0)); im.paste(inner, (0, Ht))
     im = _fabric(im, (0, 0, W, 2 * Ht), 3, seed=24); im = K.grain(im, 0.8)
     ImageDraw.Draw(im).rectangle([0, 0, 4, 4], fill=(16, 16, 18)); png = name + '.png'; _save(im, os.path.join(out, png))

@@ -27,8 +27,8 @@ DATES = "21 & 22 NOVEMBRE 2026"   # dates affichées sur les écrans des visuels
 MAIN = (70.0, 18.0)          # écran central au-dessus du départ
 SIDE = (16.0, 9.0)           # écrans latéraux
 SIGN = (24.0, 3.0)           # enseigne intérieure sous l'écran
-LED_H = 0.8                  # hauteur du bandeau LED au pied des tribunes
-LED_SEG = 12.8               # longueur d'un motif du bandeau (m) -> texture 2048 x 128 au ratio exact
+LED_H = 1.2                  # hauteur du bandeau LED du mur de front des tribunes (v39 Paris : 0,8 -> 1,2 m, en haut du mur)
+LED_SEG = 19.2               # longueur d'un motif du bandeau (m) -> texture 2048 x 128 au ratio exact (v39 : 12,8 -> 19,2 m, logos 1,5 x plus grands)
 PLAN_K = 1.0                 # agrandissement en plan de l'arène (build.py) : les écrans s'élargissent d'autant,
                              # les visuels sont dessinés au ratio FINAL (largeur x K / hauteur) : rien n'est étiré
 

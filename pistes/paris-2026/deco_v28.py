@@ -231,23 +231,30 @@ def paris_logo(logo_dir):
 
 
 def nofrills_js(rows):
-    """script : statues de rows ([rang, x, z, yaw]) enterrées (y -200) jusqu'à LATE_S s après la chute de la grille ; sans chute
-    de grille (entraînement libre) elles sont là. Texte ASCII."""
+    """script : chaque statue de rows ([rang, x0, y0, z0, yaw0, x1, y1, z1, yaw1]) est à la place 0 jusqu'à LATE_S s après la chute de
+    la grille, puis à la place 1 ; sans chute de grille (entraînement libre) elle est à la place 1. Boudin « tardif » : place 0 =
+    enterré (y -200), place 1 = posé ; v39 : boudin « déplacé » (ligne Minerva : place du départ, puis place du reste de la manche).
+    Texte ASCII."""
     return '\n'.join([
-        '/*', 'USLAND Paris v28 - boudins sponsors de la ligne de depart et boudin Automoto du virage apres le saut AMV :',
-        'invisibles de 0 a 20 s, ils sortent du sol 20 s apres la chute de la grille. Texte ASCII expres.', '*/', '',
-        'var g_lt = [' + ', '.join('[%d, %.3f, %.3f, %.6f]' % tuple(r) for r in rows) + '];', 'var LATE_AFTER = %.1f;' % LATE_S,
+        '/*', 'USLAND Paris - boudins de la ligne de depart : place 0 de 0 a 20 s apres la chute de la grille, puis place 1',
+        '(boudins tardifs : enterres puis sortis ; ligne Minerva : deplacee). Texte ASCII expres.', '*/', '',
+        'var g_lt = [' + ', '.join('[%d, %.3f, %.3f, %.3f, %.6f, %.3f, %.3f, %.3f, %.6f]' % tuple(r) for r in rows) + '];',
+        'var LATE_AFTER = %.1f;' % LATE_S,
         'var g_lt_shown = -1;', 'var g_lt_t = -1.0;', '',
         'function ltSet(show) {', '    var i, s;', '    for (i = 0; i < g_lt.length; i++) {', '        s = g_lt[i];',
-        '        mx.move_statue(s[0], s[1], show ? 0.0 : -200.0, s[2], s[3]);', '    }', '    g_lt_shown = show;', '}', '',
+        '        if (show) mx.move_statue(s[0], s[5], s[6], s[7], s[8]);', '        else mx.move_statue(s[0], s[1], s[2], s[3], s[4]);',
+        '    }', '    g_lt_shown = show;', '}', '',
         'function lateTuff(seconds) {', '    var d = mx.get_gate_drop_time();', '    var show = (d < 0 || mx.seconds >= d + LATE_AFTER);',
         '    if (show != g_lt_shown || mx.seconds < g_lt_t || mx.seconds - g_lt_t > 1.0) {', '        ltSet(show);',
         '        g_lt_t = mx.seconds;', '    }', '    if (lateTuffPrev)', '        lateTuffPrev(seconds);', '}', '',
         'var lateTuffPrev = mx.frame_handler;', 'mx.frame_handler = lateTuff;', ''])
 
 
-def write_late(OUT, late_lines):
-    """rangs des statues « tardives » dans statues (et le même rang dans chaque variante), puis nofrills.js."""
+def write_late(OUT, late_lines, moves=None):
+    """rangs des statues « tardives » dans statues (et le même rang dans chaque variante), puis nofrills.js.
+    v39 : moves = {ligne de statue : (x, z, yaw) après 20 s, ou None = enterrée après 20 s} : statues posées au départ puis déplacées
+    (elles sont aussi dans late_lines). Hauteur : celle de la ligne de statue (avant : 0 forcé)."""
+    moves = moves or {}
     files = ["statues"] + ["variants/" + v for v in os.listdir(os.path.join(OUT, "variants")) if v.startswith("statues")]
     idx = None
     for f in files:
@@ -259,7 +266,12 @@ def write_late(OUT, late_lines):
         idx = k
     rows = []
     for i, l in zip(idx, late_lines):
-        v_ = l.split(']')[0][1:].split(); rows.append((i, float(v_[0]), float(v_[2]), float(l.split(']')[1].split()[0])))
+        v_ = l.split(']')[0][1:].split(); x, y, z, a = float(v_[0]), float(v_[1]), float(v_[2]), float(l.split(']')[1].split()[0])
+        if l in moves:                                   # posée au départ, déplacée (ou enterrée) après 20 s
+            m_ = moves[l]
+            rows.append((i, x, y, z, a) + ((m_[0], y, m_[1], m_[2]) if m_ is not None else (x, -200.0, z, a)))
+        else:                                            # tardive : enterrée, puis sortie à sa place
+            rows.append((i, x, -200.0, z, a, x, y, z, a))
     open(os.path.join(OUT, "nofrills.js"), "w", newline="\n", encoding="ascii").write(nofrills_js(rows))
     fj = os.path.join(OUT, "frills.js")
     if os.path.exists(fj):   # v38c : la v37 ajoute frills.js (classement) : même code des boudins tardifs, noms à part (ne se gênent pas)
@@ -440,7 +452,7 @@ def mesh_mat(sd, L, W=4.0, name=None):
                 x, y = i * c, j * c
                 d.polygon([(x, y - c // 2), (x + c // 2, y), (x, y + c // 2), (x - c // 2, y)], outline=col_, width=wd_)
     im.save(os.path.join(sd, 'grille_losanges-repeat.png'))      # « -repeat » : le jeu ne répète une texture que si son nom le dit (comme RF)
-    m = Mesh(); y = 0.06; rep_ = 2.0                                  # une tuile de texture = 2 ft
+    m = Mesh(); y = 0.30; rep_ = 2.0                                  # une tuile de texture = 2 ft ; v39b (Ryan : « la grille ne s'affiche que quand on arrive ») : 0,06 -> 0,30 ft au-dessus du sol (à 0,06 ft, de loin le jeu dessinait la terre par-dessus)
     P = [(-L / 2, y, W / 2), (L / 2, y, W / 2), (L / 2, y, -W / 2), (-L / 2, y, -W / 2)]
     m.quad(P, (0, 0, L / rep_, W / rep_), two=True)
     m.write(os.path.join(sd, name + '.jm'))
@@ -570,3 +582,176 @@ def border_v2(OUT, path, fl, xpad, folder, wall_max=32.0, e0=BORD_E0, pw=BORD_PW
     hors = (tm == road) & (cx < xpad - 4.0)
     tm[conc | hors] = beton; tm.astype(np.uint8).tofile(os.path.join(OUT, 'tilemap'))
     return out_p + out_t, (lambda x, z, r=9.5: zone(x, z) and fval(x, z) > -r), (n_t, n_p, int(conc.sum()), int(hors.sum()))
+
+
+# v39 (Ryan, capture de RF Anaheim 1 : « les planches avec le béton, je veux que ce soit pareil ; nous c'est tout droit, il faut que ce soit
+# un peu de travers comme ça ; reprends le même dégradé, de la terre aux planches et des planches au béton ; le béton aussi, qu'il
+# ressemble ; c'est A1, tu reprends ») : la bordure de RF Anaheim 1 telle quelle, mesurée sur ses décals (rf_ext/sx2026r01anaheim1/decals) :
+#   - béton « concrete.png » : disques de 35 ft, bord fondu, ~13 ft entre voisins, angle au hasard, des planches jusqu'au mur ;
+#   - planches « ply.png » : un paquet de 5 plaques OSB posées de travers, décal de 22 ft, tous les 8,6 ft (écart-type des angles
+#     0,93 rad : angle au hasard) ; centres à 10,5 ft de la rangée de terre ;
+#   - terre « offtrack.png » : disques de 28 ft, bord fondu, tous les 7,2 ft, angle au hasard, sur le bord de la piste ;
+#   - ordre d'A1 : béton, puis planches par-dessus, puis terre par-dessus (dégradé terre -> planches -> béton).
+# Ici : même ordre, mêmes tailles, mêmes pas, mêmes textures (la terre recolorée à la teinte de notre sol) ; la rangée de planches suit
+# le contour de border_v2 (au large des appuis), tout le tour côté tribunes (rien au paddock) ; tuile Beton sous le béton.
+A1_OFF = (12.0, 4.0)          # terre : taille, pas (ft) ; v39b : A1 = 28 / 7,2 ft, trop gros pour 20 ft entre piste et mur (recouvrait les planches)
+# v39b (Ryan, capture en jeu de la v39 : « les planches montent sur les bosses ; elles sont censées être au sol, à plat ; un peu plus loin
+# des bords ; pas sur les appuis, que sur le sol plat ; partout, tout le terrain ») : les paquets d'A1 (22 ft) ne tiennent pas sur le plat
+# entre les appuis et le mur (20 ft) -> plaques A1 seules (une plaque OSB 4 x 8 ft de ply.png, décal de 8 ft), posées de travers (angle de
+# la piste + écart au hasard, comme le vrac d'A1), centres à >= PL_FLAT ft de tout relief (h > 0,03 ft) : la plaque entière est sur le
+# plat ; bande de planches de PL_FLAT à PL_FLAT + PL_BAND ft du relief ; terre d'A1 (disques fondus) le long du pied du relief, par-dessus
+# le bord des planches ; au-delà des planches, tuile Beton = texture du béton d'A1 jusqu'au mur
+PL_SIZE, PL_STEP, PL_FLAT, PL_BAND, PL_WALL = 8.0, 3.4, 5.5, 8.0, 4.5   # plaque 4 x 8 ft : demi-diagonale 4,47 ft -> centre à 5,5 ft du relief
+PL_JIT = 0.45                 # écart-type de l'angle (rad) autour du sens de la piste
+REL_H = 0.03                  # relief : terrain > 0,03 ft
+
+
+def border_a1_textures(rf_tex, out_dir, dirt_png, beton_png=None):
+    """textures A1 dans la piste : plaque seule (planche_a1.png), terre (offtrack recolorée à la teinte de notre sol), et (v39b) la tuile
+    Beton refaite avec le béton d'A1 (centre opaque du disque concrete.png, à la taille de l'ancienne tuile)."""
+    ply = Image.open(os.path.join(rf_tex, 'ply.png')).convert('RGB').crop((80, 667, 1120, 1187)).rotate(90, expand=True).resize((512, 1024), Image.LANCZOS)
+    P = Image.new('RGBA', (1024, 1024), (0, 0, 0, 0)); P.paste(ply, (256, 0))
+    d = ImageDraw.Draw(P); d.rectangle([256, 0, 767, 5], fill=(58, 48, 36, 255)); d.rectangle([256, 1018, 767, 1023], fill=(58, 48, 36, 255))
+    d.rectangle([256, 0, 261, 1023], fill=(70, 58, 42, 255)); d.rectangle([762, 0, 767, 1023], fill=(70, 58, 42, 255))
+    P.save(os.path.join(out_dir, 'planche_a1.png'))
+    a = np.asarray(Image.open(os.path.join(rf_tex, 'offtrack.png')).convert('RGBA'), float); m = a[..., 3] > 200
+    zm = np.asarray(Image.open(dirt_png).convert('RGB'), float).reshape(-1, 3).mean(0)
+    a[..., :3] = np.clip(a[..., :3] * (zm / a[..., :3][m].mean(0)), 0, 255)
+    Image.fromarray(a.astype(np.uint8), 'RGBA').save(os.path.join(out_dir, 'a1_offtrack.png'))
+    if beton_png and os.path.exists(beton_png):
+        beton_tile(os.path.join(rf_tex, 'concrete.png'), beton_png)
+    return [round(float(v)) for v in zm]
+
+
+BETON_MOY = np.array([84.0, 84.0, 82.0])   # v39b (Ryan : « le béton plus foncé et avec de la texture ») : gris moyen de la tuile
+BETON_CONTRASTE = 2.2                       # grain du béton d'A1 x 2,2 autour de la moyenne
+BETON_TACHES = 14.0                         # taches (variations douces, +/- gris)
+
+
+def beton_tile(a1_concrete, out_png, n=512, seed=39):
+    """tuile Beton : centre opaque du béton d'A1 (512 px au lieu de 128 : plus de détail), assombrie, grain renforcé, taches douces,
+    raccord sans couture (moitié décalée fondue en croix)."""
+    from scipy.ndimage import gaussian_filter
+    c = np.asarray(Image.open(a1_concrete).convert('RGB').crop((312, 312, 712, 712)).resize((n, n), Image.LANCZOS), float)
+    m = c.reshape(-1, 3).mean(0); c = BETON_MOY + (c - m) * BETON_CONTRASTE
+    rng = np.random.default_rng(seed)
+    t = gaussian_filter(rng.normal(0, 1, (n, n)), n / 14, mode='wrap'); t = t / (np.abs(t).max() or 1) * BETON_TACHES
+    g = gaussian_filter(rng.normal(0, 1, (n, n)), 1.2, mode='wrap') * 6.0
+    c = c + (t + g)[..., None]
+    r = np.roll(np.roll(c, n // 2, 0), n // 2, 1)                       # raccord : la tuile décalée d'une demie au bord
+    y = np.abs(np.arange(n) - n / 2 + 0.5) / (n / 2); w = np.clip(1.0 - np.maximum.outer(y, y), 0, 1) ** 0.6
+    c = c * w[..., None] + r * (1 - w[..., None])
+    Image.fromarray(np.clip(c, 0, 255).astype(np.uint8)).save(out_png)
+    return out_png
+
+
+def _poisson(cells, X, Z, step, rng):
+    """points d'un tirage de Poisson (écart mini step) parmi les cases (i, j)."""
+    ci = cells.copy(); rng.shuffle(ci); grid = {}; out = []
+    for i, j in ci:
+        q = np.array([X[i, j], Z[i, j]]); key = (int(q[0] // step), int(q[1] // step))
+        if any(np.hypot(*(p_ - q)) < step for dx in (-1, 0, 1) for dz in (-1, 0, 1) for p_ in grid.get((key[0] + dx, key[1] + dz), [])):
+            continue
+        grid.setdefault(key, []).append(q); out.append((q, i, j))
+    return out
+
+
+def border_a1(OUT, path, fl, xpad, folder, rng, wall_max=32.0):
+    """bordure v39b (voir plus haut) -> (décals : planches puis terre par-dessus, filtre des taches de terre, nombres)."""
+    from scipy.ndimage import distance_transform_edt, map_coordinates
+    from scipy.spatial import cKDTree
+    from matplotlib.path import Path as MPath
+    t = open(os.path.join(OUT, 'terrain.hf')).read().split(); s_, lo, hi = float(t[1]), float(t[2]), float(t[3])
+    Hm = np.asarray(Image.open(os.path.join(OUT, 'terrain.png')), float) / 65535 * (hi - lo) + lo
+    fl = np.asarray(fl, float); x0, x1, z0, z1 = fl[:, 0].min() - 2, fl[:, 0].max() + 2, fl[:, 1].min() - 2, fl[:, 1].max() + 2
+    st = 0.5; xs, zs = np.arange(x0, x1, st), np.arange(z0, z1, st); X, Z = np.meshgrid(xs, zs)
+    h = map_coordinates(Hm, [Z / s_, X / s_], order=1)
+    sm = path.samples(0.5); PT = np.c_[sm['x'], sm['z']]; TH = np.asarray(sm['th'])
+    dp, ip = cKDTree(PT).query(np.c_[X.ravel(), Z.ravel()]); dp = dp.reshape(X.shape); ip = ip.reshape(X.shape)
+    rel = (h > REL_H) | (dp < 15.2)                                       # relief ou couloir
+    dr = distance_transform_edt(~rel) * st                                # distance au relief / au couloir (ft)
+    floor = MPath(fl).contains_points(np.c_[X.ravel(), Z.ravel()]).reshape(X.shape); dw = distance_transform_edt(floor) * st
+    U = floor & (X < xpad - 4.0) & (dw < wall_max)
+    line_ = lambda q, a, size, tex: "[%.6f %.6f] %.6f %.6f 1.000000 @%s/rfborder/%s" % (q[0], q[1], a, size, folder, tex)
+    # planches : tirage de Poisson (écart PL_STEP) dans la bande plate
+    band = U & (dr >= PL_FLAT) & (dr <= PL_FLAT + PL_BAND) & (dw >= PL_WALL)
+    ply = []
+    for q, i, j in _poisson(np.argwhere(band), X, Z, PL_STEP, rng):
+        a = -(TH[ip[i, j]] + np.pi / 2) + rng.normal(0.0, PL_JIT) + (np.pi if rng.random() < 0.5 else 0.0)
+        ply.append(line_(q, a, PL_SIZE, 'planche_a1.png'))
+    # terre d'A1 : disques fondus de 28 ft tous les 7,2 ft le long du pied du relief, côté tribunes (dégradé terre -> planches)
+    foot = U & (dr > 0) & (dr <= st * 1.5)
+    off = [line_(q, rng.uniform(-np.pi, np.pi), A1_OFF[0], 'a1_offtrack.png') for q, i, j in _poisson(np.argwhere(foot), X, Z, A1_OFF[1], rng)]
+    # tuile Beton (béton d'A1) : sur le plat à >= PL_FLAT - 1 ft du relief côté tribunes, + le béton (Road) hors du sol côté tribunes
+    names = [__import__('re').search(r'name ([^\r\n]+)', b_) for b_ in open(os.path.join(OUT, 'tileinfo')).read().split('addtile')]
+    ix = {m.group(1).strip(): i for i, m in enumerate(names) if m}
+    beton, road = ix.get('Beton', ix['Road']), ix['Road']
+    tm = np.fromfile(os.path.join(OUT, 'tilemap'), np.uint8); TN = int(np.sqrt(tm.size)); tm = tm.reshape(TN, TN); S2 = 2 * 0.28975
+    jj, ii = np.meshgrid(np.arange(TN), np.arange(TN)); cx, cz = (jj + 0.5) * S2, (ii + 0.5) * S2
+    m = (cx >= x0) & (cx < x1 - 1) & (cz >= z0) & (cz < z1 - 1)
+    gi, gj = np.clip(np.round((cz - z0) / st).astype(int), 0, len(zs) - 1), np.clip(np.round((cx - x0) / st).astype(int), 0, len(xs) - 1)
+    conc = m & U[gi, gj] & (dr[gi, gj] >= PL_FLAT - 1.0)
+    hors = (tm == road) & (cx < xpad - 4.0)
+    tm[conc | hors] = beton; tm.astype(np.uint8).tofile(os.path.join(OUT, 'tilemap'))
+    ij = lambda x, z: (int(np.clip(round((z - z0) / st), 0, len(zs) - 1)), int(np.clip(round((x - x0) / st), 0, len(xs) - 1)))
+    under_ply = lambda x, z, r=9.5: bool(U[ij(x, z)]) and float(dr[ij(x, z)]) >= 1.0   # v39b (« remets la texture enlevée ») : seules les taches posées SUR le plat (planches) ; avant : tout le couloir aussi
+    # contrôle : aucune planche ne touche le relief (plaque de 4 x 8 ft : rayon 4,5 ft)
+    hmax = 0.0
+    for l in ply:
+        x_, z_ = float(l.split()[0][1:]), float(l.split()[1][:-1])
+        for a_ in np.linspace(0, 2 * np.pi, 16, endpoint=False):
+            for r_ in (0.0, 2.3, 4.5):
+                hmax = max(hmax, float(map_coordinates(Hm, [[(z_ + r_ * np.sin(a_)) / s_], [(x_ + r_ * np.cos(a_)) / s_]], order=1)[0]))
+    assert hmax <= 0.05, ("planche sur le relief", hmax)
+    return ply + off, under_ply, dict(planches=len(ply), terre=len(off), cases_beton=int(conc.sum()), relief_max_sous_planches=round(hmax, 3))
+
+
+MONSTER_MARGIN = (0.8, 0.7, 0.6)   # marges du logo Monster sur le flanc (ft) : côté lèvre, bas, sous le bord du dessus
+
+
+def ramp_sides_monster(statue_dir, variants=(('ramp_50', 1.0),)):
+    """v39b (Ryan, photo de Paris : « sur les sauts freestyle, il faut le logo Monster ») : logo Monster (griffe + MONSTER ENERGY) sur les
+    2 flancs des tremplins FMX, à l'endroit des 2 côtés, jamais déformé. Le modèle ramp_50 donnait aux 2 flancs la même zone de texture
+    (le flanc -x la voyait la tête en bas) : texture 1024 x 1024 (quart haut gauche = l'ancienne texture : dessus noir + tête Venum ;
+    quart bas gauche = flanc +x, lèvre à droite ; quart bas droit = flanc -x, lèvre à gauche) et UV refaits ; une texture par hauteur de
+    tremplin (variants : (nom, k) ; k = hauteur x k de ramp_tall), le logo dessiné à l'échelle réelle du flanc. -> {nom: png}"""
+    import gate_monster as GM
+    base = Image.open(os.path.join(statue_dir, 'ramp_50.png')).convert('RGB').resize((512, 512), Image.LANCZOS)
+    logo = GM._user_logo('monster'); asp = logo.size[0] / logo.size[1]
+    out = {}
+    for name, k in variants:
+        p = os.path.join(statue_dir, name + '.jm'); L = open(p).read().split(chr(10)); nv = int(L[2].split()[0])
+        V = np.array([[float(t) for t in L[3 + i].split()] for i in range(nv)])
+        Lz, Hy = -float(V[:, 2].min()), float(V[:, 1].max())
+        side = np.abs(np.abs(V[:, 3]) - 1.0) < 0.05
+        zs = np.linspace(-Lz, 0.0, 200); topz = np.array([V[side & (np.abs(V[:, 2] - z) < 0.6), 1].max(initial=0.0) for z in zs])
+        topz = np.maximum.accumulate(topz[::-1])[::-1]                      # hauteur du flanc (décroît de la lèvre au pied)
+        top = lambda z: float(np.interp(z, zs, topz))
+        ml, mb, mt = MONSTER_MARGIN; best = None
+        for h in np.arange(0.5, Hy, 0.05):                                  # le plus grand logo sous le bord, collé côté lèvre
+            w = h * asp; z1 = -Lz + ml + w
+            if z1 > 0 or top(z1) < mb + h + mt:
+                break
+            best = (h, w)
+        h, w = best
+        pxu, pxv = 512.0 / Lz, 512.0 / Hy                                   # px par ft dans un quart de texture
+        lg = logo.resize((max(1, int(w * pxu)), max(1, int(h * pxv))), Image.LANCZOS)
+        im = Image.new('RGB', (1024, 1024), (14, 14, 15)); im.paste(base, (0, 0))
+        yb = 1024 - int((mb + h) * pxv)
+        im.paste(lg, (512 - int((ml + w) * pxu), yb), lg)                  # flanc +x : lèvre à droite du quart bas gauche
+        im.paste(lg, (512 + int(ml * pxu), yb), lg)                        # flanc -x : lèvre à gauche du quart bas droit
+        im = K.grain(im, 1.0); im.save(os.path.join(statue_dir, name + '.png'))
+        for i in range(nv):
+            v_ = L[3 + i].split()
+            x, y, z, nx = float(v_[0]), float(v_[1]), float(v_[2]), float(v_[3])
+            if side[i]:
+                t = -z / Lz                                                 # 0 = pied, 1 = lèvre
+                u = 0.5 * t if nx > 0 else 0.5 + 0.5 * (1.0 - t)
+                v = 0.5 * y / Hy
+            else:
+                u, v = float(v_[6]) * 0.5, 0.5 + float(v_[7]) * 0.5
+            v_[6], v_[7] = '%.6f' % min(max(u, 0.001), 0.999), '%.6f' % min(max(v, 0.001), 0.999)
+            L[3 + i] = ' '.join(v_)
+        open(p, 'w', newline=chr(10)).write(chr(10).join(L))
+        out[name] = dict(png=name + '.png', logo_ft=(round(w, 1), round(h, 1)), k=k)
+    return out

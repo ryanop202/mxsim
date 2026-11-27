@@ -22,8 +22,8 @@ import layout_paris as LP         # noqa: E402
 from PIL import Image             # noqa: E402
 from scipy.ndimage import map_coordinates   # noqa: E402
 
-BP.FOLDER = "USLANDParis"                     # v22d (« renomme-la usland paris ») ; était USLAND2026SupercrossParisZion
-BP.DESC = "USLAND Paris"                        # v22d (« renomme-la usland paris »)
+BP.FOLDER = os.environ.get("PARIS_FOLDER", "USLANDParis")   # v22d (« renomme-la usland paris ») ; était USLAND2026SupercrossParisZion ; v39 : PARIS_FOLDER=USLANDParisbyRyan (version de Ryan, nom de Bazo v38e)
+BP.DESC = os.environ.get("PARIS_DESC", "USLAND Paris")      # v22d (« renomme-la usland paris ») ; v39 : PARIS_DESC="USLAND Paris by Ryan"
 BP.OUT = os.path.join(BP.ROOT, "tracks", BP.FOLDER)
 BP.AP = os.path.join(HERE, "apercu_zion")
 BP.SAND_V25 = True                 # v25e : sable en bande droite + vaguelettes
@@ -100,7 +100,49 @@ def berm_rf(out, g):
     out[sl] = np.maximum(out[sl], h)
 
 
-BERM_PLATEAU = {'T_D ': 1.15}   # v39 : face x1,15 coupée au max -> arête + dessus plat (~4 ft) jusqu'au mur
+BERM_PLATEAU = {}   # v39b (Ryan, capture de T_D : « ce virage ne va pas du tout, horrible ; compare avec les autres ; fais un truc beau, roulant ») :
+#   plus de plateau (dessus plat coupé net) ; la coupe du croissant (débruitée, BERM_SMOOTH) garde son dessus arrondi, comme les autres virages ;
+#   v39 Bazo : {'T_D ': 1.15} (face x1,15 coupée au max -> arête + dessus plat (~4 ft) jusqu'au mur)
+BERM_SMOOTH = 0.5   # v39b : coupe radiale débruitée (ft) pour tous les berms réguliers (sinon stries concentriques)
+
+
+BERM_LIKE = {'T_D ': 'T_Bb'}   # v39b (Ryan, captures : « reprends ce virage [MX Sim, T_Bb] et mets le même après le saut freestyle, mais
+#   garde la même longueur et la même hauteur qu'on a ; juste sa forme ») : T_D prend la forme du croissant de T_Bb (coupe radiale et
+#   montée / descente le long du virage), étirée sur l'angle de T_D, à la hauteur de T_D, crête au même rayon que T_D
+BERM_SRC = {}
+
+
+def _berm_polar(g, sl):
+    from engine import turn_mid_angle
+    jj_, ii_ = np.meshgrid(np.arange(N)[sl[1]], np.arange(N)[sl[0]])
+    X_, Z_ = jj_ * S - g['cx'], ii_ * S - g['cz']; r_ = np.hypot(X_, Z_); th_ = np.arctan2(Z_, X_)
+    sg = 1.0 if g['ang'] > 0 else -1.0; a0 = turn_mid_angle(g) + np.radians(g['ang']) / 2
+    p_ = np.degrees(np.angle(np.exp(1j * (a0 - th_)))) * sg
+    return r_, p_, a0, sg
+
+
+def _berm_extent(T_, r_, p_):
+    """début / fin (degrés, là où le croissant dépasse 3 % de sa hauteur), hauteur, rayon de la crête au sommet."""
+    hm = T_.max(); pb = np.arange(-60.0, 200.0, 1.0); env = np.array([T_[np.abs(p_ - b) < 0.5].max(initial=0.0) for b in pb])
+    on = pb[env > 0.03 * hm]; pm = float(pb[int(np.argmax(env))]); sel = np.abs(p_ - pm) < 1.0
+    rc = float(r_[sel][np.argmax(T_[sel])])
+    return float(on.min()), float(on.max()), float(hm), rc
+
+
+def berm_like(tmp, sl, g, src, sl_s, g_s):
+    """v39b : le croissant de g remplacé par la forme de celui de g_s (voir BERM_LIKE)."""
+    r_, p_, _, _ = _berm_polar(g, sl); T_ = tmp[sl]
+    if T_.max() <= 0:
+        return
+    pa, pz, H, rc = _berm_extent(T_, r_, p_)
+    rs_, ps_, a0s, sgs = _berm_polar(g_s, sl_s); pas, pzs, Hs, rcs = _berm_extent(src[sl_s], rs_, ps_)
+    p2 = pas + (p_ - pa) / (pz - pa) * (pzs - pas); r2 = r_ - (rc - rcs)          # même place relative dans le virage modèle
+    th2 = a0s - sgs * np.radians(p2); x2 = g_s['cx'] + r2 * np.cos(th2); z2 = g_s['cz'] + r2 * np.sin(th2)
+    v = map_coordinates(src, [z2 / S, x2 / S], order=1, mode='constant', cval=0.0) * (H / Hs)
+    v[(p_ < pa - 2.0) | (p_ > pz + 2.0) | (r2 < 0)] = 0.0
+    tmp[sl] = v
+    BP.REPORT.setdefault('berm_forme', {})[g['tag'][:4]] = dict(modele=g_s['tag'][:4], debut=round(pa, 1), fin=round(pz, 1), h=round(H, 2),
+                                                              crete_r=round(rc, 1), modele_crete_r=round(rcs, 1), modele_h=round(Hs, 2))
 
 
 def berm_regular(tmp, sl, g, rg):
@@ -122,6 +164,9 @@ def berm_regular(tmp, sl, g, rg):
     sel = np.abs(p_ - pm) < 2.0; prof = np.array([T_[sel & (np.abs(r_ - b) < 0.2)].max(initial=0.0) for b in rb])
     ss = lambda t: (lambda t_: t_ * t_ * (3 - 2 * t_))(np.clip(t, 0, 1))
     e_ = ss((p_ - pa) / rg['rin']) * ss((pz - p_) / rg['rout'])
+    if BERM_SMOOTH and g['tag'][:4] not in BERM_PLATEAU:
+        from scipy.ndimage import gaussian_filter1d
+        prof = gaussian_filter1d(prof, BERM_SMOOTH / 0.25)
     if g['tag'][:4] in BERM_PLATEAU:
         # v39 (« l'extérieur fait une patate ; pas d'angle sur le dessus, pas un plat sur le dessus avec des beaux contours ») : la coupe
         # prise sur les pixels (bins de 0,25 ft) était bruitée -> les stries concentriques ; elle est débruitée (0,5 ft), puis la face monte
@@ -469,8 +514,12 @@ def render_zion(path, st):
                 from scipy.ndimage import gaussian_filter as _gf
                 m0_ = tmp[sl].max(); tmp[sl] = _gf(tmp[sl], sg_ / S); tmp[sl] *= m0_ / max(tmp[sl].max(), 1e-6)
             rg_ = getattr(LP, 'BERM_REGULAR', {}).get(g['tag'][:4])
-            if rg_:
+            if g['tag'][:4] in BERM_LIKE and BERM_LIKE[g['tag'][:4]] in BERM_SRC:
+                berm_like(tmp, sl, g, *BERM_SRC[BERM_LIKE[g['tag'][:4]]])
+            elif rg_:
                 berm_regular(tmp, sl, g, rg_)
+            if g['tag'][:4] in BERM_LIKE.values():           # v39b : forme gardée pour les virages qui la reprennent
+                BERM_SRC[g['tag'][:4]] = (tmp.copy(), sl, g)
             berms[sl] = np.maximum(berms[sl], tmp[sl] * gain)
     # v19d (capture en jeu : « regarde, il y a encore le trait gradient ») : (1) les croissants JGSX gardent un fond de 0,02 - 0,1 ft
     # coupé net -> petites marches droites au bout des virages : le bas des berms est fondu à zéro ; (2) pieds des bosses arrondis
@@ -490,6 +539,8 @@ def render_zion(path, st):
         t_ = np.clip(tmp_ / sf['h'], 0, 1); w_ = t_ * t_ * (3 - 2 * t_)
         tmp_[:] = tmp_ * w_ + gaussian_filter(tmp_, sf['sigma'] / S) * (1 - w_)
         board_cut_layer(tmp_, g_, kind_)
+        if kind_ == 'amv' and 'venum' in LP.BOARD_POLY:      # v39b : appel du freestyle (même couche que la butte AMV) coupé au plan des triangles Venum
+            board_cut_layer(tmp_, g_, 'venum')
     for A_ in (jumps, whoops):                                # (pas les berms : leur pied s'étalait sous les grilles)
         t_ = np.clip(A_ / sf['h'], 0, 1); w_ = t_ * t_ * (3 - 2 * t_)
         A_[:] = A_ * w_ + gaussian_filter(A_, sf['sigma'] / S) * (1 - w_)
@@ -527,8 +578,9 @@ RAMP_MI_K = 1.2                    # v38d : R2 un peu plus haute
 RAMP_TALL_K = 1.4                  # v38c : rampe R1 x1,4 en hauteur
 RAMP_MAT_L = (25.0, 25.0, 88.0)    # v38c : longueur des grilles au sol derrière R1, R2, R3 (lues sur les captures)
 PUBLIC_RANG_Y, PUBLIC_X = 9.6, 500.0   # v38c : 2e rang de la tribune Sud, à hauteur des whoops
-CLASSEMENT_DIRECT = False          # v38c : l'écran géant garde son image fixe (le classement en direct de la v37 s'affiche mal en jeu)
+CLASSEMENT_DIRECT = True           # v39 (Ryan : « la télé, on voit rien ; même DA que la retransmission de Paris, en direct ») : refait comme la tour ZION 2025 (tableau_direct.py) ; v38c : False (la v37 s'affichait mal en jeu)
 RF_BORDER = True                   # v38c : bordure RF (terre, planches, béton) côté stade
+BORDER_A1 = True                   # v39 (Ryan : « comme A1, un peu de travers, même dégradé ») : bordure d'A1 telle quelle (deco_v28.border_a1) ; False = border_v2 (v38e)
 SABLE_RF = True     # v36p : tuile sable à la texture de la terre (ZION) + bouts du sable en dégradé de décals (RF Anaheim 1)
 
 
@@ -804,11 +856,19 @@ def zion_extras(OUT, FOLDER):
         # les taches de terre (terre_stt) de cette zone enlevées
         # v38e : distances mesurées sur la photo (planches de 10 à 14 ft du bord du couloir), tuile Beton (gris du trait), terre du sol en
         # bande régulière ; les taches de terre (terre_stt, ~9 ft de rayon) qui toucheraient les planches enlevées
-        D28b.border_textures(os.path.join(os.path.dirname(BP.ROOT), "rf_ext", "sx2026r01anaheim1", "textures"), rbd_, os.path.join(OUT, "zdecal", "terre_stt.png"))
-        rb_, inU_, nrb_ = D28b.border_v2(OUT, path, fl, XPAD, FOLDER)
+        rft_ = os.path.join(os.path.dirname(BP.ROOT), "rf_ext", "sx2026r01anaheim1", "textures")
+        assert os.path.isdir(rft_), "bordure A1 : extraire refs/rf/sx2026r01anaheim1.medium.saf dans %s (commun/tools/extract_saf.py)" % os.path.dirname(rft_)
         xz_ = lambda l_: (float(l_.split()[0][1:]), float(l_.split()[1][:-1]))
-        n0_ = len(ov); ov = [l_ for l_ in ov if not ('terre_stt' in l_ and inU_(*xz_(l_)))]
-        BP.REPORT['bordure_v2'] = dict(terre=nrb_[0], planches=nrb_[1], cases_beton=nrb_[2], cases_beton_hors_sol=nrb_[3], taches_enlevees=n0_ - len(ov))
+        if BORDER_A1:   # v39 : la bordure de RF Anaheim 1 telle quelle (planches de travers, dégradé terre -> planches -> béton) : deco_v28.border_a1
+            teinte_ = D28b.border_a1_textures(rft_, rbd_, os.path.join(OUT, "ztile", "2.png"), os.path.join(OUT, "ztile", "beton.png"))   # terre du sol (tuile 1 de tileinfo) ; v39b : tuile Beton = béton d A1
+            rb_, inU_, nrb_ = D28b.border_a1(OUT, path, fl, XPAD, FOLDER, np.random.default_rng(39))
+            n0_ = len(ov); ov = [l_ for l_ in ov if not ('terre_stt' in l_ and inU_(*xz_(l_)))]
+            BP.REPORT['bordure_a1'] = dict(nrb_, teinte_terre=teinte_, taches_enlevees=n0_ - len(ov))
+        else:
+            D28b.border_textures(rft_, rbd_, os.path.join(OUT, "zdecal", "terre_stt.png"))
+            rb_, inU_, nrb_ = D28b.border_v2(OUT, path, fl, XPAD, FOLDER)
+            n0_ = len(ov); ov = [l_ for l_ in ov if not ('terre_stt' in l_ and inU_(*xz_(l_)))]
+            BP.REPORT['bordure_v2'] = dict(terre=nrb_[0], planches=nrb_[1], cases_beton=nrb_[2], cases_beton_hors_sol=nrb_[3], taches_enlevees=n0_ - len(ov))
         ov = rb_ + ov
     open(os.path.join(OUT, "decals"), "w", newline=chr(10)).write(chr(10).join(ov + dl) + chr(10))
     # v19 (« le saut d'arrivée, il va pas ; il faut faire les câbles comme sur mon track, avec le finish ») : plus d'arche ZION, le panneau
@@ -1008,6 +1068,10 @@ def deco_v21(OUT, FOLDER, combos):
             for side_, nm_ in ((-1, 'bache_amv_g'), (1, 'bache_amv_d')):
                 O_, jm_, png_, shp_ = D22.board_v25b(sd, nm_.replace('bache', 'panneau'), Hf, g3, side_, 'amv')   # v24 : forme dessinée par l'utilisateur
                 lines.append(line(O_[0], O_[1], 0.0, jm_, png_, shp_))
+            if 'venum' in LP.BOARD_POLY:                        # v39b : triangles noirs Venum de chaque côté de l'appel du freestyle
+                for side_, nm_ in ((-1, 'panneau_venum_g'), (1, 'panneau_venum_d')):
+                    O_, jm_, png_, shp_ = D22.board_v25b(sd, nm_, Hf, g3, side_, 'venum')
+                    lines.append(line(O_[0], O_[1], 0.0, jm_, png_, shp_))
     # v24 (« avec les 2 ballots de paille posés sur le dessus ») : 2 ballots Milwaukee au milieu du plateau du saut, un de chaque côté
     (pu0, _), (pu1, _), (pu2, _), (pu3, _) = D22.BOARD_POLY['milwaukee']; cR, sR2 = np.cos(gR['t']), np.sin(gR['t']); nR = np.array([-sR2, cR])
     fM = DV.bale_u(sd, 'milwaukee')
@@ -1071,7 +1135,7 @@ def deco_v21(OUT, FOLDER, combos):
         p = os.path.join(OUT, f); s0 = open(p).read().rstrip(chr(10)) + chr(10)
         open(p, "w", newline=chr(10)).write(chr(10).join(late_) + chr(10) + s0 + chr(10).join(rest_) + chr(10))
     import deco_v28 as D28
-    rep_['boudins_20s'] = D28.write_late(OUT, late_)                  # v28 : nofrills.js (rangs définitifs des statues)
+    rep_['boudins_20s'] = D28.write_late(OUT, late_, getattr(D28, 'MOVES', None))   # v28 : nofrills.js (rangs définitifs des statues) ; v39 : + ligne Minerva déplacée
     BP.REPORT['deco_v21'] = rep_
 
 
@@ -1090,6 +1154,14 @@ V36_LIGNES = dict(A=[(646.0, 518.7), (633.0, 519.4), (620.0, 520.2), (607.0, 521
 A_SHIFT_V39 = (10.0, 595.0, 566.0)
 _sA = lambda t: (lambda t_: t_ * t_ * (3 - 2 * t_))(min(1.0, max(0.0, t)))
 V36_LIGNES['A'] = [(x_, z_ - A_SHIFT_V39[0] * _sA((x_ - A_SHIFT_V39[2]) / (A_SHIFT_V39[1] - A_SHIFT_V39[2]))) for x_, z_ in V36_LIGNES['A']]
+# v39 Ryan (capture du départ : « garde le même début, mais que ce soit droit, pas un zigzag : tu prends le premier point et le dernier,
+# une ligne droite ») : ligne A = un seul segment, du 1er point (décalé de 10 ft par Bazo) au dernier
+V36_LIGNES['A'] = [V36_LIGNES['A'][0], V36_LIGNES['A'][-1]]
+# v39 Ryan (vue de dessus annotée : la ligne Minerva entourée « le départ, il doit être comme ça ; dès que le départ est fini, au bout de
+# 20 s, tu la mets comme mon autre trait, pour le reste de la manche ; mon trait est nul, prends le premier et le dernier point, en ligne
+# droite ») : la ligne Minerva est là dès le départ (plus tardive), puis nofrills.js la déplace à 20 s sur ce segment (boudins en trop
+# enterrés) ; logos vers le couloir de LD
+ILE_APRES = [(435.5, 600.0), (408.0, 582.0)]
 V36_B_COUPES = [(576.0, 607.0), (483.0, 506.0), (395.0, 440.0)]
 V36_SANS_AUTOMOTO = True
 # v36e (photo du vrai Paris avec 11 points bleus = tuff blocks et 1 point argile = gros poteau gonflable, dans le virage en U après
@@ -1243,8 +1315,11 @@ def deco_v28(OUT, FOLDER, combos, Hf, lines, line, sd, DV, rep_, g3, gR):
     if V36_LIGNES:
         bB = [b_ for b_ in bB if not any(lo_ <= b_[0] <= hi_ for lo_, hi_ in V36_B_COUPES)]
     bl = D28.polyline_boudins(A, third(A, ['mxsim', 'honda', 'yamaha']), True) + bB
+    ile0_, ile1_ = [], []
     if V36_LIGNES:
-        bl += D28.polyline_boudins(V38_ILE, ['minerva'] * 99, True)   # v38 : Minerva (noir, logo Minerva), 11 boudins, un peu plus en travers
+        ile0_ = D28.polyline_boudins(V38_ILE, ['minerva'] * 99, True)   # v38 : Minerva (noir, logo Minerva), un peu plus en travers ; v39 : place du départ
+        ile1_ = D28.polyline_boudins(ILE_APRES, ['minerva'] * 99, True)  # v39 : place après 20 s
+        bl += ile0_
     rep_['couloir_depart'] = dict(A=[tuple(np.round(q, 1)) for q in A], B=[tuple(np.round(q, 1)) for q in B])
     # Automoto : (1) du bout du panneau AMV côté L2 au poteau intérieur de T_D ; (2) du bout du panneau AMV côté LD, autour de l'extérieur
     # du 1er quart de T_D (TD1), 2,5 ft hors piste : coupe la montée du départ vers T_D (le départ est passé à 20 s)
@@ -1260,24 +1335,31 @@ def deco_v28(OUT, FOLDER, combos, Hf, lines, line, sd, DV, rep_, g3, gR):
     rep_['automoto_ligne2'] = [tuple(np.round(q, 1)) for q in l2_]
     if not V36_SANS_AUTOMOTO:
         bl += D28.polyline_boudins(l2_, ['automoto'] * 6, True)
-    late = []
+    late = []; moves_ = {}
     for x_, z_, yaw_, key_ in bl:
         l_ = line(x_, z_, yaw_, bcj, D28.boudin_court_skin(sd, key_, PROPS), bcs); lines.append(l_); late.append(l_)
+        if (x_, z_, yaw_, key_) in ile0_:                                # v39 : ligne Minerva déplacée à 20 s
+            k_ = ile0_.index((x_, z_, yaw_, key_)); moves_[l_] = ile1_[k_][:3] if k_ < len(ile1_) else None
+    rep_['minerva_deplacee'] = dict(depart=len(ile0_), apres_20s=min(len(ile0_), len(ile1_)))
+    D28.MOVES = moves_
     D28.ramp_black_venum(os.path.join(OUT, "statue"), os.path.join(BP.ROOT, "commun/assets", "logos", "user"))   # v38 : rampes FMX noires ; v38c : tête de serpent seule
     # v38c : rampe la plus proche de la butte (R1) plus haute / plus raide (+ son habillage), grilles en losanges au sol derrière les 3 rampes
     import hab_objets as HO_
     tj_, ts_ = D28.ramp_tall(os.path.join(OUT, "statue"), RAMP_TALL_K)
     tj2_, ts2_ = D28.ramp_tall(os.path.join(OUT, "statue"), RAMP_MI_K, name='ramp_50_mi')   # v38d (« la rampe de gauche, un petit peu plus haute ») : R2
     tmpd_ = os.path.join(OUT, "statue", "_jupe_haut"); os.makedirs(tmpd_, exist_ok=True); HO_.fmx_jupe(tmpd_, os.path.join(OUT, "statue", tj_))
+    # v39b (« sur les sauts freestyle, le logo Monster ») : logo Monster sur les 2 flancs des 3 tremplins, une texture par hauteur
+    rep_['rampes_monster'] = D28.ramp_sides_monster(os.path.join(OUT, "statue"), (('ramp_50', 1.0), (tj_[:-3], RAMP_TALL_K), (tj2_[:-3], RAMP_MI_K)))
+    png_ = {tj_: tj_[:-3] + '.png', tj2_: tj2_[:-3] + '.png'}
     jdir_ = None
     for f in ["statues"] + ["variants/" + v for v in os.listdir(os.path.join(OUT, "variants")) if v.startswith("statues")]:
         p_ = os.path.join(OUT, f); L_ = open(p_).read().split(chr(10)); rl_ = [(float(l.split()[0][1:]), k) for k, l in enumerate(L_) if '/statue/ramp_50.jm ' in l]
         if not rl_:
             continue
         rl_ = sorted(rl_); x1_, k1_ = rl_[0]; xz1_ = (float(L_[k1_].split()[0][1:]), float(L_[k1_].split()[2][:-1]))
-        L_[k1_] = L_[k1_].replace('/statue/ramp_50.jm ', '/statue/' + tj_ + ' ').replace('/statue/ramp_50.shp', '/statue/' + ts_)
+        L_[k1_] = L_[k1_].replace('/statue/ramp_50.jm ', '/statue/' + tj_ + ' ').replace('/statue/ramp_50.shp', '/statue/' + ts_).replace('/statue/ramp_50.png', '/statue/' + png_[tj_])
         if len(rl_) > 1:
-            k2_ = rl_[1][1]; L_[k2_] = L_[k2_].replace('/statue/ramp_50.jm ', '/statue/' + tj2_ + ' ').replace('/statue/ramp_50.shp', '/statue/' + ts2_)
+            k2_ = rl_[1][1]; L_[k2_] = L_[k2_].replace('/statue/ramp_50.jm ', '/statue/' + tj2_ + ' ').replace('/statue/ramp_50.shp', '/statue/' + ts2_).replace('/statue/ramp_50.png', '/statue/' + png_[tj2_])
         jl_ = [k for k, l in enumerate(L_) if 'fmx_jupe.jm' in l and abs(float(l.split()[0][1:]) - xz1_[0]) < 0.5 and abs(float(l.split()[2][:-1]) - xz1_[1]) < 0.5]
         for k in jl_:
             jdir_ = L_[k].split()[4].rsplit('/', 1)[0]
@@ -1308,7 +1390,7 @@ def deco_v28(OUT, FOLDER, combos, Hf, lines, line, sd, DV, rep_, g3, gR):
     # v38c (« l'écran, de loin il est tout buggé, on le voit pas : qu'on le voie tout le temps ») : version lointaine (LOD, *_lod8.jm,
     # bascule à 256 ft) de la dalle du classement = vide : de loin on voit l'image fixe de l'écran géant juste derrière
     dl_ = os.path.join(OUT, "statue", "paris", "direct")
-    if os.path.isdir(dl_):
+    if os.path.isdir(dl_) and not CLASSEMENT_DIRECT:                    # v39 : plus de LOD vide (le nouvel écran se voit de partout)
         mm_ = DV.Mesh(); mm_.tri([(0, -50, 0), (0.01, -50, 0), (0, -50, 0.01)], [(0.5, 0.5)] * 3); mm_.write(os.path.join(dl_, "dalle_lod8.jm"))
     # v29 : bandeau LED du pied des tribunes (USLAND | Supercross Paris | USLAND | MX Sim Racing)
     D28.led_board_v29(os.path.join(OUT, "tex", "led_board-hrepeat.png"), os.path.join(BP.ROOT, "commun/assets", "logos", "user"), os.path.join(BP.ROOT, "pistes/paris-2026/stade_paris", "src"))
@@ -1362,7 +1444,7 @@ def roof_ft(x, z):
     sys.path.insert(0, os.path.join(BP.ROOT, "pistes/paris-2026/stade_paris", "src"))
     from arena import roof
     f = roof.field(); f = getattr(f, "f", f)                                  # champ à la taille réelle (sans _ScaledField)
-    X = (x - LP.OX) / LP.FT / LP.PLAN_K; Y = ((LP.OZ - z) / LP.FT - LP.ARENA_DY) / LP.PLAN_KZ   # v37 : stade resserré en z
+    X = ((x - LP.OX) / LP.FT - LP.ARENA_DX) / LP.PLAN_KX; Y = ((LP.OZ - z) / LP.FT - LP.ARENA_DY) / LP.PLAN_KZ   # v37 : stade resserré en z ; v39 : x KX + DX (côté Ouest rapproché)
     i = int(np.clip(round((X - f.xs[0]) / (f.xs[1] - f.xs[0])), 0, len(f.xs) - 1)); j = int(np.clip(round((Y - f.ys[0]) / (f.ys[1] - f.ys[0])), 0, len(f.ys) - 1))
     return float(f.h[i, j]) * LP.FT
 
@@ -1383,8 +1465,45 @@ def export_zion(*a, **k):
     BP.REPORT['paddock_2026'] = PD.apply(BP.OUT, BP.FOLDER)
     if CLASSEMENT_DIRECT:   # v38c (vidéo en jeu : la dalle du classement s'affiche en traits / pointillés roses, de près comme de loin) : coupé
         BP.REPORT['classement_direct'] = classement_direct(BP.OUT, BP.FOLDER)   # v37 : classement en direct sur l'écran géant
+    BP.REPORT['chant_grille'] = chant_grille(BP.OUT, BP.FOLDER)       # v39b : chant sur la grille de départ
     deco_v21(BP.OUT, BP.FOLDER, LS.COMBOS)                             # v21 : murs bâchés + filets, ballots en U, arche 50 Factory
     BP.REPORT['cameras_tv'] = cameras_tv(BP.OUT)                      # v37 : caméras TV (comme la RF)
+
+
+CHANT_VOL = 0.7    # volume du chant (le public de ZION est à 0,4)
+
+
+def chant_grille(OUT, FOLDER):
+    """v39b (Ryan : « quand on est sur la grille de départ, un petit son, quelqu'un qui chante » ; son mp3, « de la 1re à la 5e seconde ;
+    à la fin il ne s'arrête pas d'un coup, il descend sur 2 secondes ») : pistes/paris-2026/sons/chant_grille.wav (1-5 s du mp3 de Ryan,
+    fondu de sortie sur les 2 dernières secondes, mono 44,1 kHz, normalisé) copié dans OUT/sounds ; frills.js le lance UNE fois quand on
+    arrive sur la grille (avant la chute de la grille ; en entraînement libre, à l'arrivée), à la position de la caméra (comme le public de
+    ZION 2025 : mx.add_sound / set_sound_pos / start_sound)."""
+    src = os.path.join(HERE, "sons", "chant_grille.wav")
+    if not os.path.exists(src):
+        return None
+    os.makedirs(os.path.join(OUT, "sounds"), exist_ok=True); shutil.copy(src, os.path.join(OUT, "sounds", "chant_grille.wav"))
+    js = r"""
+/* USLAND Paris by Ryan v39b - chant sur la grille de depart (une fois, avant la chute de la grille). Texte ASCII expres. */
+var CG_SON = mx.add_sound("@%s/sounds/chant_grille.wav");
+mx.set_sound_freq(CG_SON, 44100);
+mx.set_sound_vol(CG_SON, %.2f);
+var cg_fait = false, cg_p = [], cg_r = [];
+function cg_image(secs) {
+    try {
+        var d = mx.get_gate_drop_time();
+        mx.get_camera_location(cg_p, cg_r);
+        mx.set_sound_pos(CG_SON, cg_p[0], cg_p[1], cg_p[2]);
+        if (!cg_fait && mx.seconds >= 0.5 && (d < 0 || mx.seconds < d)) { mx.start_sound(CG_SON); cg_fait = true; }
+    } catch (e) { mx.message("chant : " + e.toString()); }
+    cg_prev(secs);
+}
+var cg_prev = mx.frame_handler;
+if (!cg_prev) cg_prev = function (s) {};
+mx.frame_handler = cg_image;
+""" % (FOLDER, CHANT_VOL)
+    open(os.path.join(OUT, "frills.js"), "a", newline="\n", encoding="ascii").write(js)
+    return dict(fichier="sounds/chant_grille.wav", volume=CHANT_VOL)
 
 
 def classement_direct(OUT, FOLDER):
@@ -1394,10 +1513,10 @@ def classement_direct(OUT, FOLDER):
     import tableau_direct as TD
     L = open(os.path.join(OUT, "statues")).read().splitlines()
     e = [l for l in L if "/ecran_geant.jm " in l]; assert len(e) == 1, "classement : écran géant introuvable"
-    m = re.match(r"\[(\S+) \S+ (\S+)\] (\S+)", e[0]); line, rep = TD.make(OUT, FOLDER, float(m.group(1)), float(m.group(2)), float(m.group(3)))
+    m = re.match(r"\[(\S+) \S+ (\S+)\] (\S+)", e[0]); line, rep = TD.make(OUT, FOLDER, float(m.group(1)), float(m.group(2)), float(m.group(3)), os.path.join(BP.AP, "apercu_ecran_direct.png"))
     for f in ["statues"] + ["variants/" + v for v in os.listdir(os.path.join(OUT, "variants")) if v.startswith("statues")]:
-        p_ = os.path.join(OUT, f); L_ = [l for l in open(p_).read().splitlines() if l.strip() and "/direct/dalle.jm" not in l]
-        open(p_, "w", newline="\n").write("\n".join(L_ + [line]) + "\n")
+        p_ = os.path.join(OUT, f); L_ = [l for l in open(p_).read().splitlines() if l.strip() and "/paris/direct/" not in l]   # v39b : 2 statues (direct_a, direct_b)
+        open(p_, "w", newline="\n").write("\n".join(L_ + line) + "\n")
     return rep
 
 

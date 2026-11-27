@@ -73,8 +73,8 @@ def tile(z, x, y):
 def photo(gx, gz, OX, OZ, K, FT):
     """couleur IGN aux points du jeu (gx, gz en ft) : jeu -> repère local réel (m) -> L93 -> lon/lat -> pixel WebMercator."""
     from arena.survey import local_to_l93
-    KX, KY, DY = (K, K, 0.0) if np.isscalar(K) else K               # v37 : stade resserré en travers (X x KX, Y x KY + DY)
-    Xr, Yr = (gx - OX) / (KX * FT), ((OZ - gz) / FT - DY) / KY
+    KX, KY, DY, DX = (K, K, 0.0, 0.0) if np.isscalar(K) else (tuple(K) + (0.0,))[:4]   # v37 : stade resserré en travers (X x KX, Y x KY + DY) ; v39 : + DX
+    Xr, Yr = ((gx - OX) / FT - DX) / KX, ((OZ - gz) / FT - DY) / KY
     E, N = local_to_l93(Xr, Yr); lon, lat = l93_to_lonlat(E, N); px, py = merc_px(lon, lat)
     tx0, ty0 = int(np.floor(px.min() / 256)), int(np.floor(py.min() / 256)); tx1, ty1 = int(px.max() // 256), int(py.max() // 256)
     M = np.zeros(((ty1 - ty0 + 1) * 256, (tx1 - tx0 + 1) * 256, 3), np.uint8)

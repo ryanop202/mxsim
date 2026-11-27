@@ -1,16 +1,13 @@
 {
- "berm_plat": {
+ "berm_forme": {
   "T_D ": {
-   "h": 6.92,
-   "plat_ft": 4.0
-  }
- },
- "berm_regulier": {
-  "T_D ": {
+   "modele": "T_Bb",
    "debut": 11.0,
    "fin": 82.0,
-   "sommet": 45.0,
-   "h": 6.92
+   "h": 6.94,
+   "crete_r": 55.6,
+   "modele_crete_r": 41.5,
+   "modele_h": 6.94
   }
  },
  "apres_arrivee": {
@@ -183,13 +180,13 @@
     ],
     [
      "bosse ZION 4.0 ft",
-     157.4,
-     184.5
+     159.4,
+     186.5
     ],
     [
      "bosse ZION 4.1 ft",
-     190.0,
-     217.4
+     191.0,
+     218.4
     ],
     [
      "bosse ZION 3.9 ft",
@@ -281,7 +278,7 @@
    "retirés (v13) : boudins FLY Racing (whoops)": 28,
    "retirés (v13) : ballots ZION (unis)": 204,
    "retirés (v13) : poteaux ronds": 8,
-   "retirés (v13) : tuffs de virage ZION (unis)": 70,
+   "retirés (v13) : tuffs de virage ZION (unis)": 71,
    "retirés (v13) : filets": 42,
    "panneau FINISH suspendu": 1,
    "cage du drapeau": 1,
@@ -317,7 +314,7 @@
  },
  "long_tuff_apres_depart": 0,
  "quartier_ign_dalles": 36,
- "public": 6151,
+ "public": 5990,
  "export": {
   "hmin": -0.5,
   "hmax": 22.93475760838552,
@@ -329,14 +326,19 @@
   "tuiles": 8,
   "ombrage_plat": 228
  },
- "decals_sable": 447,
+ "decals_sable": 446,
  "decals_sable_voiles": 280,
- "bordure_v2": {
-  "terre": 118,
-  "planches": 158,
-  "cases_beton": 59055,
-  "cases_beton_hors_sol": 2034609,
-  "taches_enlevees": 211
+ "bordure_a1": {
+  "planches": 344,
+  "terre": 267,
+  "cases_beton": 30576,
+  "relief_max_sous_planches": 0.013,
+  "teinte_terre": [
+   130,
+   100,
+   60
+  ],
+  "taches_enlevees": 111
  },
  "zion_v19": {
   "paddock": [
@@ -347,14 +349,14 @@
   ],
   "dalles_tuiles": 147628,
   "x_paddock": 736.3,
-  "overlay": 5402,
+  "overlay": 5771,
   "decals_gardes": 0,
   "start": [
    684.6,
    555.6,
-   150.0
+   150.1
   ],
-  "toit_finish": 145.5,
+  "toit_finish": 145.3,
   "grilles": 22
  },
  "boudins_whoops": 22,
@@ -405,7 +407,25 @@
   "lignes": 261,
   "modeles": 104,
   "fichiers": 197,
-  "triangles": 46450
+  "triangles": 401700
+ },
+ "classement_direct": {
+  "lettres": [
+   39,
+   11,
+   10,
+   13
+  ],
+  "panneaux": 4,
+  "panneau_ft": [
+   52.5,
+   55.8
+  ],
+  "apercu": "C:\\Users\\ryan\\AppData\\Local\\Temp\\mxsim_paris\\USLANDParisbyRyan_apercu\\apercu_ecran_direct.png"
+ },
+ "chant_grille": {
+  "fichier": "sounds/chant_grille.wav",
+  "volume": 0.7
  },
  "deco_v21": {
   "murs": [
@@ -439,8 +459,8 @@
     "T_D 9",
     "automoto",
     [
-     0.09,
-     0.793
+     0.112,
+     0.777
     ],
     6,
     []
@@ -522,7 +542,7 @@
    ],
    [
     "invisible_milwaukee",
-    176.9,
+    178.9,
     18.9,
     43.9
    ],
@@ -544,74 +564,6 @@
     [
      646.0,
      508.7
-    ],
-    [
-     633.0,
-     509.4
-    ],
-    [
-     620.0,
-     510.2
-    ],
-    [
-     607.0,
-     511.1
-    ],
-    [
-     594.0,
-     512.0
-    ],
-    [
-     581.0,
-     517.8
-    ],
-    [
-     568.0,
-     524.1
-    ],
-    [
-     555.0,
-     525.4
-    ],
-    [
-     542.0,
-     526.8
-    ],
-    [
-     529.0,
-     528.2
-    ],
-    [
-     516.0,
-     529.7
-    ],
-    [
-     503.0,
-     531.3
-    ],
-    [
-     490.0,
-     532.9
-    ],
-    [
-     477.0,
-     534.7
-    ],
-    [
-     464.0,
-     536.6
-    ],
-    [
-     451.0,
-     538.5
-    ],
-    [
-     438.0,
-     540.5
-    ],
-    [
-     425.0,
-     542.7
     ],
     [
      412.5,
@@ -655,6 +607,36 @@
     664.0
    ]
   ],
+  "minerva_deplacee": {
+   "depart": 4,
+   "apres_20s": 2
+  },
+  "rampes_monster": {
+   "ramp_50": {
+    "png": "ramp_50.png",
+    "logo_ft": [
+     4.1,
+     1.9
+    ],
+    "k": 1.0
+   },
+   "ramp_50_haut": {
+    "png": "ramp_50_haut.png",
+    "logo_ft": [
+     5.2,
+     2.4
+    ],
+    "k": 1.4
+   },
+   "ramp_50_mi": {
+    "png": "ramp_50_mi.png",
+    "logo_ft": [
+     4.6,
+     2.1
+    ],
+    "k": 1.2
+   }
+  },
   "rampes_v38c": {
    "k": 1.4,
    "grilles": [
@@ -665,7 +647,7 @@
    "jupe": null
   },
   "personne_public": [
-   500.5011,
+   505.8997,
    9.5832,
    800.7507
   ],

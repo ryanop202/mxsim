@@ -249,12 +249,18 @@ def build(scene, with_seats=True):
     vom_blocks = set(range(1, len(edges) - 1, 3))
 
     # ---- mur de front et circulation basse
-    scene.add("bowl", "wall_black", _strip(ref, 0, S, LOWER["d0"], LOWER["d0"], 0.0, LOWER["z0"], flip=False))
     # bandeau LED allumé : motif USLAND | SUPERCROSS PARIS 2026 (branding.led_board), ≈12,8 m x 0,8 m.
     # Nombre entier de motifs sur le tour (pas de motif coupé à la jonction) : écart de longueur < 2 %.
     n_led = max(1, int(round(S / branding.LED_SEG)))
     uvs = n_led / S
-    led = _strip(ref, 0, S, LOWER["d0"] - 0.08, LOWER["d0"] - 0.08, 0.15, 0.15 + branding.LED_H, flip=False, uvs=uvs)
+    # v39 Paris (Ryan, capture en jeu : « les sponsors sur le bord du stade : en haut, pas en bas ; on ne les voit pas, ça disparaît ») :
+    # bandeau en HAUT du mur de front (sous la lisse béton), plus en bas derrière les tuff blocks et les appuis ; plus grand (branding.LED_H)
+    # v39b (« les logos sur le bord sont bien faits, mais buggés de loin ») : le mur noir était aussi DERRIÈRE le bandeau (8 cm) : de loin le
+    # jeu mélange les deux (logos en morceaux) -> mur noir seulement sous et au-dessus du bandeau, rien derrière
+    z_led = LOWER["z0"] - 0.08
+    scene.add("bowl", "wall_black", _strip(ref, 0, S, LOWER["d0"], LOWER["d0"], 0.0, z_led - branding.LED_H, flip=False))
+    scene.add("bowl", "wall_black", _strip(ref, 0, S, LOWER["d0"], LOWER["d0"], z_led, LOWER["z0"], flip=False))
+    led = _strip(ref, 0, S, LOWER["d0"], LOWER["d0"], z_led - branding.LED_H, z_led, flip=False, uvs=uvs)
     led.UV[:, 1] /= branding.LED_H * uvs                   # v : 0 en bas -> 1 en haut du bandeau
     if not branding.readable(led):                          # texte lu depuis le sol : jamais en miroir
         led.UV[:, 0] = -led.UV[:, 0]

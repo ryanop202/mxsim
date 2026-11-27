@@ -48,6 +48,13 @@ PLAN_K = 1.55    # v28 Paris (« le stade plus autour de la piste » ; x1,55 pou
 # Mêmes valeurs dans pistes/paris-2026/layout_paris.py (PLAN_KZ, ARENA_DZ)
 PLAN_KY = 1.3124
 PLAN_DY = -0.762
+# v39 Paris (Ryan, vue de dessus de la v37 : « le côté ouest à la même distance de la piste que le sud et le nord ») : bord du couloir ->
+# sol de l'arène = 20,3 ft au Nord et au Sud, 41,8 ft à l'Ouest (= bout Sud de l'arène, x petit dans le jeu). Le front de tribune Sud
+# de l'arène avance de WEST_SHIFT_M ; le mur de scène (X_STAGE, paddock) ne bouge pas : X x PLAN_KX + PLAN_DX au lieu de X x 1,55.
+# Mêmes valeurs dans pistes/paris-2026/layout_paris.py (PLAN_KX, ARENA_DX)
+WEST_SHIFT_M = 21.5 / 3.28084
+PLAN_KX = (62.0 * PLAN_K - (-60.0 * PLAN_K + WEST_SHIFT_M)) / (62.0 + 60.0)     # X_STAGE = 62 m, FLOOR_X_SOUTH = -60 m (taille réelle)
+PLAN_DX = 62.0 * PLAN_K - 62.0 * PLAN_KX
 
 
 def build(only=None):
@@ -55,7 +62,7 @@ def build(only=None):
     want = lambda k: only is None or k in only
     log("textures")
     from arena import branding
-    branding.PLAN_K = PLAN_K          # visuels (écrans des entrées : sur les façades Nord / Sud, le long de X) dessinés au ratio final des écrans agrandis
+    branding.PLAN_K = PLAN_KX         # v39 : KX ; visuels (écrans des entrées : sur les façades Nord / Sud, le long de X) dessinés au ratio final des écrans agrandis
     textures.build_all(TEX)
     textures.build_terrain_tiles(TEX)
     from PIL import Image
@@ -88,10 +95,10 @@ def build(only=None):
     if want("interior"):
         log("mur de scène, charpente, équipements")
         info["interior"] = interior.build(scene, rm)
-    KXYD = (PLAN_K, PLAN_KY, PLAN_DY)
-    if KXYD != (1, 1, 0):
+    KXYD = (PLAN_KX, PLAN_KY, PLAN_DY, PLAN_DX)                       # v39 : + décalage en X (côté Ouest du jeu rapproché)
+    if KXYD != (1, 1, 0, 0):
         # Paris 2026 : arène agrandie en plan pour faire tenir le tracé (hauteurs inchangées)
-        log("agrandissement en plan X x%.3f, Y x%.4f puis Y %+.3f m (coque), tribunes reconstruites à la nouvelle taille" % KXYD)
+        log("agrandissement en plan X x%.4f, Y x%.4f puis Y %+.3f m, X %+.3f m (coque), tribunes reconstruites à la nouvelle taille" % KXYD)
         plan_scale.scale_scene(scene, KXYD)
         plan_scale.scale_dims(KXYD)
     info["plan_scale"] = list(KXYD)
