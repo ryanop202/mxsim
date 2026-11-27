@@ -113,24 +113,6 @@ var td_prev = mx.frame_handler;
 if (!td_prev) td_prev = function (s) {};
 mx.frame_handler = td_image;
 
-/* USLAND Paris by Ryan v39b - chant sur la grille de depart (une fois, avant la chute de la grille). Texte ASCII expres. */
-var CG_SON = mx.add_sound("@USLANDParisbyRyan/sounds/chant_grille.wav");
-mx.set_sound_freq(CG_SON, 44100);
-mx.set_sound_vol(CG_SON, 0.70);
-var cg_fait = false, cg_p = [], cg_r = [];
-function cg_image(secs) {
-    try {
-        var d = mx.get_gate_drop_time();
-        mx.get_camera_location(cg_p, cg_r);
-        mx.set_sound_pos(CG_SON, cg_p[0], cg_p[1], cg_p[2]);
-        if (!cg_fait && mx.seconds >= 0.5 && (d < 0 || mx.seconds < d)) { mx.start_sound(CG_SON); cg_fait = true; }
-    } catch (e) { mx.message("chant : " + e.toString()); }
-    cg_prev(secs);
-}
-var cg_prev = mx.frame_handler;
-if (!cg_prev) cg_prev = function (s) {};
-mx.frame_handler = cg_image;
-
 /*
 USLAND Paris - boudins de la ligne de depart : place 0 de 0 a 20 s apres la chute de la grille, puis place 1
 (boudins tardifs : enterres puis sortis ; ligne Minerva : deplacee). Texte ASCII expres.

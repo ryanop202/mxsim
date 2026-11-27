@@ -31,3 +31,24 @@ function lateTuff(seconds) {
 
 var lateTuffPrev = mx.frame_handler;
 mx.frame_handler = lateTuff;
+
+/* USLAND Paris by Ryan v39b - chant sur la grille de depart (une fois, avant la chute de la grille). Texte ASCII expres. */
+var CG_SON = mx.add_sound("@USLANDParisbyRyan/sounds/chant_grille.wav");
+mx.set_sound_freq(CG_SON, 44100);
+mx.set_sound_vol(CG_SON, 0.70);
+var cg_fait = false, cg_p = [], cg_r = [], cg_t0 = -1, CG_AVANT = 8.0;
+function cg_image(secs) {
+    try {
+        var d = mx.get_gate_drop_time();
+        mx.get_camera_location(cg_p, cg_r);
+        mx.set_sound_pos(CG_SON, cg_p[0], cg_p[1], cg_p[2]);
+        if (cg_t0 < 0) cg_t0 = mx.seconds;
+        if (!cg_fait && ((d > 0 && mx.seconds >= d - CG_AVANT && mx.seconds < d) || (d < 0 && mx.seconds - cg_t0 >= 2.0))) {
+            mx.start_sound(CG_SON); cg_fait = true;
+        }
+    } catch (e) { mx.message("chant : " + e.toString()); }
+    cg_prev(secs);
+}
+var cg_prev = mx.frame_handler;
+if (!cg_prev) cg_prev = function (s) {};
+mx.frame_handler = cg_image;

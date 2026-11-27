@@ -601,7 +601,7 @@ A1_OFF = (12.0, 4.0)          # terre : taille, pas (ft) ; v39b : A1 = 28 / 7,2 
 # la piste + écart au hasard, comme le vrac d'A1), centres à >= PL_FLAT ft de tout relief (h > 0,03 ft) : la plaque entière est sur le
 # plat ; bande de planches de PL_FLAT à PL_FLAT + PL_BAND ft du relief ; terre d'A1 (disques fondus) le long du pied du relief, par-dessus
 # le bord des planches ; au-delà des planches, tuile Beton = texture du béton d'A1 jusqu'au mur
-PL_SIZE, PL_STEP, PL_FLAT, PL_BAND, PL_WALL = 8.0, 3.4, 5.5, 8.0, 4.5   # plaque 4 x 8 ft : demi-diagonale 4,47 ft -> centre à 5,5 ft du relief
+PL_SIZE, PL_STEP, PL_FLAT, PL_BAND, PL_WALL = 8.0, 2.4, 5.5, 8.0, 4.5   # v39c (« entre les planches, parfois le béton s'affiche ») : pas 3,4 -> 2,4 ft   # plaque 4 x 8 ft : demi-diagonale 4,47 ft -> centre à 5,5 ft du relief
 PL_JIT = 0.45                 # écart-type de l'angle (rad) autour du sens de la piste
 REL_H = 0.03                  # relief : terrain > 0,03 ft
 
@@ -625,7 +625,9 @@ def border_a1_textures(rf_tex, out_dir, dirt_png, beton_png=None):
 
 BETON_MOY = np.array([84.0, 84.0, 82.0])   # v39b (Ryan : « le béton plus foncé et avec de la texture ») : gris moyen de la tuile
 BETON_CONTRASTE = 2.2                       # grain du béton d'A1 x 2,2 autour de la moyenne
-BETON_TACHES = 14.0                         # taches (variations douces, +/- gris)
+BETON_TACHES = 30.0                         # taches (variations douces, +/- gris) ; v39c (« le béton n'a pas de texture ») : 14 -> 30
+BETON_MOYEN, BETON_GRAIN = 16.0, 14.0       # v39c : grain moyen (~6 px) et fin (~1 px), +/- gris
+BETON_JOINTS = 2                            # v39c : joints de dalles sombres (2 x 2 dalles par tuile)
 
 
 def beton_tile(a1_concrete, out_png, n=512, seed=39):
@@ -636,11 +638,16 @@ def beton_tile(a1_concrete, out_png, n=512, seed=39):
     m = c.reshape(-1, 3).mean(0); c = BETON_MOY + (c - m) * BETON_CONTRASTE
     rng = np.random.default_rng(seed)
     t = gaussian_filter(rng.normal(0, 1, (n, n)), n / 14, mode='wrap'); t = t / (np.abs(t).max() or 1) * BETON_TACHES
-    g = gaussian_filter(rng.normal(0, 1, (n, n)), 1.2, mode='wrap') * 6.0
-    c = c + (t + g)[..., None]
+    g = gaussian_filter(rng.normal(0, 1, (n, n)), 1.2, mode='wrap'); g = g / (g.std() or 1) * BETON_GRAIN / 2
+    g2 = gaussian_filter(rng.normal(0, 1, (n, n)), 6.0, mode='wrap'); g2 = g2 / (g2.std() or 1) * BETON_MOYEN / 2
+    c = c + (t + g + g2)[..., None]
     r = np.roll(np.roll(c, n // 2, 0), n // 2, 1)                       # raccord : la tuile décalée d'une demie au bord
     y = np.abs(np.arange(n) - n / 2 + 0.5) / (n / 2); w = np.clip(1.0 - np.maximum.outer(y, y), 0, 1) ** 0.6
     c = c * w[..., None] + r * (1 - w[..., None])
+    for k in range(BETON_JOINTS):                                        # joints de dalles (sciés), raccord gardé (aux bords de la tuile)
+        q = k * n // BETON_JOINTS
+        for o, f in ((-1, 0.86), (0, 0.62), (1, 0.86)):
+            c[(q + o) % n, :, :] *= f; c[:, (q + o) % n, :] *= f
     Image.fromarray(np.clip(c, 0, 255).astype(np.uint8)).save(out_png)
     return out_png
 
@@ -706,6 +713,17 @@ def border_a1(OUT, path, fl, xpad, folder, rng, wall_max=32.0):
     return ply + off, under_ply, dict(planches=len(ply), terre=len(off), cases_beton=int(conc.sum()), relief_max_sous_planches=round(hmax, 3))
 
 
+def monster_griffe():
+    """v39c : griffe Monster envoyée par Ryan (commun/assets/logos/user/monster_griffe.webp), fond blanc enlevé depuis les bords."""
+    from scipy import ndimage
+    U = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'commun', 'assets', 'logos', 'user')
+    a = np.asarray(Image.open(os.path.join(U, 'monster_griffe.webp')).convert('RGBA')).astype(int)
+    bg = (a[..., :3].min(-1) > 225) | (a[..., 3] < 20); lab, _ = ndimage.label(bg)
+    edge = set(np.unique(np.r_[lab[0], lab[-1], lab[:, 0], lab[:, -1]])) - {0}
+    a[..., 3] = np.where(np.isin(lab, list(edge)), 0, 255)
+    im = Image.fromarray(a.astype(np.uint8), 'RGBA'); return im.crop(im.getbbox())
+
+
 MONSTER_MARGIN = (0.8, 0.7, 0.6)   # marges du logo Monster sur le flanc (ft) : côté lèvre, bas, sous le bord du dessus
 
 
@@ -715,9 +733,8 @@ def ramp_sides_monster(statue_dir, variants=(('ramp_50', 1.0),)):
     (le flanc -x la voyait la tête en bas) : texture 1024 x 1024 (quart haut gauche = l'ancienne texture : dessus noir + tête Venum ;
     quart bas gauche = flanc +x, lèvre à droite ; quart bas droit = flanc -x, lèvre à gauche) et UV refaits ; une texture par hauteur de
     tremplin (variants : (nom, k) ; k = hauteur x k de ramp_tall), le logo dessiné à l'échelle réelle du flanc. -> {nom: png}"""
-    import gate_monster as GM
     base = Image.open(os.path.join(statue_dir, 'ramp_50.png')).convert('RGB').resize((512, 512), Image.LANCZOS)
-    logo = GM._user_logo('monster'); asp = logo.size[0] / logo.size[1]
+    logo = monster_griffe(); asp = logo.size[0] / logo.size[1]
     out = {}
     for name, k in variants:
         p = os.path.join(statue_dir, name + '.jm'); L = open(p).read().split(chr(10)); nv = int(L[2].split()[0])
@@ -740,6 +757,11 @@ def ramp_sides_monster(statue_dir, variants=(('ramp_50', 1.0),)):
         yb = 1024 - int((mb + h) * pxv)
         im.paste(lg, (512 - int((ml + w) * pxu), yb), lg)                  # flanc +x : lèvre à droite du quart bas gauche
         im.paste(lg, (512 + int(ml * pxu), yb), lg)                        # flanc -x : lèvre à gauche du quart bas droit
+        # v39c (« sur chaque côté de la rampe : gauche, derrière et droite ») : dos (sous la lèvre, z = -Lz) = quart haut droit
+        xs_ = V[np.abs(V[:, 5] + 1.0) < 0.1][:, 0]; Wx = float(xs_.max() - xs_.min()) if len(xs_) else 4.0
+        pbu, pbv = 512.0 / Wx, 512.0 / Hy; hb = min(Hy - 1.2, (Wx - 0.5) / asp); wb = hb * asp
+        lgb = logo.resize((max(1, int(wb * pbu)), max(1, int(hb * pbv))), Image.LANCZOS)
+        im.paste(lgb, (512 + (512 - lgb.size[0]) // 2, int(512 - (Hy - 0.6) * pbv)), lgb)
         im = K.grain(im, 1.0); im.save(os.path.join(statue_dir, name + '.png'))
         for i in range(nv):
             v_ = L[3 + i].split()
@@ -748,6 +770,9 @@ def ramp_sides_monster(statue_dir, variants=(('ramp_50', 1.0),)):
                 t = -z / Lz                                                 # 0 = pied, 1 = lèvre
                 u = 0.5 * t if nx > 0 else 0.5 + 0.5 * (1.0 - t)
                 v = 0.5 * y / Hy
+            elif float(v_[5]) < -0.9:                                       # dos : vu de derrière, la droite = -x
+                u = 0.5 + 0.5 * (float(xs_.max()) - x) / Wx
+                v = 0.5 + 0.5 * y / Hy
             else:
                 u, v = float(v_[6]) * 0.5, 0.5 + float(v_[7]) * 0.5
             v_[6], v_[7] = '%.6f' % min(max(u, 0.001), 0.999), '%.6f' % min(max(v, 0.001), 0.999)

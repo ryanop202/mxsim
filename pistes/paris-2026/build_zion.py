@@ -1465,12 +1465,13 @@ def export_zion(*a, **k):
     BP.REPORT['paddock_2026'] = PD.apply(BP.OUT, BP.FOLDER)
     if CLASSEMENT_DIRECT:   # v38c (vidéo en jeu : la dalle du classement s'affiche en traits / pointillés roses, de près comme de loin) : coupé
         BP.REPORT['classement_direct'] = classement_direct(BP.OUT, BP.FOLDER)   # v37 : classement en direct sur l'écran géant
-    BP.REPORT['chant_grille'] = chant_grille(BP.OUT, BP.FOLDER)       # v39b : chant sur la grille de départ
     deco_v21(BP.OUT, BP.FOLDER, LS.COMBOS)                             # v21 : murs bâchés + filets, ballots en U, arche 50 Factory
+    BP.REPORT['chant_grille'] = chant_grille(BP.OUT, BP.FOLDER)       # v39b : chant sur la grille de départ ; v39c : dans nofrills.js (après deco_v21 qui l'écrit)
     BP.REPORT['cameras_tv'] = cameras_tv(BP.OUT)                      # v37 : caméras TV (comme la RF)
 
 
 CHANT_VOL = 0.7    # volume du chant (le public de ZION est à 0,4)
+CHANT_AVANT = 8.0  # v39c : le chant part 8 s avant la chute de la grille (4 s de chant, fini 4 s avant)
 
 
 def chant_grille(OUT, FOLDER):
@@ -1488,21 +1489,26 @@ def chant_grille(OUT, FOLDER):
 var CG_SON = mx.add_sound("@%s/sounds/chant_grille.wav");
 mx.set_sound_freq(CG_SON, 44100);
 mx.set_sound_vol(CG_SON, %.2f);
-var cg_fait = false, cg_p = [], cg_r = [];
+var cg_fait = false, cg_p = [], cg_r = [], cg_t0 = -1, CG_AVANT = %.1f;
 function cg_image(secs) {
     try {
         var d = mx.get_gate_drop_time();
         mx.get_camera_location(cg_p, cg_r);
         mx.set_sound_pos(CG_SON, cg_p[0], cg_p[1], cg_p[2]);
-        if (!cg_fait && mx.seconds >= 0.5 && (d < 0 || mx.seconds < d)) { mx.start_sound(CG_SON); cg_fait = true; }
+        if (cg_t0 < 0) cg_t0 = mx.seconds;
+        if (!cg_fait && ((d > 0 && mx.seconds >= d - CG_AVANT && mx.seconds < d) || (d < 0 && mx.seconds - cg_t0 >= 2.0))) {
+            mx.start_sound(CG_SON); cg_fait = true;
+        }
     } catch (e) { mx.message("chant : " + e.toString()); }
     cg_prev(secs);
 }
 var cg_prev = mx.frame_handler;
 if (!cg_prev) cg_prev = function (s) {};
 mx.frame_handler = cg_image;
-""" % (FOLDER, CHANT_VOL)
-    open(os.path.join(OUT, "frills.js"), "a", newline="\n", encoding="ascii").write(js)
+""" % (FOLDER, CHANT_VOL, CHANT_AVANT)
+    # v39c (« le chant ne marche pas ») : dans nofrills.js (toujours lancé, même frills coupés) et plus au chargement : CHANT_AVANT s avant
+    # la chute de la grille (course) ou 2 s après l'arrivée (entraînement libre, sans grille)
+    open(os.path.join(OUT, "nofrills.js"), "a", newline="\n", encoding="ascii").write(js)
     return dict(fichier="sounds/chant_grille.wav", volume=CHANT_VOL)
 
 

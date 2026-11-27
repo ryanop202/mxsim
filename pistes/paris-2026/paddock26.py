@@ -946,11 +946,8 @@ def screen(D):
     # v39b (Ryan : « sur les 2 petits écrans : Supercross de Paris, USLAND, avec les graphismes rose de Supercross Paris ») : coucher de
     # soleil rose, logo Supercross Paris en haut, logo USLAND blanc en dessous
     sw = 1024; sh = int(sw * (SIDE_Y1 - SIDE_Y0) / SIDE_W)
-    side = _sunset(sw, sh); fitc(side, lg("sxparis"), (40, int(sh * 0.06), sw - 40, int(sh * 0.56)), 0.02)
-    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "stade_paris", "src"))
-    from arena import branding as BR_
-    u_ = BR_.logo_rgba(); us = Image.fromarray(np.dstack([np.clip(u_[..., :3], 0, 255), np.clip(u_[..., 3] * 255, 0, 255)]).astype(np.uint8), "RGBA")
-    fitc(side, us.crop(us.getbbox()), (int(sw * 0.2), int(sh * 0.60), int(sw * 0.8), int(sh * 0.86)), 0.02); rS = A.put(side)
+    side = _sunset(sw, sh); fitc(side, lg("sxparis"), (40, int(sh * 0.08), sw - 40, int(sh * 0.92)), 0.02)   # v39c (« enlève le USLAND, seulement le grand Supercross Paris rose, recadré »)
+    rS = A.put(side)
     if not SCREEN_LIVE:
         main = _sunset(hW, hH); fitc(main, lg("sxparis").filter(ImageFilter.SMOOTH), (int(hW * 0.2), int(hH * 0.08), int(hW * 0.8), int(hH * 0.8)), 0.02)
         un.panel((0, 1.02), (0, 1), SCR_W, SCR_Y1 - SCR_Y0, SCR_Y0, A.put(main))

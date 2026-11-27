@@ -329,10 +329,10 @@
  "decals_sable": 446,
  "decals_sable_voiles": 280,
  "bordure_a1": {
-  "planches": 344,
-  "terre": 267,
+  "planches": 623,
+  "terre": 275,
   "cases_beton": 30576,
-  "relief_max_sous_planches": 0.013,
+  "relief_max_sous_planches": 0.014,
   "teinte_terre": [
    130,
    100,
@@ -349,7 +349,7 @@
   ],
   "dalles_tuiles": 147628,
   "x_paddock": 736.3,
-  "overlay": 5771,
+  "overlay": 6058,
   "decals_gardes": 0,
   "start": [
    684.6,
@@ -422,10 +422,6 @@
    55.8
   ],
   "apercu": "C:\\Users\\ryan\\AppData\\Local\\Temp\\mxsim_paris\\USLANDParisbyRyan_apercu\\apercu_ecran_direct.png"
- },
- "chant_grille": {
-  "fichier": "sounds/chant_grille.wav",
-  "volume": 0.7
  },
  "deco_v21": {
   "murs": [
@@ -615,24 +611,24 @@
    "ramp_50": {
     "png": "ramp_50.png",
     "logo_ft": [
-     4.1,
-     1.9
+     2.6,
+     3.6
     ],
     "k": 1.0
    },
    "ramp_50_haut": {
     "png": "ramp_50_haut.png",
     "logo_ft": [
-     5.2,
-     2.4
+     3.1,
+     4.4
     ],
     "k": 1.4
    },
    "ramp_50_mi": {
     "png": "ramp_50_mi.png",
     "logo_ft": [
-     4.6,
-     2.1
+     3.1,
+     4.4
     ],
     "k": 1.2
    }
@@ -669,6 +665,10 @@
    616.0
   ],
   "boudins_20s": 24
+ },
+ "chant_grille": {
+  "fichier": "sounds/chant_grille.wav",
+  "volume": 0.7
  },
  "cameras_tv": {
   "cameras": 8,
