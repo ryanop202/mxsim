@@ -1433,6 +1433,7 @@ def deco_v28(OUT, FOLDER, combos, Hf, lines, line, sd, DV, rep_, g3, gR):
     if GRATES_SGM:
         lines.append(line(G0[0], G0[1], float(np.arctan2(f0[1], -f0[0])), *D28.grates_sgm(sd)))
         rep_['grates_depart']['modele'] = 'start_grids de Saint-Georges'
+        gq_ = []   # v42c (« les grilles se superposent à deux, c'est moche ») : plus les décals v41c dessous (décalées du modèle)
     # boudins sponsors qui sortent 20 s après la chute de la grille
     PROPS = os.path.join(BP.ROOT, "commun/assets", "props")
     bcj, bcs = D28.boudin_court(sd, PROPS)                       # v36 (photo du vrai Paris) : boudins de 6 ft collés, mêmes sponsors
@@ -1675,6 +1676,7 @@ def export_zion(*a, **k):
     BP.REPORT['flammes'] = FLP.flammes(BP.OUT, BP.FOLDER, BP.ROOT)
     BP.REPORT['scripts'] = scripts_uniques(BP.OUT)                    # v42 : un seul script, dans frills.js et nofrills.js
     BP.REPORT['toit'] = toit_editeur(BP.OUT)                          # v42b : dessus du toit enlevé (l'éditeur voit la piste)
+    BP.REPORT['sable_hors_pentes'] = sable_hors_pentes(BP.OUT)       # v42c : plus de sable étiré sur la face de l'appel du Milwaukee
     if RECADRE:
         BP.REPORT['recadrage'] = recadrer(BP.OUT, *RECADRE)           # v42b : terrain collé à l'arène (comme RF) -> minimap ~1,7x plus grande
     BP.REPORT['taille'] = alleger(BP.OUT, BP.FOLDER)                  # v42 : < 200 Mo (fichiers inutilisés enlevés, .jm -> .jm.gz)
@@ -1746,7 +1748,35 @@ def scripts_uniques(OUT):
     return dict(lignes=js.count("\n"), chant=bool(CHANT_JS), flammes="flamme_start_0" in js, ecran="td_image" in js)
 
 
-TERRE_SOMBRE = (0.78, 0.78, 0.795)   # v42b (« le terrain est maintenant trop foncé : un entre-deux ») ; v42 : (0,555 0,555 0,59)
+TERRE_SOMBRE = (0.827, 0.749, 0.684)   # v42c (aperçu A, « touche d'orange » de la vraie terre de Paris) : (0,78 0,78 0,795) x (1,06 0,96 0,86)
+#   v42b (« le terrain est maintenant trop foncé : un entre-deux ») : (0,78 0,78 0,795) ; v42 : (0,555 0,555 0,59)
+SABLE_PENTE_MAX = 0.75   # v42c : décals de sable enlevées si leur disque touche une pente > 0,75 (37°) : face de l'appel du Milwaukee
+
+
+def sable_hors_pentes(OUT):
+    """v42c (capture : « bug de texture à l'appel » du Milwaukee, au bout de la partie sable) : les décals de sable (rfsand : traces,
+    disques, voiles) sont projetées d'en haut ; posées au pied de l'appel, elles montaient sur sa face raide, étirées en traînées ->
+    enlevées si une pente > SABLE_PENTE_MAX tombe dans leur disque (80 % du rayon). La tuile de sable reste dessous."""
+    t_ = open(os.path.join(OUT, "terrain.hf")).read().split(); s_, lo, hi = float(t_[1]), float(t_[2]), float(t_[3])
+    H = np.asarray(Image.open(os.path.join(OUT, "terrain.png")), float) / 65535 * (hi - lo) + lo
+    gz_, gx_ = np.gradient(H, s_); G_ = np.hypot(gx_, gz_)
+    # seulement les pentes en TERRE (le berm du virage en sable garde ses décals) : tuiles dont le nom ne contient pas « sable »
+    noms = [re.search(r"name ([^\r\n]+)", b).group(1).strip() for b in open(os.path.join(OUT, "tileinfo")).read().split("addtile") if "name" in b]
+    tm = np.fromfile(os.path.join(OUT, "tilemap"), np.uint8); M_ = int(np.sqrt(tm.size)); tm = tm.reshape(M_, M_)
+    sab = np.isin(tm, [i for i, n in enumerate(noms) if "sable" in n.lower()])
+    ix_ = np.minimum(np.arange(H.shape[0]) * M_ // (H.shape[0] - 1), M_ - 1)
+    G_ = np.where(sab[np.ix_(ix_, ix_)], 0.0, G_)
+    p_ = os.path.join(OUT, "decals"); L_ = open(p_).read().split("\n"); o_ = []; n_ = 0
+    for l in L_:
+        m = re.match(r"^\[([-0-9.]+) ([-0-9.]+)\] [-0-9.]+ ([-0-9.]+) \S+ \S+/rfsand/", l)
+        if m:
+            x, z, sz = float(m.group(1)), float(m.group(2)), float(m.group(3)); r_ = 0.4 * sz
+            i0, i1 = max(0, int((z - r_) / s_)), int((z + r_) / s_) + 1; j0, j1 = max(0, int((x - r_) / s_)), int((x + r_) / s_) + 1
+            if G_[i0:i1, j0:j1].size and G_[i0:i1, j0:j1].max() > SABLE_PENTE_MAX:
+                n_ += 1; continue
+        o_.append(l)
+    open(p_, "w", newline="\n").write("\n".join(o_))
+    return dict(enlevees=n_)
 TERRE_DECALS = ("zdecal/terre_stt.png", "zdecal/sgm_90_lt.png", "zdecal/sgm_180_lt.png", "zdecal/sgm_tripleface_lt.png",
                 "zdecal/sgm_table_lt.png", "zdecal/sgm_single_lt.png", "zdecal/sgm_whoops_lt.png")
 
@@ -1783,10 +1813,10 @@ def terre_couleur(OUT):
     return dict(tuile=tuple(int(v) for v in np.round(mg_ * k_)), decals=n_)
 
 
-RECADRE = (200.0, 256.0, 680.0)   # v42b : terrain recadré sur l'arène : x0, z0, côté (ft) ; None = terrain d'origine (1187 ft)
+RECADRE = (200.0, 256.0, 680.0, 2049)   # v42b : terrain recadré sur l'arène : x0, z0, côté (ft), points ; None = terrain d'origine (1187 ft)
 
 
-def recadrer(OUT, x0, z0, W):
+def recadrer(OUT, x0, z0, W, N1=None):
     """v42b (« minimap toujours beaucoup trop petite » ; « garde exactement la même piste, regarde comme RF fait pour avoir une bonne
     minimap ») : le jeu étire map.png sur TOUT le terrain ; RF Anaheim 1 a un terrain collé à l'arène (1025 points x 0,58 ft = 593 ft) et
     son arène remplit la minimap. Ici le terrain faisait 4097 x 0,28975 = 1187 ft, l'arène ~40 % de la carte. Recadrage : même nombre de
@@ -1796,20 +1826,23 @@ def recadrer(OUT, x0, z0, W):
     from scipy.ndimage import map_coordinates
     t_ = open(os.path.join(OUT, "terrain.hf")).read().split(); n_, s0, lo, hi = int(t_[0]), float(t_[1]), float(t_[2]), float(t_[3])
     raw = np.asarray(Image.open(os.path.join(OUT, "terrain.png")), float); N_ = raw.shape[0]   # 4097 (terrain.hf : 11 = log2(4096) - 1)
-    side0 = (N_ - 1) * s0; s1 = W / (N_ - 1)
+    # v42c (« le minimum de Mo possible, sans rien changer à ce qu'on voit ») : N1 points (2049 : pas 0,332 ft ; RF Anaheim : 0,58 ft) ;
+    # sur ce qui se roule (pente < 40°), écart de hauteur < 0,1 ft partout (moyen 0,001 ft) ; ombre 50 -> 12,6 Mo, tilemap 4 -> 1 Mo
+    N1 = N1 or N_; n1 = int(round(np.log2(N1 - 1))) - 1
+    side0 = (N_ - 1) * s0; s1 = W / (N1 - 1)
     assert x0 >= 0 and z0 >= 0 and x0 + W <= side0 and z0 + W <= side0
-    q_ = np.arange(N_) * s1
+    q_ = np.arange(N1) * s1
     Zi, Xi = np.meshgrid((q_ + z0) / s0, (q_ + x0) / s0, indexing="ij")
     H1 = map_coordinates(raw, [Zi, Xi], order=1)
     Image.fromarray(np.clip(np.round(H1), 0, 65535).astype(np.uint16)).save(os.path.join(OUT, "terrain.png"))
-    open(os.path.join(OUT, "terrain.hf"), "w", newline="\n").write("%d %.6f %.6f %.6f\n" % (n_, s1, lo, hi))
+    open(os.path.join(OUT, "terrain.hf"), "w", newline="\n").write("%d %.6f %.6f %.6f\n" % (n1, s1, lo, hi))
     for f_ in ("shading.ppm", "shadingx2.ppm"):
         p_ = os.path.join(OUT, f_)
         if os.path.exists(p_):
             g_ = np.asarray(Image.open(p_).convert("L"), float)
             BP.ppm(p_, np.clip(np.round(map_coordinates(g_, [Zi * (g_.shape[0] - 1) / (raw.shape[0] - 1), Xi * (g_.shape[1] - 1) / (raw.shape[1] - 1)], order=1)), 0, 255).astype(np.uint8))
-    tm = np.fromfile(os.path.join(OUT, "tilemap"), np.uint8); M_ = int(np.sqrt(tm.size)); tm = tm.reshape(M_, M_)
-    c0, c1 = side0 / M_, W / M_; j_ = ((np.arange(M_) + 0.5) * c1)
+    tm = np.fromfile(os.path.join(OUT, "tilemap"), np.uint8); M_ = int(np.sqrt(tm.size)); tm = tm.reshape(M_, M_); M1 = (N1 - 1) // 2
+    c0, c1 = side0 / M_, W / M1; j_ = ((np.arange(M1) + 0.5) * c1)
     tm[np.ix_(np.clip(((j_ + z0) / c0).astype(int), 0, M_ - 1), np.clip(((j_ + x0) / c0).astype(int), 0, M_ - 1))].tofile(os.path.join(OUT, "tilemap"))
     num = lambda v: "%.6f" % v
     pos3 = re.compile(r"^\[([-0-9.]+) ([-0-9.]+) ([-0-9.]+)\]")
@@ -1871,7 +1904,23 @@ def toit_editeur(OUT):
     first_ = next((i for i, l in enumerate(L_) if "/statue/roof__roof__" in l), len(L_))
     assert first_ >= 24, "toit avant les statues déplacées par le script"
     open(p_, "w", newline="\n").write("\n".join(k_))
-    return dict(enleves=len(L_) - len(k_))
+    # v42c (capture de l'éditeur v42b : « toujours les traits ») : la charpente noire (roof_structure__*) a autant de faces vers le haut
+    # que vers le bas ; d'en dessous on ne voit que celles vers le bas (et les côtés) -> faces vers le haut enlevées : la charpente reste
+    # pareille vue des tribunes / de la piste, et disparaît vue d'en haut (le dessous du toit, déjà invisible d'en haut, le confirme)
+    import gzip
+    n_f = 0
+    for f_ in sorted(os.listdir(os.path.join(OUT, "statue"))):
+        if not f_.startswith("roof_structure__") or not f_.endswith((".jm", ".jm.gz")):
+            continue
+        q_ = os.path.join(OUT, "statue", f_); gz_ = f_.endswith(".gz")
+        L2 = (gzip.open(q_, "rt") if gz_ else open(q_)).read().split("\n"); nv, nt = (int(t) for t in L2[2].split()[:2])
+        V = np.array([[float(t) for t in L2[3 + i].split()[:3]] for i in range(nv)])
+        F = np.array([int(float(t)) for t in " ".join(L2[3 + nv:]).split()][:3 * nt]).reshape(-1, 3)
+        nrm = np.cross(V[F[:, 1]] - V[F[:, 0]], V[F[:, 2]] - V[F[:, 0]]); ny = nrm[:, 1] / np.maximum(np.linalg.norm(nrm, axis=1), 1e-12)
+        F = F[ny <= 0.3]; n_f += int((ny > 0.3).sum())
+        out = L2[:2] + ["%d %d" % (nv, len(F))] + L2[3:3 + nv] + ["%d %d %d" % tuple(t) for t in F]
+        (gzip.open(q_, "wt") if gz_ else open(q_, "w", newline="\n")).write("\n".join(out) + "\n")
+    return dict(enleves=len(L_) - len(k_), charpente_faces_haut=n_f)
 
 
 ALLEGER_SANS_X2 = True  # v42 : pas de shadingx2.ppm (copie de shading.ppm / 2)

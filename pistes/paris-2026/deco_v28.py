@@ -542,7 +542,7 @@ def start_grates(sd, L=88.0):
     return 'grates_depart.jm', tex, None
 
 
-GRATE_LEVE = 0.06   # v42 : grates de Saint-Georges montées de 0,06 ft (le stade de Paris, bien plus grand, rend le sol moins précis de loin)
+GRATE_LEVE = 0.10   # v42c : 0,10 ft (sans les décals dessous) ; v42 : grates de Saint-Georges montées de 0,06 ft (le stade de Paris, bien plus grand, rend le sol moins précis de loin)
 
 
 def grates_sgm(sd, name='start_grids_sgm'):
@@ -571,7 +571,7 @@ def grates_sgm(sd, name='start_grids_sgm'):
 
 
 GRATE_POUTRE_X = 9.3   # v42b : au-delà (fond des grates), la poutre de Saint-Georges
-GRATE_NOIR = 0.22      # v42b : grates noires (luminance x 0,22 : losanges encore lisibles)
+GRATE_NOIR = 0.15      # v42c (« celle de Saint-Georges, mais tout en noir ») ; v42b : 0,22
 
 
 def post_shifted(sd, dx, dy, dz, name='rf_corner_post_v40'):

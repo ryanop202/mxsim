@@ -961,9 +961,10 @@ def _board_side_v25(kind, W, H, px_u, px_v, ua, inner, top=None, mir=None):
     if kind == 'milwaukee':
         bg, lg = SP.panel('milwaukee'); im = Image.new('RGB', (W, H), bg); d = ImageDraw.Draw(im); ysk = 2.3
         d.rectangle([0, Y(ysk), W, H], fill=(16, 16, 18))                               # noir du sol jusqu'à la forme rouge
-        yc = ysk + 0.47 * (yt - ysk); hh = 0.42 * (yt - ysk)                            # centré sur la partie ROUGE
+        # v42c (« fais plus gros le logo Milwaukee des deux côtés ») : 0,42 -> 0,60 de la hauteur rouge, 0,80 -> 0,92 de la largeur, un peu plus bas
+        yc = ysk + 0.44 * (yt - ysk); hh = 0.60 * (yt - ysk)                            # centré sur la partie ROUGE
         wl = lambda y: (u3 - (u3 - u2) * y / yt) - (u0 + (u1 - u0) * y / yt)              # largeur du trapèze à la hauteur y
-        uc = (u0 + (u1 - u0) * yc / yt + u3 - (u3 - u2) * yc / yt) / 2; ww = 0.80 * wl(yc + hh / 2)
+        uc = (u0 + (u1 - u0) * yc / yt + u3 - (u3 - u2) * yc / yt) / 2; ww = 0.92 * wl(yc + hh / 2)
         xa, xb = sorted((X(uc - ww / 2), X(uc + ww / 2)))
         fit(im, sq(lg), (xa, Y(yc + hh / 2), xb, Y(yc - hh / 2)), 0.0)
         return im
