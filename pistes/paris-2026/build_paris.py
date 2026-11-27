@@ -317,7 +317,9 @@ def sand_waves(H, path):
     if SAND_BED:                     # v27 : couche de sable surélevée (bords nets de sand_weight)
         # v35 (captures : « un petit cran à la limite du sable », entrée et bas de l'appel du Milwaukee) : la couche monte sur SAND_BED_FADE ft
         # (était 1 ft = marche de 0,3 ft), centrée sur le bout d'origine ; côtés aussi (Bazo v28 : « un petit rebord tout le long »)
-        wb_ = sand_weight(path, X, Z, fade=SAND_BED_FADE, inset_s=-SAND_BED_FADE / 2)[0]
+        # v42b (capture : « au changement de sol, un mini cran : enlève-le ») : aux 2 bouts, montée sur SAND_BED_BOUTS ft (0,3 ft sur 30 ft)
+        fb_ = SAND_BED_BOUTS or SAND_BED_FADE
+        wb_ = sand_weight(path, X, Z, fade=SAND_BED_FADE, fade_s=fb_, inset_s=-fb_ / 2)[0]
         H = H.copy(); H[sl] = H[sl] + SAND_BED * wb_; REPORT['sable_couche'] = (SAND_BED, SAND_BED_FADE)
     if SAND_CHOP:
         # v26 (« dans la partie sable, mets la texture ; là c'est tout plat, c'est bizarre ») : sable remué, sans ornières ni vagues
@@ -378,7 +380,8 @@ def arch_cut(H, path):
 
 EXTRA_H = []
 SAND_WAVES = False
-SAND_BED_FADE = 8.0              # v35 : fondu de la couche de sable (ft) ; Bazo v28 : 5
+SAND_BED_BOUTS = 30.0            # v42b : montée de la couche de sable aux 2 bouts (ft) ; 0 = SAND_BED_FADE
+SAND_BED_FADE = 8.0             # v35 : fondu de la couche de sable (ft) ; Bazo v28 : 5
 SAND_GRAD = 14.0                 # v35 (« pas que ça change de couleur aussi vite : dégradé ») : longueur du dégradé terre -> sable aux 2 bouts (ft)
 SAND_BED = 0.0                   # v27 (version Zion) : épaisseur de la couche de sable (ft)
 SAND_CHOP = 0.0                  # v26 (version Zion) : relief du sable remué (facteur ; 0 = plat)

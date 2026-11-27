@@ -548,21 +548,30 @@ GRATE_LEVE = 0.06   # v42 : grates de Saint-Georges montées de 0,06 ft (le stad
 def grates_sgm(sd, name='start_grids_sgm'):
     """v42 (« les grates de Saint-Georges sont vraiment parfaites : prends exactement les mêmes et pose-les ») : modèle start_grids de
     Saint-Georges tel quel (22 grates de 4 ft encadrées alu, 88 x 10 ft ; origine au milieu de la ligne des grilles, +x local = derrière),
-    texture et collision comprises, seulement monté de GRATE_LEVE ft."""
+    texture comprise, seulement monté de GRATE_LEVE ft.
+    v42b (« mêmes dimensions, même 3D, même visu, sauf qu'elles doivent être noires » ; « derrière la grille, enlève la poutre ») :
+    la poutre du fond (x local >= GRATE_POUTRE_X : rondin de 88 ft, seule collision du modèle) enlevée -> plus de collision ; texture
+    passée en noir (luminance x GRATE_NOIR : losanges, cadres et taches gardés)."""
     src = os.path.join(os.path.dirname(SGM_GRATES), 'start_grids')
-    L = open(src + '.jm').read().split(chr(10)); nv = int(L[2].split()[0])
-    for i in range(3, 3 + nv):
-        v = L[i].split(); v[1] = '%.6f' % (float(v[1]) + GRATE_LEVE); L[i] = ' '.join(v)
-    open(os.path.join(sd, name + '.jm'), 'w', newline=chr(10)).write(chr(10).join(L))
-    S_ = open(src + '.shp').read().split(chr(10)); out = [S_[0]]
-    for l in S_[1:]:
-        v = l.split()
-        if len(v) >= 4:
-            v[1] = '%.4f' % (float(v[1]) + GRATE_LEVE)
-        out.append(' '.join(v))
-    open(os.path.join(sd, name + '.shp'), 'w', newline=chr(10)).write(chr(10).join(out))
-    shutil.copy(src + '.png', os.path.join(sd, name + '.png'))
-    return name + '.jm', name + '.png', name + '.shp'
+    L = open(src + '.jm').read().split(chr(10)); nv, nt = (int(t) for t in L[2].split()[:2])
+    V = [L[3 + i].split() for i in range(nv)]
+    ix = [int(float(t)) for t in ' '.join(L[3 + nv:]).split()][:3 * nt]
+    T = [ix[3 * k:3 * k + 3] for k in range(nt)]
+    T = [t for t in T if not all(float(V[i][0]) >= GRATE_POUTRE_X for i in t)]
+    used = sorted(set(i for t in T for i in t)); new = {o: n for n, o in enumerate(used)}
+    out = L[:2] + ['%d %d' % (len(used), len(T))]
+    for o in used:
+        v = list(V[o]); v[1] = '%.6f' % (float(v[1]) + GRATE_LEVE); out.append(' '.join(v))
+    out += ['%d %d %d' % tuple(new[i] for i in t) for t in T]
+    open(os.path.join(sd, name + '.jm'), 'w', newline=chr(10)).write(chr(10).join(out) + chr(10))
+    a = np.asarray(Image.open(src + '.png').convert('RGBA'), float)
+    g = a[..., :3] @ np.array([0.299, 0.587, 0.114]); a[..., :3] = (g * GRATE_NOIR + 6.0)[..., None]
+    Image.fromarray(np.clip(a, 0, 255).astype(np.uint8), 'RGBA').save(os.path.join(sd, name + '.png'))
+    return name + '.jm', name + '.png', None
+
+
+GRATE_POUTRE_X = 9.3   # v42b : au-delà (fond des grates), la poutre de Saint-Georges
+GRATE_NOIR = 0.22      # v42b : grates noires (luminance x 0,22 : losanges encore lisibles)
 
 
 def post_shifted(sd, dx, dy, dz, name='rf_corner_post_v40'):

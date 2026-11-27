@@ -1,5 +1,5 @@
-[709.576880 0.000 528.590000]
-[709.576880 0.000 582.590000]
+[509.576880 0.000 272.590000]
+[509.576880 0.000 326.590000]
 8.4 1
 10
 @30sec_30.png
@@ -8,7 +8,7 @@
 @30sec_run.seq
 @USLANDParisbyRyan/billboard/blank.png
 
-[541.221880 3.600 511.775000]
+[341.221880 3.600 255.775000]
 7.3584 1
 @USLANDParisbyRyan/ext/2024Bh1Conway/flaggerfiles/defaultflag.png
 @USLANDParisbyRyan/ext/2024Bh1Conway/flaggerfiles/halfway.png
@@ -17,7 +17,7 @@
 
 
 
-[0.00000000 0.000 0.00000000]
+[-200.000000 0.000 -256.000000]
 9.6 1
 3 4 5 -1
 @flagger_resting.png

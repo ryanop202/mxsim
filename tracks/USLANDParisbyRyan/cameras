@@ -1,31 +1,31 @@
 autofovsize 35
 gate 27
-addcamera 800.0 60.0 575.0
+addcamera 600.0 60.0 319.0
 
 autofovsize 30
 gate 28 18 19 20
-addcamera 215.0 40.0 600.0
+addcamera 15.0 40.0 344.0
 
 autofovsize 30
 gate 21 22 23 24
-addcamera 560.0 45.0 372.0
+addcamera 360.0 45.0 116.0
 
 autofovsize 30
 gate 25 26 0 1 2 3
-addcamera 450.0 45.0 372.0
+addcamera 250.0 45.0 116.0
 
 autofovsize 35
 gate 4 5 6
-addcamera 800.0 60.0 615.0
+addcamera 600.0 60.0 359.0
 
 autofovsize 30
 gate 7 8 15
-addcamera 480.0 45.0 822.0
+addcamera 280.0 45.0 566.0
 
 autofovsize 30
 gate 9 10 11 16 17
-addcamera 360.0 45.0 822.0
+addcamera 160.0 45.0 566.0
 
 autofovsize 30
 gate 12 13 14
-addcamera 640.0 45.0 822.0
+addcamera 440.0 45.0 566.0

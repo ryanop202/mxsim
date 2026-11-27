@@ -193,7 +193,7 @@ function td_rangees(y0, k0, n) {                              /* places k0+1 .. 
         r = td_ordre[k];
         if (r.position < 1) break;
         yy = y0 + (k - k0) * %(rh)d + 3;
-        p = td_2(r.position);
+        p = td_2(k + 1);                                        /* v42 : la place (r.position = portes de chrono passees : 44) */
         td_txt(TD_D, (%(px0)d + %(px1)d) / 2 - td_larg(TD_D, p) / 2, yy, p);
         td_cp(1, TD_BANDES[td_marque(mx.get_bike_model(r.slot))] * 10, TD_BY, %(bx0)d, yy - 1, %(bw)d, %(rh)d - 4);
         td_txt(TD_P, %(nx)d, yy, mx.get_rider_number(r.slot).toString() + ".");

@@ -11,7 +11,9 @@ Sortie : tracks/USLAND2026SupercrossParisZion (piste à part, la version USLAND 
 
   py -3.12 -I pistes/paris-2026/build_zion.py      (après pistes/paris-2026/stade_paris/src/build.py --mx)
 """
+import json
 import os
+import re
 import sys
 import shutil
 import numpy as np
@@ -1665,11 +1667,16 @@ def export_zion(*a, **k):
     BP.REPORT['cameras_tv'] = cameras_tv(BP.OUT)                      # v37 : caméras TV (comme la RF)
     BP.REPORT['terre_couleur'] = terre_couleur(BP.OUT)                # v42 : terre plus sombre (comme Saint-Georges), plus de plaques
     import minimap_paris as MM                                         # v41c : minimap (arène détourée, START, logo USLAND)
+    if RECADRE:
+        MM.M = 2048                                                     # v42b : dessinée en 2048 px, recadrée ensuite sur l'arène
     BP.REPORT['minimap'] = MM.make_map(BP.OUT, BP.FOLDER, np.asarray(BP.mx_poly(BP.arena_dims().floor_outline(1.0)), float), BP.START,
                                        os.path.join(BP.ROOT, "commun", "assets", "usland_logo.png"))
     import flammes_paris as FLP                                         # v41e : flammes START (chute de grille) et FINISH (1er tour, arrivée)
     BP.REPORT['flammes'] = FLP.flammes(BP.OUT, BP.FOLDER, BP.ROOT)
     BP.REPORT['scripts'] = scripts_uniques(BP.OUT)                    # v42 : un seul script, dans frills.js et nofrills.js
+    BP.REPORT['toit'] = toit_editeur(BP.OUT)                          # v42b : dessus du toit enlevé (l'éditeur voit la piste)
+    if RECADRE:
+        BP.REPORT['recadrage'] = recadrer(BP.OUT, *RECADRE)           # v42b : terrain collé à l'arène (comme RF) -> minimap ~1,7x plus grande
     BP.REPORT['taille'] = alleger(BP.OUT, BP.FOLDER)                  # v42 : < 200 Mo (fichiers inutilisés enlevés, .jm -> .jm.gz)
 
 
@@ -1739,9 +1746,9 @@ def scripts_uniques(OUT):
     return dict(lignes=js.count("\n"), chant=bool(CHANT_JS), flammes="flamme_start_0" in js, ecran="td_image" in js)
 
 
-TERRE_SOMBRE = (0.555, 0.555, 0.59)   # v42 : captures en jeu, terre de Paris ~(146, 117, 86), de Saint-Georges ~(81, 65, 51)
+TERRE_SOMBRE = (0.78, 0.78, 0.795)   # v42b (« le terrain est maintenant trop foncé : un entre-deux ») ; v42 : (0,555 0,555 0,59)
 TERRE_DECALS = ("zdecal/terre_stt.png", "zdecal/sgm_90_lt.png", "zdecal/sgm_180_lt.png", "zdecal/sgm_tripleface_lt.png",
-                "zdecal/sgm_table_lt.png", "zdecal/sgm_single_lt.png", "zdecal/sgm_whoops_lt.png", "rfborder/a1_offtrack.png")
+                "zdecal/sgm_table_lt.png", "zdecal/sgm_single_lt.png", "zdecal/sgm_whoops_lt.png")
 
 
 def terre_couleur(OUT):
@@ -1761,10 +1768,113 @@ def terre_couleur(OUT):
         if os.path.exists(p_):
             b_ = np.asarray(Image.open(p_).convert("RGBA"), float); b_[..., :3] *= k_
             Image.fromarray(np.clip(np.round(b_), 0, 255).astype(np.uint8), "RGBA").save(p_); n_ += 1
+    # v42b (capture : « des petits bugs de couleur, des endroits bizarres » le long du bord, entre la piste et les planches) : les disques
+    # de terre d'A1 (a1_offtrack : terre lisse, opaque, plus jaune) faisaient une bande lisse d'une autre couleur -> même forme (alpha du
+    # disque), mais dedans exactement le sol d'à côté : couleur de la tuile + grain de Saint-Georges (terre_stt) à la même échelle
+    import deco_v28 as D28
+    po_ = os.path.join(OUT, "rfborder", "a1_offtrack.png")
+    if os.path.exists(po_):
+        d_ = np.asarray(Image.open(po_).convert("RGBA"), float); nd_ = d_.shape[0]
+        gs_ = Image.open(os.path.join(OUT, "zdecal", "terre_stt.png")).convert("RGBA"); cpx_ = int(gs_.size[0] * D28.A1_OFF[0] / 26.0)
+        x0_ = (gs_.size[0] - cpx_) // 2
+        gr_ = np.asarray(gs_.crop((x0_, x0_, x0_ + cpx_, x0_ + cpx_)).resize((nd_, nd_), Image.LANCZOS), float); wa_ = gr_[..., 3:] / 255.0
+        d_[..., :3] = (mg_ * k_)[None, None, :] * (1 - wa_) + gr_[..., :3] * wa_
+        Image.fromarray(np.clip(np.round(d_), 0, 255).astype(np.uint8), "RGBA").save(po_); n_ += 1
     return dict(tuile=tuple(int(v) for v in np.round(mg_ * k_)), decals=n_)
 
 
-ALLEGER_SANS_X2 = True   # v42 : pas de shadingx2.ppm (copie de shading.ppm / 2)
+RECADRE = (200.0, 256.0, 680.0)   # v42b : terrain recadré sur l'arène : x0, z0, côté (ft) ; None = terrain d'origine (1187 ft)
+
+
+def recadrer(OUT, x0, z0, W):
+    """v42b (« minimap toujours beaucoup trop petite » ; « garde exactement la même piste, regarde comme RF fait pour avoir une bonne
+    minimap ») : le jeu étire map.png sur TOUT le terrain ; RF Anaheim 1 a un terrain collé à l'arène (1025 points x 0,58 ft = 593 ft) et
+    son arène remplit la minimap. Ici le terrain faisait 4097 x 0,28975 = 1187 ft, l'arène ~40 % de la carte. Recadrage : même nombre de
+    points (4097), sur W ft autour de l'arène (pas de W / 4096 ft, plus fin), hauteurs relues sur l'ancien terrain (interpolation
+    linéaire : mêmes bosses), ombre (shading) et tuiles (tilemap) relues pareil ; toutes les positions décalées de (-x0, -z0) : statues,
+    décals, billboards, signaleurs, portes de chrono, caméras, positions des scripts (flammes, boudins tardifs) ; map.png recadrée."""
+    from scipy.ndimage import map_coordinates
+    t_ = open(os.path.join(OUT, "terrain.hf")).read().split(); n_, s0, lo, hi = int(t_[0]), float(t_[1]), float(t_[2]), float(t_[3])
+    raw = np.asarray(Image.open(os.path.join(OUT, "terrain.png")), float); N_ = raw.shape[0]   # 4097 (terrain.hf : 11 = log2(4096) - 1)
+    side0 = (N_ - 1) * s0; s1 = W / (N_ - 1)
+    assert x0 >= 0 and z0 >= 0 and x0 + W <= side0 and z0 + W <= side0
+    q_ = np.arange(N_) * s1
+    Zi, Xi = np.meshgrid((q_ + z0) / s0, (q_ + x0) / s0, indexing="ij")
+    H1 = map_coordinates(raw, [Zi, Xi], order=1)
+    Image.fromarray(np.clip(np.round(H1), 0, 65535).astype(np.uint16)).save(os.path.join(OUT, "terrain.png"))
+    open(os.path.join(OUT, "terrain.hf"), "w", newline="\n").write("%d %.6f %.6f %.6f\n" % (n_, s1, lo, hi))
+    for f_ in ("shading.ppm", "shadingx2.ppm"):
+        p_ = os.path.join(OUT, f_)
+        if os.path.exists(p_):
+            g_ = np.asarray(Image.open(p_).convert("L"), float)
+            BP.ppm(p_, np.clip(np.round(map_coordinates(g_, [Zi * (g_.shape[0] - 1) / (raw.shape[0] - 1), Xi * (g_.shape[1] - 1) / (raw.shape[1] - 1)], order=1)), 0, 255).astype(np.uint8))
+    tm = np.fromfile(os.path.join(OUT, "tilemap"), np.uint8); M_ = int(np.sqrt(tm.size)); tm = tm.reshape(M_, M_)
+    c0, c1 = side0 / M_, W / M_; j_ = ((np.arange(M_) + 0.5) * c1)
+    tm[np.ix_(np.clip(((j_ + z0) / c0).astype(int), 0, M_ - 1), np.clip(((j_ + x0) / c0).astype(int), 0, M_ - 1))].tofile(os.path.join(OUT, "tilemap"))
+    num = lambda v: "%.6f" % v
+    pos3 = re.compile(r"^\[([-0-9.]+) ([-0-9.]+) ([-0-9.]+)\]")
+    pos2 = re.compile(r"^\[([-0-9.]+) ([-0-9.]+)\]")
+
+    def sh3(l):
+        m = pos3.match(l)
+        return l if not m else "[%s %s %s]" % (num(float(m.group(1)) - x0), m.group(2), num(float(m.group(3)) - z0)) + l[m.end():]
+    n_l = {}
+    for f_ in ("statues", "billboards", "flaggers", os.path.join("variants", "statues_nuit")):
+        p_ = os.path.join(OUT, f_)
+        if os.path.exists(p_):
+            L_ = open(p_).read().split("\n"); open(p_, "w", newline="\n").write("\n".join(sh3(l) for l in L_)); n_l[f_] = len(L_)
+    p_ = os.path.join(OUT, "decals"); L_ = open(p_).read().split("\n"); o_ = []
+    for l in L_:
+        m = pos2.match(l)
+        o_.append(l if not m else "[%s %s]" % (num(float(m.group(1)) - x0), num(float(m.group(2)) - z0)) + l[m.end():])
+    open(p_, "w", newline="\n").write("\n".join(o_)); n_l["decals"] = len(L_)
+    p_ = os.path.join(OUT, "timing_gates"); L_ = open(p_).read().split("\n"); o_ = []
+    for l in L_:
+        m = re.match(r"^([-0-9.]+) \[([-0-9.]+) ([-0-9.]+) ([-0-9.]+)\](.*)$", l)
+        o_.append(sh3(l) if not m else "%s [%s %s %s]%s" % (m.group(1), num(float(m.group(2)) - x0), m.group(3), num(float(m.group(4)) - z0), m.group(5)))
+    open(p_, "w", newline="\n").write("\n".join(o_))
+    p_ = os.path.join(OUT, "cameras")
+    if os.path.exists(p_):
+        L_ = open(p_).read().split("\n"); o_ = []
+        for l in L_:
+            m = re.match(r"^(\s*addcamera) ([-0-9.]+) ([-0-9.]+) ([-0-9.]+)(.*)$", l)
+            o_.append(l if not m else "%s %.1f %s %.1f%s" % (m.group(1), float(m.group(2)) - x0, m.group(3), float(m.group(4)) - z0, m.group(5)))
+        open(p_, "w", newline="\n").write("\n".join(o_))
+    # scripts : FL_POS = [[x, y, z], ...] (flammes) ; g_lt / g_lt2 = [[i, x, y, z, a, x, y, z, a], ...] (boudins tardifs)
+    def js_(s):
+        def fl_(m):
+            P = json.loads(m.group(2)); return m.group(1) + json.dumps([[round(p[0] - x0, 2), p[1], round(p[2] - z0, 2)] for p in P])
+        def lt_(m):
+            P = json.loads(m.group(2))
+            return m.group(1) + json.dumps([[r[0], round(r[1] - x0, 3), r[2], round(r[3] - z0, 3), r[4], round(r[5] - x0, 3), r[6], round(r[7] - z0, 3), r[8]] for r in P])
+        s, a_ = re.subn(r"(var FL_POS = )(\[\[.*?\]\])", fl_, s)
+        s, b_ = re.subn(r"(var g_lt2? = )(\[\[.*?\]\])", lt_, s)
+        return s, a_, b_
+    for f_ in ("frills.js", "nofrills.js"):
+        p_ = os.path.join(OUT, f_)
+        if os.path.exists(p_):
+            s_, a_, b_ = js_(open(p_, encoding="ascii").read()); open(p_, "w", newline="\n", encoding="ascii").write(s_); n_l[f_] = (a_, b_)
+    p_ = os.path.join(OUT, "map.png")
+    if os.path.exists(p_):
+        mp = Image.open(p_); k_ = mp.size[0] / side0
+        mp.crop((round(x0 * k_), round(z0 * k_), round((x0 + W) * k_), round((z0 + W) * k_))).resize((1024, 1024), Image.LANCZOS).save(p_)
+    return dict(x0=x0, z0=z0, cote_ft=W, pas_ft=round(s1, 5), fichiers=n_l)
+
+
+def toit_editeur(OUT):
+    """v42b (capture de l'éditeur : « on voit le stade depuis le haut, ça cache, je ne peux pas voir la piste ») : le toit du stade =
+    dessus (roof__roof__*, bac acier, faces vers le HAUT) + dessous (roof_under__*, faces vers le BAS). Le jeu ne dessine une face que
+    du côté où elle regarde : de l'intérieur on ne voit que le dessous ; le dessus ne sert qu'à qui regarde d'en haut (l'éditeur) -> enlevé.
+    Seulement des lignes après les statues déplacées par le script (indices 0-23) : leurs numéros ne changent pas."""
+    p_ = os.path.join(OUT, "statues"); L_ = open(p_).read().split("\n")
+    k_ = [l for l in L_ if "/statue/roof__roof__" not in l]
+    first_ = next((i for i, l in enumerate(L_) if "/statue/roof__roof__" in l), len(L_))
+    assert first_ >= 24, "toit avant les statues déplacées par le script"
+    open(p_, "w", newline="\n").write("\n".join(k_))
+    return dict(enleves=len(L_) - len(k_))
+
+
+ALLEGER_SANS_X2 = True  # v42 : pas de shadingx2.ppm (copie de shading.ppm / 2)
 ALLEGER_MOTOS_PX = 1024  # v42 : textures des motos du paddock (2048 -> 1024 px)
 
 
