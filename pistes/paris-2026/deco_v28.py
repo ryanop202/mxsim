@@ -119,8 +119,9 @@ def boudin_court_skin(sd, key, props, L=BOUDIN_COURT, rgb=None):
         bg, lg = rgb, None
     top = Image.new('RGB', (Wt, hb), bg)
     if lg is not None:
+        hh_, ww_ = (0.19, 0.03) if key == 'monster' else (0.115, 0.08)   # v41 (« les logos Monster sur les boudins, bien trop petits ») : bande plus haute
         for yc in (0.245, 0.705):
-            fit(top, lg, (int(0.08 * Wt), int((yc - 0.115) * H), int(0.92 * Wt), int((yc + 0.115) * H)), 0.0)
+            fit(top, lg, (int(ww_ * Wt), int((yc - hh_) * H), int((1 - ww_) * Wt), int((yc + hh_) * H)), 0.0)
     base.paste(top.resize((W, hb), Image.LANCZOS), (0, 0)); base.save(p, optimize=True)
     return name
 
@@ -435,28 +436,126 @@ def ramp_tall(statue_dir, k=1.4, name='ramp_50_haut'):
     return name + '.jm', name + '.shp'
 
 
+SGM_GRATES = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'tracks', 'USLAND2026SaintGeorgesbyBazo', 'statue', 'start_grids')
+GRATE_CROP = (22, 22, 400, 624)   # losanges d'une grate de Saint-Georges (start_grids.png, 1024 px) sans le cadre alu
+
+
+GRATE_PAS = (0.40, 0.25)    # v41 : pas des losanges (ft) en travers / en long
+GRATE_FIL = 0.055            # v41 : demi-largeur du fil (ft) -> ~60 % de métal (la transparence moyennée de loin reste > 50 % : visible)
+GRATE_Y = 0.10               # v41 : à plat, 0,1 ft au-dessus du sol
+
+
+def grate_texture(sd, name='grate_noire.png', W=4.0, L=8.0, ppf=96):
+    """v41 (« les grates noires, juste les losanges de base, comme une grate de départ ; des beaux losanges bien définis, des lignes droites,
+    des angles ; pas de ligne de fusion dans chaque grille ; qu'elles ne disparaissent pas de loin ») : losanges découpés (polygones nets)
+    dans une plaque de métal noir, trous transparents ; la texture est périodique (4 x 8 ft = 10 x 32 losanges) : pas de raccord visible."""
+    p = os.path.join(sd, name)
+    if os.path.exists(p):
+        return name
+    Wp, Lp = int(W * ppf), int(L * ppf); px, pz = GRATE_PAS[0] * ppf, GRATE_PAS[1] * ppf; f = GRATE_FIL * ppf * 1.414
+    im = Image.new('RGBA', (Wp, Lp), (34, 34, 37, 255)); d = ImageDraw.Draw(im)
+    for i in range(-1, int(W / GRATE_PAS[0]) + 2):
+        for j in range(-1, int(L / GRATE_PAS[1]) + 2):
+            for o in (0.0, 0.5):
+                cx, cz = (i + o) * px, (j + o) * pz; hx, hz = px / 2 - f, pz / 2 - f * pz / px
+                if hx > 1 and hz > 1:
+                    d.polygon([(cx, cz - hz), (cx + hx, cz), (cx, cz + hz), (cx - hx, cz)], fill=(0, 0, 0, 0))
+    a = np.asarray(im).copy(); edge = (a[..., 3] > 0)
+    a[..., :3] = np.where(edge[..., None], a[..., :3], 0); im = Image.fromarray(a, 'RGBA'); im.save(p)
+    return name
+
+
+def _grate_quads(m, x0, x1, z0, z1, y, along_x=True):
+    """plaques de 4 x 8 ft (une texture par plaque, périodique) couvrant [x0, x1] x [z0, z1] ; along_x : le long côté (8 ft) selon x."""
+    from deco_v21 import _face
+    if along_x:
+        nx_, nz_ = max(1, int(round((x1 - x0) / 8.0))), max(1, int(round((z1 - z0) / 4.0)))
+    else:
+        nx_, nz_ = max(1, int(round((x1 - x0) / 4.0))), max(1, int(round((z1 - z0) / 8.0)))
+    dx, dz = (x1 - x0) / nx_, (z1 - z0) / nz_
+    for a in range(nx_):
+        for b in range(nz_):
+            xa, xb, za, zb = x0 + a * dx, x0 + (a + 1) * dx, z0 + b * dz, z0 + (b + 1) * dz
+            uv = [(0, 0), (0, 1), (1, 1), (1, 0)] if along_x else [(0, 0), (1, 0), (1, 1), (0, 1)]
+            _face(m, [(xa, y, za), (xb, y, za), (xb, y, zb), (xa, y, zb)], uv, [(0, 1, 0)] * 4)
+            _face(m, [(xa, y, za), (xb, y, za), (xb, y, zb), (xa, y, zb)], uv, [(0, -1, 0)] * 4)
+
+
 def mesh_mat(sd, L, W=4.0, name=None):
-    """v38c (« derrière la rampe, une grille métallique en losanges posée au sol, gris noir comme la rampe, petits losanges fins ») :
-    plaque au ras du sol (0,06 ft), W x L ft, le long de x local, centrée sur l'origine ; texture : métal déployé gris foncé, losanges
-    de ~0,5 ft (répétés par les UV), bords en cornière. Forme créée."""
+    """v41 (« la grate pour aller sur les rampes : catastrophe, en hauteur, blanche, avec un fond ; je veux juste les losanges, noire, comme
+    une grate de départ ») : plaques à plat (GRATE_Y), losanges noirs nets (grate_texture), trous transparents."""
     name = name or 'grille_rampe_%d' % int(round(L))
-    # v38d (« pas ouf : une grille comme les grilles de départ, couleur métal ; les mailles noires, pas de fond noir dessous, la couleur de
-    # la rampe ») : seulement les fils (gris foncé métal), les trous transparents (on voit le sol)
-    T = 256; im = Image.new('RGBA', (T, T), (0, 0, 0, 0)); d = ImageDraw.Draw(im); n = 4; c = T // n
-    # v38e : fil de métal foncé (gris-noir de la rampe) avec un reflet clair au milieu (aspect métal, comme les grilles de départ)
-    # v39 (« il n'y a pas du tout les grilles devant les rampes ») : fils trop fins -> invisibles en jeu (transparence moyennée de loin < 50 %) ;
-    # fils 2,5 x plus épais (~60 % de métal, petits trous), reflet clair au milieu
-    for wd_, col_ in ((20, (30, 30, 33, 255)), (6, (92, 92, 98, 255))):
-        for i in range(n + 1):
-            for j in range(n + 1):
-                x, y = i * c, j * c
-                d.polygon([(x, y - c // 2), (x + c // 2, y), (x, y + c // 2), (x - c // 2, y)], outline=col_, width=wd_)
-    im.save(os.path.join(sd, 'grille_losanges-repeat.png'))      # « -repeat » : le jeu ne répète une texture que si son nom le dit (comme RF)
-    m = Mesh(); y = 0.30; rep_ = 2.0                                  # une tuile de texture = 2 ft ; v39b (Ryan : « la grille ne s'affiche que quand on arrive ») : 0,06 -> 0,30 ft au-dessus du sol (à 0,06 ft, de loin le jeu dessinait la terre par-dessus)
-    P = [(-L / 2, y, W / 2), (L / 2, y, W / 2), (L / 2, y, -W / 2), (-L / 2, y, -W / 2)]
-    m.quad(P, (0, 0, L / rep_, W / rep_), two=True)
+    tex = grate_texture(sd); m = Mesh(); _grate_quads(m, -L / 2, L / 2, -W / 2, W / 2, GRATE_Y, along_x=True)
     m.write(os.path.join(sd, name + '.jm'))
-    return name + '.jm', 'grille_losanges-repeat.png'
+    return name + '.jm', tex
+
+
+GRATE_CADRE, GRATE_CADRE_RGB = 0.15, (34, 34, 37)   # v41c : cadre des grates de départ (ft, couleur) ; « même couleur que la grate » = métal de grate_texture
+
+
+def grate_panel_texture(d_, S, W, L, name='grate_panneau.png', n=1024):
+    """v41c (« garde la forme des grates : une grate individuelle à chaque grille ») : une plaque de W x L ft (L = sens de roulage = axe
+    vertical de l'image) au centre d'un carré transparent de S ft ; losanges noirs comme grate_texture (grand axe en travers du roulage,
+    comme les grates de Saint-Georges), sans cadre."""
+    p = os.path.join(d_, name)
+    t = Image.open(os.path.join(d_, grate_texture(d_, name='grate_decal.png', W=4.0, L=4.0, ppf=128))).convert('RGBA')
+    wp, lp = int(round(W / S * n)), int(round(L / S * n)); tw = int(round(4.0 / S * n))
+    t = t.resize((tw, tw), Image.LANCZOS); pl = Image.new('RGBA', (wp, lp), (0, 0, 0, 0))
+    for yy in range(0, lp, tw):
+        for xx in range(0, wp, tw):
+            pl.paste(t, (xx, yy))
+    # v41c (« fais un cadre noir autour des grates de départ uniquement, comme les bordures des grates de Saint-Georges ») : cadre plein
+    # de GRATE_CADRE ft tout autour de la plaque (Saint-Georges : cornière alu de ~0,1 ft ; ici noire, un peu plus large pour se voir)
+    c_ = max(2, int(round(GRATE_CADRE / S * n))); d = ImageDraw.Draw(pl)
+    for k in range(c_):
+        d.rectangle([k, k, wp - 1 - k, lp - 1 - k], outline=GRATE_CADRE_RGB + (255,))
+    im = Image.new('RGBA', (n, n), (0, 0, 0, 0)); im.paste(pl, ((n - wp) // 2, (n - lp) // 2)); im.save(p)
+    return name
+
+
+def grate_decals(OUT, folder, quads):
+    """v41b (vidéo en jeu : « les grates n'apparaissent que quand on est dessus, ça ne reste pas ») : les plaques à 0,1 ft du sol étaient
+    recouvertes par le terrain simplifié de loin -> grates en DÉCALS (collées au sol, dessinées à toute distance, comme le béton / les
+    planches), ajoutées à la fin du fichier decals (par-dessus la terre). quads = [(centre (x, z), sens de roulage (dx, dz), côté ft, texture)] :
+    l'axe vertical de l'image suit le sens de roulage (statues / décals : +z local -> (sin a, cos a)), losanges en travers."""
+    d_ = os.path.join(OUT, 'rfborder'); os.makedirs(d_, exist_ok=True)
+    grate_texture(d_, name='grate_decal.png', W=4.0, L=4.0, ppf=128)
+    out = []
+    for (x, z), (dx, dz), s, tex in quads:
+        a = float(np.arctan2(dx, dz))
+        out.append("[%.6f %.6f] %.6f %.6f 1.000000 @%s/rfborder/%s" % (x, z, a, s, folder, tex))
+    p_ = os.path.join(OUT, 'decals'); L_ = open(p_).read().rstrip(chr(10))
+    open(p_, 'w', newline=chr(10)).write(L_ + chr(10) + chr(10).join(out) + chr(10))
+    return len(out)
+
+
+GRATES_D = 8.3   # v41 (« la grate de départ, raccourcis-la au trait rouge ») : 10 -> 8,3 ft derrière la ligne des grilles
+
+
+def start_grates(sd, L=88.0):
+    """v41 (« fais les grates plus courtes et noires ») : grates de départ = mêmes plaques que les rampes (losanges noirs), GRATES_D ft
+    derrière la ligne des grilles (x local 0 -> GRATES_D), L ft le long de la ligne (z local), une plaque de 4 ft par grille."""
+    tex = grate_texture(sd); m = Mesh(); _grate_quads(m, 0.0, GRATES_D, -L / 2, L / 2, GRATE_Y, along_x=False)
+    m.write(os.path.join(sd, 'grates_depart.jm'))
+    return 'grates_depart.jm', tex, None
+
+
+def post_shifted(sd, dx, dy, dz, name='rf_corner_post_v40'):
+    """v40 (« enlève le socle du bâtonnet rouge, place-le au point rouge, enterré, bien droit : perpendiculaire au sol à plat, pas à la
+    bosse ») : le jeu penche une statue selon le sol sous son ORIGINE -> origine posée sur du plat, bâton RF (x 4/3) décalé de (dx, dy, dz)
+    jusqu'au point voulu : il reste parfaitement vertical. Collision décalée pareil."""
+    L = open(os.path.join(sd, 'rf_corner_post.jm')).read().split(chr(10)); nv = int(L[2].split()[0])
+    for i in range(3, 3 + nv):
+        v = L[i].split(); v[0] = '%.6f' % (float(v[0]) + dx); v[1] = '%.6f' % (float(v[1]) + dy); v[2] = '%.6f' % (float(v[2]) + dz); L[i] = ' '.join(v)
+    open(os.path.join(sd, name + '.jm'), 'w', newline=chr(10)).write(chr(10).join(L))
+    S_ = open(os.path.join(sd, 'rf_corner_post.shp')).read().split(chr(10)); out = [S_[0]]
+    for l in S_[1:]:
+        v = l.split()
+        if len(v) >= 4:
+            v[0] = '%.4f' % (float(v[0]) + dx); v[1] = '%.4f' % (float(v[1]) + dy); v[2] = '%.4f' % (float(v[2]) + dz)
+        out.append(' '.join(v))
+    open(os.path.join(sd, name + '.shp'), 'w', newline=chr(10)).write(chr(10).join(out))
+    return name + '.jm', 'rf_corner_post_rouge.png', name + '.shp'
 
 
 def rf_border(path, floor_poly, xpad, rng, folder, dist_edge=(4.0, 14.0, (18.0, 60.0)), wall_max=50.0):
@@ -606,6 +705,44 @@ PL_JIT = 0.45                 # écart-type de l'angle (rad) autour du sens de l
 REL_H = 0.03                  # relief : terrain > 0,03 ft
 
 
+BETON_A1 = (35.0, 13.0, 50.0)   # v41c (« la texture béton : grossis-la, un carré tous les 10 ; plus aléatoire, déplace-les ; des taches plus
+# grosses ; il manque toute la bande côté gauche, jusqu'au stade ») : décals = disques de béton d'A1 (35 ft, bord fondu), tous les ~13 ft
+# (tirage de Poisson), angle au hasard, jusqu'à 50 ft hors du sol (sous les tribunes : caché) ; v41b : dalles de 6 ft en grille, qui
+# s'arrêtaient à 2 ft du sol (la grille de calcul ne dépassait pas le sol de plus de 2 ft) -> bande nue à l'Ouest
+BETON_A1_TACHES = 14.0          # v41c : grandes taches (+/- gris) ajoutées au disque d'A1
+
+
+def beton_a1_decal(rf_tex, out_dir, seed=411):
+    """v41c : disque de béton d'A1 (concrete.png, bord fondu) remis au gris BETON_MOY, grain x BETON_CONTRASTE, + grandes taches douces ;
+    son relief (concrete_tnorm.png) copié à côté."""
+    from scipy.ndimage import gaussian_filter
+    a = np.asarray(Image.open(os.path.join(rf_tex, 'concrete.png')).convert('RGBA'), float); n = a.shape[0]
+    g = a[..., :3].mean(-1); m = a[..., 3] > 200; g = (g - g[m].mean()) * BETON_CONTRASTE
+    t = gaussian_filter(np.random.default_rng(seed).normal(0, 1, g.shape), n / 14); t = t / (np.abs(t).max() or 1) * BETON_A1_TACHES
+    a[..., :3] = np.clip(BETON_MOY[None, None, :] + (g + t)[..., None], 0, 255)
+    Image.fromarray(a.astype(np.uint8), 'RGBA').save(os.path.join(out_dir, 'beton_a1.png'))
+    shutil.copy(os.path.join(rf_tex, 'concrete_tnorm.png'), os.path.join(out_dir, 'beton_a1_tnorm.png'))
+
+
+BETON_DALLE = 6.0    # v41b : taille des décals de béton (ft) = une dalle (12 ft : seulement 78 posées, la bande fait ~20 ft)
+
+
+def beton_dalle_texture(out_png, n=1024, seed=41):
+    """v41 : texture de dalle de béton (décal, périodique) : gris BETON_MOY, grain fin et moyen, taches douces, joint scié sur le bord."""
+    from scipy.ndimage import gaussian_filter
+    rng = np.random.default_rng(seed)
+    g = gaussian_filter(rng.normal(0, 1, (n, n)), 1.0, mode='wrap'); g = g / (g.std() or 1) * 7.0
+    g2 = gaussian_filter(rng.normal(0, 1, (n, n)), 6.0, mode='wrap'); g2 = g2 / (g2.std() or 1) * 6.0
+    t = gaussian_filter(rng.normal(0, 1, (n, n)), n / 9, mode='wrap'); t = t / (np.abs(t).max() or 1) * 11.0
+    pores = (rng.random((n, n)) < 0.004) * -18.0
+    c = BETON_MOY[None, None, :] + (g + g2 + t + pores)[..., None]
+    for o, f in ((0, 0.58), (1, 0.72), (n - 1, 0.72), (2, 0.88), (n - 2, 0.88)):
+        c[o, :, :] *= f; c[:, o, :] *= f
+    a = np.dstack([np.clip(c, 0, 255), np.full((n, n), 255.0)]).astype(np.uint8)
+    Image.fromarray(a, 'RGBA').save(out_png)
+    return out_png
+
+
 def border_a1_textures(rf_tex, out_dir, dirt_png, beton_png=None):
     """textures A1 dans la piste : plaque seule (planche_a1.png), terre (offtrack recolorée à la teinte de notre sol), et (v39b) la tuile
     Beton refaite avec le béton d'A1 (centre opaque du disque concrete.png, à la taille de l'ancienne tuile)."""
@@ -620,6 +757,7 @@ def border_a1_textures(rf_tex, out_dir, dirt_png, beton_png=None):
     Image.fromarray(a.astype(np.uint8), 'RGBA').save(os.path.join(out_dir, 'a1_offtrack.png'))
     if beton_png and os.path.exists(beton_png):
         beton_tile(os.path.join(rf_tex, 'concrete.png'), beton_png)
+    beton_a1_decal(rf_tex, out_dir)   # v41c : décals de béton (disques d'A1) ; v41b : beton_dalle_texture (dalles de 6 ft)
     return [round(float(v)) for v in zm]
 
 
@@ -630,24 +768,18 @@ BETON_MOYEN, BETON_GRAIN = 16.0, 14.0       # v39c : grain moyen (~6 px) et fin 
 BETON_JOINTS = 2                            # v39c : joints de dalles sombres (2 x 2 dalles par tuile)
 
 
+BETON_BRUIT = (3.0, 5.0)   # v40 : grain fin, taches douces (+/- gris) sur le gris uni
+
+
 def beton_tile(a1_concrete, out_png, n=512, seed=39):
-    """tuile Beton : centre opaque du béton d'A1 (512 px au lieu de 128 : plus de détail), assombrie, grain renforcé, taches douces,
-    raccord sans couture (moitié décalée fondue en croix)."""
+    """v40 (« le béton : t'as pas réussi à mettre la texture ; fais une couleur unifiée, garde ce gris-là, juste un peu de saleté, de bruit,
+    pas abuser, pour pas que ça fasse trop lisse ») : gris uni BETON_MOY + grain fin et taches douces légers (raccord parfait : bruit
+    périodique). a1_concrete n'est plus utilisé (gardé pour l'appel)."""
     from scipy.ndimage import gaussian_filter
-    c = np.asarray(Image.open(a1_concrete).convert('RGB').crop((312, 312, 712, 712)).resize((n, n), Image.LANCZOS), float)
-    m = c.reshape(-1, 3).mean(0); c = BETON_MOY + (c - m) * BETON_CONTRASTE
     rng = np.random.default_rng(seed)
-    t = gaussian_filter(rng.normal(0, 1, (n, n)), n / 14, mode='wrap'); t = t / (np.abs(t).max() or 1) * BETON_TACHES
-    g = gaussian_filter(rng.normal(0, 1, (n, n)), 1.2, mode='wrap'); g = g / (g.std() or 1) * BETON_GRAIN / 2
-    g2 = gaussian_filter(rng.normal(0, 1, (n, n)), 6.0, mode='wrap'); g2 = g2 / (g2.std() or 1) * BETON_MOYEN / 2
-    c = c + (t + g + g2)[..., None]
-    r = np.roll(np.roll(c, n // 2, 0), n // 2, 1)                       # raccord : la tuile décalée d'une demie au bord
-    y = np.abs(np.arange(n) - n / 2 + 0.5) / (n / 2); w = np.clip(1.0 - np.maximum.outer(y, y), 0, 1) ** 0.6
-    c = c * w[..., None] + r * (1 - w[..., None])
-    for k in range(BETON_JOINTS):                                        # joints de dalles (sciés), raccord gardé (aux bords de la tuile)
-        q = k * n // BETON_JOINTS
-        for o, f in ((-1, 0.86), (0, 0.62), (1, 0.86)):
-            c[(q + o) % n, :, :] *= f; c[:, (q + o) % n, :] *= f
+    g = gaussian_filter(rng.normal(0, 1, (n, n)), 0.8, mode='wrap'); g = g / (g.std() or 1) * BETON_BRUIT[0]
+    t = gaussian_filter(rng.normal(0, 1, (n, n)), n / 10, mode='wrap'); t = t / (np.abs(t).max() or 1) * BETON_BRUIT[1]
+    c = BETON_MOY[None, None, :] + (g + t)[..., None]
     Image.fromarray(np.clip(c, 0, 255).astype(np.uint8)).save(out_png)
     return out_png
 
@@ -670,12 +802,14 @@ def border_a1(OUT, path, fl, xpad, folder, rng, wall_max=32.0):
     from matplotlib.path import Path as MPath
     t = open(os.path.join(OUT, 'terrain.hf')).read().split(); s_, lo, hi = float(t[1]), float(t[2]), float(t[3])
     Hm = np.asarray(Image.open(os.path.join(OUT, 'terrain.png')), float) / 65535 * (hi - lo) + lo
-    fl = np.asarray(fl, float); x0, x1, z0, z1 = fl[:, 0].min() - 2, fl[:, 0].max() + 2, fl[:, 1].min() - 2, fl[:, 1].max() + 2
+    mg_ = BETON_A1[2] + 2.0   # v41c : grille de calcul jusqu'à 52 ft hors du sol (avant : 2 ft) pour le béton jusqu'au stade
+    fl = np.asarray(fl, float); x0, x1, z0, z1 = fl[:, 0].min() - mg_, fl[:, 0].max() + mg_, fl[:, 1].min() - mg_, fl[:, 1].max() + mg_
     st = 0.5; xs, zs = np.arange(x0, x1, st), np.arange(z0, z1, st); X, Z = np.meshgrid(xs, zs)
     h = map_coordinates(Hm, [Z / s_, X / s_], order=1)
     sm = path.samples(0.5); PT = np.c_[sm['x'], sm['z']]; TH = np.asarray(sm['th'])
     dp, ip = cKDTree(PT).query(np.c_[X.ravel(), Z.ravel()]); dp = dp.reshape(X.shape); ip = ip.reshape(X.shape)
     rel = (h > REL_H) | (dp < 15.2)                                       # relief ou couloir
+    rel &= (X >= fl[:, 0].min() - 2) & (X <= fl[:, 0].max() + 2) & (Z >= fl[:, 1].min() - 2) & (Z <= fl[:, 1].max() + 2)   # v41c : comme avant (grille à 2 ft du sol)
     dr = distance_transform_edt(~rel) * st                                # distance au relief / au couloir (ft)
     floor = MPath(fl).contains_points(np.c_[X.ravel(), Z.ravel()]).reshape(X.shape); dw = distance_transform_edt(floor) * st
     U = floor & (X < xpad - 4.0) & (dw < wall_max)
@@ -710,7 +844,19 @@ def border_a1(OUT, path, fl, xpad, folder, rng, wall_max=32.0):
             for r_ in (0.0, 2.3, 4.5):
                 hmax = max(hmax, float(map_coordinates(Hm, [[(z_ + r_ * np.sin(a_)) / s_], [(x_ + r_ * np.cos(a_)) / s_]], order=1)[0]))
     assert hmax <= 0.05, ("planche sur le relief", hmax)
-    return ply + off, under_ply, dict(planches=len(ply), terre=len(off), cases_beton=int(conc.sum()), relief_max_sous_planches=round(hmax, 3))
+    # v41 (« le béton : toujours rien sur le gris ; revois le code ») : dans le jeu, la texture d'une TUILE ne donne que sa couleur (nos tuiles
+    # de terre aussi sont unies : leur grain vient des décals) -> le béton est fait de décals : dalles de BETON_DALLE ft, grille alignée,
+    # texture périodique (grain, taches, joints sciés aux bords = dalles), posées sous les planches et la terre, sur le plat côté tribunes
+    # (U, >= 3 ft du relief) et sur le béton hors du sol jusqu'à 14 ft du bord
+    dout = distance_transform_edt(~floor) * st
+    # v41c : disques d'A1 (BETON_A1), tirage de Poisson, angle au hasard, côté tribunes : sur le plat (U, >= 3 ft du relief) et hors du sol
+    # jusqu'à BETON_A1[2] ft (jusqu'au stade, tout le tour, l'Ouest compris), jamais au paddock
+    # centres à >= 17 ft du relief : le disque (opaque sur ~10 ft de rayon, fondu jusqu'à ~14 ft) passe sous les planches (5,5-13,5 ft du
+    # relief) sans griser la terre au pied des bosses
+    Cz = (U | (~floor & (dout <= BETON_A1[2]) & (X < xpad - 4.0))) & (dr >= 17.0)
+    cells_ = np.argwhere(Cz); cells_ = cells_[(cells_[:, 0] % 4 == 0) & (cells_[:, 1] % 4 == 0)]   # cases de 2 ft
+    conc_dec = [line_(q, rng.uniform(-np.pi, np.pi), BETON_A1[0], 'beton_a1.png') for q, i, j in _poisson(cells_, X, Z, BETON_A1[1], rng)]
+    return conc_dec + ply + off, under_ply, dict(planches=len(ply), terre=len(off), cases_beton=int(conc.sum()), dalles_beton=len(conc_dec), relief_max_sous_planches=round(hmax, 3))
 
 
 def monster_griffe():
@@ -721,7 +867,20 @@ def monster_griffe():
     bg = (a[..., :3].min(-1) > 225) | (a[..., 3] < 20); lab, _ = ndimage.label(bg)
     edge = set(np.unique(np.r_[lab[0], lab[-1], lab[:, 0], lab[:, -1]])) - {0}
     a[..., 3] = np.where(np.isin(lab, list(edge)), 0, 255)
-    im = Image.fromarray(a.astype(np.uint8), 'RGBA'); return im.crop(im.getbbox())
+    im = Image.fromarray(a.astype(np.uint8), 'RGBA'); im = im.crop(im.getbbox())
+    # v40 (« le Monster est centré sur le petit truc à gauche de la griffe ; centre à partir de la griffe du milieu ») : milieu de la griffe
+    # du milieu (2e trait plein à mi-hauteur) au centre de l'image (marge transparente ajoutée du côté court)
+    al = np.asarray(im)[..., 3] > 40; row = al[int(al.shape[0] * 0.55)]; runs = []; x = 0
+    while x < len(row):
+        if row[x]:
+            x0 = x
+            while x < len(row) and row[x]: x += 1
+            runs.append((x0, x))
+        x += 1
+    if len(runs) >= 3:
+        xm = (runs[1][0] + runs[1][1]) / 2.0; W2 = int(round(2 * max(xm, im.width - xm)))
+        pad = Image.new('RGBA', (W2, im.height), (0, 0, 0, 0)); pad.paste(im, (int(round(W2 / 2 - xm)), 0)); im = pad
+    return im
 
 
 MONSTER_MARGIN = (0.8, 0.7, 0.6)   # marges du logo Monster sur le flanc (ft) : côté lèvre, bas, sous le bord du dessus

@@ -1390,7 +1390,7 @@ def plan():
     # ======================= rangée PISTE : bout whoops -> KTM (validé)
     for k, n in enumerate((None, None, 6, 8, 10, 12, None, None, None)):
         P.append(("barriere_num_%d" % n if n else "barriere_vauban", 741.3 + 6.7 * k, 825.0, AL_X, "barrière numérotée"))
-    add("gant_five", 739.0, 808.0, W_, "gant gonflable Five")   # v28 (« tourne-le dans le bon sens, le truc 5 ») : face à la piste
+    add("gant_five", 739.0, 808.0, E, "gant gonflable Five")   # v40 (« les gants Five, retourne-le : le dos du gant vers la piste ») ; v28 : face à la piste (W_)
     add("van_blanc", 750.0, 806.0, N_, "van blanc")
     add("tente_arche", 763.5, 806.0, S_, "tente arche noire")
     add("van_bus_noir", 746.5, 770.0, N_, "bus noir à côté du KTM")

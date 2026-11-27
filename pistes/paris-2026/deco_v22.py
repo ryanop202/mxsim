@@ -376,7 +376,8 @@ def turn_wall_v23(out, k, g, Hf, key):
             a3 = V3(A2, dcen + d_, yb2 + y_); b3 = V3(B2, dcen + d_, yb2 + y_)
             # v23f (« les boudins : la couleur de la bâche sur leur extérieur, l'intérieur gris, un peu plus foncé ») : tour = fond du sponsor
             # (coin bas de l'image, sans logo), bouts = disques gris
-            a2.tube(a3, b3, rb * 0.97, (0.02, 0.02, 0.05, 0.05), 14, caps=False)
+            pass   # v40 (« les boudins sur les appuis, de loin ils sont flous, logos déformés ; on voit les cylindres derrière ») : les 3 tubes
+            #        noirs étaient à 0,02 ft sous la bâche -> de loin ils la traversaient ; plus de tubes, seulement leurs bouts (disques)
             ax_ = np.subtract(b3, a3); ax_ = ax_ / np.linalg.norm(ax_); s1 = np.cross(ax_, [0, 1, 0]); s1 /= np.linalg.norm(s1); s2 = np.cross(ax_, s1)
             for cen_, sg_ in ((np.asarray(a3), -1), (np.asarray(b3), 1)):
                 ring_ = [cen_ + (np.cos(t_) * s1 + np.sin(t_) * s2) * rb * 0.97 for t_ in np.linspace(0, 2 * np.pi, 15)]
@@ -721,7 +722,8 @@ def turn_wall_v25(out, k, g, Hf, key):
             _face(a2, Q, [(u0_, v0), (u1_, v0), (u1_, v1), (u0_, v1)], [(nn[0] * nd0, ny0, nn[1] * nd0)] * 2 + [(nn[0] * nd1, ny1, nn[1] * nd1)] * 2)
         for d_, y_ in ((-rb, rb), (rb, rb), (0.0, rb * (1 + np.sqrt(3)))):
             a3 = V3(A2, dcen + d_, yb2 + y_); b3 = V3(B2, dcen + d_, yb2 + y_)
-            a2.tube(a3, b3, rb * 0.97, (0.02, 0.02, 0.05, 0.05), 14, caps=False)
+            pass   # v40 (« les boudins sur les appuis, de loin ils sont flous, logos déformés ; on voit les cylindres derrière ») : les 3 tubes
+            #        noirs étaient à 0,02 ft sous la bâche -> de loin ils la traversaient ; plus de tubes, seulement leurs bouts (disques)
             ax_ = np.subtract(b3, a3); ax_ = ax_ / np.linalg.norm(ax_); s1 = np.cross(ax_, [0, 1, 0]); s1 /= np.linalg.norm(s1); s2 = np.cross(ax_, s1)
             for cen_, sg_ in ((np.asarray(a3), -1), (np.asarray(b3), 1)):
                 ring_ = [cen_ + (np.cos(t_) * s1 + np.sin(t_) * s2) * rb * 0.97 for t_ in np.linspace(0, 2 * np.pi, 15)]
@@ -946,7 +948,13 @@ def _board_side_v25(kind, W, H, px_u, px_v, ua, inner, top=None, mir=None):
             if ww <= 0.80 * wl(yb_ + hh) or hh < 0.5:
                 break
             hh *= 0.95
-        uc = (np.interp(yb_ + hh / 2, ty[:ia + 1], tu[:ia + 1]) + np.interp(yb_ + hh / 2, ty[ia:][::-1], tu[ia:][::-1])) / 2
+        # v40 (« le Venum, centre-le sous l'angle, pas au milieu ») : centré sur le u de la pointe ; rétréci si un côté du triangle le coupe
+        uc = ua_
+        for _ in range(40):
+            yb_ = 0.78 * yt_ - hh; ww = hh * asp; yq = yb_ + hh
+            if (uc - ww / 2 >= np.interp(yq, ty[:ia + 1], tu[:ia + 1]) + 0.2 and uc + ww / 2 <= np.interp(yq, ty[ia:][::-1], tu[ia:][::-1]) - 0.2) or hh < 0.5:
+                break
+            hh *= 0.95
         xa, xb = sorted((X(uc - ww / 2), X(uc + ww / 2)))
         fit(im, sq(hd), (xa, Y(yb_ + hh), xb, Y(yb_)), 0.0)
         return im
@@ -1064,6 +1072,15 @@ def board_v25b(out, name, Hf, g, side, kind, th=None):
                 hull.pop()
             hull.append(q)
         ys = np.interp(us, [q[0] for q in hull], [q[1] for q in hull])
+        # v40 (« que le pic en haut soit plus à un angle ») : 2 droites, des 2 pieds jusqu'à un sommet au-dessus de la crête (la plus basse
+        # pointe qui reste au-dessus de la terre partout) -> vraie pointe
+        ia_ = int(np.argmax(ys)); u_a = float(us[ia_]); y_a = float(ys[ia_])
+        for i_ in range(len(us)):
+            if i_ < ia_ and us[i_] > us[0]:
+                y_a = max(y_a, ys[0] + (ys[i_] - ys[0]) * (u_a - us[0]) / (us[i_] - us[0]))
+            elif i_ > ia_ and us[i_] < us[-1]:
+                y_a = max(y_a, ys[-1] + (ys[i_] - ys[-1]) * (us[-1] - u_a) / (us[-1] - us[i_]))
+        ys = np.interp(us, [us[0], u_a, us[-1]], [ys[0], y_a + 0.05, ys[-1]])
         ua, ub = float(us[0]), float(us[-1]); um = (ua + ub) / 2
     else:
         us = np.arange(ua, ub + 0.01, 0.5); ys = np.interp(us, [q[0] for q in poly], [q[1] for q in poly])

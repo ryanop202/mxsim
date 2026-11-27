@@ -261,6 +261,7 @@
    0.4
   ]
  ],
+ "sillons_bouches": [],
  "grilles_a_plat": 3,
  "socles": 7,
  "sable_tuiles": 12843,
@@ -326,19 +327,20 @@
   "tuiles": 8,
   "ombrage_plat": 228
  },
- "decals_sable": 446,
+ "decals_sable": 440,
  "decals_sable_voiles": 280,
  "bordure_a1": {
   "planches": 623,
   "terre": 275,
   "cases_beton": 30576,
+  "dalles_beton": 268,
   "relief_max_sous_planches": 0.014,
   "teinte_terre": [
-   130,
-   100,
-   60
+   176,
+   144,
+   84
   ],
-  "taches_enlevees": 111
+  "taches_enlevees": 118
  },
  "zion_v19": {
   "paddock": [
@@ -349,7 +351,7 @@
   ],
   "dalles_tuiles": 147628,
   "x_paddock": 736.3,
-  "overlay": 6058,
+  "overlay": 6499,
   "decals_gardes": 0,
   "start": [
    684.6,
@@ -393,7 +395,7 @@
     "VHR": 19.4,
     "YCF": 28.7,
     "barrière numérotée": -32.6,
-    "gant gonflable Five": -29.9,
+    "gant gonflable Five": -30.1,
     "van blanc": -160.1,
     "tente arche noire": -162.4,
     "KTM": -18.2,
@@ -407,7 +409,7 @@
   "lignes": 261,
   "modeles": 104,
   "fichiers": 197,
-  "triangles": 401700
+  "triangles": 46468
  },
  "classement_direct": {
   "lettres": [
@@ -421,7 +423,7 @@
    52.5,
    55.8
   ],
-  "apercu": "C:\\Users\\ryan\\AppData\\Local\\Temp\\mxsim_paris\\USLANDParisbyRyan_apercu\\apercu_ecran_direct.png"
+  "apercu": "C:\\Users\\basil\\AppData\\Local\\Claude-Data\\claude_pzs8sxrjxfjjc\\scratch-workspaces\\88d478f8-540d-4811-8570-5b7d3789edd5\\7ce31b78-0ed2-4bc7-b5fd-226fa3f6aa26\\scratch-2026-10-24-bdb21d\\work\\wt_ryan\\pistes\\paris-2026\\apercu_zion\\apercu_ecran_direct.png"
  },
  "deco_v21": {
   "murs": [
@@ -551,10 +553,24 @@
   ],
   "bottes_v29": 40,
   "poteau_virage_axe": 22.5,
-  "poteau_virage": [
-   391.1,
-   536.3
-  ],
+  "poteau_virage": {
+   "point": [
+    388.4,
+    538.9
+   ],
+   "origine": [
+    391.8,
+    523.6
+   ],
+   "pente_origine": 0.0
+  },
+  "grates_depart": {
+   "ligne": [
+    684.6,
+    555.6
+   ],
+   "plaques": 22
+  },
   "couloir_depart": {
    "A": [
     [
@@ -611,7 +627,7 @@
    "ramp_50": {
     "png": "ramp_50.png",
     "logo_ft": [
-     2.6,
+     2.9,
      3.6
     ],
     "k": 1.0
@@ -619,8 +635,8 @@
    "ramp_50_haut": {
     "png": "ramp_50_haut.png",
     "logo_ft": [
-     3.1,
-     4.4
+     3.2,
+     4.1
     ],
     "k": 1.4
    },
@@ -628,11 +644,12 @@
     "png": "ramp_50_mi.png",
     "logo_ft": [
      3.1,
-     4.4
+     3.9
     ],
     "k": 1.2
    }
   },
+  "grates_decals": 56,
   "rampes_v38c": {
    "k": 1.4,
    "grilles": [
@@ -641,6 +658,16 @@
     88.0
    ],
    "jupe": null
+  },
+  "public_haut": {
+   "sieges_haut": 88.4,
+   "derniere_rangee": 71.8,
+   "rangees_ajoutees": 7,
+   "spectateurs": 1344
+  },
+  "public_assombri": {
+   "panneaux": 7333,
+   "textures": 72
   },
   "personne_public": [
    505.8997,
@@ -658,7 +685,7 @@
   "v38": {
    "oter": 6,
    "poses": 8,
-   "courbe_tbb": 6
+   "courbe_tbb": 5
   },
   "rider_gate": [
    686.0,

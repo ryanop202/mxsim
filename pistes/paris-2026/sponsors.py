@@ -39,6 +39,9 @@ def panel(key):
     import hab_kit as K
     if key is None:
         r = ((22, 22, 24), None)
+    elif key == 'monster':                                           # v40 : griffe + Monster Energy (logo de l'utilisateur, comme les grilles) sur fond noir
+        import gate_monster as GM
+        r = ((16, 16, 18), GM._user_logo('monster'))
     elif key == 'honda':                                             # fond rouge, logo blanc
         _, lg = _detour(os.path.join(U, FILES['honda'])); r = ((204, 8, 18), K.tint(lg, (245, 245, 245)))
     elif key == 'five':                                              # logo FIVE landscape de l'utilisateur (5 rouge + FIVE noir)
