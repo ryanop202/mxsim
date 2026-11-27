@@ -19,7 +19,7 @@ from hab_kit import Mesh, fit
 
 LATE_S = 20.0
 BOUDIN_KEYS = ['mxsim', 'five', 'honda', 'yamaha', 'automoto', 'motoverte', 'minerva', 'amv', 'milwaukee', '50factory']
-BOUDIN_COURT = 12.0      # v38d (« 2 boudins font 1, un seul gros logo sur les 2 ») : 6 -> 12 ft ;
+BOUDIN_COURT = 18.0      # v39 (« que ça passe sur 3 : un logo tous les 3 petits d'origine ») : 12 -> 18 ft ; v38d (« 2 boudins font 1, un seul gros logo sur les 2 ») : 6 -> 12 ft ;
 BOUDIN_COURT_V36 = 6.0      # v36 (photo du vrai Paris : boudins plus courts, « collés ») : boudins de 6 ft bout à bout au lieu de 18 ft
 
 
@@ -194,6 +194,29 @@ def start_tarp_black(sd, sgm_statue):
 
 
 TARP_LOGOS = True
+
+
+def start_tarp_panel(sd, L=90.0, Hh=10.5):
+    """v39 (« le mur noir derrière le départ : aligné à la grille, logos côté grilles, centrés sur la bâche ») : panneau plein à nous (L x Hh
+    ft, le long de x local, origine au sol au milieu), face imprimée = -z local (vers les grilles, comme la bâche de Saint-Georges), dos noir.
+    Texture 4096 x 1024 : moitié haute = face (6 logos, 15 ft d'écart, centrés en hauteur), moitié basse = noir (dos)."""
+    import gate_monster as GM
+    from deco_v21 import _face, MAT_MAT
+    ROOT_ = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    lg = {'venum': GM._user_logo('venum'), 'monster': GM._user_logo('monster'), 'paris': paris_logo(os.path.join(ROOT_, 'commun', 'assets', 'logos', 'user'))}
+    W, Hp = 4096, 512; ppf_x, ppf_y = W / L, Hp / Hh; im = Image.new('RGBA', (W, 2 * Hp), (16, 16, 18, 255))
+    for i, k in enumerate(['venum', 'monster', 'paris'] * 2):
+        c = (L / 12.0 + L / 6.0 * i) * ppf_x; w = 11.0 * ppf_x; h0, h1 = Hh * 0.18, Hh * 0.82
+        l_ = lg[k]; l_ = l_.resize((max(1, int(l_.width * ppf_x / ppf_y)), l_.height), Image.LANCZOS)   # px / ft différents en x et y -> logo jamais déformé en jeu
+        fit(im, l_, (int(c - w / 2), int(h0 * ppf_y), int(c + w / 2), int(h1 * ppf_y)), 0.02)
+    im.convert('RGB').save(os.path.join(sd, 'bache_depart.png'))
+    m = Mesh(); y0 = 0.0
+    F = [(-L / 2, y0, 0.0), (L / 2, y0, 0.0), (L / 2, Hh, 0.0), (-L / 2, Hh, 0.0)]
+    uvF = [(1.0, 0.5), (0.0, 0.5), (0.0, 1.0), (1.0, 1.0)]          # vu depuis -z : +x à gauche -> u = 0 à +x
+    _face(m, F, uvF, [(0, 0, -1)] * 4)
+    _face(m, F, [(0.5, 0.25)] * 4, [(0, 0, 1)] * 4)                   # dos noir
+    m.write(os.path.join(sd, 'bache_depart.jm'), MAT_MAT)
+    return 'bache_depart.jm', 'bache_depart.png', None
 
 
 def paris_logo(logo_dir):
@@ -409,7 +432,9 @@ def mesh_mat(sd, L, W=4.0, name=None):
     # la rampe ») : seulement les fils (gris foncé métal), les trous transparents (on voit le sol)
     T = 256; im = Image.new('RGBA', (T, T), (0, 0, 0, 0)); d = ImageDraw.Draw(im); n = 4; c = T // n
     # v38e : fil de métal foncé (gris-noir de la rampe) avec un reflet clair au milieu (aspect métal, comme les grilles de départ)
-    for wd_, col_ in ((8, (30, 30, 33, 255)), (3, (92, 92, 98, 255))):
+    # v39 (« il n'y a pas du tout les grilles devant les rampes ») : fils trop fins -> invisibles en jeu (transparence moyennée de loin < 50 %) ;
+    # fils 2,5 x plus épais (~60 % de métal, petits trous), reflet clair au milieu
+    for wd_, col_ in ((20, (30, 30, 33, 255)), (6, (92, 92, 98, 255))):
         for i in range(n + 1):
             for j in range(n + 1):
                 x, y = i * c, j * c

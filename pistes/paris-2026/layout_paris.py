@@ -630,6 +630,17 @@ def paris():
             # d'arrivée et la suite du triple ; l'appel ne bouge pas, la fin du triple se rapproche du virage de 4 ft
             kr_ = [k for k, t in enumerate(pre) if t[0] == 'raw']; k2_ = kr_[-1]
             pre = list(pre); q_ = np.asarray(pre[k2_][2], float); pre[k2_] = (pre[k2_][0], pre[k2_][1] + ' x0,85', resample(q_, 0.85) * 0.85, pre[k2_][3])
+            if L5_RECEP_K > 1.0:
+                # v39 (« la bosse de réception avant le saut d'arrivée est trop raide ; plus de terre, plus ronde, que du côté de la remontée,
+                # la descente est très bien ») : montée x L5_RECEP_K plus longue (même hauteur, moins raide), adoucie ; la crête et la descente
+                # restent en place (la montée prend sur le plat d'avant)
+                from scipy.ndimage import gaussian_filter1d as g1_
+                q_ = np.asarray(pre[k2_][2], float); kq_ = int(np.argmax(q_)); up_ = resample(q_[:kq_ + 1], L5_RECEP_K)
+                up_ = np.r_[g1_(up_, 6.0)[:-12], up_[-12:]] if len(up_) > 40 else up_
+                q2_ = np.r_[up_, q_[kq_ + 1:]]; d_ = (len(q2_) - len(q_)) * 0.1
+                pre[k2_] = (pre[k2_][0], pre[k2_][1] + ' montee x%.1f' % L5_RECEP_K, q2_, pre[k2_][3])
+                kg_ = k2_ - 1; assert pre[kg_][0] == 'gap' and pre[kg_][1] > d_ + 8.0, (pre[kg_], d_)
+                pre[kg_] = ('gap', round(pre[kg_][1] - d_, 1)); LOG['l5_reception'] = dict(montee_plus=round(d_, 1), ecart=pre[kg_][1])
             toks = toks[:i_t + 1] + [('gap', toks[i_t + 1][1] + L5_GAP34)] + toks[i_t + 2:]
         u_app = (xWb - (xT5 + RB)) - END_GAP - tlen(toks[i_t:]) - TRIPLE_EARLY + L5_CUT + (L5_GAP34 if L5_V38 else 0.0)   # v36j : le triple reste en place   # v19d (« la pointe de l'appel du triple au trait orange,
         #   là il est un peu trop dans le virage ») : 20 ft plus tôt
@@ -711,6 +722,17 @@ def paris():
             q2 = q2 * (1 - w_) + gaussian_filter1d(q2, 18) * w_
             return ('raw', t[1] + ' plat +7', q2, t[3])
         toks = [_plat_devant(t) if t[0] == 'raw' and 'butte' in t[1] else t for t in toks]
+    if ZION and L3_APP_FWD > 0:
+        # v39 (trait rouge sur la vue de dessus : « le pic de l'appel là ; garde la même bosse, rapproche-le de sa réception pour gagner quelques
+        # mètres : plus d'élan, plus facile à sauter ») : crête x 517,8 -> 512,9 ; l'appel avance de L3_APP_FWD ft (zéros devant), son bout
+        # plat (~0 ft) fusionné au pied de la butte (max) : la butte et le reste de L3 ne bougent pas
+        ia_ = next(i for i, t in enumerate(toks) if t[0] == 'raw' and 'appel' in t[1]); ib_ = next(i for i in range(ia_ + 1, len(toks)) if toks[i][0] == 'raw')
+        assert all(toks[i][0] == 'gap' and abs(toks[i][1]) < 0.05 for i in range(ia_ + 1, ib_)), toks[ia_ + 1:ib_]   # gap 0 entre appel et butte
+        assert toks[ib_][0] == 'raw' and 'butte' in toks[ib_][1], [t[0] + ' ' + str(t[1])[:20] for t in toks]
+        n_ = int(round(L3_APP_FWD / 0.1)); qa_ = np.r_[np.zeros(n_), np.asarray(toks[ia_][2], float)]; qb_ = np.asarray(toks[ib_][2], float).copy()
+        tail_ = qa_[-n_:]; qa_ = qa_[:-n_]; qb_[:n_] = np.maximum(qb_[:n_], tail_)
+        LOG['l3_appel_avance'] = dict(ft=L3_APP_FWD, queue_max=round(float(tail_.max()), 2))
+        toks = toks[:ia_] + [('raw', toks[ia_][1] + ' +%.1f' % L3_APP_FWD, qa_, toks[ia_][3])] + toks[ia_ + 1:ib_] + [('raw', toks[ib_][1], qb_, toks[ib_][3])] + toks[ib_ + 1:]
     secs3 = [LS.sec(L3_SEC, toks, u0)]
     if ZION:   # v20c (« ajoute un roller en sortie de virage avant le saut de freestyle ») : le roller de Saint-Georges (Custom1_g30_1,
         #   1,9 ft) à EXIT_U0 de la sortie de T_Bb, ~50 ft de plat avant l'appel
@@ -1049,8 +1071,8 @@ def paris():
         B_[ib_] = zionize([B_[ib_ + 0] if False else L6B[ib_]])[0]   # v23 (« la 4e bosse, refais une bosse normale ; garde cet écart ») 
         B_[it_] = table_stt(7.0, extra=TABLE_PLUS)
         adj_ = {ib_ - 1: -d_b, it_ - 1: eb_ - TABLE_PLUS / 2, it_: ea_ - TABLE_PLUS / 2}
-        adj_[2] = adj_.get(2, 0.0) + L6_PULL   # v38 (« entre la 3e et la 4e, quelques feet d'écart ; tu les gagnes : trop d'élan avant ») : +L6_PULL ft, le début de L6 avance d'autant
-        g_ = (xWb - (xLR + RB) - (EXIT_U0 - L6_PULL) - END_GAP - sum(tlen(b) for b in B_) - sum(adj_.values())) / (len(B_) - 1)
+        adj_[2] = adj_.get(2, 0.0) + L6_PULL + L6_GAP34   # v39 : + L6_GAP34 (la fin de L6 se rapproche de T_C d'autant, les autres écarts ne bougent pas)   # v38 (« entre la 3e et la 4e, quelques feet d'écart ; tu les gagnes : trop d'élan avant ») : +L6_PULL ft, le début de L6 avance d'autant
+        g_ = (xWb - (xLR + RB) - (EXIT_U0 - L6_PULL) - (END_GAP - L6_GAP34) - sum(tlen(b) for b in B_) - sum(adj_.values())) / (len(B_) - 1)
         toks = []
         for k, b in enumerate(B_):
             toks.append(b)
@@ -1069,8 +1091,11 @@ N_GATES, GATE_PITCH = 22, 4.0
 X_APEX_SHIFT, L3_ADVANCE = 6.0, 8.0     # v9 : sommet du 180 après le saut du milieu / avance du saut (ft)
 L3_SHIFT, L2_SHIFT = 12.0, 10.0          # v13 (« plus d'espace entre chaque enchaînement ») : L3 12 ft et L2 / L1 22 ft plus au sud
 #                                         -> couloir Est 22 ft plus long, 180 L3 -> L2 de rayon 37 ft
+L6_GAP34 = 4.0     # v39 (rectangle rouge : « plus d'élan dans le triple : entre la 3e et la 4e bosse, ~4 ft de plus ; décale la fin de l'enchaînement, moins d'espace avant le virage ; la dernière bosse s'arrête au niveau de celle d'en face ») : fin de L6 au début de la 1re bosse de L5
 L6_PULL = 0.0      # v38b (« je parlais de l'enchaînement avant l'arrivée ») : L6 remis comme la v37 ; v38 : L6 commence 4 ft plus près de T_E, 4 ft de plus entre sa 3e et sa 4e bosse (la suite ne bouge pas)
+L5_RECEP_K = 1.5   # v39 : montée de la réception du petit double avant l'arrivée x1,5 (moins raide, plus ronde)
 L5_V38, L5_GAP34 = True, 4.0   # v38b : ligne d'arrivée (2e bosse plus courte et plus basse, +4 ft après l'appel d'arrivée)
+L3_APP_FWD = 4.9   # v39 : crête de l'appel du freestyle 4,9 ft plus près de la butte (trait rouge)
 L3_RUN = 8.0       # v38 (« rallonge de quelques mètres le double avant le saut de freestyle, il est trop petit ») : élan avant l'appel du freestyle 14 -> 8 ft (table +6 ft)
 EXIT_U0 = 6.0 if ZION else 10.0          # v23 Zion (« moins d'élan sur toutes les sorties de virage ») : 10 -> 6 ft ; v13 : 1re bosse à 10 ft de la sortie des virages (plus de marque berm / appel)
 L2_U0_V13 = 10.0
@@ -1086,7 +1111,7 @@ if ZION and T_D_CUT:
     BERM_SOFT_TAG['T_D '] = 0.0   # v29b (« on dirait un gros bout de tas de terre, c'est pas carré ») : plus de flou, croissant JGSX net comme T_Bb
     BERM_END_FADE['T_D '] = (4.0, 20.0)
     BERM_START_FADE = {'T_D ': (6.0, 28.0)}   # v28w (« adoucis, ça fait carré ») : fondu 8 -> 28°, commence à 6° ; v28v (trait vert : « coupe le début du virage ») : berm coupé sur les 11 premiers degrés (au trait), fondu sur 8°
-BERM_REGULAR = {'T_D ': dict(rin=28.0, rout=20.0)} if ZION else {}   # v35 (« la gueule du virage pas belle, fais que ce soit linéaire, même hauteur ; la sortie pas belle ») : berm régulier (build_zion.berm_regular), montée / descente = fondus d'avant
+BERM_REGULAR = {'T_D ': dict(rin=12.0, rout=14.0)} if ZION else {}   # v39 (« une patate : pas un vrai virage ») : pleine hauteur sur 21-68° au lieu de 39-62°, bouts plus nets ; v35 : rin 28 / rout 20   # v35 (« la gueule du virage pas belle, fais que ce soit linéaire, même hauteur ; la sortie pas belle ») : berm régulier (build_zion.berm_regular), montée / descente = fondus d'avant
 LD_SHIFT = 5.0                          # v10 : ligne de départ 5 ft plus loin du saut du milieu (place pour les tremplins FMX ;
 #                                         plus loin, le bout des 22 grilles monte sur le pied du berm T_C : grilles plus plates)
 L2_GAP, L2_U0 = 5.0, 10.0               # v9 : écart identique entre les 7 bosses de L2 ; v13 : 1re bosse à 10 ft du 180 (était 3 : marque)

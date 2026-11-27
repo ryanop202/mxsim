@@ -1,10 +1,16 @@
 {
+ "berm_plat": {
+  "T_D ": {
+   "h": 6.92,
+   "plat_ft": 4.0
+  }
+ },
  "berm_regulier": {
   "T_D ": {
    "debut": 11.0,
    "fin": 82.0,
    "sommet": 45.0,
-   "h": 6.94
+   "h": 6.92
   }
  },
  "apres_arrivee": {
@@ -26,8 +32,8 @@
      24.6
     ],
     [
-     "double USLAND x0,85",
-     52.5,
+     "double USLAND x0,85 montee x1.5",
+     47.2,
      88.4
     ],
     [
@@ -50,7 +56,7 @@
    "H": 22.43,
    "items": [
     [
-     "appel gros saut ZION 2025 (10,0) raidi",
+     "appel gros saut ZION 2025 (10,0) raidi +4.9",
      0.0,
      47.0
     ],
@@ -196,7 +202,7 @@
    "lane": "L6 tribune Sud",
    "name": "PAR-L6 triple, double, table, double",
    "u0": 6.0,
-   "L": 327.1,
+   "L": 331.1,
    "H": 7.0,
    "items": [
     [
@@ -216,28 +222,28 @@
     ],
     [
      "bosse ZION 5.2 ft",
-     114.3,
-     147.0
+     118.3,
+     151.0
     ],
     [
      "bosse ZION 5.4 ft",
-     153.8,
-     187.1
+     157.8,
+     191.1
     ],
     [
      "table Saint-Thibery 7.0 ft +3.3 ft",
-     195.3,
-     253.7
+     199.3,
+     257.7
     ],
     [
      "bosse ZION 4.7 ft",
-     256.9,
-     288.2
+     260.9,
+     292.2
     ],
     [
      "bosse ZION 5.0 ft",
-     295.0,
-     327.0
+     299.0,
+     331.0
     ]
    ]
   }
@@ -251,12 +257,7 @@
   8.0
  ],
  "raccords_adoucis": [],
- "zones_lissees": [
-  [
-   "T_D ",
-   0.51
-  ]
- ],
+ "zones_lissees": [],
  "raccord_appui_bosse": [
   [
    "T_L5a",
@@ -278,9 +279,9 @@
  "objets": {
   "objets": {
    "retirés (v13) : boudins FLY Racing (whoops)": 28,
-   "retirés (v13) : ballots ZION (unis)": 202,
+   "retirés (v13) : ballots ZION (unis)": 204,
    "retirés (v13) : poteaux ronds": 8,
-   "retirés (v13) : tuffs de virage ZION (unis)": 71,
+   "retirés (v13) : tuffs de virage ZION (unis)": 70,
    "retirés (v13) : filets": 42,
    "panneau FINISH suspendu": 1,
    "cage du drapeau": 1,
@@ -438,8 +439,8 @@
     "T_D 9",
     "automoto",
     [
-     0.112,
-     0.777
+     0.09,
+     0.793
     ],
     6,
     []
@@ -495,7 +496,7 @@
     ]
    ]
   ],
-  "ballots": 117,
+  "ballots": 123,
   "arche": [
    300.9,
    716.6,
@@ -542,31 +543,31 @@
    "A": [
     [
      646.0,
-     518.7
+     508.7
     ],
     [
      633.0,
-     519.4
+     509.4
     ],
     [
      620.0,
-     520.2
+     510.2
     ],
     [
      607.0,
-     521.1
+     511.1
     ],
     [
      594.0,
-     522.0
+     512.0
     ],
     [
      581.0,
-     523.1
+     517.8
     ],
     [
      568.0,
-     524.2
+     524.1
     ],
     [
      555.0,
@@ -668,7 +669,7 @@
    9.5832,
    800.7507
   ],
-  "boudins_tardifs": 35,
+  "boudins_tardifs": 24,
   "v36_enleves": 7,
   "v36p_tuff_oter": 7,
   "v36_virage_U": {
@@ -682,10 +683,10 @@
    "courbe_tbb": 6
   },
   "rider_gate": [
-   705.0,
-   615.6
+   686.0,
+   616.0
   ],
-  "boudins_20s": 35
+  "boudins_20s": 24
  },
  "cameras_tv": {
   "cameras": 8,

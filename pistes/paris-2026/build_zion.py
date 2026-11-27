@@ -100,6 +100,9 @@ def berm_rf(out, g):
     out[sl] = np.maximum(out[sl], h)
 
 
+BERM_PLATEAU = {'T_D ': 1.15}   # v39 : face x1,15 coupée au max -> arête + dessus plat (~4 ft) jusqu'au mur
+
+
 def berm_regular(tmp, sl, g, rg):
     """v35 (« regarde la gueule du virage, pas beau ; fais que ce soit linéaire, en gardant la même hauteur ; la sortie pas belle ; pas
     différent en roulé ») : le croissant (bosse au milieu, bouts qui fondent chacun à sa façon, petit palier bas coupé net à la sortie)
@@ -119,6 +122,14 @@ def berm_regular(tmp, sl, g, rg):
     sel = np.abs(p_ - pm) < 2.0; prof = np.array([T_[sel & (np.abs(r_ - b) < 0.2)].max(initial=0.0) for b in rb])
     ss = lambda t: (lambda t_: t_ * t_ * (3 - 2 * t_))(np.clip(t, 0, 1))
     e_ = ss((p_ - pa) / rg['rin']) * ss((pz - p_) / rg['rout'])
+    if g['tag'][:4] in BERM_PLATEAU:
+        # v39 (« l'extérieur fait une patate ; pas d'angle sur le dessus, pas un plat sur le dessus avec des beaux contours ») : la coupe
+        # prise sur les pixels (bins de 0,25 ft) était bruitée -> les stries concentriques ; elle est débruitée (0,5 ft), puis la face monte
+        # x k plus vite et est coupée à la hauteur max : arête nette, dessus plat jusqu'à la crête d'origine (le mur), arrière inchangé
+        from scipy.ndimage import gaussian_filter1d
+        k_ = BERM_PLATEAU[g['tag'][:4]]; pr_ = gaussian_filter1d(prof, 0.5 / 0.25); H_ = float(pr_.max()); ic_ = int(np.argmax(pr_))
+        prof = np.where(np.arange(len(pr_)) <= ic_, np.minimum(H_, pr_ * k_), pr_)
+        BP.REPORT.setdefault('berm_plat', {})[g['tag'][:4]] = dict(h=round(H_, 2), plat_ft=round(float((prof >= H_ - 0.01).sum()) * 0.25, 1))
     tmp[sl] = np.interp(r_, rb, prof, right=0.0) * e_
     BP.REPORT.setdefault('berm_regulier', {})[g['tag'][:4]] = dict(debut=round(pa, 1), fin=round(pz, 1), sommet=round(pm, 1), h=round(float(prof.max()), 2))
 
@@ -243,7 +254,7 @@ JUNCTIONS = []   # v38e (« mets-moi ça en jeu [appui + bosse fusionnés tels q
 # ~1-1,5 ft = les « stries » (« recrée-le, smooth tout ») ; (2) fine crête en arc sur la face intérieure de l'appui de T_L5a = le « rebord »
 # après l'arrivée. Lissage local (flou sigma ft) dans un anneau autour du centre du virage (r_min -> r_max ft, fondu 3 ft) : les petites
 # crêtes disparaissent, la forme de l'appui et de la bosse (10-20 ft) reste ; le centre du virage (origine du mur) n'est pas touché
-SMOOTH_ZONES = [('T_D ', 22.0, 80.0, 1.2)]   # v38e (« il n'y a plus l'angle de l'appui de base ») : T_L5a retiré (le flou arrondissait tout l'appui) ; raccord appui / bosse : crease_smooth
+SMOOTH_ZONES = []   # v39 (« le virage après le freestyle fait une patate, pas d'angle, pas de plat dessus ») : flou de T_D retiré (coupe radiale débruitée + plat dans berm_regular) ; v38d : [('T_D ', 22.0, 80.0, 1.2)]   # v38e (« il n'y a plus l'angle de l'appui de base ») : T_L5a retiré (le flou arrondissait tout l'appui) ; raccord appui / bosse : crease_smooth
 
 
 def smooth_zones(H, path):
@@ -1073,6 +1084,12 @@ V36_LIGNES = dict(A=[(646.0, 518.7), (633.0, 519.4), (620.0, 520.2), (607.0, 521
                   ile=[(378.9, 588.5), (340.7, 613.1)])   # v36m : début coupé au trait rouge (était (392, 580)) ; v36o (« coupe ça encore ») : les 2 bouts coupés aux traits
 # v36m (traits rouges sur la vue v36j : « sur la ligne 600 enlève la 1re partie, coupe entre les 2 traits, coupe la fin ») : boudins du
 # bord sud enlevés dans ces plages de x (les autres gardent leur place et leur sponsor)
+# v39 (review v38e, capture du départ : « depuis la dernière grille extérieure, les boudins sont en plein milieu ; décale-les vers la droite,
+# l'angle de la courbe plus gros, vers mon trait rouge ») : ligne A (MX Sim / Honda / Yamaha) : début 10 ft plus au nord (hors de la
+# trajectoire de la grille extérieure, z 513,6), parallèle jusqu'à x ~595 puis rejoint la ligne d'origine vers x 566 (début de la partie Honda)
+A_SHIFT_V39 = (10.0, 595.0, 566.0)
+_sA = lambda t: (lambda t_: t_ * t_ * (3 - 2 * t_))(min(1.0, max(0.0, t)))
+V36_LIGNES['A'] = [(x_, z_ - A_SHIFT_V39[0] * _sA((x_ - A_SHIFT_V39[2]) / (A_SHIFT_V39[1] - A_SHIFT_V39[2]))) for x_, z_ in V36_LIGNES['A']]
 V36_B_COUPES = [(576.0, 607.0), (483.0, 506.0), (395.0, 440.0)]
 V36_SANS_AUTOMOTO = True
 # v36e (photo du vrai Paris avec 11 points bleus = tuff blocks et 1 point argile = gros poteau gonflable, dans le virage en U après
@@ -1117,9 +1134,10 @@ V38C_TBB = [(580.6, 600.0, 0.999, 0.048), (590.9, 600.4, 0.995, 0.098), (600.1, 
 V38_TUFF = [(683.8, 776.6, np.pi, 'honda'),                     # entrée des whoops, à gauche
             (329.6, 736.6, np.pi, 'mv'),   # v38c : 1,5 ft vers la bosse (« un entre-deux, pas aligné ») ;                        # intérieur du virage Moto Verte (T_TR)
             (329.8, 456.7, 0.0, 'yamaha'), (317.5, 470.9, np.pi / 2, 'yamaha'),   # virage Yamaha : à la place des 2 croix
-            (285.4, 636.4, np.pi / 2, 'milwaukee'), (285.4, 643.9, np.pi / 2, 'milwaukee'),   # pied du Milwaukee : écartées, rouges
-            (316.4, 636.4, np.pi / 2, 'milwaukee'), (316.4, 643.9, np.pi / 2, 'milwaukee')]
-V38_RIDER = (705.0, 615.6)
+            # v39 (« espace-les bien plus, triple l'espace : une plus vers la pelle, l'autre plus près du 50 Factory ») : écart 7,5 -> 22,5 ft, même milieu
+            (285.4, 628.9, np.pi / 2, 'milwaukee'), (285.4, 651.4, np.pi / 2, 'milwaukee'),   # pied du Milwaukee : écartées, rouges
+            (316.4, 628.9, np.pi / 2, 'milwaukee'), (316.4, 651.4, np.pi / 2, 'milwaukee')]
+V38_RIDER = (686.0, 616.0)   # v39 (rectangle jaune : « à droite de la grille de départ, le même angle ») : 19 ft vers les grilles, même angle ; v38 : (705,0 ; 615,6)
 V38_OTER = [(326.7, 452.1), (318.8, 476.1), (329.2, 453.3),   # v38d : + botte Yamaha marquée en gris
                                 # croix du virage Yamaha
             (285.4, 642.24), (285.4, 638.74), (316.4, 642.49), (316.4, 638.74)]   # paires collées au pied du Milwaukee                                                          # v36i : point bleu de la capture ; v36j : + 5
@@ -1142,7 +1160,7 @@ def deco_v28(OUT, FOLDER, combos, Hf, lines, line, sd, DV, rep_, g3, gR):
     # v29 (review v28, captures annotées : vert = déplacer, blanc = enlever, rectangle rouge = nouvelle place)
     spec = [('T_Bb', L_('T_Bb') - 5.0, -17.0, 'mxsim'),          # sortie, extérieur (gardée)
             ('L3', u_tab0 + 6.0, -BALE_V, 'mxsim'), ('L3', u_tab0 + 6.0, BALE_V, 'mxsim')]   # « une de chaque côté dans la pelle »
-    for u_ in (u_tab + 2.5, u_app + 0.5):                         # « plus d'espace entre les deux, la 2e plus vers la pelle »
+    for u_ in (u_tab - 1.9, u_app + 7.3):                         # v39 (rectangles noirs : « bien trop collés, un ici un ici, symétriques, au bord ») : 6,3 -> 17,5 ft ; v29 : (u_tab + 2,5, u_app + 0,5)
         spec += [('L3', u_, -BALE_V, 'amv'), ('L3', u_, BALE_V, 'amv')]
     # 1re bosse de L6 côté droit : en face des 2 premières du côté gauche (« pas vraiment alignées »)
     c6, s6_ = np.cos(g6['t']), np.sin(g6['t'])
@@ -1191,7 +1209,10 @@ def deco_v28(OUT, FOLDER, combos, Hf, lines, line, sd, DV, rep_, g3, gR):
     # bâche noire derrière les grilles (« des grillages noirs comme à Saint-Georges, sans les sponsors »), 35 ft derrière la grille
     st_ = BP.START; G0 = np.array(st_['gate']); f0 = np.array([np.cos(np.radians(st_['heading'])), np.sin(np.radians(st_['heading']))])
     T0 = G0 - f0 * 35.0; tj = D28.start_tarp_black(sd, os.path.join(BP.ROOT, "tracks", "USLAND2026SaintGeorgesbyBazo", "statue"))
-    lines.append(line(T0[0], T0[1], float(np.arctan2(-f0[0], -f0[1])) + np.pi, *tj))   # v38e : retournée (logos du côté opposé aux grilles, côté grilles tout noir)
+    # v39 (« le mur noir est parti en travers ; les logos sont de l'autre côté et pas centrés : retourne-le, aligne-le à la grille, centre les
+    # logos ») : panneau noir plein à nous (90 x 10,4 ft, 2 faces), 6 logos centrés en hauteur côté grilles / pilotes, dos noir ; orientation d'origine
+    tj = D28.start_tarp_panel(sd)
+    lines.append(line(T0[0], T0[1], float(np.arctan2(-f0[0], -f0[1])), *tj))   # v39 : face imprimée vers les grilles (v38e : +pi, de travers en jeu)
     # boudins sponsors qui sortent 20 s après la chute de la grille
     PROPS = os.path.join(BP.ROOT, "commun/assets", "props")
     bcj, bcs = D28.boudin_court(sd, PROPS)                       # v36 (photo du vrai Paris) : boudins de 6 ft collés, mêmes sponsors
