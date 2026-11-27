@@ -593,11 +593,17 @@ def grates_sgm(sd, name='start_grids_sgm'):
     V = [L[3 + i].split() for i in range(nv)]
     ix = [int(float(t)) for t in ' '.join(L[3 + nv:]).split()][:3 * nt]
     T = [ix[3 * k:3 * k + 3] for k in range(nt)]
-    T = [t for t in T if not all(float(V[i][0]) >= GRATE_POUTRE_X for i in t)]
+    # v42f (« continue le cadre tout autour, même à l'arrière ») : la poutre seulement (x > 9,5 ft ou plus haute que le cadre, 0,12 ft) ;
+    # le côté arrière du cadre de chaque grate (x 9,4 -> 9,5, 0,12 ft de haut) reste
+    T = [t for t in T if not (all(float(V[i][0]) >= GRATE_POUTRE_X for i in t)
+                              and (max(float(V[i][0]) for i in t) > 9.51 or max(float(V[i][1]) for i in t) > 0.13))]
     used = sorted(set(i for t in T for i in t)); new = {o: n for n, o in enumerate(used)}
     out = L[:2] + ['%d %d' % (len(used), len(T))]
+    # v42e (« coupe 1,5 ft à l'arrière, c'est trop long ; mets un cadre comme le reste ») : modèle resserré en x (l'avant reste sur la ligne
+    # des grilles, x = 0) de GRATE_COUPE ft : chaque plaque garde son cadre alu (dans la texture) sur les 4 côtés
+    xm_ = max(float(V[o][0]) for o in used); fx_ = (xm_ - GRATE_COUPE) / xm_
     for o in used:
-        v = list(V[o]); v[1] = '%.6f' % (float(v[1]) + GRATE_LEVE); out.append(' '.join(v))
+        v = list(V[o]); v[0] = '%.6f' % (float(v[0]) * fx_); v[1] = '%.6f' % (float(v[1]) + GRATE_LEVE); out.append(' '.join(v))
     out += ['%d %d %d' % tuple(new[i] for i in t) for t in T]
     open(os.path.join(sd, name + '.jm'), 'w', newline=chr(10)).write(chr(10).join(out) + chr(10))
     a = np.asarray(Image.open(src + '.png').convert('RGBA'), float)
@@ -606,7 +612,8 @@ def grates_sgm(sd, name='start_grids_sgm'):
     return name + '.jm', name + '.png', None
 
 
-GRATE_POUTRE_X = 9.3   # v42b : au-delà (fond des grates), la poutre de Saint-Georges
+GRATE_POUTRE_X = 9.49  # v42f : la poutre de Saint-Georges (x >= 9,5 ft) ; v42b : 9,3 (enlevait aussi le cadre arrière)
+GRATE_COUPE = 1.5      # v42e : grates raccourcies de 1,5 ft à l'arrière
 GRATE_NOIR = 0.15      # v42c (« celle de Saint-Georges, mais tout en noir ») ; v42b : 0,22
 
 
