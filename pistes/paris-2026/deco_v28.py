@@ -542,7 +542,43 @@ def start_grates(sd, L=88.0):
     return 'grates_depart.jm', tex, None
 
 
-GRATE_LEVE = 0.10   # v42c : 0,10 ft (sans les décals dessous) ; v42 : grates de Saint-Georges montées de 0,06 ft (le stade de Paris, bien plus grand, rend le sol moins précis de loin)
+def grates_sgm_dessus(sd, name, d_out, png_out='grates_sgm_dessus.png', n=2048, side=90.0, cx=4.75):
+    """v42d (« elles disparaissent à distance, même en reculant un tout petit peu ») : de loin le jeu ne dessine plus ce modèle posé au
+    ras du sol, mais il dessine toujours les décals -> décal = le modèle vu de dessus, calculé depuis ses triangles et sa texture (UV, v
+    inversé), même noir, même place (carré de side ft centré sur x local = cx, z local = 0) : de près le modèle, de loin la décal,
+    au même endroit (pas de doublon : modèle à 0,06 ft du sol, comme à Saint-Georges)."""
+    L = open(os.path.join(sd, name + '.jm')).read().split(chr(10)); nv, nt = (int(t) for t in L[2].split()[:2])
+    V = np.array([[float(t) for t in L[3 + i].split()] for i in range(nv)])
+    F = np.array([int(float(t)) for t in ' '.join(L[3 + nv:]).split()][:3 * nt]).reshape(-1, 3)
+    tex = np.asarray(Image.open(os.path.join(sd, name + '.png')).convert('RGBA'), float); TH, TW = tex.shape[:2]
+    out = np.zeros((n, n, 4)); k = n / side
+    P = np.c_[(V[:, 0] - cx) * k + n / 2, V[:, 2] * k + n / 2]
+    nr = np.cross(V[F[:, 1], :3] - V[F[:, 0], :3], V[F[:, 2], :3] - V[F[:, 0], :3]); ny = nr[:, 1] / np.linalg.norm(nr, axis=1).clip(1e-12)
+    for t in np.argsort(V[F, 1].mean(1)):
+        if ny[t] < 0.3:
+            continue
+        a, b, c = P[F[t]]
+        x0, x1 = int(max(0, np.floor(min(a[0], b[0], c[0])))), int(min(n - 1, np.ceil(max(a[0], b[0], c[0]))))
+        y0, y1 = int(max(0, np.floor(min(a[1], b[1], c[1])))), int(min(n - 1, np.ceil(max(a[1], b[1], c[1]))))
+        X, Y = np.meshgrid(np.arange(x0, x1 + 1) + 0.5, np.arange(y0, y1 + 1) + 0.5)
+        dd = (b[1] - c[1]) * (a[0] - c[0]) + (c[0] - b[0]) * (a[1] - c[1])
+        if abs(dd) < 1e-9:
+            continue
+        l1 = ((b[1] - c[1]) * (X - c[0]) + (c[0] - b[0]) * (Y - c[1])) / dd; l2 = ((c[1] - a[1]) * (X - c[0]) + (a[0] - c[0]) * (Y - c[1])) / dd
+        l3 = 1 - l1 - l2; m = (l1 >= -1e-6) & (l2 >= -1e-6) & (l3 >= -1e-6)
+        if not m.any():
+            continue
+        uv = V[F[t]][:, 6:8]; u = l1 * uv[0, 0] + l2 * uv[1, 0] + l3 * uv[2, 0]; v = 1.0 - (l1 * uv[0, 1] + l2 * uv[1, 1] + l3 * uv[2, 1])
+        col = tex[np.clip((np.mod(v, 1.0) * TH).astype(int), 0, TH - 1), np.clip((np.mod(u, 1.0) * TW).astype(int), 0, TW - 1)]
+        A = col[..., 3:] / 255.0; sub = out[y0:y1 + 1, x0:x1 + 1]; mm = m[..., None]
+        sub[..., :3] = np.where(mm, col[..., :3] * A + sub[..., :3] * (1 - A), sub[..., :3])
+        sub[..., 3:] = np.where(mm, np.maximum(sub[..., 3:], col[..., 3:]), sub[..., 3:])
+    os.makedirs(d_out, exist_ok=True)
+    Image.fromarray(np.clip(np.round(out), 0, 255).astype(np.uint8), 'RGBA').save(os.path.join(d_out, png_out))
+    return png_out, side, cx
+
+
+GRATE_LEVE = 0.0    # v42d : hauteur d'origine de Saint-Georges (plaques à 0,06 ft), la décal dessous prend le relais de loin ; v42c : 0,10 ft (sans les décals dessous) ; v42 : grates de Saint-Georges montées de 0,06 ft (le stade de Paris, bien plus grand, rend le sol moins précis de loin)
 
 
 def grates_sgm(sd, name='start_grids_sgm'):

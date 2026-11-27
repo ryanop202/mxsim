@@ -1434,6 +1434,10 @@ def deco_v28(OUT, FOLDER, combos, Hf, lines, line, sd, DV, rep_, g3, gR):
         lines.append(line(G0[0], G0[1], float(np.arctan2(f0[1], -f0[0])), *D28.grates_sgm(sd)))
         rep_['grates_depart']['modele'] = 'start_grids de Saint-Georges'
         gq_ = []   # v42c (« les grilles se superposent à deux, c'est moche ») : plus les décals v41c dessous (décalées du modèle)
+        # v42d (« elles disparaissent à distance ») : décal = le modèle vu de dessus, au même endroit (centre : x local 4,75 = derrière la ligne)
+        gpng_, gside_, gcx_ = D28.grates_sgm_dessus(sd, 'start_grids_sgm', os.path.join(OUT, 'rfborder'))
+        gc_ = G0 - f0 * gcx_
+        open(os.path.join(OUT, 'decals'), 'a', newline='\n').write("[%.6f %.6f] %.6f %.6f 1.000000 @%s/rfborder/%s\n" % (gc_[0], gc_[1], float(np.arctan2(f0[1], -f0[0])), gside_, FOLDER, gpng_))
     # boudins sponsors qui sortent 20 s après la chute de la grille
     PROPS = os.path.join(BP.ROOT, "commun/assets", "props")
     bcj, bcs = D28.boudin_court(sd, PROPS)                       # v36 (photo du vrai Paris) : boudins de 6 ft collés, mêmes sponsors
@@ -1676,13 +1680,14 @@ def export_zion(*a, **k):
     BP.REPORT['flammes'] = FLP.flammes(BP.OUT, BP.FOLDER, BP.ROOT)
     BP.REPORT['scripts'] = scripts_uniques(BP.OUT)                    # v42 : un seul script, dans frills.js et nofrills.js
     BP.REPORT['toit'] = toit_editeur(BP.OUT)                          # v42b : dessus du toit enlevé (l'éditeur voit la piste)
-    BP.REPORT['sable_hors_pentes'] = sable_hors_pentes(BP.OUT)       # v42c : plus de sable étiré sur la face de l'appel du Milwaukee
+    BP.REPORT['sable_hors_pentes'] = sable_hors_pentes(BP.OUT, BP.FOLDER)     # v42c : plus de sable étiré sur la face de l'appel du Milwaukee
     if RECADRE:
         BP.REPORT['recadrage'] = recadrer(BP.OUT, *RECADRE)           # v42b : terrain collé à l'arène (comme RF) -> minimap ~1,7x plus grande
     BP.REPORT['taille'] = alleger(BP.OUT, BP.FOLDER)                  # v42 : < 200 Mo (fichiers inutilisés enlevés, .jm -> .jm.gz)
 
 
-CHANT_VOL = 0.7    # volume du chant (le public de ZION est à 0,4)
+CHANT = False      # v42d : chant de la grille coupé (« il ne marche pas »)
+CHANT_VOL = 0.7   # volume du chant (le public de ZION est à 0,4)
 CHANT_AVANT = 8.0  # v39c : le chant part 8 s avant la chute de la grille (4 s de chant, fini 4 s avant)
 
 
@@ -1694,7 +1699,7 @@ def chant_grille(OUT, FOLDER):
     ZION 2025 : mx.add_sound / set_sound_pos / start_sound)."""
     global CHANT_JS
     src = os.path.join(HERE, "sons", "chant_grille.wav")
-    if not os.path.exists(src):
+    if not CHANT or not os.path.exists(src):                          # v42d (« enlève le chant du jeu, il ne marche pas ») : coupé
         return None
     # v42 (« on n'entend pas le son ») : en .raw (16 bits mono 44,1 kHz sans en-tête), le format du son des flammes de Saint-Thibéry
     import wave
@@ -1750,10 +1755,11 @@ def scripts_uniques(OUT):
 
 TERRE_SOMBRE = (0.827, 0.749, 0.684)   # v42c (aperçu A, « touche d'orange » de la vraie terre de Paris) : (0,78 0,78 0,795) x (1,06 0,96 0,86)
 #   v42b (« le terrain est maintenant trop foncé : un entre-deux ») : (0,78 0,78 0,795) ; v42 : (0,555 0,555 0,59)
+SABLE_GRAIN_PAS = 6.0   # v42d : pas (ft) du grain de terre remis sur la face de l'appel
 SABLE_PENTE_MAX = 0.75   # v42c : décals de sable enlevées si leur disque touche une pente > 0,75 (37°) : face de l'appel du Milwaukee
 
 
-def sable_hors_pentes(OUT):
+def sable_hors_pentes(OUT, FOLDER):
     """v42c (capture : « bug de texture à l'appel » du Milwaukee, au bout de la partie sable) : les décals de sable (rfsand : traces,
     disques, voiles) sont projetées d'en haut ; posées au pied de l'appel, elles montaient sur sa face raide, étirées en traînées ->
     enlevées si une pente > SABLE_PENTE_MAX tombe dans leur disque (80 % du rayon). La tuile de sable reste dessous."""
@@ -1766,17 +1772,34 @@ def sable_hors_pentes(OUT):
     sab = np.isin(tm, [i for i, n in enumerate(noms) if "sable" in n.lower()])
     ix_ = np.minimum(np.arange(H.shape[0]) * M_ // (H.shape[0] - 1), M_ - 1)
     G_ = np.where(sab[np.ix_(ix_, ix_)], 0.0, G_)
-    p_ = os.path.join(OUT, "decals"); L_ = open(p_).read().split("\n"); o_ = []; n_ = 0
+    p_ = os.path.join(OUT, "decals"); L_ = open(p_).read().split("\n"); o_ = []; n_ = 0; R_ = []
     for l in L_:
         m = re.match(r"^\[([-0-9.]+) ([-0-9.]+)\] [-0-9.]+ ([-0-9.]+) \S+ \S+/rfsand/", l)
         if m:
             x, z, sz = float(m.group(1)), float(m.group(2)), float(m.group(3)); r_ = 0.4 * sz
             i0, i1 = max(0, int((z - r_) / s_)), int((z + r_) / s_) + 1; j0, j1 = max(0, int((x - r_) / s_)), int((x + r_) / s_) + 1
             if G_[i0:i1, j0:j1].size and G_[i0:i1, j0:j1].max() > SABLE_PENTE_MAX:
-                n_ += 1; continue
+                n_ += 1; R_.append((x, z)); continue
         o_.append(l)
+    # v42d (capture : « bug de texture ici : pas la bonne terre ») : la face de l'appel, sans le sable, restait sans grain (le grain de
+    # terre n'est jamais posé à moins de 34 ft du sable) -> grain de terre (terre_stt, 26 ft, comme partout) tous les SABLE_GRAIN_PAS ft sur
+    # les pentes en terre (> 0,25) autour des décals enlevées, mis AVANT le sable dans le fichier (le sable reste dessus)
+    ng_ = 0
+    if R_:
+        from scipy.ndimage import distance_transform_edt
+        sabH = sab[np.ix_(ix_, ix_)]; dsab = distance_transform_edt(~sabH) * s_
+        Rk = np.array(R_); rng_ = np.random.default_rng(42); new_ = []
+        for xx in np.arange(Rk[:, 0].min() - 30, Rk[:, 0].max() + 30, SABLE_GRAIN_PAS):
+            for zz in np.arange(Rk[:, 1].min() - 30, Rk[:, 1].max() + 30, SABLE_GRAIN_PAS):
+                i, j = int(zz / s_), int(xx / s_)
+                if not (0 <= i < H.shape[0] and 0 <= j < H.shape[1]) or np.hypot(*(Rk - (xx, zz)).T).min() > 30:
+                    continue
+                if not sabH[i, j] and G_[i, j] > 0.25 and dsab[i, j] >= 4.0:
+                    new_.append("[%.6f %.6f] %.6f 26.000000 1.000000 @%s/zdecal/terre_stt.png" % (xx, zz, rng_.uniform(-np.pi, np.pi), FOLDER))
+        k_s = next((i for i, l in enumerate(o_) if "/rfsand/" in l), len(o_))
+        o_ = o_[:k_s] + new_ + o_[k_s:]; ng_ = len(new_)
     open(p_, "w", newline="\n").write("\n".join(o_))
-    return dict(enlevees=n_)
+    return dict(enlevees=n_, grain_ajoute=ng_)
 TERRE_DECALS = ("zdecal/terre_stt.png", "zdecal/sgm_90_lt.png", "zdecal/sgm_180_lt.png", "zdecal/sgm_tripleface_lt.png",
                 "zdecal/sgm_table_lt.png", "zdecal/sgm_single_lt.png", "zdecal/sgm_whoops_lt.png")
 
