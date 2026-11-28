@@ -42,7 +42,10 @@ LAT = dict(T=(34.0, 7.0), W=(40.0, 2.2))      # dessus plat, flanc (ft) : obstac
 #   gardant la forme des bosses ») : obstacles à la coupe mesurée sur RF Anaheim 1 (dessus 34 ft, flancs 7 ft ; était 35,1 / 5,2)
 ZION_R = 28.3
 GRATE_W = 3.1                               # v41c : largeur d'une grate de départ (Saint-Georges : 3,1 ft, pas 4 ft)
-MUR_MILWAUKEE_BAS = 13.0                    # v43c : bas du mur invisible après le Milwaukee (ft au-dessus du 1er obstacle du triple) ; v23f : 15
+MUR_MILWAUKEE_F = 0.75                      # v45b : mur du Milwaukee aux 3/4 du plat entre le Milwaukee et la bosse (trait rouge de l'utilisateur)
+MUR_AMV_BAS = 15.8                          # v45d (« monte-le d'1 m ») : 12,5 -> 15,8 ; v45c : mur entre la petite table et l'appel AMV, bas à 12,5 ft du sol plat (comme v38 : on roule dessous) ; v45b : 11 ft sur la face
+MUR_MILWAUKEE_RECUL = 5.5                   # v45c : mur du Milwaukee 5,5 ft avant le milieu de la bosse (vers la réception du Milwaukee), même hauteur
+MUR_MILWAUKEE_BAS = 8.0                     # v45d (« baisse-le de 5 ft ») : 13 -> 8 ft au-dessus du sol au milieu de la bosse ; v43c : bas du mur invisible après le Milwaukee (ft au-dessus du 1er obstacle du triple) ; v23f : 15
 GRATES_SGM = True                          # v42 : le modèle de grates de Saint-Georges (start_grids) posé par-dessus les décals
 SGM_TERRE = True                            # v41b (« remplace la texture de la terre par exactement celle de Saint-Georges ») : tuile dirt_light.ppm, décals track_lt.png, projections de SGM
 STT_TERRE = True                            # v29c : terre de Saint-Thibéry (texture, couleur, projections, traces) ; False = TERRE_RGB
@@ -800,6 +803,37 @@ def paddock_rect(OUT):
     P = np.array(P); return (P[:, 0].min() - 92.0, P[:, 0].max() + 30.0, P[:, 1].min() - 25.0, P[:, 1].max() + 25.0)
 
 
+RF_ERODE = True   # v45b (« niveau érosion, mets exactement la même que la RF ») : érosion de RF Anaheim 1 (data/rf_erode.json)
+RF_ERODE_MAP = {'dirtappel 3.0': 'Mid Corner', 'turnterre': 'Mid Corner', 'viraplaterre': 'Jumpv2', 'jump transition': 'Jump Transition',
+                'viraplasable': 'old sand straight', 'turnsable': 'old sand straight'}
+RF_ERODE_SAUT_H, RF_ERODE_PIED = 0.5, 3.0   # sauts : terre > 0,5 ft ; pied de saut : jusqu'à 3 ft autour
+
+
+def rf_erode(OUT):
+    """v45b : comme RF Anaheim 1, mesuré sur sa tilemap : le sol (et les virages) en « Mid Corner », les sauts en « Jumpv2 », leur pied
+    en « Jump Transition », le sable en « old sand straight » ; lignes erode_* de RF recopiées telles quelles dans nos tuiles de même rôle
+    (le reste : texture, adhérence, projections, inchangé). Nos sauts n'avaient pas de tuile à eux (tout en dirtappel) : les cases de
+    dirtappel au-dessus de 0,5 ft passent en viraplaterre (érosion Jumpv2), celles à moins de 3 ft autour en jump transition (même texture)."""
+    from scipy.ndimage import distance_transform_edt, map_coordinates
+    rf = json.load(open(os.path.join(HERE, "data", "rf_erode.json"), encoding="utf-8"))["tuiles"]
+    bl = open(os.path.join(OUT, "tileinfo")).read().split("addtile"); names = []; nb = 0
+    for i, b in enumerate(bl):
+        m = re.search(r"^name (.+)$", b, re.M); names.append(m.group(1).strip() if m else None)
+        if m and names[-1] in RF_ERODE_MAP:
+            L = b.split(chr(10)); k = next(j for j, l in enumerate(L) if l.startswith("erode"))
+            L = [l for l in L if not l.startswith("erode")]; bl[i] = chr(10).join(L[:k] + rf[RF_ERODE_MAP[names[-1]]] + L[k:]); nb += 1
+    open(os.path.join(OUT, "tileinfo"), "w", newline=chr(10)).write("addtile".join(bl))
+    ix = {n: i for i, n in enumerate(names) if n}
+    tm = np.fromfile(os.path.join(OUT, "tilemap"), np.uint8); N = int(np.sqrt(tm.size)); tm = tm.reshape(N, N)
+    t = open(os.path.join(OUT, "terrain.hf")).read().split(); s_, lo, hi = float(t[1]), float(t[2]), float(t[3])
+    Hm = np.asarray(Image.open(os.path.join(OUT, "terrain.png")), float) / 65535 * (hi - lo) + lo; side = (Hm.shape[0] - 1) * s_; cs = side / N
+    jj, ii = np.meshgrid(np.arange(N), np.arange(N)); h = map_coordinates(Hm, [(ii + 0.5) * cs / s_, (jj + 0.5) * cs / s_], order=1)
+    sol = tm == ix['dirtappel 3.0']; saut = sol & (h > RF_ERODE_SAUT_H)
+    pied = sol & ~saut & (distance_transform_edt(~saut) * cs <= RF_ERODE_PIED)
+    tm[saut] = ix['viraplaterre']; tm[pied] = ix['jump transition']; tm.astype(np.uint8).tofile(os.path.join(OUT, "tilemap"))
+    return dict(tuiles=nb, cases_saut=int(saut.sum()), cases_pied=int(pied.sum()))
+
+
 def zion_extras(OUT, FOLDER):
     """v17 : dalles grises sous les camions (tuile Road), voile de terre ZION (overlay) en dalles sur tout le sol de terre (pas
     seulement sur le tracé) ; v19 : décals d'obstacles retirés, panneau START suspendu, grilles noires Monster, plus de start_grids."""
@@ -1219,11 +1253,17 @@ def deco_v21(OUT, FOLDER, combos):
     # v23e : murs INVISIBLES (collision seule), assez hauts pour ne pas gêner un saut normal : (1) entre la petite table et l'appel du
     # freestyle (« ça saute derrière l'appel ») ; (2) après le Milwaukee, au-dessus du 1er obstacle du triple (« pas sauter dans la 2e,
     # ça fait monter très haut ») ; (3) entre la réception du double et l'appel du triple d'arrivée (« pas sauter par-dessus le triple »)
-    def inv_wall(nm, g, u, lo, hi):
+    def inv_wall(nm, g, u, lo, hi, u_org=None, haut_origine=False):
+        # v45b : u_org = origine de la statue sur du plat (le jeu penche une statue selon le sol sous son origine) ; le mur (boules de
+        # collision) reste à u, de lo à hi ft au-dessus du sol en u
         c, s2 = np.cos(g['t']), np.sin(g['t']); nrm = np.array([-s2, c]); P0 = np.array([g['x0'] + u * c, g['z0'] + u * s2])
-        h_ = float(Hf(*P0)[0]); sph = [(nrm[0] * v, h_ - h_ + y, nrm[1] * v) for v in np.arange(-16.0, 16.01, 2.6) for y in np.arange(lo, hi + 0.01, 2.6)]
+        Po = P0 if u_org is None else np.array([g['x0'] + u_org * c, g['z0'] + u_org * s2]); off = P0 - Po
+        h_ = float(Hf(*P0)[0]); dy = h_ - float(Hf(*Po)[0])
+        if haut_origine:   # v45c : hauteurs comptées depuis le sol sous l'origine (pas sous le mur)
+            dy = 0.0
+        sph = [(off[0] + nrm[0] * v, dy + y, off[1] + nrm[1] * v) for v in np.arange(-16.0, 16.01, 2.6) for y in np.arange(lo, hi + 0.01, 2.6)]
         m = DV.Mesh(); m.tri([(0, -20, 0), (0.01, -20, 0), (0, -20, 0.01)], [(0.5, 0.5)] * 3); m.write(os.path.join(sd, nm + '.jm'))
-        DV.K.shp(os.path.join(sd, nm + '.shp'), sph, 1.4, par=(1.5, 1000, 200)); lines.append(line(P0[0], P0[1], 0.0, nm + '.jm', 'bache_paille.png', nm + '.shp'))
+        DV.K.shp(os.path.join(sd, nm + '.shp'), sph, 1.4, par=(1.5, 1000, 200)); lines.append(line(Po[0], Po[1], 0.0, nm + '.jm', 'bache_paille.png', nm + '.shp'))
         rep_.setdefault('murs_invisibles', []).append((nm, round(u, 1), round(h_ + lo, 1), round(h_ + hi, 1)))
     it_ = combos[LP.L3_SEC]['items'][0]; s3 = next(sec for sec in g3['sections'] if sec[2] == LP.L3_SEC); pr3 = s3[0]
     i0_, i1_ = int(it_[1] / 0.1), int(it_[2] / 0.1); kc_ = i0_ + int(np.argmax(pr3[i0_:i1_]))
@@ -1234,7 +1274,23 @@ def deco_v21(OUT, FOLDER, combos):
     st3_ = next(q for q in g3['sections'] if q[2] != LP.L3_SEC); sa3_ = next(q for q in g3['sections'] if q[2] == LP.L3_SEC)
     # v43c (« le mur invisible du saut de freestyle, enlève-le complètement, ça sert à rien ») : retiré
     # v43c (« sur le Milwaukee, baisse un petit peu le mur, sans abuser : là on saute dans la 2e sans le toucher ») : 15 -> 13 ft
-    inv_wall('invisible_milwaukee', gR, sR[1] + (itR[kM + 1][1] + itR[kM + 1][2]) / 2, MUR_MILWAUKEE_BAS, MUR_MILWAUKEE_BAS + 25.0)
+    # v45b (vue de dessus, trait rouge : « le mur après le Milwaukee : plus bas c'est bien, mais surtout rapproche-le, entre les deux, pas
+    # aussi tard ; là on passe encore en scrubbant ») : dans le plat entre le Milwaukee et la bosse (aux 3/4, ~4 ft avant la bosse), au lieu
+    # du milieu de la bosse ; toujours MUR_MILWAUKEE_BAS ft au-dessus du sol (ici le plat : ~4 ft plus bas qu'au-dessus de la bosse)
+    # v45c (l'utilisateur voyait encore le mur de la v45 au milieu de la bosse, sa copie d'éditeur passant avant la piste installée :
+    # « rapproche-le de 5-6 ft vers la réception du Milwaukee, même hauteur ») : MUR_MILWAUKEE_RECUL ft avant le milieu de la bosse, à la
+    # même hauteur qu'en v45 (MUR_MILWAUKEE_BAS ft au-dessus du sol au milieu de la bosse ; l'origine y reste : pas de statue penchée)
+    uB_ = sR[1] + (itR[kM + 1][1] + itR[kM + 1][2]) / 2
+    inv_wall('invisible_milwaukee', gR, uB_ - MUR_MILWAUKEE_RECUL, MUR_MILWAUKEE_BAS, MUR_MILWAUKEE_BAS + 25.0, u_org=uB_, haut_origine=True)
+    # v45b (vue de dessus, trait rouge sur l'appel du saut AMV : « remets le mur, très haut : si on enroule on ne touche pas, plus haut qu'un
+    # pilote, avec de la marge ; on ne doit pas pouvoir allonger ») : sur la face de l'appel (MUR_AMV_U ft après son début), de MUR_AMV_BAS
+    # ft au-dessus du sol à +25 ft ; origine de la statue sur le plat avant l'appel (sinon penchée comme la face)
+    # v45c (« un mur invisible en hauteur au milieu, entre la réception de la petite table et le saut AMV ; on ne doit pas le toucher en
+    # sautant normalement ») : au milieu du plat entre la fin de la petite table et le pied de l'appel AMV (comme le mur de la v38), de
+    # MUR_AMV_BAS ft au-dessus du sol (plat) à +25 ft ; v45b : sur la face de l'appel (jamais vu en jeu)
+    uT_ = st3_[1] + combos[st3_[2]]['items'][-1][2]
+    uP_ = next(u_ for u_ in np.arange(sa3_[1], sa3_[1] + 47.0, 0.5) if float(Hf(g3['x0'] + u_ * np.cos(g3['t']), g3['z0'] + u_ * np.sin(g3['t']))[0]) > 0.3)
+    inv_wall('invisible_amv', g3, (uT_ + uP_) / 2, MUR_AMV_BAS, MUR_AMV_BAS + 25.0)
     g5 = next(g for g in BP.PATH.segs if g['kind'] == 'S' and g['tag'].startswith('L5')); s5 = g5['sections'][0]; it5 = combos[s5[2]]['items']
     inv_wall('invisible_arrivee', g5, s5[1] + (it5[1][2] + it5[2][1]) / 2, 13.0, 30.0)   # v23f : « le plus haut pour le saut d'arrivée encore »
     late_ = deco_v28(OUT, FOLDER, combos, Hf, lines, line, sd, DV, rep_, g3, gR)
@@ -1659,6 +1715,8 @@ _export0 = BP.export
 def export_zion(*a, **k):
     _export0(*a, **k)
     zion_ground(BP.OUT, BP.FOLDER)
+    if RF_ERODE:
+        BP.REPORT['erosion_rf'] = rf_erode(BP.OUT)
     zion_extras(BP.OUT, BP.FOLDER)
     import layouts_sx as LS
     BP.WHOOPS_LEFT_GROUND = True                                       # v22c : boudins FLY, au sol à gauche (plus de talus)
@@ -1685,13 +1743,35 @@ def export_zion(*a, **k):
     BP.REPORT['sable_hors_pentes'] = sable_hors_pentes(BP.OUT, BP.FOLDER)     # v42c : plus de sable étiré sur la face de l'appel du Milwaukee
     if RECADRE:
         BP.REPORT['recadrage'] = recadrer(BP.OUT, *RECADRE)           # v42b : terrain collé à l'arène (comme RF) -> minimap ~1,7x plus grande
-    BP.REPORT['portes'] = portes_ryan(BP.OUT)                         # v44b : portes de chrono refaites par Ryan dans l'éditeur
+    BP.REPORT['portes'] = portes_utilisateur(BP.OUT) if PORTES_UTIL else portes_ryan(BP.OUT)   # v45c : portes de l'utilisateur (+ ajouts) ; v44b : de Ryan
     BP.REPORT['hauts_parleurs'] = hauts_parleurs(BP.OUT)             # v44d : 4 hauts-parleurs au-dessus de la piste (annonce de fin)
     BP.REPORT['taille'] = alleger(BP.OUT, BP.FOLDER)                  # v42 : < 200 Mo (fichiers inutilisés enlevés, .jm -> .jm.gz)
     BP.REPORT['noms'] = renommer(BP.OUT, BP.FOLDER)                   # v43b : RF / A1 / ZION / Conway -> USLAND (dossier de la piste seulement)
 
 
 PORTES_RYAN = os.path.join(os.path.dirname(os.path.abspath(__file__)), "portes_ryan.txt")
+# v45c (« j'ai changé les gates dans l'éditeur ; garde les miennes et ajoute-en là où je te demande ») : timing_gates enregistré par
+# l'utilisateur dans l'éditeur (copie AppData du 2026-11-28, coordonnées finales) : ses portes, son ordre (firstlap / normallap) ;
+# PORTES_AJOUT : (porte après laquelle passer dans l'ordre, ligne de la porte), numérotées à la suite (29, 30...)
+PORTES_UTIL = os.path.join(os.path.dirname(os.path.abspath(__file__)), "portes_utilisateur_2026-11-28.txt")
+PORTES_AJOUT = [(17, "18.000000 [100.750000 0.000000 414.100000] [-0.000000 0.000000 -18.000000]")]   # trait rouge : couloir du sable, entre 17 et 18
+
+
+def portes_utilisateur(OUT):
+    """v45c : bloc checkpoints / firstlap / normallap de timing_gates = celui de l'utilisateur + PORTES_AJOUT (grilles de départ du build)."""
+    p = os.path.join(OUT, "timing_gates"); L = open(p).read().split(chr(10)); i0 = L.index("checkpoints:")
+    U = open(PORTES_UTIL).read().split(chr(10)); u0, u1, u2 = U.index("checkpoints:"), U.index("firstlap:"), U.index("normallap:")
+    cp = [l for l in U[u0 + 1:u1] if l.strip()]; fl = U[u1 + 1].split(); nl = U[u2 + 1].split()
+    # v45d (« la nouvelle a pris le numéro 29 : il faut que ce soit elle la 18 et que ça décale tout, sans déplacer les portes ») : la porte
+    # ajoutée prend le numéro apres + 1 dans le fichier, les suivantes sont renumérotées (+1) dans les listes du 1er tour et du tour
+    for apres, ligne in PORTES_AJOUT:
+        k = apres + 1; cp.insert(k, ligne)
+        for lst in (fl, nl):
+            lst[:] = [str(int(v) + 1) if int(v) >= k else v for v in lst]
+            if str(apres) in lst:
+                lst.insert(lst.index(str(apres)) + 1, str(k))
+    open(p, "w", newline=chr(10)).write(chr(10).join(L[:i0 + 1] + cp + ["firstlap:", " ".join(fl) + " ", "normallap:", " ".join(nl)]) + chr(10))
+    return dict(portes=len(cp), ajoutees=len(PORTES_AJOUT), premier_tour=" ".join(fl), tour=" ".join(nl))
 
 
 def portes_ryan(OUT):
@@ -2090,14 +2170,19 @@ def alleger(OUT, FOLDER):
         if rl_.startswith("statue/paris/pad/vraie_") and max(im_.size) > ALLEGER_MOTOS_PX:
             f_ = ALLEGER_MOTOS_PX / max(im_.size); im_ = im_.resize((round(im_.size[0] * f_), round(im_.size[1] * f_)), Image.LANCZOS)
             im_.save(p_, optimize=True); return
-        if im_.mode == "RGBA" and rl_.startswith(("statue/", "tex/")) and im_.getchannel("A").getextrema()[0] == 255:
-            im_ = im_.convert("RGB")
+        if im_.mode == "RGBA" and rl_.startswith(("statue/", "tex/")) and im_.getchannel("A").getextrema()[0] == 255 and rl_.lower() not in seq_pngs:
+            im_ = im_.convert("RGB")      # v45b : pas les images d'une séquence .seq (fond_b en RGB + lettres en RGBA : moitié droite de l'écran noire)
         tmp_ = p_ + ".tmp.png"; im_.save(tmp_, optimize=True)
         if os.path.getsize(tmp_) < os.path.getsize(p_):
             os.replace(tmp_, p_)
         else:
             os.remove(tmp_)
     pngs = [os.path.join(r_, f_) for r_, _, fs_ in os.walk(OUT) for f_ in fs_ if f_.lower().endswith(".png")]
+    seq_pngs = set()
+    for r_, _, fs_ in os.walk(OUT):
+        for f_ in fs_:
+            if f_.lower().endswith(".seq"):
+                seq_pngs |= set(m.lower() for m in re_.findall(r"@" + re_.escape(FOLDER) + r"/(\S+\.png)", open(os.path.join(r_, f_), encoding="latin-1").read()))
     with ThreadPoolExecutor(8) as ex_:
         list(ex_.map(png_, pngs))
     for r_, ds_, fs_ in sorted(os.walk(OUT), reverse=True):

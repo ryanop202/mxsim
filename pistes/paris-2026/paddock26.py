@@ -929,6 +929,7 @@ def _sunset(W, H):
     return Image.fromarray(a.clip(0, 255).astype(np.uint8)).convert("RGBA")
 
 
+SIDE_MXSIM = True      # v45b : logo MX Sim Racing sur les 2 petits écrans (à la place de Supercross Paris)
 SCREEN_LIVE = True     # v39b : le grand écran = classement en direct sur toute sa surface (tableau_direct.py), plus d'image fixe dessous
 
 
@@ -947,6 +948,9 @@ def screen(D):
     # soleil rose, logo Supercross Paris en haut, logo USLAND blanc en dessous
     sw = 1024; sh = int(sw * (SIDE_Y1 - SIDE_Y0) / SIDE_W)
     side = _sunset(sw, sh); fitc(side, lg("sxparis"), (40, int(sh * 0.08), sw - 40, int(sh * 0.92)), 0.02)   # v39c (« enlève le USLAND, seulement le grand Supercross Paris rose, recadré »)
+    if SIDE_MXSIM:   # v45b (« sur les 2 petits écrans, au lieu de Supercross Paris, mets le logo MX Sim Racing ») : le logo (fond noir) sur noir
+        side = Image.new("RGBA", (sw, sh), (0, 0, 0, 255))
+        fitc(side, Image.open(os.path.join(ROOT, "commun", "assets", "logos", "user", "logo mxsim racing.png")).convert("RGBA"), (0, 0, sw, sh), 0.0)
     rS = A.put(side)
     if not SCREEN_LIVE:
         main = _sunset(hW, hH); fitc(main, lg("sxparis").filter(ImageFilter.SMOOTH), (int(hW * 0.2), int(hH * 0.08), int(hW * 0.8), int(hH * 0.8)), 0.02)
