@@ -64,7 +64,8 @@ MT_NOM_Y = 156                          # v45b (« laisse 202 - OPPLIGER ») : n
 # grille ; le public sur les chutes et les bagarres ; refais notre propre code ») : module d'événements (code USLAND, écrit ici)
 EV_Y = (164, 189, 213)                  # 3 lignes dans la case du temps, sous son trait blanc (y 159-162) : titre, numéro + nom, valeur
 EV_HS_INDEX = 2                         # holeshot : 1er à passer 2 portes (porte 28, entrée du 1er virage ; la 27 est au milieu de la ligne droite)
-EV_VOL = dict(grille=1.5, public=8.0, ooh=8.0, foule=4.0, foule_fin=1.0, annonce=6.0, hp=1.5, mus=10.0, mus_hp=2.0)   # sons RF (pack sx2026) : clameur rms ~1100 (RF la joue à 25), grille rms ~2400 ; v45e (Ryan : « la foule j'entends rien ; chaque micro en décalé, trop ») : foule normalisée (x9) à 4, son principal à la caméra, hauts-parleurs bas (léger écho) ; v45g (« pas assez fort », chutes pas entendues) : chanson x2, clameur normalisée (x3,8) à 8 ; v45h : grille inchangée (1.5), foule 4 -> 1 après l'arrivée
+EV_VOL = dict(grille=1.5, public=1.0, ooh=1.0, foule=1.0, foule_fin=0.25, annonce=1.0, hp=0.5, mus=1.0, mus_hp=0.4)
+EV_COPIES = dict(public=3, mus=2)   # v45i : volume plafonné à 1 dans le jeu -> plus fort = plusieurs copies au même point (pas d'écho)   # sons RF (pack sx2026) : clameur rms ~1100 (RF la joue à 25), grille rms ~2400 ; v45e (Ryan : « la foule j'entends rien ; chaque micro en décalé, trop ») : foule normalisée (x9) à 4, son principal à la caméra, hauts-parleurs bas (léger écho) ; v45g (« pas assez fort », chutes pas entendues) : chanson x2, clameur normalisée (x3,8) à 8 ; v45h : grille inchangée (1.5), foule 4 -> 1 après l'arrivée
 MUSIQUE = os.path.join(HERE, "sons", "musique_paris.raw")       # v45d : chanson FIVE - SX Paris 2022 (locale seulement, voir _bloc_musique)
 SONS_RF = os.path.join(os.path.dirname(os.path.dirname(HERE)), "commun", "assets", "sons_rf")
 EV_JS = r"""
@@ -83,8 +84,9 @@ function ev_son(f, vol, freq) {
     return i;
 }
 var EV_S_GRILLE = ev_son("@FOLDER/js/sounds/grille.raw", EVVG, 44100);
-var EV_S_PUBLIC = ev_son("@FOLDER/js/sounds/public.raw", EVVP, 44100);
-var EV_S_OOH = ev_son("@FOLDER/js/sounds/public.raw", EVVO, 33075);
+function ev_sons(f, vol, freq, n) { var k, a = []; for (k = 0; k < n; k++) a.push(ev_son(f, vol, freq)); return a; }
+var EV_S_PUBLIC = ev_sons("@FOLDER/js/sounds/public.raw", EVVP, 44100, EVNP);   /* v45i : copies a la camera (volume plafonne a 1) */
+var EV_S_OOH = ev_sons("@FOLDER/js/sounds/public.raw", EVVO, 33075, EVNP);
 var EV_S_ANNONCE = ev_son("@FOLDER/js/sounds/annonce.raw", EVVA, 44100);   /* v44c : annonce "le plus beau supercross du monde, c est Paris" */
 var EV_HP = [[0, 0, 0]];                                              /* v44d : hauts-parleurs au-dessus de la piste (remplace par le build) */
 var EV_S_HP = [], ev_k;
@@ -124,11 +126,15 @@ function ev_musique() {                                                /* v45d :
         for (k = 0; k < EV_S_MUS.length; k++) if (EV_S_MUS[k] >= 0) mx.start_sound(EV_S_MUS[k]);
     }
     if (ev_mus_fin >= 0 && mx.seconds > ev_mus_fin) ev_mus_fin = -1;
-    if (ev_mus_fin >= 0 && EV_S_MUS.length && EV_S_MUS[EV_S_MUS.length - 1] >= 0) mx.set_sound_pos(EV_S_MUS[EV_S_MUS.length - 1], ev_p[0], ev_p[1], ev_p[2]);
+    if (ev_mus_fin >= 0) for (k = 0; k < EV_S_MUS_CAM.length; k++) if (EV_S_MUS_CAM[k] >= 0) mx.set_sound_pos(EV_S_MUS_CAM[k], ev_p[0], ev_p[1], ev_p[2]);
 }
 var ev_top = [], ev_bas = {}, ev_prec_s = -1, ev_rec = null, ev_rec_t = -1;
 
-function ev_joue(i) { if (i >= 0) { mx.set_sound_pos(i, ev_p[0], ev_p[1], ev_p[2]); mx.start_sound(i); } }
+function ev_joue(i) {
+    var k;
+    if (typeof i == "object") { for (k = 0; k < i.length; k++) ev_joue(i[k]); return; }
+    if (i >= 0) { mx.set_sound_pos(i, ev_p[0], ev_p[1], ev_p[2]); mx.start_sound(i); }
+}
 function ev_public(i) { if (mx.seconds - ev_public_t >= EV_PAUSE_PUBLIC) { ev_public_t = mx.seconds; ev_joue(i); } }
 function ev_nom(slot) { return td_nom(mx.get_rider_name(slot)); }
 function ev_num(slot) { return mx.get_rider_number(slot).toString() + " -"; }
@@ -214,7 +220,13 @@ function ev_ecran() {                                                 /* [titre,
     return null;
 }
 """.replace("EVY0", str(EV_Y[0])).replace("EVY1", str(EV_Y[1])).replace("EVY2", str(EV_Y[2])).replace("EVHS", str(EV_HS_INDEX)) \
-   .replace("EVVG", "%.1f" % EV_VOL["grille"]).replace("EVVP", "%.1f" % EV_VOL["public"]).replace("EVVO", "%.1f" % EV_VOL["ooh"]).replace("EVFF", "%.1f" % EV_VOL["foule_fin"]).replace("EVVF", "%.1f" % EV_VOL["foule"]).replace("EVVA", "%.1f" % EV_VOL["annonce"]).replace("EVVH", "%.1f" % EV_VOL["hp"]).replace("EVFD", "%.2f" % (os.path.getsize(os.path.join(SONS_RF, "crowdconstant.raw")) / 2.0 / 44100))
+   .replace("EVVG", "%.2f" % EV_VOL["grille"]).replace("EVVP", "%.2f" % EV_VOL["public"]).replace("EVNP", str(EV_COPIES["public"])).replace("EVVO", "%.2f" % EV_VOL["ooh"]).replace("EVFF", "%.2f" % EV_VOL["foule_fin"]).replace("EVVF", "%.2f" % EV_VOL["foule"]).replace("EVVA", "%.2f" % EV_VOL["annonce"]).replace("EVVH", "%.2f" % EV_VOL["hp"]).replace("EVFD", "%.2f" % (os.path.getsize(os.path.join(SONS_RF, "crowdconstant.raw")) / 2.0 / 44100))
+
+
+def _fort(a, k):
+    """v45i : limiteur doux (tanh) : monte le niveau moyen sans dépasser le pic de 29000 (le volume du jeu est plafonné à 1)."""
+    a = a / np.abs(a).max()
+    return (np.tanh(k * a) / np.tanh(k) * 29000.0).astype("<i2")
 
 
 def _bloc_musique():
@@ -222,14 +234,15 @@ def _bloc_musique():
     hauts-parleurs + une copie qui suit la caméra. Pas à nous et dépôt GitHub public : sons/musique_paris.raw reste en local
     (.gitignore) ; sans le fichier, pas de chanson (EV_S_MUS vide)."""
     an = os.path.getsize(os.path.join(HERE, "sons", "annonce_paris.raw")) / 2.0 / 44100
-    L = ["var EV_ANNONCE_DUREE = %.2f, EV_S_MUS = [], EV_MUS_DUREE = 0;" % (an + 0.5)]
+    L = ["var EV_ANNONCE_DUREE = %.2f, EV_S_MUS = [], EV_S_MUS_CAM = [], EV_MUS_DUREE = 0;" % (an + 0.5)]
     if os.path.exists(MUSIQUE):
         L += ["EV_MUS_DUREE = %.2f;" % (os.path.getsize(MUSIQUE) / 2.0 / 44100),
               "for (ev_k = 0; ev_k < EV_HP.length; ev_k++) {",
               '    EV_S_MUS.push(ev_son("@FOLDER/js/sounds/musique.raw", %.1f, 44100));' % EV_VOL["mus_hp"],
               "    if (EV_S_MUS[ev_k] >= 0) mx.set_sound_pos(EV_S_MUS[ev_k], EV_HP[ev_k][0], EV_HP[ev_k][1], EV_HP[ev_k][2]);",
               "}",
-              'EV_S_MUS.push(ev_son("@FOLDER/js/sounds/musique.raw", %.1f, 44100));   /* copie a la camera (en dernier) */' % EV_VOL["mus"]]
+              'EV_S_MUS_CAM = ev_sons("@FOLDER/js/sounds/musique.raw", %.1f, 44100, %d);   /* copies a la camera */' % (EV_VOL["mus"], EV_COPIES["mus"]),
+              "EV_S_MUS = EV_S_MUS.concat(EV_S_MUS_CAM);"]
     return chr(10).join(L) + chr(10)
 
 
@@ -570,12 +583,12 @@ def make(OUT, FOLDER, x, z, yaw, apercu_png=None):
     sd_ = os.path.join(OUT, "js", "sounds"); os.makedirs(sd_, exist_ok=True)
     shutil.copy(os.path.join(SONS_RF, "gatedrop.raw"), os.path.join(sd_, "grille.raw"))
     cr_ = np.fromfile(os.path.join(SONS_RF, "crowdroar.raw"), "<i2").astype(float)            # v45g : clameur au-dessus de la foule
-    (cr_ * (29000.0 / np.abs(cr_).max())).astype("<i2").tofile(os.path.join(sd_, "public.raw"))
+    _fort(cr_, 2.5).tofile(os.path.join(sd_, "public.raw"))                                   # v45i : limiteur doux (plus fort à pic égal)
     fo_ = np.fromfile(os.path.join(SONS_RF, "crowdconstant.raw"), "<i2").astype(float)       # v45e : rms 692 -> pic 29000 (inaudible avant)
     (fo_ * (29000.0 / np.abs(fo_).max())).astype("<i2").tofile(os.path.join(sd_, "foule.raw"))
     shutil.copy(os.path.join(os.path.dirname(os.path.abspath(__file__)), "sons", "annonce_paris.raw"), os.path.join(sd_, "annonce.raw"))   # v44c     # v44b : « et le son des spectateurs »
     if os.path.exists(MUSIQUE):                                                                          # v45d : chanson (locale)
-        shutil.copy(MUSIQUE, os.path.join(sd_, "musique.raw"))
+        _fort(np.fromfile(MUSIQUE, "<i2").astype(float), 2.0).tofile(os.path.join(sd_, "musique.raw"))   # v45i
     open(os.path.join(OUT, "frills.js"), "w", newline="\n", encoding="ascii").write(_js(N, P, Dg, T, by, ta, tb, FOLDER))
     ap = apercu(OUT, apercu_png or os.path.join(D, "..", "apercu_direct.png"))
     return lines, dict(lettres=[len(N), len(P), len(Dg), len(T)], panneaux=len(PANNEAUX), panneau_ft=[round(wp, 1), round(hs, 1)], apercu=ap)
