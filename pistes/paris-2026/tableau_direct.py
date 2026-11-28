@@ -48,7 +48,7 @@ TIME_Y = 168
 # grille ; le public sur les chutes et les bagarres ; refais notre propre code ») : module d'événements (code USLAND, écrit ici)
 EV_Y = (164, 189, 213)                  # 3 lignes dans la case du temps, sous son trait blanc (y 159-162) : titre, numéro + nom, valeur
 EV_HS_INDEX = 2                         # holeshot : 1er à passer 2 portes (porte 28, entrée du 1er virage ; la 27 est au milieu de la ligne droite)
-EV_VOL = dict(grille=1.5, public=4.0, ooh=4.0)   # sons RF (pack sx2026) : clameur rms ~1100 (RF la joue à 25), grille rms ~2400
+EV_VOL = dict(grille=1.5, public=4.0, ooh=4.0, foule=2.0)   # sons RF (pack sx2026) : clameur rms ~1100 (RF la joue à 25), grille rms ~2400
 SONS_RF = os.path.join(os.path.dirname(os.path.dirname(HERE)), "commun", "assets", "sons_rf")
 EV_JS = r"""
 /*
@@ -68,6 +68,8 @@ function ev_son(f, vol, freq) {
 var EV_S_GRILLE = ev_son("@FOLDER/js/sounds/grille.raw", EVVG, 44100);
 var EV_S_PUBLIC = ev_son("@FOLDER/js/sounds/public.raw", EVVP, 44100);
 var EV_S_OOH = ev_son("@FOLDER/js/sounds/public.raw", EVVO, 33075);
+var EV_S_FOULE = mx.add_sound("@FOLDER/js/sounds/foule.raw");          /* v44b : bruit du public en continu (boucle), suit la camera */
+if (EV_S_FOULE >= 0) { mx.set_sound_freq(EV_S_FOULE, 44100); mx.set_sound_vol(EV_S_FOULE, EVVF); mx.set_sound_loop(EV_S_FOULE, 1); mx.start_sound(EV_S_FOULE); }
 var ev_p = [0, 0, 0], ev_r = [1, 0, 0, 0, 1, 0, 0, 0, 1];
 var ev_d = -2, ev_grille = -1, ev_hs = -1, ev_hs_t = -1, ev_fin_t = -1, ev_tour_temps = -1, ev_public_t = -100;
 var ev_top = [], ev_bas = {}, ev_prec_s = -1, ev_rec = null, ev_rec_t = -1;
@@ -106,6 +108,7 @@ function ev_recompenses(o) {
 function ev_maj() {
     var d = mx.get_gate_drop_time(), o, i, tour, top;
     mx.get_camera_location(ev_p, ev_r);
+    if (EV_S_FOULE >= 0) mx.set_sound_pos(EV_S_FOULE, ev_p[0], ev_p[1], ev_p[2]);
     if (mx.seconds < ev_prec_s) { ev_reset(); ev_grille = -1; }          /* retour en arriere (replay) */
     ev_prec_s = mx.seconds;
     if (d != ev_d) { ev_d = d; ev_reset(); }                          /* nouvelle course */
@@ -147,7 +150,7 @@ function ev_ecran() {                                                 /* [titre,
     return null;
 }
 """.replace("EVY0", str(EV_Y[0])).replace("EVY1", str(EV_Y[1])).replace("EVY2", str(EV_Y[2])).replace("EVHS", str(EV_HS_INDEX)) \
-   .replace("EVVG", "%.1f" % EV_VOL["grille"]).replace("EVVP", "%.1f" % EV_VOL["public"]).replace("EVVO", "%.1f" % EV_VOL["ooh"])
+   .replace("EVVG", "%.1f" % EV_VOL["grille"]).replace("EVVP", "%.1f" % EV_VOL["public"]).replace("EVVO", "%.1f" % EV_VOL["ooh"]).replace("EVVF", "%.1f" % EV_VOL["foule"])
 
 
 def _police(im, chars, path, px, gh, col, y0):
@@ -411,6 +414,7 @@ def make(OUT, FOLDER, x, z, yaw, apercu_png=None):
     sd_ = os.path.join(OUT, "js", "sounds"); os.makedirs(sd_, exist_ok=True)
     shutil.copy(os.path.join(SONS_RF, "gatedrop.raw"), os.path.join(sd_, "grille.raw"))
     shutil.copy(os.path.join(SONS_RF, "crowdroar.raw"), os.path.join(sd_, "public.raw"))
+    shutil.copy(os.path.join(SONS_RF, "crowdconstant.raw"), os.path.join(sd_, "foule.raw"))     # v44b : « et le son des spectateurs »
     open(os.path.join(OUT, "frills.js"), "w", newline="\n", encoding="ascii").write(_js(N, P, Dg, T, by, ta, tb, FOLDER))
     ap = apercu(OUT, apercu_png or os.path.join(D, "..", "apercu_direct.png"))
     return lines, dict(lettres=[len(N), len(P), len(Dg), len(T)], panneaux=len(PANNEAUX), panneau_ft=[round(wp, 1), round(hs, 1)], apercu=ap)

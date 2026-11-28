@@ -144,6 +144,8 @@ function ev_son(f, vol, freq) {
 var EV_S_GRILLE = ev_son("@USLANDParisSupercross2026/js/sounds/grille.raw", 1.5, 44100);
 var EV_S_PUBLIC = ev_son("@USLANDParisSupercross2026/js/sounds/public.raw", 4.0, 44100);
 var EV_S_OOH = ev_son("@USLANDParisSupercross2026/js/sounds/public.raw", 4.0, 33075);
+var EV_S_FOULE = mx.add_sound("@USLANDParisSupercross2026/js/sounds/foule.raw");          /* v44b : bruit du public en continu (boucle), suit la camera */
+if (EV_S_FOULE >= 0) { mx.set_sound_freq(EV_S_FOULE, 44100); mx.set_sound_vol(EV_S_FOULE, 2.0); mx.set_sound_loop(EV_S_FOULE, 1); mx.start_sound(EV_S_FOULE); }
 var ev_p = [0, 0, 0], ev_r = [1, 0, 0, 0, 1, 0, 0, 0, 1];
 var ev_d = -2, ev_grille = -1, ev_hs = -1, ev_hs_t = -1, ev_fin_t = -1, ev_tour_temps = -1, ev_public_t = -100;
 var ev_top = [], ev_bas = {}, ev_prec_s = -1, ev_rec = null, ev_rec_t = -1;
@@ -182,6 +184,7 @@ function ev_recompenses(o) {
 function ev_maj() {
     var d = mx.get_gate_drop_time(), o, i, tour, top;
     mx.get_camera_location(ev_p, ev_r);
+    if (EV_S_FOULE >= 0) mx.set_sound_pos(EV_S_FOULE, ev_p[0], ev_p[1], ev_p[2]);
     if (mx.seconds < ev_prec_s) { ev_reset(); ev_grille = -1; }          /* retour en arriere (replay) */
     ev_prec_s = mx.seconds;
     if (d != ev_d) { ev_d = d; ev_reset(); }                          /* nouvelle course */
