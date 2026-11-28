@@ -81,6 +81,9 @@ PUBLIC_K = 2.5 / 4.0
 for k_ in ("public", "ooh", "foule", "foule_fin"):
     EV_VOL[k_] = round(EV_VOL[k_] * PUBLIC_K, 3)
 EV_COPIES = dict(public=3, mus=2)   # v45i : volume plafonné à 1 dans le jeu -> plus fort = plusieurs copies au même point (pas d'écho)   # sons RF (pack sx2026) : clameur rms ~1100 (RF la joue à 25), grille rms ~2400 ; v45e (Ryan : « la foule j'entends rien ; chaque micro en décalé, trop ») : foule normalisée (x9) à 4, son principal à la caméra, hauts-parleurs bas (léger écho) ; v45g (« pas assez fort », chutes pas entendues) : chanson x2, clameur normalisée (x3,8) à 8 ; v45h : grille inchangée (1.5), foule 4 -> 1 après l'arrivée
+MUSIQUE_FIN, MUSIQUE_FONDU = 79.4, 7.0   # v45i (« coupe la chanson avant le 2e couplet, après les 3 "thunder strike" vers 1:10 ; un
+# fondu de 7 s pour la fin ») : paroles transcrites (Whisper, sur le PC) : « Thunder strike! » à 62,0 / 67,2 / 71,5 s (le 3e fini à 72,3 s),
+# 2e couplet à 79,5 s (« And we're in Paris... ») -> fondu de 7 s de 72,4 à 79,4 s, coupée là
 MUSIQUE = os.path.join(HERE, "sons", "musique_paris.raw")       # v45d : chanson FIVE - SX Paris 2022 (locale seulement, voir _bloc_musique)
 SONS_RF = os.path.join(os.path.dirname(os.path.dirname(HERE)), "commun", "assets", "sons_rf")
 EV_JS = r"""
@@ -238,6 +241,13 @@ function ev_ecran() {                                                 /* [titre,
    .replace("EVVG", "%.2f" % EV_VOL["grille"]).replace("EVVP", "%.2f" % EV_VOL["public"]).replace("EVNP", str(EV_COPIES["public"])).replace("EVVO", "%.2f" % EV_VOL["ooh"]).replace("EVFF", "%.2f" % EV_VOL["foule_fin"]).replace("EVVF", "%.2f" % EV_VOL["foule"]).replace("EVVA", "%.2f" % EV_VOL["annonce"]).replace("EVVH", "%.2f" % EV_VOL["hp"]).replace("EVFD", "%.2f" % (os.path.getsize(os.path.join(SONS_RF, "crowdconstant.raw")) / 2.0 / 44100))
 
 
+def musique_coupee():
+    """v45i : la chanson jusqu'à MUSIQUE_FIN s, fondu de sortie de MUSIQUE_FONDU s."""
+    a = np.fromfile(MUSIQUE, "<i2").astype(float); n = int(MUSIQUE_FIN * 44100); a = a[:n].copy()
+    f = int(MUSIQUE_FONDU * 44100); a[-f:] *= np.linspace(1.0, 0.0, f)
+    return a
+
+
 def _fort(a, k):
     """v45i : limiteur doux (tanh) : monte le niveau moyen sans dépasser le pic de 29000 (le volume du jeu est plafonné à 1)."""
     a = a / np.abs(a).max()
@@ -252,7 +262,7 @@ def _bloc_musique():
     an = os.path.getsize(os.path.join(HERE, "sons", "annonce_paris.raw")) / 2.0 / 44100
     L = ["var EV_ANNONCE_DUREE = %.2f, EV_S_MUS = [], EV_S_MUS_CAM = [], EV_MUS_DUREE = 0;" % (an + 0.5)]
     if os.path.exists(MUSIQUE):
-        L += ["EV_MUS_DUREE = %.2f;" % (os.path.getsize(MUSIQUE) / 2.0 / 44100),
+        L += ["EV_MUS_DUREE = %.2f;" % min(os.path.getsize(MUSIQUE) / 2.0 / 44100, MUSIQUE_FIN),   # v45i : durée coupée
               "for (ev_k = 0; ev_k < EV_HP.length; ev_k++) {",
               '    EV_S_MUS.push(ev_son("@FOLDER/js/sounds/musique.raw", %.1f, 44100));' % EV_VOL["mus_hp"],
               "    if (EV_S_MUS[ev_k] >= 0) mx.set_sound_pos(EV_S_MUS[ev_k], EV_HP[ev_k][0], EV_HP[ev_k][1], EV_HP[ev_k][2]);",
@@ -637,7 +647,7 @@ def make(OUT, FOLDER, x, z, yaw, apercu_png=None):
     (fo_ * (29000.0 / np.abs(fo_).max())).astype("<i2").tofile(os.path.join(sd_, "foule.raw"))
     shutil.copy(os.path.join(os.path.dirname(os.path.abspath(__file__)), "sons", "annonce_paris.raw"), os.path.join(sd_, "annonce.raw"))   # v44c     # v44b : « et le son des spectateurs »
     if os.path.exists(MUSIQUE):                                                                          # v45d : chanson (locale)
-        _fort(np.fromfile(MUSIQUE, "<i2").astype(float), 2.0).tofile(os.path.join(sd_, "musique.raw"))   # v45i
+        _fort(musique_coupee(), 2.0).tofile(os.path.join(sd_, "musique.raw"))   # v45i
     if DA_CHRONO:
         open(os.path.join(OUT, "frills.js"), "w", newline="\n", encoding="ascii").write(TC.js(pol_, ta, tb) + EV_JS.replace("@FOLDER", "@" + FOLDER))
         ap = TC.apercu(A, B, let, pol_, apercu_png or os.path.join(D, "..", "apercu_direct.png"))

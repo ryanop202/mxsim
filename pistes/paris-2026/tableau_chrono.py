@@ -32,9 +32,11 @@ N_LIGNES, N_MOITIES, MOITIE = 9, 1, 1024
 # 9 lignes, police 18 px (13 avant) ; bande du haut plus haute : temps écoulé (vert) et décompte (rouge) en 18 px à droite, meilleur
 # tour à gauche (place de l'heure du logiciel de chrono) ; plus de ligne en bas : les 9 lignes vont jusqu'en bas de l'écran
 # v45h (« le meilleur tour doit être en bas de l'écran ») : bande du haut = temps seulement, meilleur tour sur la dernière ligne
-Y_TITRES, H_TITRES, Y0, H = 24, 18, 43, 21                     # px de l'écran entier (256 de haut)
+# v45i (« le temps qui reste et le temps écoulé, mets-les en bas à droite, sur la ligne du meilleur tour : en haut on ne les voit pas »)
+# : plus de bande en haut ; titres tout en haut, 9 lignes un peu plus hautes, la ligne du bas = meilleur tour (gauche) + temps (droite)
+Y_TITRES, H_TITRES, Y0, H = 0, 18, 19, 23                      # px de l'écran entier (256 de haut)
 GH = 22                                                        # hauteur d'une cellule de lettre
-Y_BAS = Y0 + N_LIGNES * H + 1                                  # meilleur tour : en bas de l'écran
+Y_BAS = Y0 + N_LIGNES * H + 3                                  # meilleur tour et temps : en bas de l'écran
 TAILLE = 18
 # colonnes (x 0-1023 ; ancre : g = gauche, d = droite, c = centre) ; chaque colonne dans un seul panneau de 256
 COLS = dict(pos=(6, 38, "c"), num=(46, 98, "c"), nom=(108, 252, "g"),
@@ -112,7 +114,7 @@ def js(polices, tex_a, tex_b):
     s = JS
     for k, v in dict(TA=tex_a, TB=tex_b, POLICES=json.dumps(polices), COLS=json.dumps(cols), NL=str(N_LIGNES), NM=str(N_MOITIES), MO=str(MOITIE), Y0=str(Y0), HL=str(H),
                      DY=str((H - 1 - GH) // 2), YBAS=str(Y_BAS), XMT=str(X_MT), XV=json.dumps(X_VERT), XR=json.dumps(X_ROUGE), MT=json.dumps([X_MT_T, X_MT_N, X_MT_P]),
-                     YHAUT=str((Y_TITRES - GH) // 2), MARQUES=", ".join('[/%s/, "%s"]' % (r, m) for r, m in MARQUES_JS)).items():
+                     YHAUT=str(Y_BAS), MARQUES=", ".join('[/%s/, "%s"]' % (r, m) for r, m in MARQUES_JS)).items():
         s = s.replace("@@" + k + "@@", v)
     s.encode("ascii")
     return s
@@ -285,7 +287,7 @@ def apercu(fA, fB, let, polices, path_png):
             (41, "HARRISSON Mitchell", "Kawasaki", 8, "6:04.506", "9.321", "46.250", "46.531", 0), (16, "THOMPSON Cole", "Yamaha", 8, "6:06.547", "11.362", "45.922", "45.922", 1),
             (20, "MILLER Henry", "Kawasaki", 8, "6:07.205", "12.020", "46.113", "46.113", 1), (402, "HICKS Michael", "KTM", 8, "6:11.773", "16.588", "46.597", "50.272", 0),
             (250, "LEDEAU Julien", "GasGas", 8, "6:15.030", "19.845", "46.552", "49.159", 0), (65, "LOPEZ Yannis", "Husqvarna", 7, "6:18.606", "+1 L", "47.741", "47.815", 0)]
-    yh = (Y_TITRES - GH) // 2
+    yh = Y_BAS
     txt(P["V"], X_VERT[1] - larg(P["V"], "00:06:58"), yh, "00:06:58"); txt(P["R"], X_ROUGE[1] - larg(P["R"], "2 TOURS"), yh, "2 TOURS")
     import random
     rnd = random.Random(45); noms = ["ROBERT Alex", "DUPONT Hugo", "MARTIN Leo", "BERNARD Tom", "PETIT Noah", "DURAND Enzo", "LEROY Theo",
