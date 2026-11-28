@@ -64,7 +64,8 @@ MT_NOM_Y = 156                          # v45b (« laisse 202 - OPPLIGER ») : n
 # grille ; le public sur les chutes et les bagarres ; refais notre propre code ») : module d'événements (code USLAND, écrit ici)
 EV_Y = (164, 189, 213)                  # 3 lignes dans la case du temps, sous son trait blanc (y 159-162) : titre, numéro + nom, valeur
 EV_HS_INDEX = 2                         # holeshot : 1er à passer 2 portes (porte 28, entrée du 1er virage ; la 27 est au milieu de la ligne droite)
-EV_VOL = dict(grille=1.5, public=4.0, ooh=4.0, foule=10.0, annonce=4.0, hp=5.0)   # sons RF (pack sx2026) : clameur rms ~1100 (RF la joue à 25), grille rms ~2400 ; v45c : foule 2 -> 10 (rms 692), annonce 0.6 -> 4, hauts-parleurs 2 -> 5 (inaudibles en jeu)
+EV_VOL = dict(grille=1.5, public=4.0, ooh=4.0, foule=10.0, annonce=4.0, hp=5.0, mus=2.5, mus_hp=3.5)   # sons RF (pack sx2026) : clameur rms ~1100 (RF la joue à 25), grille rms ~2400 ; v45c : foule 2 -> 10 (rms 692), annonce 0.6 -> 4, hauts-parleurs 2 -> 5 (inaudibles en jeu)
+MUSIQUE = os.path.join(HERE, "sons", "musique_paris.raw")       # v45d : chanson FIVE - SX Paris 2022 (locale seulement, voir _bloc_musique)
 SONS_RF = os.path.join(os.path.dirname(os.path.dirname(HERE)), "commun", "assets", "sons_rf")
 EV_JS = r"""
 /*
@@ -95,7 +96,9 @@ function ev_hauts_parleurs() {                                         /* l'anno
     var k;
     for (k = 0; k < EV_S_HP.length; k++) if (EV_S_HP[k] >= 0) mx.start_sound(EV_S_HP[k]);
     ev_joue(EV_S_ANNONCE);
+    if (EV_S_MUS.length) ev_mus_t = mx.seconds + EV_ANNONCE_DUREE;      /* v45d : la chanson juste apres l'annonce */
 }
+/*EV_MUSIQUE*/
 var EV_ANNONCE_MAX = 120.0;                                           /* si un pilote ne finit jamais (abandon) : annonce 120 s apres le vainqueur */
 var EV_S_FOULE = ev_son("@FOLDER/js/sounds/foule.raw", EVVF, 44100);  /* v44b : bruit du public en continu, suit la camera */
 var EV_FOULE_DUREE = EVFD, ev_foule_t = -1000;                        /* v45c : relance a chaque fin (pas de boucle du jeu, pas au chargement) */
@@ -107,13 +110,24 @@ function ev_foule() {
 var ev_p = [0, 0, 0], ev_r = [1, 0, 0, 0, 1, 0, 0, 0, 1];
 var ev_d = -2, ev_grille = -1, ev_hs = -1, ev_hs_t = -1, ev_fin_t = -1, ev_tour_temps = -1, ev_public_t = -100;
 var ev_fin_tv = -1, ev_annonce = 0;
+var ev_mus_t = -1, ev_mus_fin = -1;
+function ev_mus_stop() { var k; if (ev_mus_fin < 0) return; for (k = 0; k < EV_S_MUS.length; k++) if (EV_S_MUS[k] >= 0) mx.stop_sound(EV_S_MUS[k]); ev_mus_fin = -1; }
+function ev_musique() {                                                /* v45d : chanson sur les hauts-parleurs + une copie qui suit la camera */
+    var k;
+    if (ev_mus_t >= 0 && mx.seconds >= ev_mus_t) {
+        ev_mus_t = -1; ev_mus_fin = mx.seconds + EV_MUS_DUREE;
+        for (k = 0; k < EV_S_MUS.length; k++) if (EV_S_MUS[k] >= 0) mx.start_sound(EV_S_MUS[k]);
+    }
+    if (ev_mus_fin >= 0 && mx.seconds > ev_mus_fin) ev_mus_fin = -1;
+    if (ev_mus_fin >= 0 && EV_S_MUS.length && EV_S_MUS[EV_S_MUS.length - 1] >= 0) mx.set_sound_pos(EV_S_MUS[EV_S_MUS.length - 1], ev_p[0], ev_p[1], ev_p[2]);
+}
 var ev_top = [], ev_bas = {}, ev_prec_s = -1, ev_rec = null, ev_rec_t = -1;
 
 function ev_joue(i) { if (i >= 0) { mx.set_sound_pos(i, ev_p[0], ev_p[1], ev_p[2]); mx.start_sound(i); } }
 function ev_public(i) { if (mx.seconds - ev_public_t >= EV_PAUSE_PUBLIC) { ev_public_t = mx.seconds; ev_joue(i); } }
 function ev_nom(slot) { return td_nom(mx.get_rider_name(slot)); }
 function ev_num(slot) { return mx.get_rider_number(slot).toString() + " -"; }
-function ev_reset() { ev_hs = -1; ev_hs_t = -1; ev_fin_t = -1; ev_tour_temps = -1; ev_top = []; ev_bas = {}; ev_rec = null; ev_rec_t = -1; ev_fin_tv = -1; ev_annonce = 0; }
+function ev_reset() { ev_hs = -1; ev_hs_t = -1; ev_fin_t = -1; ev_tour_temps = -1; ev_top = []; ev_bas = {}; ev_rec = null; ev_rec_t = -1; ev_fin_tv = -1; ev_annonce = 0; ev_mus_t = -1; ev_mus_stop(); }
 function ev_tours_course() {
     if (EV_FIN_TEMPS > 0) return ev_tour_temps >= 0 ? ev_tour_temps + 1 + EV_FIN_TOURS : 1000000;
     return EV_FIN_TOURS > 0 ? EV_FIN_TOURS : 1000000;
@@ -152,6 +166,7 @@ function ev_maj() {
     var d = mx.get_gate_drop_time(), o, i, tour, top;
     mx.get_camera_location(ev_p, ev_r);
     ev_foule();
+    ev_musique();
     if (mx.seconds < ev_prec_s) { ev_reset(); ev_grille = -1; }          /* retour en arriere (replay) */
     ev_prec_s = mx.seconds;
     if (d != ev_d) { ev_d = d; ev_reset(); }                          /* nouvelle course */
@@ -195,6 +210,25 @@ function ev_ecran() {                                                 /* [titre,
 }
 """.replace("EVY0", str(EV_Y[0])).replace("EVY1", str(EV_Y[1])).replace("EVY2", str(EV_Y[2])).replace("EVHS", str(EV_HS_INDEX)) \
    .replace("EVVG", "%.1f" % EV_VOL["grille"]).replace("EVVP", "%.1f" % EV_VOL["public"]).replace("EVVO", "%.1f" % EV_VOL["ooh"]).replace("EVVF", "%.1f" % EV_VOL["foule"]).replace("EVVA", "%.1f" % EV_VOL["annonce"]).replace("EVVH", "%.1f" % EV_VOL["hp"]).replace("EVFD", "%.2f" % (os.path.getsize(os.path.join(SONS_RF, "crowdconstant.raw")) / 2.0 / 44100))
+
+
+def _bloc_musique():
+    """v45d (Ryan : la chanson FIVE - SX Paris 2022 « quand tout le monde a passé l'arrivée ») : jouée juste après l'annonce, sur les
+    hauts-parleurs + une copie qui suit la caméra. Pas à nous et dépôt GitHub public : sons/musique_paris.raw reste en local
+    (.gitignore) ; sans le fichier, pas de chanson (EV_S_MUS vide)."""
+    an = os.path.getsize(os.path.join(HERE, "sons", "annonce_paris.raw")) / 2.0 / 44100
+    L = ["var EV_ANNONCE_DUREE = %.2f, EV_S_MUS = [], EV_MUS_DUREE = 0;" % (an + 0.5)]
+    if os.path.exists(MUSIQUE):
+        L += ["EV_MUS_DUREE = %.2f;" % (os.path.getsize(MUSIQUE) / 2.0 / 44100),
+              "for (ev_k = 0; ev_k < EV_HP.length; ev_k++) {",
+              '    EV_S_MUS.push(ev_son("@FOLDER/js/sounds/musique.raw", %.1f, 44100));' % EV_VOL["mus_hp"],
+              "    if (EV_S_MUS[ev_k] >= 0) mx.set_sound_pos(EV_S_MUS[ev_k], EV_HP[ev_k][0], EV_HP[ev_k][1], EV_HP[ev_k][2]);",
+              "}",
+              'EV_S_MUS.push(ev_son("@FOLDER/js/sounds/musique.raw", %.1f, 44100));   /* copie a la camera (en dernier) */' % EV_VOL["mus"]]
+    return chr(10).join(L) + chr(10)
+
+
+EV_JS = EV_JS.replace("/*EV_MUSIQUE*/" + chr(10), _bloc_musique())
 
 
 def _police(im, chars, path, px, gh, col, y0):
@@ -533,6 +567,8 @@ def make(OUT, FOLDER, x, z, yaw, apercu_png=None):
     shutil.copy(os.path.join(SONS_RF, "crowdroar.raw"), os.path.join(sd_, "public.raw"))
     shutil.copy(os.path.join(SONS_RF, "crowdconstant.raw"), os.path.join(sd_, "foule.raw"))
     shutil.copy(os.path.join(os.path.dirname(os.path.abspath(__file__)), "sons", "annonce_paris.raw"), os.path.join(sd_, "annonce.raw"))   # v44c     # v44b : « et le son des spectateurs »
+    if os.path.exists(MUSIQUE):                                                                          # v45d : chanson (locale)
+        shutil.copy(MUSIQUE, os.path.join(sd_, "musique.raw"))
     open(os.path.join(OUT, "frills.js"), "w", newline="\n", encoding="ascii").write(_js(N, P, Dg, T, by, ta, tb, FOLDER))
     ap = apercu(OUT, apercu_png or os.path.join(D, "..", "apercu_direct.png"))
     return lines, dict(lettres=[len(N), len(P), len(Dg), len(T)], panneaux=len(PANNEAUX), panneau_ft=[round(wp, 1), round(hs, 1)], apercu=ap)
