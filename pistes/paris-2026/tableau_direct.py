@@ -64,7 +64,7 @@ MT_NOM_Y = 156                          # v45b (« laisse 202 - OPPLIGER ») : n
 # grille ; le public sur les chutes et les bagarres ; refais notre propre code ») : module d'événements (code USLAND, écrit ici)
 EV_Y = (164, 189, 213)                  # 3 lignes dans la case du temps, sous son trait blanc (y 159-162) : titre, numéro + nom, valeur
 EV_HS_INDEX = 2                         # holeshot : 1er à passer 2 portes (porte 28, entrée du 1er virage ; la 27 est au milieu de la ligne droite)
-EV_VOL = dict(grille=1.5, public=4.0, ooh=4.0, foule=10.0, annonce=4.0, hp=5.0, mus=2.5, mus_hp=3.5)   # sons RF (pack sx2026) : clameur rms ~1100 (RF la joue à 25), grille rms ~2400 ; v45c : foule 2 -> 10 (rms 692), annonce 0.6 -> 4, hauts-parleurs 2 -> 5 (inaudibles en jeu)
+EV_VOL = dict(grille=1.5, public=4.0, ooh=4.0, foule=4.0, annonce=6.0, hp=1.5, mus=5.0, mus_hp=1.0)   # sons RF (pack sx2026) : clameur rms ~1100 (RF la joue à 25), grille rms ~2400 ; v45e (Ryan : « la foule j'entends rien ; chaque micro en décalé, trop ») : foule normalisée (x9) à 4, son principal à la caméra, hauts-parleurs bas (léger écho)
 MUSIQUE = os.path.join(HERE, "sons", "musique_paris.raw")       # v45d : chanson FIVE - SX Paris 2022 (locale seulement, voir _bloc_musique)
 SONS_RF = os.path.join(os.path.dirname(os.path.dirname(HERE)), "commun", "assets", "sons_rf")
 EV_JS = r"""
@@ -94,9 +94,9 @@ for (ev_k = 0; ev_k < EV_HP.length; ev_k++) {
 }
 function ev_hauts_parleurs() {                                         /* l'annonce part de chaque haut-parleur + un peu a la camera */
     var k;
+    if (EV_S_MUS.length) { ev_mus_t = mx.seconds; return; }            /* v45f : la chanson complete seule (plus l'extrait de 20 s avant) */
     for (k = 0; k < EV_S_HP.length; k++) if (EV_S_HP[k] >= 0) mx.start_sound(EV_S_HP[k]);
     ev_joue(EV_S_ANNONCE);
-    if (EV_S_MUS.length) ev_mus_t = mx.seconds + EV_ANNONCE_DUREE;      /* v45d : la chanson juste apres l'annonce */
 }
 /*EV_MUSIQUE*/
 var EV_ANNONCE_MAX = 120.0;                                           /* si un pilote ne finit jamais (abandon) : annonce 120 s apres le vainqueur */
@@ -565,7 +565,8 @@ def make(OUT, FOLDER, x, z, yaw, apercu_png=None):
     sd_ = os.path.join(OUT, "js", "sounds"); os.makedirs(sd_, exist_ok=True)
     shutil.copy(os.path.join(SONS_RF, "gatedrop.raw"), os.path.join(sd_, "grille.raw"))
     shutil.copy(os.path.join(SONS_RF, "crowdroar.raw"), os.path.join(sd_, "public.raw"))
-    shutil.copy(os.path.join(SONS_RF, "crowdconstant.raw"), os.path.join(sd_, "foule.raw"))
+    fo_ = np.fromfile(os.path.join(SONS_RF, "crowdconstant.raw"), "<i2").astype(float)       # v45e : rms 692 -> pic 29000 (inaudible avant)
+    (fo_ * (29000.0 / np.abs(fo_).max())).astype("<i2").tofile(os.path.join(sd_, "foule.raw"))
     shutil.copy(os.path.join(os.path.dirname(os.path.abspath(__file__)), "sons", "annonce_paris.raw"), os.path.join(sd_, "annonce.raw"))   # v44c     # v44b : « et le son des spectateurs »
     if os.path.exists(MUSIQUE):                                                                          # v45d : chanson (locale)
         shutil.copy(MUSIQUE, os.path.join(sd_, "musique.raw"))
