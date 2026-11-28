@@ -10,7 +10,7 @@ Fait (pages 256 x 512, dessin a chaque image). Texte ASCII expres.
 var TD_A = mx.read_texture("@USLANDParisSupercross2026/statue/paris/direct/direct_a.seq");
 var TD_B = mx.read_texture("@USLANDParisSupercross2026/statue/paris/direct/direct_b.seq");
 var TD_W = 256, TD_H = 512;
-var TD_N = { h: 26, c: {"A": [1, 0, 16], "B": [18, 0, 15], "C": [34, 0, 15], "D": [50, 0, 15], "E": [66, 0, 14], "F": [81, 0, 13], "G": [95, 0, 16], "H": [112, 0, 16], "I": [129, 0, 9], "J": [139, 0, 13], "K": [153, 0, 17], "L": [171, 0, 13], "M": [185, 0, 18], "N": [204, 0, 16], "O": [221, 0, 16], "P": [238, 0, 14], "Q": [1, 26, 16], "R": [18, 26, 16], "S": [35, 26, 14], "T": [50, 26, 14], "U": [65, 26, 16], "V": [82, 26, 16], "W": [99, 26, 21], "X": [121, 26, 16], "Y": [138, 26, 16], "Z": [155, 26, 14], "0": [170, 26, 13], "1": [184, 26, 13], "2": [198, 26, 13], "3": [212, 26, 13], "4": [226, 26, 13], "5": [240, 26, 13], "6": [1, 52, 13], "7": [15, 52, 13], "8": [29, 52, 13], "9": [43, 52, 13], "-": [57, 52, 8], "'": [66, 52, 7], ".": [74, 52, 8]} };
+var TD_N = { h: 26, c: {"A": [1, 0, 16], "B": [18, 0, 15], "C": [34, 0, 15], "D": [50, 0, 15], "E": [66, 0, 14], "F": [81, 0, 13], "G": [95, 0, 16], "H": [112, 0, 16], "I": [129, 0, 9], "J": [139, 0, 13], "K": [153, 0, 17], "L": [171, 0, 13], "M": [185, 0, 18], "N": [204, 0, 16], "O": [221, 0, 16], "P": [238, 0, 14], "Q": [1, 26, 16], "R": [18, 26, 16], "S": [35, 26, 14], "T": [50, 26, 14], "U": [65, 26, 16], "V": [82, 26, 16], "W": [99, 26, 21], "X": [121, 26, 16], "Y": [138, 26, 16], "Z": [155, 26, 14], "0": [170, 26, 13], "1": [184, 26, 13], "2": [198, 26, 13], "3": [212, 26, 13], "4": [226, 26, 13], "5": [240, 26, 13], "6": [1, 52, 13], "7": [15, 52, 13], "8": [29, 52, 13], "9": [43, 52, 13], "-": [57, 52, 8], "'": [66, 52, 7], ".": [74, 52, 8], ":": [83, 52, 8], "+": [92, 52, 13]} };
 var TD_P = { h: 26, c: {"0": [1, 78, 13], "1": [15, 78, 13], "2": [29, 78, 13], "3": [43, 78, 13], "4": [57, 78, 13], "5": [71, 78, 13], "6": [85, 78, 13], "7": [99, 78, 13], "8": [113, 78, 13], "9": [127, 78, 13], ".": [141, 78, 8], "-": [150, 78, 8]} };
 var TD_D = { h: 26, c: {"0": [1, 104, 13], "1": [15, 104, 13], "2": [29, 104, 13], "3": [43, 104, 13], "4": [57, 104, 13], "5": [71, 104, 13], "6": [85, 104, 13], "7": [99, 104, 13], "8": [113, 104, 13], "9": [127, 104, 13]} };
 var TD_T = { h: 56, c: {"0": [1, 130, 25], "1": [27, 130, 25], "2": [53, 130, 25], "3": [79, 130, 25], "4": [105, 130, 25], "5": [131, 130, 25], "6": [157, 130, 25], "7": [183, 130, 25], "8": [209, 130, 25], "9": [1, 186, 25], ":": [27, 186, 14], "+": [42, 186, 25], "L": [68, 186, 25]} };
@@ -99,8 +99,16 @@ function td_dessine(secs) {
     td_tex = TD_A;
     mx.begin_custom_frame(TD_A);
     td_cp(0, 0, 0, 0, 0, TD_W, TD_H);
-    s = td_haut();
-    td_txt(TD_T, TD_W / 2 - td_larg(TD_T, s) / 2, 168, s);
+    s = ev_ecran();                                           /* v44 : holeshot / vainqueur / recompenses a la place du temps */
+    if (s) {
+        td_txt(TD_N, TD_W / 2 - td_larg(TD_N, s[0]) / 2, EV_Y[0], s[0]);
+        td_txt(TD_P, TD_W / 2 - (td_larg(TD_P, s[1]) + 8 + td_larg(TD_N, s[2])) / 2, EV_Y[1], s[1]);
+        td_txt(TD_N, TD_W / 2 - (td_larg(TD_P, s[1]) + 8 + td_larg(TD_N, s[2])) / 2 + td_larg(TD_P, s[1]) + 8, EV_Y[1], s[2]);
+        td_txt(TD_N, TD_W / 2 - td_larg(TD_N, s[3]) / 2, EV_Y[2], s[3]);
+    } else {
+        s = td_haut();
+        td_txt(TD_T, TD_W / 2 - td_larg(TD_T, s) / 2, 168, s);
+    }
     td_rangees(256, 0, 8);
     mx.end_custom_frame(TD_A);
     td_tex = TD_B;
@@ -111,12 +119,109 @@ function td_dessine(secs) {
     mx.end_custom_frame(TD_B);
 }
 function td_image(secs) {
+    try { ev_maj(); } catch (e) { mx.message("evenements : " + e.toString()); }
     try { td_dessine(secs); } catch (e) { mx.message("classement : " + e.toString()); }
     td_prev(secs);
 }
 var td_prev = mx.frame_handler;
 if (!td_prev) td_prev = function (s) {};
 mx.frame_handler = td_image;
+
+/*
+USLAND Paris - evenements de course (code USLAND, v44) : son de la grille, holeshot (ecran + public), vainqueur et recompenses
+de fin de manche sur l'ecran geant (vainqueur, holeshot, hard charger, meilleur tour), public sur les chutes du top 3 et les
+bagarres (depassements dans le top 3). Texte ASCII expres.
+*/
+var EV_Y = [164, 189, 213];
+var EV_HS_INDEX = 2;
+var EV_HS_DUREE = 10.0, EV_ROT = 5.0, EV_APRES_DEPART = 20.0, EV_PAUSE_PUBLIC = 10.0;
+var EV_FIN_TOURS = mx.get_finish_laps(), EV_FIN_TEMPS = mx.get_finish_time();
+function ev_son(f, vol, freq) {
+    var i = mx.add_sound(f);
+    if (i >= 0) { mx.set_sound_freq(i, freq); mx.set_sound_vol(i, vol); mx.set_sound_loop(i, 0); }
+    return i;
+}
+var EV_S_GRILLE = ev_son("@USLANDParisSupercross2026/js/sounds/grille.raw", 1.5, 44100);
+var EV_S_PUBLIC = ev_son("@USLANDParisSupercross2026/js/sounds/public.raw", 4.0, 44100);
+var EV_S_OOH = ev_son("@USLANDParisSupercross2026/js/sounds/public.raw", 4.0, 33075);
+var ev_p = [0, 0, 0], ev_r = [1, 0, 0, 0, 1, 0, 0, 0, 1];
+var ev_d = -2, ev_grille = -1, ev_hs = -1, ev_hs_t = -1, ev_fin_t = -1, ev_tour_temps = -1, ev_public_t = -100;
+var ev_top = [], ev_bas = {}, ev_prec_s = -1, ev_rec = null, ev_rec_t = -1;
+
+function ev_joue(i) { if (i >= 0) { mx.set_sound_pos(i, ev_p[0], ev_p[1], ev_p[2]); mx.start_sound(i); } }
+function ev_public(i) { if (mx.seconds - ev_public_t >= EV_PAUSE_PUBLIC) { ev_public_t = mx.seconds; ev_joue(i); } }
+function ev_nom(slot) { return td_nom(mx.get_rider_name(slot)); }
+function ev_num(slot) { return mx.get_rider_number(slot).toString() + " -"; }
+function ev_reset() { ev_hs = -1; ev_hs_t = -1; ev_fin_t = -1; ev_tour_temps = -1; ev_top = []; ev_bas = {}; ev_rec = null; ev_rec_t = -1; }
+function ev_tours_course() {
+    if (EV_FIN_TEMPS > 0) return ev_tour_temps >= 0 ? ev_tour_temps + 1 + EV_FIN_TOURS : 1000000;
+    return EV_FIN_TOURS > 0 ? EV_FIN_TOURS : 1000000;
+}
+function ev_temps(t) { var m = Math.floor(t / 60), s = t - 60 * m; return m + ":" + (s < 10 ? "0" : "") + s.toFixed(1); }
+function ev_recompenses(o) {
+    var i, j, k, n, t, t1, t2, r = {}, l1 = mx.lap_to_index(1), dep = [], best = 1e9;
+    r.vainqueur = o[0].slot; r.holeshot = ev_hs;
+    /* hard charger : places gagnees entre la fin du 1er tour (ordre de passage sur la ligne) et maintenant */
+    for (i = 0; i < o.length; i++) { t = mx.get_timing(o[i].slot, l1); if (t >= 0) dep.push([t, o[i].slot]); }
+    dep.sort(function (a, b) { return a[0] - b[0]; });
+    r.charger = -1; r.gain = 0;
+    for (j = 0; j < dep.length; j++)
+        for (i = 0; i < o.length; i++) if (o[i].slot == dep[j][1] && j - i > r.gain) { r.gain = j - i; r.charger = o[i].slot; }
+    /* meilleur tour : tours complets a partir du 2e (le 1er part de la grille) */
+    r.mt = -1;
+    for (i = 0; i < o.length; i++) {
+        n = mx.index_to_lap(o[i].position);
+        for (k = 1; k < n; k++) {
+            t1 = mx.get_timing(o[i].slot, mx.lap_to_index(k)); t2 = mx.get_timing(o[i].slot, mx.lap_to_index(k + 1));
+            if (t1 >= 0 && t2 > t1 && t2 - t1 < best) { best = t2 - t1; r.mt = o[i].slot; }
+        }
+    }
+    r.mt_t = best;
+    return r;
+}
+function ev_maj() {
+    var d = mx.get_gate_drop_time(), o, i, tour, top;
+    mx.get_camera_location(ev_p, ev_r);
+    if (mx.seconds < ev_prec_s) { ev_reset(); ev_grille = -1; }          /* retour en arriere (replay) */
+    ev_prec_s = mx.seconds;
+    if (d != ev_d) { ev_d = d; ev_reset(); }                          /* nouvelle course */
+    if (d < 0 || mx.seconds < d) return;
+    if (ev_grille != d && mx.seconds < d + 1.0) { ev_grille = d; ev_joue(EV_S_GRILLE); }
+    o = mx.get_running_order();
+    if (!o.length) return;
+    if (ev_hs < 0 && o[0].position >= EV_HS_INDEX) { ev_hs = o[0].slot; ev_hs_t = mx.seconds; ev_public(EV_S_PUBLIC); }
+    tour = mx.index_to_lap(o[0].position);
+    if (EV_FIN_TEMPS > 0 && ev_tour_temps < 0 && mx.seconds - d >= EV_FIN_TEMPS) ev_tour_temps = tour;
+    if (ev_fin_t < 0 && o[0].position >= 1 && tour >= ev_tours_course()) { ev_fin_t = mx.seconds; ev_public_t = -100; ev_public(EV_S_PUBLIC); }
+    if (ev_fin_t >= 0) {
+        if (ev_rec_t < 0 || mx.seconds - ev_rec_t >= 1.0) { ev_rec = ev_recompenses(o); ev_rec_t = mx.seconds; }
+        return;
+    }
+    if (mx.seconds - d < EV_APRES_DEPART) return;
+    top = [];
+    for (i = 0; i < 3 && i < o.length; i++) {
+        top.push(o[i].slot);
+        if (mx.get_rider_down(o[i].slot)) {                           /* chute dans le top 3 */
+            if (!ev_bas[o[i].slot]) { ev_bas[o[i].slot] = 1; ev_public(EV_S_OOH); }
+        } else ev_bas[o[i].slot] = 0;
+    }
+    if (ev_top.length == top.length)                                  /* bagarre : depassement dans le top 3 */
+        for (i = 0; i < top.length; i++) if (top[i] != ev_top[i]) { ev_public(EV_S_PUBLIC); break; }
+    ev_top = top;
+}
+function ev_ecran() {                                                 /* [titre, numero, nom, valeur] ou null (temps de course) */
+    var k, r = ev_rec, l = [];
+    if (ev_fin_t >= 0 && r) {
+        l.push(["WINNER", ev_num(r.vainqueur), ev_nom(r.vainqueur), ""]);
+        if (r.holeshot >= 0) l.push(["HOLESHOT", ev_num(r.holeshot), ev_nom(r.holeshot), ""]);
+        if (r.charger >= 0) l.push(["HARD CHARGER", ev_num(r.charger), ev_nom(r.charger), "+" + r.gain + " PLACES"]);
+        if (r.mt >= 0) l.push(["FASTEST LAP", ev_num(r.mt), ev_nom(r.mt), ev_temps(r.mt_t)]);
+        k = Math.floor((mx.seconds - ev_fin_t) / EV_ROT) % l.length;
+        return l[k];
+    }
+    if (ev_hs >= 0 && mx.seconds - ev_hs_t < EV_HS_DUREE) return ["HOLESHOT", ev_num(ev_hs), ev_nom(ev_hs), ""];
+    return null;
+}
 
 /*
 USLAND Paris - boudins de la ligne de depart : place 0 de 0 a 20 s apres la chute de la grille, puis place 1

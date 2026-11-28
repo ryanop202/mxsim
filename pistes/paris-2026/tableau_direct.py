@@ -31,7 +31,7 @@ NUM_X = 55                              # numéro (rose)
 NAME_X = 116                            # nom (blanc)
 NAME_MAX = 9
 FONT_B = r"C:/Windows/Fonts/ariblk.ttf"     # Arial Black (gras, comme l'habillage TV)
-NOM = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-'."
+NOM = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-'.:+"   # v44 : « : » et « + » (temps du meilleur tour, places gagnées)
 NUM = "0123456789.-"                    # v43d : « - » après le numéro (était « . »)
 POS = "0123456789"
 TEMPS = "0123456789:+L"
@@ -44,6 +44,110 @@ MARQUES = [(r"^crf?[0-9]+", "honda"), (r"^[0-9]+sx", "ktm"), (r"^kx[0-9]+", "kaw
 PANNEAUX = [("a", 0, None), ("a", 256, 1), ("b", 0, 9), ("b", 256, 17)]
 TIME_BOX = (16, 150, 240, 240)          # case du temps dans le panneau 1 (px du carré)
 TIME_Y = 168
+# v44 (« holeshot avec le nom du pilote sur le grand écran ; à l'arrivée le vainqueur ; les récompenses en fin de manche ; son de la
+# grille ; le public sur les chutes et les bagarres ; refais notre propre code ») : module d'événements (code USLAND, écrit ici)
+EV_Y = (164, 189, 213)                  # 3 lignes dans la case du temps, sous son trait blanc (y 159-162) : titre, numéro + nom, valeur
+EV_HS_INDEX = 2                         # holeshot : 1er à passer 2 portes (porte 28, entrée du 1er virage ; la 27 est au milieu de la ligne droite)
+EV_VOL = dict(grille=1.5, public=4.0, ooh=4.0)   # sons RF (pack sx2026) : clameur rms ~1100 (RF la joue à 25), grille rms ~2400
+SONS_RF = os.path.join(os.path.dirname(os.path.dirname(HERE)), "commun", "assets", "sons_rf")
+EV_JS = r"""
+/*
+USLAND Paris - evenements de course (code USLAND, v44) : son de la grille, holeshot (ecran + public), vainqueur et recompenses
+de fin de manche sur l'ecran geant (vainqueur, holeshot, hard charger, meilleur tour), public sur les chutes du top 3 et les
+bagarres (depassements dans le top 3). Texte ASCII expres.
+*/
+var EV_Y = [EVY0, EVY1, EVY2];
+var EV_HS_INDEX = EVHS;
+var EV_HS_DUREE = 10.0, EV_ROT = 5.0, EV_APRES_DEPART = 20.0, EV_PAUSE_PUBLIC = 10.0;
+var EV_FIN_TOURS = mx.get_finish_laps(), EV_FIN_TEMPS = mx.get_finish_time();
+function ev_son(f, vol, freq) {
+    var i = mx.add_sound(f);
+    if (i >= 0) { mx.set_sound_freq(i, freq); mx.set_sound_vol(i, vol); mx.set_sound_loop(i, 0); }
+    return i;
+}
+var EV_S_GRILLE = ev_son("@FOLDER/js/sounds/grille.raw", EVVG, 44100);
+var EV_S_PUBLIC = ev_son("@FOLDER/js/sounds/public.raw", EVVP, 44100);
+var EV_S_OOH = ev_son("@FOLDER/js/sounds/public.raw", EVVO, 33075);
+var ev_p = [0, 0, 0], ev_r = [1, 0, 0, 0, 1, 0, 0, 0, 1];
+var ev_d = -2, ev_grille = -1, ev_hs = -1, ev_hs_t = -1, ev_fin_t = -1, ev_tour_temps = -1, ev_public_t = -100;
+var ev_top = [], ev_bas = {}, ev_prec_s = -1, ev_rec = null, ev_rec_t = -1;
+
+function ev_joue(i) { if (i >= 0) { mx.set_sound_pos(i, ev_p[0], ev_p[1], ev_p[2]); mx.start_sound(i); } }
+function ev_public(i) { if (mx.seconds - ev_public_t >= EV_PAUSE_PUBLIC) { ev_public_t = mx.seconds; ev_joue(i); } }
+function ev_nom(slot) { return td_nom(mx.get_rider_name(slot)); }
+function ev_num(slot) { return mx.get_rider_number(slot).toString() + " -"; }
+function ev_reset() { ev_hs = -1; ev_hs_t = -1; ev_fin_t = -1; ev_tour_temps = -1; ev_top = []; ev_bas = {}; ev_rec = null; ev_rec_t = -1; }
+function ev_tours_course() {
+    if (EV_FIN_TEMPS > 0) return ev_tour_temps >= 0 ? ev_tour_temps + 1 + EV_FIN_TOURS : 1000000;
+    return EV_FIN_TOURS > 0 ? EV_FIN_TOURS : 1000000;
+}
+function ev_temps(t) { var m = Math.floor(t / 60), s = t - 60 * m; return m + ":" + (s < 10 ? "0" : "") + s.toFixed(1); }
+function ev_recompenses(o) {
+    var i, j, k, n, t, t1, t2, r = {}, l1 = mx.lap_to_index(1), dep = [], best = 1e9;
+    r.vainqueur = o[0].slot; r.holeshot = ev_hs;
+    /* hard charger : places gagnees entre la fin du 1er tour (ordre de passage sur la ligne) et maintenant */
+    for (i = 0; i < o.length; i++) { t = mx.get_timing(o[i].slot, l1); if (t >= 0) dep.push([t, o[i].slot]); }
+    dep.sort(function (a, b) { return a[0] - b[0]; });
+    r.charger = -1; r.gain = 0;
+    for (j = 0; j < dep.length; j++)
+        for (i = 0; i < o.length; i++) if (o[i].slot == dep[j][1] && j - i > r.gain) { r.gain = j - i; r.charger = o[i].slot; }
+    /* meilleur tour : tours complets a partir du 2e (le 1er part de la grille) */
+    r.mt = -1;
+    for (i = 0; i < o.length; i++) {
+        n = mx.index_to_lap(o[i].position);
+        for (k = 1; k < n; k++) {
+            t1 = mx.get_timing(o[i].slot, mx.lap_to_index(k)); t2 = mx.get_timing(o[i].slot, mx.lap_to_index(k + 1));
+            if (t1 >= 0 && t2 > t1 && t2 - t1 < best) { best = t2 - t1; r.mt = o[i].slot; }
+        }
+    }
+    r.mt_t = best;
+    return r;
+}
+function ev_maj() {
+    var d = mx.get_gate_drop_time(), o, i, tour, top;
+    mx.get_camera_location(ev_p, ev_r);
+    if (mx.seconds < ev_prec_s) { ev_reset(); ev_grille = -1; }          /* retour en arriere (replay) */
+    ev_prec_s = mx.seconds;
+    if (d != ev_d) { ev_d = d; ev_reset(); }                          /* nouvelle course */
+    if (d < 0 || mx.seconds < d) return;
+    if (ev_grille != d && mx.seconds < d + 1.0) { ev_grille = d; ev_joue(EV_S_GRILLE); }
+    o = mx.get_running_order();
+    if (!o.length) return;
+    if (ev_hs < 0 && o[0].position >= EV_HS_INDEX) { ev_hs = o[0].slot; ev_hs_t = mx.seconds; ev_public(EV_S_PUBLIC); }
+    tour = mx.index_to_lap(o[0].position);
+    if (EV_FIN_TEMPS > 0 && ev_tour_temps < 0 && mx.seconds - d >= EV_FIN_TEMPS) ev_tour_temps = tour;
+    if (ev_fin_t < 0 && o[0].position >= 1 && tour >= ev_tours_course()) { ev_fin_t = mx.seconds; ev_public_t = -100; ev_public(EV_S_PUBLIC); }
+    if (ev_fin_t >= 0) {
+        if (ev_rec_t < 0 || mx.seconds - ev_rec_t >= 1.0) { ev_rec = ev_recompenses(o); ev_rec_t = mx.seconds; }
+        return;
+    }
+    if (mx.seconds - d < EV_APRES_DEPART) return;
+    top = [];
+    for (i = 0; i < 3 && i < o.length; i++) {
+        top.push(o[i].slot);
+        if (mx.get_rider_down(o[i].slot)) {                           /* chute dans le top 3 */
+            if (!ev_bas[o[i].slot]) { ev_bas[o[i].slot] = 1; ev_public(EV_S_OOH); }
+        } else ev_bas[o[i].slot] = 0;
+    }
+    if (ev_top.length == top.length)                                  /* bagarre : depassement dans le top 3 */
+        for (i = 0; i < top.length; i++) if (top[i] != ev_top[i]) { ev_public(EV_S_PUBLIC); break; }
+    ev_top = top;
+}
+function ev_ecran() {                                                 /* [titre, numero, nom, valeur] ou null (temps de course) */
+    var k, r = ev_rec, l = [];
+    if (ev_fin_t >= 0 && r) {
+        l.push(["WINNER", ev_num(r.vainqueur), ev_nom(r.vainqueur), ""]);
+        if (r.holeshot >= 0) l.push(["HOLESHOT", ev_num(r.holeshot), ev_nom(r.holeshot), ""]);
+        if (r.charger >= 0) l.push(["HARD CHARGER", ev_num(r.charger), ev_nom(r.charger), "+" + r.gain + " PLACES"]);
+        if (r.mt >= 0) l.push(["FASTEST LAP", ev_num(r.mt), ev_nom(r.mt), ev_temps(r.mt_t)]);
+        k = Math.floor((mx.seconds - ev_fin_t) / EV_ROT) % l.length;
+        return l[k];
+    }
+    if (ev_hs >= 0 && mx.seconds - ev_hs_t < EV_HS_DUREE) return ["HOLESHOT", ev_num(ev_hs), ev_nom(ev_hs), ""];
+    return null;
+}
+""".replace("EVY0", str(EV_Y[0])).replace("EVY1", str(EV_Y[1])).replace("EVY2", str(EV_Y[2])).replace("EVHS", str(EV_HS_INDEX)) \
+   .replace("EVVG", "%.1f" % EV_VOL["grille"]).replace("EVVP", "%.1f" % EV_VOL["public"]).replace("EVVO", "%.1f" % EV_VOL["ooh"])
 
 
 def _police(im, chars, path, px, gh, col, y0):
@@ -108,7 +212,7 @@ def _fonds(PD):
     return A, B
 
 
-def _js(N, P, D, T, by, tex_a, tex_b):
+def _js(N, P, D, T, by, tex_a, tex_b, folder=""):
     bandes = {k: i for i, k in enumerate(BANDES)}
     return r"""/*
 USLAND Paris by Ryan v39b - classement en direct sur tout l'ecran geant (DA de la retransmission Supercross Paris).
@@ -206,8 +310,16 @@ function td_dessine(secs) {
     td_tex = TD_A;
     mx.begin_custom_frame(TD_A);
     td_cp(0, 0, 0, 0, 0, TD_W, TD_H);
-    s = td_haut();
-    td_txt(TD_T, TD_W / 2 - td_larg(TD_T, s) / 2, %(ty)d, s);
+    s = ev_ecran();                                           /* v44 : holeshot / vainqueur / recompenses a la place du temps */
+    if (s) {
+        td_txt(TD_N, TD_W / 2 - td_larg(TD_N, s[0]) / 2, EV_Y[0], s[0]);
+        td_txt(TD_P, TD_W / 2 - (td_larg(TD_P, s[1]) + 8 + td_larg(TD_N, s[2])) / 2, EV_Y[1], s[1]);
+        td_txt(TD_N, TD_W / 2 - (td_larg(TD_P, s[1]) + 8 + td_larg(TD_N, s[2])) / 2 + td_larg(TD_P, s[1]) + 8, EV_Y[1], s[2]);
+        td_txt(TD_N, TD_W / 2 - td_larg(TD_N, s[3]) / 2, EV_Y[2], s[3]);
+    } else {
+        s = td_haut();
+        td_txt(TD_T, TD_W / 2 - td_larg(TD_T, s) / 2, %(ty)d, s);
+    }
     td_rangees(256, 0, %(npan)d);
     mx.end_custom_frame(TD_A);
     td_tex = TD_B;
@@ -218,6 +330,7 @@ function td_dessine(secs) {
     mx.end_custom_frame(TD_B);
 }
 function td_image(secs) {
+    try { ev_maj(); } catch (e) { mx.message("evenements : " + e.toString()); }
     try { td_dessine(secs); } catch (e) { mx.message("classement : " + e.toString()); }
     td_prev(secs);
 }
@@ -226,7 +339,7 @@ if (!td_prev) td_prev = function (s) {};
 mx.frame_handler = td_image;
 """ % dict(ta=tex_a, tb=tex_b, pw=PW, ph=PH, N=json.dumps(N), P=json.dumps(P), D=json.dumps(D), T=json.dumps(T), bandes=json.dumps(bandes),
            by=by, marques=", ".join('[/%s/, "%s"]' % (r, k) for r, k in MARQUES), nmax=NAME_MAX, rh=ROW_H, px0=POS_X0, px1=POS_X1,
-           bx0=BAR_X0, bw=BAR_X1 - BAR_X0, nx=NUM_X, nmx=NAME_X, ty=TIME_Y, npan=NPAN)
+           bx0=BAR_X0, bw=BAR_X1 - BAR_X0, nx=NUM_X, nmx=NAME_X, ty=TIME_Y, npan=NPAN) + EV_JS.replace("@FOLDER", "@" + folder)
 
 
 def apercu(OUT, path_png, ordre=None, temps="04:32 + 1L"):
@@ -293,6 +406,11 @@ def make(OUT, FOLDER, x, z, yaw, apercu_png=None):
         PD.write_jm(os.path.join(D, "ecran_%s.jm" % t_), [(PD.UNLIT, m)])
         lines.append("[%.6f 0.000000 %.6f] %.6f @%s/%s/ecran_%s.jm @%s/%s/direct_%s.seq null" % (x, z, yaw, FOLDER, SUB, t_, FOLDER, SUB, t_))
     ta, tb = ("@%s/%s/direct_%s.seq" % (FOLDER, SUB, t_) for t_ in ("a", "b"))
-    open(os.path.join(OUT, "frills.js"), "w", newline="\n", encoding="ascii").write(_js(N, P, Dg, T, by, ta, tb))
+    # v44 : sons des événements (pack sx2026 de RF : grille qui tombe, clameur du public)
+    import shutil
+    sd_ = os.path.join(OUT, "js", "sounds"); os.makedirs(sd_, exist_ok=True)
+    shutil.copy(os.path.join(SONS_RF, "gatedrop.raw"), os.path.join(sd_, "grille.raw"))
+    shutil.copy(os.path.join(SONS_RF, "crowdroar.raw"), os.path.join(sd_, "public.raw"))
+    open(os.path.join(OUT, "frills.js"), "w", newline="\n", encoding="ascii").write(_js(N, P, Dg, T, by, ta, tb, FOLDER))
     ap = apercu(OUT, apercu_png or os.path.join(D, "..", "apercu_direct.png"))
     return lines, dict(lettres=[len(N), len(P), len(Dg), len(T)], panneaux=len(PANNEAUX), panneau_ft=[round(wp, 1), round(hs, 1)], apercu=ap)

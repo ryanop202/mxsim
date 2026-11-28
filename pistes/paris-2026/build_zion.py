@@ -1685,8 +1685,24 @@ def export_zion(*a, **k):
     BP.REPORT['sable_hors_pentes'] = sable_hors_pentes(BP.OUT, BP.FOLDER)     # v42c : plus de sable étiré sur la face de l'appel du Milwaukee
     if RECADRE:
         BP.REPORT['recadrage'] = recadrer(BP.OUT, *RECADRE)           # v42b : terrain collé à l'arène (comme RF) -> minimap ~1,7x plus grande
+    BP.REPORT['portes'] = portes_ryan(BP.OUT)                         # v44b : portes de chrono refaites par Ryan dans l'éditeur
     BP.REPORT['taille'] = alleger(BP.OUT, BP.FOLDER)                  # v42 : < 200 Mo (fichiers inutilisés enlevés, .jm -> .jm.gz)
     BP.REPORT['noms'] = renommer(BP.OUT, BP.FOLDER)                   # v43b : RF / A1 / ZION / Conway -> USLAND (dossier de la piste seulement)
+
+
+PORTES_RYAN = os.path.join(os.path.dirname(os.path.abspath(__file__)), "portes_ryan.txt")
+
+
+def portes_ryan(OUT):
+    """v44b (Ryan : « j'ai remis à jour les gates pour qu'elles soient justes, reprends ce que j'ai mis dans mon jeu ») : le bloc
+    checkpoints de timing_gates remplacé par celui que Ryan a réglé dans l'éditeur (coordonnées finales, après recadrer). Même nombre de
+    portes, même ordre (firstlap / normallap inchangés)."""
+    p = os.path.join(OUT, "timing_gates"); L = open(p).read().split(chr(10))
+    i0, i1 = L.index("checkpoints:"), L.index("firstlap:")
+    R = [l for l in open(PORTES_RYAN).read().split(chr(10)) if l.strip()]
+    assert len(R) == i1 - i0 - 1, ("portes de Ryan : %d au lieu de %d" % (len(R), i1 - i0 - 1))
+    open(p, "w", newline=chr(10)).write(chr(10).join(L[:i0 + 1] + R + L[i1:]))
+    return len(R)
 
 
 CHANT = False      # v42d : chant de la grille coupé (« il ne marche pas »)
