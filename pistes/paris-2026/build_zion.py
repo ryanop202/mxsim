@@ -24,8 +24,8 @@ import layout_paris as LP         # noqa: E402
 from PIL import Image             # noqa: E402
 from scipy.ndimage import map_coordinates   # noqa: E402
 
-BP.FOLDER = os.environ.get("PARIS_FOLDER", "USLANDParis")   # v22d (« renomme-la usland paris ») ; était USLAND2026SupercrossParisZion ; v39 : PARIS_FOLDER=USLANDParisbyRyan (version de Ryan, nom de Bazo v38e)
-BP.DESC = os.environ.get("PARIS_DESC", "USLAND Paris")      # v22d (« renomme-la usland paris ») ; v39 : PARIS_DESC="USLAND Paris by Ryan"
+BP.FOLDER = os.environ.get("PARIS_FOLDER", "USLANDParisSupercross2026")   # v45j : dossier de la piste (nom en jeu : BP.DESC) ; avant : "USLANDParis"
+BP.DESC = os.environ.get("PARIS_DESC", "USLAND: 2026 SxTour rd1 Paris Supercross")   # v45j (« rename in game ») ; avant : "USLAND Paris"      # v22d (« renomme-la usland paris ») ; v39 : PARIS_DESC="USLAND Paris by Ryan"
 BP.OUT = os.path.join(BP.ROOT, "tracks", BP.FOLDER)
 BP.AP = os.path.join(HERE, "apercu_zion")
 BP.SAND_V25 = True                 # v25e : sable en bande droite + vaguelettes
@@ -42,6 +42,10 @@ LAT = dict(T=(34.0, 7.0), W=(40.0, 2.2))      # dessus plat, flanc (ft) : obstac
 #   gardant la forme des bosses ») : obstacles à la coupe mesurée sur RF Anaheim 1 (dessus 34 ft, flancs 7 ft ; était 35,1 / 5,2)
 ZION_R = 28.3
 GRATE_W = 3.1                               # v41c : largeur d'une grate de départ (Saint-Georges : 3,1 ft, pas 4 ft)
+# v45j (vue de dessus de l'utilisateur, trait rouge sur la ligne droite de départ, entre les boudins Monster et Moto Verte) : le signaleur
+# du panneau 30 s se tient dans la ligne droite (z 577) et part en courant vers le côté sud, au-delà des boudins (z 612), puis disparaît
+SIGNALEUR_30S = ((492.0, 577.0), (492.0, 612.0))   # (où il se tient, où il court) en ft, avant le recadrage ; None = derrière les grilles
+TOIT_EDITEUR = False   # v45j : le dessus du toit reste (v42b-v45i : enlevé pour voir la piste dans l'éditeur)
 MUR_MILWAUKEE_F = 0.75                      # v45b : mur du Milwaukee aux 3/4 du plat entre le Milwaukee et la bosse (trait rouge de l'utilisateur)
 MUR_AMV_BAS = 15.8                          # v45d (« monte-le d'1 m ») : 12,5 -> 15,8 ; v45c : mur entre la petite table et l'appel AMV, bas à 12,5 ft du sol plat (comme v38 : on roule dessous) ; v45b : 11 ft sur la face
 MUR_MILWAUKEE_RECUL = 5.5                   # v45c : mur du Milwaukee 5,5 ft avant le milieu de la bosse (vers la réception du Milwaukee), même hauteur
@@ -1244,6 +1248,8 @@ def deco_v21(OUT, FOLDER, combos):
     open(sq_f, "w", newline=chr(10)).write(open(sq_f).read().replace("@USLAND2026SaintGeorgesbyBazo/", "@%s/" % FOLDER))
     os.makedirs(os.path.join(OUT, "billboard"), exist_ok=True); Image.new('RGBA', (64, 64), (0, 0, 0, 0)).save(os.path.join(OUT, "billboard", "blank.png"))
     half_ = (LP.N_GATES - 1) / 2 * LP.GATE_PITCH; b1 = G0 - f0 * 25 + r0 * (half_ - 15); b2 = G0 - f0 * 25 - r0 * (half_ - 15)
+    if SIGNALEUR_30S:   # v45j : le signaleur du panneau 30 s au milieu de la ligne droite de départ, part en courant sur le côté et disparaît
+        b1, b2 = (np.array(q, float) for q in SIGNALEUR_30S)
     ff = "@%s/ext/2024Bh1Conway/flaggerfiles/" % FOLDER
     open(os.path.join(OUT, "flaggers"), "w", newline=chr(10)).write(chr(10).join([
         "[%.6f 0.000 %.6f]" % tuple(b1), "[%.6f 0.000 %.6f]" % tuple(b2), "8.4 1", "10", "@30sec_30.png", "@30sec_turn.seq", "@30sec_5.png",
@@ -1739,7 +1745,8 @@ def export_zion(*a, **k):
     import flammes_paris as FLP                                         # v41e : flammes START (chute de grille) et FINISH (1er tour, arrivée)
     BP.REPORT['flammes'] = FLP.flammes(BP.OUT, BP.FOLDER, BP.ROOT)
     BP.REPORT['scripts'] = scripts_uniques(BP.OUT)                    # v42 : un seul script, dans frills.js et nofrills.js
-    BP.REPORT['toit'] = toit_editeur(BP.OUT)                          # v42b : dessus du toit enlevé (l'éditeur voit la piste)
+    if TOIT_EDITEUR:   # v45j (« remets le toit du stade, maintenant qu'on a fait les gates ») : plus enlevé
+        BP.REPORT['toit'] = toit_editeur(BP.OUT)                      # v42b : dessus du toit enlevé (l'éditeur voit la piste)
     BP.REPORT['sable_hors_pentes'] = sable_hors_pentes(BP.OUT, BP.FOLDER)     # v42c : plus de sable étiré sur la face de l'appel du Milwaukee
     if RECADRE:
         BP.REPORT['recadrage'] = recadrer(BP.OUT, *RECADRE)           # v42b : terrain collé à l'arène (comme RF) -> minimap ~1,7x plus grande

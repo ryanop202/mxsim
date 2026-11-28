@@ -176,6 +176,22 @@ def poster_side(asp=None, W=1024, dates=True):
     return _place(im, size), uv
 
 
+SXPARIS = os.path.join(REPO, "pistes", "paris-2026", "refs", "paddock2026", "logos", "supercross_paris.webp")
+
+
+def poster_entree(asp, W=1024):
+    """v45j (Bazo : « les écrans dehors : juste le logo USLAND et le logo Supercross Paris, pas écrit Supercross Paris, pas la date ») :
+    fond de l'écran, logo USLAND en haut, logo Supercross Paris en dessous, sans texte."""
+    size, (cw, ch), uv = _canvas(asp, W)
+    im = _background(cw, ch, glow=0.7)
+    _paste(im, logo_rgba(), (cw * 0.12, ch * 0.08, cw * 0.88, ch * 0.40))
+    sx = np.asarray(Image.open(SXPARIS).convert("RGBA"), float); sx[..., 3] /= 255.0
+    sx[..., 3] *= np.clip((sx[..., :3].max(-1) - 35.0) / 45.0, 0, 1)   # fond sombre du logo enlevé (seul le néon et les lettres restent)
+    ys, xs = np.nonzero(sx[..., 3] > 0.02); sx = sx[ys.min():ys.max() + 1, xs.min():xs.max() + 1]
+    _paste(im, sx, (cw * 0.16, ch * 0.48, cw * 0.84, ch * 0.94))
+    return _place(im, size), uv
+
+
 def led_board(W=2048):
     """Motif du bandeau LED (12,8 x 0,8 m, ratio 16:1) : USLAND | SUPERCROSS PARIS 2026.
     Un seul USLAND par motif : deux USLAND ne sont jamais côte à côte."""
@@ -220,7 +236,7 @@ def build_all(outdir, entrances=()):
     written += ["poster_main.png", "poster_side.png"]
     for w, h in entrances:
         name = entrance_tex(w, h)
-        im, uv = poster_side(aspect((w, h))); im.save(os.path.join(outdir, name)); UV[name] = uv
+        im, uv = poster_entree(aspect((w, h))); im.save(os.path.join(outdir, name)); UV[name] = uv   # v45j : logos seuls ; avant : poster_side
         written.append(name)
     led_board().save(os.path.join(outdir, "led_board-hrepeat.png")); written.append("led_board-hrepeat.png")
     im, uv = sign_interior(); im.save(os.path.join(outdir, "signage_usland.png")); UV["signage_usland.png"] = uv
