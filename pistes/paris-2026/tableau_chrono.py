@@ -23,16 +23,22 @@ FONT_B = r"C:/Windows/Fonts/tahomabd.ttf"
 FOND, LIGNE1, LIGNE2 = (0, 0, 0), (0, 0, 0), (12, 12, 14)
 BLEU_TITRES, BLEU_PLACE, BOITE_NUM = (214, 40, 40), (0, 0, 200), (226, 226, 228)   # v45d (« la ligne des titres en rouge, pas en bleu ») : bandeau rouge
 BLANC, NOIR, VERT, ROUGE, JAUNE = (255, 255, 255), (0, 0, 0), (0, 230, 0), (240, 40, 40), (255, 255, 0)
-N_LIGNES, Y_TITRES, H_TITRES, Y0, H = 10, 22, 17, 41, 19      # lignes du tableau (px de l'écran entier, 256 de haut)
-Y_BAS = Y0 + N_LIGNES * H + 3                                  # ligne du meilleur tour
-GH = 18                                                        # hauteur d'une cellule de lettre
+# v45e (« tu peux aller plus loin que le 10e ; même place que les 10 de la dernière fois, jusqu'en bas de l'écran, toute la largeur ») :
+# 2 moitiés côte à côte (places 1-11 à gauche, 12-22 à droite : les 22 grilles), 11 lignes chacune, toutes les colonnes dans chaque moitié
+# v45f (« non : seulement les 11 qui ont la place, sur toute la longueur, pas 2 colonnes ; espace un peu plus les sections, même le
+# meilleur tour ») : un seul tableau de 11 lignes sur toute la largeur de l'écran, colonnes réparties sur les 4 panneaux
+N_LIGNES, N_MOITIES, MOITIE = 11, 1, 1024
+Y_TITRES, H_TITRES, Y0, H = 20, 16, 38, 17                     # px de l'écran entier (256 de haut)
+Y_BAS = Y0 + N_LIGNES * H + 4                                  # ligne du meilleur tour
+GH = 16                                                        # hauteur d'une cellule de lettre
 TAILLE = 13
-# colonnes (x de l'écran entier 0-1023 ; ancre : g = gauche, d = droite, c = centre) ; chaque colonne dans un seul panneau
-COLS = dict(pos=(8, 36, "c"), num=(42, 80, "c"), nom=(88, 252, "g"),
-            marque=(276, 386, "c"), tours=(400, 470, "c"),
-            total=(526, 630, "d"), ecart=(640, 744, "d"),
-            meill=(780, 884, "d"), tour=(900, 1012, "d"))
+# colonnes (x 0-1023 ; ancre : g = gauche, d = droite, c = centre) ; chaque colonne dans un seul panneau de 256
+COLS = dict(pos=(6, 34, "c"), num=(44, 88, "c"), nom=(100, 252, "g"),
+            marque=(272, 382, "c"), tours=(412, 482, "c"),
+            total=(536, 636, "d"), ecart=(666, 756, "d"),
+            meill=(796, 884, "d"), tour=(924, 1012, "d"))
 TITRES = dict(pos="Pos.", num="N°", nom="Pilote", marque="Marque", tours="Tours", total="Tps total", ecart="Ecart", meill="M. Tour", tour="Tps. tour")
+X_MT_T, X_MT_N, X_MT_P = 90, 166, 272                          # bas : temps, (N° x), nom (panneau 2) : espacés
 X_VERT, X_ROUGE = (780, 884), (900, 1012)                       # haut, panneau 4 : temps écoulé (vert), temps / tours restants (rouge)
 X_MT_LABEL, X_MT = 8, 72                                        # bas, panneau 1 : « Meill TR : » puis temps (numéro) nom
 CH_B = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789:.-+()'éè°"
@@ -53,15 +59,17 @@ def fonds():
     """pages 0 de direct_a / direct_b : bandeau rouge des titres, lignes, colonne bleue, cases blanches des numéros, « Meill TR : »."""
     big = Image.new("RGBA", (1024, 256), FOND + (255,)); d = ImageDraw.Draw(big)
     d.rectangle([0, Y_TITRES, 1023, Y_TITRES + H_TITRES - 1], fill=BLEU_TITRES + (255,))
-    ft = ImageFont.truetype(FONT_B, 12)
-    for k, (x0, x1, a) in COLS.items():
-        xa = (x0 + x1) / 2 if a == "c" else (x0 if a == "g" else x1)
-        d.text((xa, Y_TITRES + H_TITRES / 2), TITRES[k], font=ft, fill=BLANC + (255,), anchor={"c": "mm", "g": "lm", "d": "rm"}[a])
-    for i in range(N_LIGNES):
-        y = Y0 + i * H
-        d.rectangle([0, y, 1023, y + H - 2], fill=(LIGNE1 if i % 2 == 0 else LIGNE2) + (255,))
-        d.rectangle([COLS["pos"][0], y, COLS["pos"][1], y + H - 2], fill=BLEU_PLACE + (255,))
-        d.rectangle([COLS["num"][0], y + 2, COLS["num"][1], y + H - 4], fill=BOITE_NUM + (255,))
+    ft = ImageFont.truetype(FONT_B, 11)
+    for m in range(N_MOITIES):
+        o = m * MOITIE
+        for k, (x0, x1, a) in COLS.items():
+            xa = o + ((x0 + x1) / 2 if a == "c" else (x0 if a == "g" else x1))
+            d.text((xa, Y_TITRES + H_TITRES / 2), TITRES[k], font=ft, fill=BLANC + (255,), anchor={"c": "mm", "g": "lm", "d": "rm"}[a])
+        for i in range(N_LIGNES):
+            y = Y0 + i * H
+            d.rectangle([o, y, o + MOITIE - 4, y + H - 2], fill=(LIGNE1 if i % 2 == 0 else LIGNE2) + (255,))
+            d.rectangle([o + COLS["pos"][0], y, o + COLS["pos"][1], y + H - 2], fill=BLEU_PLACE + (255,))
+            d.rectangle([o + COLS["num"][0], y + 1, o + COLS["num"][1], y + H - 3], fill=BOITE_NUM + (255,))
     d.text((X_MT_LABEL, Y_BAS + GH / 2), "Meill TR :", font=ImageFont.truetype(FONT, TAILLE), fill=JAUNE + (255,), anchor="lm")
     A = Image.new("RGBA", (PW, PH)); B = Image.new("RGBA", (PW, PH))
     for k in range(4):
@@ -98,8 +106,8 @@ def js(polices, tex_a, tex_b):
     """script (ASCII) : dessine le tableau à chaque image ; les écarts / meilleurs tours recalculés 1 fois par seconde."""
     cols = {k: [v[0], v[1], v[2]] for k, v in COLS.items()}
     s = JS
-    for k, v in dict(TA=tex_a, TB=tex_b, POLICES=json.dumps(polices), COLS=json.dumps(cols), NL=str(N_LIGNES), Y0=str(Y0), HL=str(H),
-                     DY=str((H - 1 - GH) // 2), YBAS=str(Y_BAS), XMT=str(X_MT), XV=json.dumps(X_VERT), XR=json.dumps(X_ROUGE),
+    for k, v in dict(TA=tex_a, TB=tex_b, POLICES=json.dumps(polices), COLS=json.dumps(cols), NL=str(N_LIGNES), NM=str(N_MOITIES), MO=str(MOITIE), Y0=str(Y0), HL=str(H),
+                     DY=str((H - 1 - GH) // 2), YBAS=str(Y_BAS), XMT=str(X_MT), XV=json.dumps(X_VERT), XR=json.dumps(X_ROUGE), MT=json.dumps([X_MT_T, X_MT_N, X_MT_P]),
                      YHAUT=str((Y_TITRES - GH) // 2), MARQUES=", ".join('[/%s/, "%s"]' % (r, m) for r, m in MARQUES_JS)).items():
         s = s.replace("@@" + k + "@@", v)
     s.encode("ascii")
@@ -113,8 +121,8 @@ temps ecoule en vert et temps restant en rouge en haut, meilleur tour en bas. Te
 var TC_TEX = [mx.read_texture("@@TA@@"), mx.read_texture("@@TB@@")];
 var TC_F = @@POLICES@@;
 var TC_COLS = @@COLS@@;
-var TC_NL = @@NL@@, TC_Y0 = @@Y0@@, TC_H = @@HL@@, TC_DY = @@DY@@, TC_YBAS = @@YBAS@@, TC_XMT = @@XMT@@, TC_YHAUT = @@YHAUT@@;
-var TC_XV = @@XV@@, TC_XR = @@XR@@;
+var TC_NL = @@NL@@, TC_NM = @@NM@@, TC_MO = @@MO@@, TC_Y0 = @@Y0@@, TC_H = @@HL@@, TC_DY = @@DY@@, TC_YBAS = @@YBAS@@, TC_XMT = @@XMT@@, TC_YHAUT = @@YHAUT@@;
+var TC_XV = @@XV@@, TC_XR = @@XR@@, TC_MT = @@MT@@;
 var TC_MARQUES = [@@MARQUES@@];
 var TC_FIN_TOURS = mx.get_finish_laps(), TC_FIN_TEMPS = mx.get_finish_time();
 var tc_ordre = [], tc_cur = -1, tc_stats = {}, tc_s = -100, tc_mt = [-1, -1];
@@ -137,12 +145,12 @@ function tc_txt(f, x, y, s) {                         /* x, y de l'ecran entier 
         xp += c[2] - 2;
     }
 }
-function tc_col(f, k, y, s) {                         /* texte dans la colonne k (ancre g / d / c), coupe a sa largeur */
+function tc_col(f, k, y, s, o) {                      /* texte dans la colonne k de la moitie qui commence en o, coupe a sa largeur */
     var c = TC_COLS[k], w = c[1] - c[0];
     while (s.length > 1 && tc_larg(f, s) > w) s = s.substring(0, s.length - 1);
-    if (c[2] == "g") tc_txt(f, c[0], y, s);
-    else if (c[2] == "d") tc_txt(f, c[1] - tc_larg(f, s), y, s);
-    else tc_txt(f, (c[0] + c[1]) / 2 - tc_larg(f, s) / 2, y, s);
+    if (c[2] == "g") tc_txt(f, o + c[0], y, s);
+    else if (c[2] == "d") tc_txt(f, o + c[1] - tc_larg(f, s), y, s);
+    else tc_txt(f, o + (c[0] + c[1]) / 2 - tc_larg(f, s) / 2, y, s);
 }
 function td_nom(s) {                                 /* pour le module d'evenements (ev_nom) : dernier mot du nom, 9 lettres */
     var m = s.replace(/\|.*/, "").replace(/^\s+|\s+$/g, "").split(" ");
@@ -201,33 +209,35 @@ function tc_haut() {                                  /* [ecoule (vert), restant
     return [ec, Math.max(0, l).toFixed(0) + " TOURS"];
 }
 function tc_page(t) {
-    var i, r, st, y, s, h, f, mq;
+    var i, r, st, y, s, h, f, mq, o;
     tc_cur = t;
     mx.begin_custom_frame(TC_TEX[t]);
     mx.paste_custom_frame(TC_TEX[t], 0, 0, 0, 0, 0, 1, 1);
     h = tc_haut();
     tc_txt(TC_F.V, TC_XV[1] - tc_larg(TC_F.V, h[0]), TC_YHAUT, h[0]);
     tc_txt(TC_F.R, TC_XR[1] - tc_larg(TC_F.R, h[1]), TC_YHAUT, h[1]);
-    for (i = 0; i < TC_NL && i < tc_ordre.length; i++) {
+    for (i = 0; i < TC_NL * TC_NM && i < tc_ordre.length; i++) {      /* v45e : places 1-11 a gauche, 12-22 a droite */
         r = tc_ordre[i];
         if (r.position < 1) break;
         st = tc_stats[r.slot] || { tours: 0, total: -1, meill: -1, der: -1 };
-        y = TC_Y0 + i * TC_H + TC_DY;
-        tc_col(TC_F.B, "pos", y, (i + 1).toString());
-        tc_col(TC_F.N, "num", y, mx.get_rider_number(r.slot).toString());
-        tc_col(TC_F.B, "nom", y, tc_nom(mx.get_rider_name(r.slot)));
-        mq = tc_marque(mx.get_bike_model(r.slot)); if (mq) tc_col(TC_F.B, "marque", y, mq);
-        tc_col(TC_F.B, "tours", y, st.tours.toString());
-        if (st.total > 0) tc_col(TC_F.B, "total", y, tc_chrono(st.total));
-        tc_col(TC_F.B, "ecart", y, i == 0 ? "-" : tc_ecart(r, tc_ordre[0]));
+        y = TC_Y0 + (i % TC_NL) * TC_H + TC_DY; o = Math.floor(i / TC_NL) * TC_MO;
+        tc_col(TC_F.B, "pos", y, (i + 1).toString(), o);
+        tc_col(TC_F.N, "num", y, mx.get_rider_number(r.slot).toString(), o);
+        tc_col(TC_F.B, "nom", y, tc_nom(mx.get_rider_name(r.slot)), o);
+        mq = tc_marque(mx.get_bike_model(r.slot)); if (mq) tc_col(TC_F.B, "marque", y, mq, o);
+        tc_col(TC_F.B, "tours", y, st.tours.toString(), o);
+        if (st.total > 0) tc_col(TC_F.B, "total", y, tc_chrono(st.total), o);
+        tc_col(TC_F.B, "ecart", y, i == 0 ? "-" : tc_ecart(r, tc_ordre[0]), o);
         f = (st.der > 0 && st.der == st.meill) ? TC_F.V : TC_F.B;           /* record perso au dernier tour : en vert */
-        if (st.meill > 0) tc_col(f, "meill", y, tc_chrono(st.meill));
-        if (st.der > 0) tc_col(f, "tour", y, tc_chrono(st.der));
+        if (st.meill > 0) tc_col(f, "meill", y, tc_chrono(st.meill), o);
+        if (st.der > 0) tc_col(f, "tour", y, tc_chrono(st.der), o);
     }
     if (tc_mt[0] > 0) {
-        s = tc_chrono(tc_mt[0]) + " (N\u00b0 " + mx.get_rider_number(tc_mt[1]) + ") " + tc_nom(mx.get_rider_name(tc_mt[1]));   /* v45d : (N deg 84) */
-        while (s.length > 1 && TC_XMT + tc_larg(TC_F.B, s) > 252) s = s.substring(0, s.length - 1);
-        tc_txt(TC_F.B, TC_XMT, TC_YBAS, s);
+        tc_txt(TC_F.B, TC_MT[0], TC_YBAS, tc_chrono(tc_mt[0]));                                   /* v45f : 3 parties espacees */
+        tc_txt(TC_F.B, TC_MT[1], TC_YBAS, "(N\u00b0 " + mx.get_rider_number(tc_mt[1]) + ")");
+        s = tc_nom(mx.get_rider_name(tc_mt[1]));
+        while (s.length > 1 && TC_MT[2] - 256 + tc_larg(TC_F.B, s) > 250) s = s.substring(0, s.length - 1);
+        tc_txt(TC_F.B, TC_MT[2], TC_YBAS, s);
     }
     mx.end_custom_frame(TC_TEX[t]);
 }
@@ -259,11 +269,11 @@ def apercu(fA, fB, let, polices, path_png):
                 continue
             c = f["c"][ch]; frames[tex].alpha_composite(let.crop((c[0], c[1], c[0] + c[2], c[1] + f["h"])), (int(round(xp)), int(round(y0 + y)))); xp += c[2] - 2
 
-    def col(f, k, y, s):
+    def col(f, k, y, s, o=0):
         x0, x1, a = COLS[k]
         while len(s) > 1 and larg(f, s) > x1 - x0:
             s = s[:-1]
-        txt(f, x0 if a == "g" else (x1 - larg(f, s) if a == "d" else (x0 + x1) / 2 - larg(f, s) / 2), y, s)
+        txt(f, o + (x0 if a == "g" else (x1 - larg(f, s) if a == "d" else (x0 + x1) / 2 - larg(f, s) / 2)), y, s)
     rows = [(84, "COENEN Sacha", "KTM", 8, "5:55.185", "-", "45.025", "45.985", 0), (60, "CLARK Seth", "Honda", 8, "6:00.680", "5.495", "46.016", "46.889", 0),
             (57, "TURNER Jesson", "Yamaha", 8, "6:02.516", "7.331", "45.992", "47.202", 0), (389, "PIETRE Jules", "Yamaha", 8, "6:03.307", "8.122", "46.243", "46.243", 1),
             (41, "HARRISSON Mitchell", "Kawasaki", 8, "6:04.506", "9.321", "46.250", "46.531", 0), (16, "THOMPSON Cole", "Yamaha", 8, "6:06.547", "11.362", "45.922", "45.922", 1),
@@ -271,11 +281,18 @@ def apercu(fA, fB, let, polices, path_png):
             (250, "LEDEAU Julien", "GasGas", 8, "6:15.030", "19.845", "46.552", "49.159", 0), (65, "LOPEZ Yannis", "Husqvarna", 7, "6:18.606", "+1 L", "47.741", "47.815", 0)]
     yh = (Y_TITRES - GH) // 2
     txt(P["V"], X_VERT[1] - larg(P["V"], "00:06:58"), yh, "00:06:58"); txt(P["R"], X_ROUGE[1] - larg(P["R"], "2 TOURS"), yh, "2 TOURS")
-    for i, (num, nom, mq, nt, tot, ec, me, de, vert) in enumerate(rows):
-        y = Y0 + i * H + (H - 1 - GH) // 2; f = P["V"] if vert else P["B"]
-        col(P["B"], "pos", y, str(i + 1)); col(P["N"], "num", y, str(num)); col(P["B"], "nom", y, nom); col(P["B"], "marque", y, mq)
-        col(P["B"], "tours", y, str(nt)); col(P["B"], "total", y, tot); col(P["B"], "ecart", y, ec); col(f, "meill", y, me); col(f, "tour", y, de)
-    txt(P["B"], X_MT, Y_BAS, "45.025 (N° 84) COENEN Sacha")
+    import random
+    rnd = random.Random(45); noms = ["ROBERT Alex", "DUPONT Hugo", "MARTIN Leo", "BERNARD Tom", "PETIT Noah", "DURAND Enzo", "LEROY Theo",
+                                     "MOREAU Jules", "SIMON Lucas", "LAURENT Nathan", "LEFEBVRE Louis", "MICHEL Adam"]
+    for k, nm in enumerate(noms):
+        t = 6 * 60 + 20 + k * 2.3
+        rows.append((rnd.randint(100, 999), nm, rnd.choice(["KTM", "Honda", "Yamaha", "Kawasaki", "GasGas", "Husqvarna", "Triumph"]), 7,
+                     "%d:%06.3f" % (t // 60, t % 60), "+1 L", "%.3f" % (47.5 + rnd.random() * 2), "%.3f" % (48 + rnd.random() * 3), 0))
+    for i, (num, nom, mq, nt, tot, ec, me, de, vert) in enumerate(rows[:N_LIGNES * N_MOITIES]):
+        y = Y0 + (i % N_LIGNES) * H + (H - 1 - GH) // 2; o = (i // N_LIGNES) * MOITIE; f = P["V"] if vert else P["B"]
+        col(P["B"], "pos", y, str(i + 1), o); col(P["N"], "num", y, str(num), o); col(P["B"], "nom", y, nom, o); col(P["B"], "marque", y, mq, o)
+        col(P["B"], "tours", y, str(nt), o); col(P["B"], "total", y, tot, o); col(P["B"], "ecart", y, ec, o); col(f, "meill", y, me, o); col(f, "tour", y, de, o)
+    txt(P["B"], X_MT_T, Y_BAS, "45.025"); txt(P["B"], X_MT_N, Y_BAS, "(N° 84)"); txt(P["B"], X_MT_P, Y_BAS, "COENEN Sacha")
     full = Image.new("RGBA", (1024, 256))
     for k in range(4):
         tex, _, y0 = _panneau(256 * k)

@@ -4,179 +4,147 @@ if (!USP_CHARGE) {
 USP_CHARGE = 1;
 (function () {
 /*
-USLAND Paris by Ryan v39b - classement en direct sur tout l'ecran geant (DA de la retransmission Supercross Paris).
-Fait (pages 256 x 512, dessin a chaque image). Texte ASCII expres.
+USLAND Paris v45d - ecran geant en tableau de chronometrage (Pos, N, Nom, Marque, Nb, Tps total, Ec 1er, Meill Tr, Tps tour),
+temps ecoule en vert et temps restant en rouge en haut, meilleur tour en bas. Texte ASCII expres.
 */
-var TD_A = mx.read_texture("@USLANDParisSupercross2026/statue/paris/direct/direct_a.seq");
-var TD_B = mx.read_texture("@USLANDParisSupercross2026/statue/paris/direct/direct_b.seq");
-var TD_W = 256, TD_H = 512;
-var TD_N = { h: 26, c: {"A": [1, 0, 16], "B": [18, 0, 15], "C": [34, 0, 15], "D": [50, 0, 15], "E": [66, 0, 14], "F": [81, 0, 13], "G": [95, 0, 16], "H": [112, 0, 16], "I": [129, 0, 9], "J": [139, 0, 13], "K": [153, 0, 17], "L": [171, 0, 13], "M": [185, 0, 18], "N": [204, 0, 16], "O": [221, 0, 16], "P": [238, 0, 14], "Q": [1, 26, 16], "R": [18, 26, 16], "S": [35, 26, 14], "T": [50, 26, 14], "U": [65, 26, 16], "V": [82, 26, 16], "W": [99, 26, 21], "X": [121, 26, 16], "Y": [138, 26, 16], "Z": [155, 26, 14], "0": [170, 26, 13], "1": [184, 26, 13], "2": [198, 26, 13], "3": [212, 26, 13], "4": [226, 26, 13], "5": [240, 26, 13], "6": [1, 52, 13], "7": [15, 52, 13], "8": [29, 52, 13], "9": [43, 52, 13], "-": [57, 52, 8], "'": [66, 52, 7], ".": [74, 52, 8], ":": [83, 52, 8], "+": [92, 52, 13]} };
-var TD_P = { h: 26, c: {"0": [1, 78, 13], "1": [15, 78, 13], "2": [29, 78, 13], "3": [43, 78, 13], "4": [57, 78, 13], "5": [71, 78, 13], "6": [85, 78, 13], "7": [99, 78, 13], "8": [113, 78, 13], "9": [127, 78, 13], ".": [141, 78, 8], "-": [150, 78, 8], "A": [159, 78, 16], "B": [176, 78, 15], "C": [192, 78, 15], "D": [208, 78, 15], "E": [224, 78, 14], "F": [239, 78, 13], "G": [1, 104, 16], "H": [18, 104, 16], "I": [35, 104, 9], "J": [45, 104, 13], "K": [59, 104, 17], "L": [77, 104, 13], "M": [91, 104, 18], "N": [110, 104, 16], "O": [127, 104, 16], "P": [144, 104, 14], "Q": [159, 104, 16], "R": [176, 104, 16], "S": [193, 104, 14], "T": [208, 104, 14], "U": [223, 104, 16], "V": [1, 130, 16], "W": [18, 130, 21], "X": [40, 130, 16], "Y": [57, 130, 16], "Z": [74, 130, 14], "'": [89, 130, 7]} };
-var TD_D = { h: 26, c: {"0": [1, 156, 13], "1": [15, 156, 13], "2": [29, 156, 13], "3": [43, 156, 13], "4": [57, 156, 13], "5": [71, 156, 13], "6": [85, 156, 13], "7": [99, 156, 13], "8": [113, 156, 13], "9": [127, 156, 13]} };
-var TD_T = { h: 56, c: {"0": [1, 182, 25], "1": [27, 182, 25], "2": [53, 182, 25], "3": [79, 182, 25], "4": [105, 182, 25], "5": [131, 182, 25], "6": [157, 182, 25], "7": [183, 182, 25], "8": [209, 182, 25], "9": [1, 238, 25], ":": [27, 238, 14], "+": [42, 238, 25], "L": [68, 238, 25], ".": [94, 238, 14], "-": [109, 238, 14]} };
-var TD_BANDES = {"honda": 0, "ktm": 1, "kawasaki": 2, "yamaha": 3, "suzuki": 4, "husqvarna": 5, "gasgas": 6, "triumph": 7, "none": 8}, TD_BY = 294;
-var TD_MARQUES = [[/^crf?[0-9]+/, "honda"], [/^[0-9]+sx/, "ktm"], [/^kx[0-9]+/, "kawasaki"], [/^yz[0-9]+/, "yamaha"], [/^rmz?[0-9]+/, "suzuki"], [/^fc[0-9]+/, "husqvarna"], [/^mc[0-9]+/, "gasgas"], [/^tf[0-9]+/, "triumph"]];
-var TD_FIN_TOURS = mx.get_finish_laps(), TD_FIN_TEMPS = mx.get_finish_time();
-var td_ordre = [];
-var td_tex = TD_A;
+var TC_TEX = [mx.read_texture("@USLANDParisSupercross2026/statue/paris/direct/direct_a.seq"), mx.read_texture("@USLANDParisSupercross2026/statue/paris/direct/direct_b.seq")];
+var TC_F = {"B": {"h": 16, "c": {"A": [1, 0, 11], "B": [13, 0, 10], "C": [24, 0, 10], "D": [35, 0, 11], "E": [47, 0, 9], "F": [57, 0, 9], "G": [67, 0, 11], "H": [79, 0, 11], "I": [91, 0, 7], "J": [99, 0, 7], "K": [107, 0, 10], "L": [118, 0, 9], "M": [128, 0, 12], "N": [141, 0, 11], "O": [153, 0, 11], "P": [165, 0, 9], "Q": [175, 0, 11], "R": [187, 0, 11], "S": [199, 0, 9], "T": [209, 0, 10], "U": [220, 0, 11], "V": [232, 0, 11], "W": [1, 16, 14], "X": [16, 16, 10], "Y": [27, 16, 11], "Z": [39, 16, 9], "a": [49, 16, 9], "b": [59, 16, 9], "c": [69, 16, 8], "d": [78, 16, 9], "e": [88, 16, 9], "f": [98, 16, 7], "g": [106, 16, 9], "h": [116, 16, 9], "i": [126, 16, 5], "j": [132, 16, 7], "k": [140, 16, 9], "l": [150, 16, 5], "m": [156, 16, 13], "n": [170, 16, 9], "o": [180, 16, 9], "p": [190, 16, 9], "q": [200, 16, 9], "r": [210, 16, 7], "s": [218, 16, 8], "t": [227, 16, 7], "u": [235, 16, 9], "v": [245, 16, 9], "w": [1, 32, 12], "x": [14, 32, 9], "y": [24, 32, 9], "z": [34, 32, 8], "0": [43, 32, 9], "1": [53, 32, 9], "2": [63, 32, 9], "3": [73, 32, 9], "4": [83, 32, 9], "5": [93, 32, 9], "6": [103, 32, 9], "7": [113, 32, 9], "8": [123, 32, 9], "9": [133, 32, 9], ":": [143, 32, 7], ".": [151, 32, 6], "-": [158, 32, 7], "+": [166, 32, 11], "(": [178, 32, 7], ")": [186, 32, 7], "'": [194, 32, 5], "\u00e9": [200, 32, 9], "\u00e8": [210, 32, 9], "\u00b0": [220, 32, 8]}}, "N": {"h": 16, "c": {"0": [1, 48, 10], "1": [12, 48, 10], "2": [23, 48, 10], "3": [34, 48, 10], "4": [45, 48, 11], "5": [57, 48, 10], "6": [68, 48, 10], "7": [79, 48, 10], "8": [90, 48, 10], "9": [101, 48, 10]}}, "V": {"h": 16, "c": {"0": [1, 64, 9], "1": [11, 64, 9], "2": [21, 64, 9], "3": [31, 64, 9], "4": [41, 64, 9], "5": [51, 64, 9], "6": [61, 64, 9], "7": [71, 64, 9], "8": [81, 64, 9], "9": [91, 64, 9], ":": [101, 64, 7], ".": [109, 64, 6], "-": [116, 64, 7]}}, "R": {"h": 16, "c": {"0": [1, 80, 9], "1": [11, 80, 9], "2": [21, 80, 9], "3": [31, 80, 9], "4": [41, 80, 9], "5": [51, 80, 9], "6": [61, 80, 9], "7": [71, 80, 9], "8": [81, 80, 9], "9": [91, 80, 9], ":": [101, 80, 7], ".": [109, 80, 6], "-": [116, 80, 7], "+": [124, 80, 11], " ": [136, 80, 6], "L": [143, 80, 9], "T": [153, 80, 10], "O": [164, 80, 11], "U": [176, 80, 11], "R": [188, 80, 11], "S": [200, 80, 9]}}};
+var TC_COLS = {"pos": [6, 34, "c"], "num": [44, 88, "c"], "nom": [100, 252, "g"], "marque": [272, 382, "c"], "tours": [412, 482, "c"], "total": [536, 636, "d"], "ecart": [666, 756, "d"], "meill": [796, 884, "d"], "tour": [924, 1012, "d"]};
+var TC_NL = 11, TC_NM = 1, TC_MO = 1024, TC_Y0 = 38, TC_H = 17, TC_DY = 0, TC_YBAS = 229, TC_XMT = 72, TC_YHAUT = 2;
+var TC_XV = [780, 884], TC_XR = [900, 1012], TC_MT = [90, 166, 272];
+var TC_MARQUES = [[/^crf?[0-9]+/, "Honda"], [/^[0-9]+sx/, "KTM"], [/^kx[0-9]+/, "Kawasaki"], [/^yz[0-9]+/, "Yamaha"], [/^rmz?[0-9]+/, "Suzuki"], [/^fc[0-9]+/, "Husqvarna"], [/^mc[0-9]+/, "GasGas"], [/^tf[0-9]+/, "Triumph"]];
+var TC_FIN_TOURS = mx.get_finish_laps(), TC_FIN_TEMPS = mx.get_finish_time();
+var tc_ordre = [], tc_cur = -1, tc_stats = {}, tc_s = -100, tc_mt = [-1, -1];
 
-function td_cp(f, sx, sy, dx, dy, w, h) {
-    mx.paste_custom_frame(td_tex, f, sx / TD_W, sy / TD_H, dx / TD_W, dy / TD_H, w / TD_W, h / TD_H);
-}
-function td_larg(f, s) {
+function tc_larg(f, s) {
     var i, c, w = 0;
     for (i = 0; i < s.length; i++) {
-        if (s[i] == " ") { w += 8; continue; }
-        c = f.c[s[i]]; if (c) w += c[2] - 1;
+        if (s[i] == " ") { w += 4; continue; }
+        c = f.c[s[i]]; if (c) w += c[2] - 2;
     }
     return w;
 }
-function td_txt(f, x, y, s) {
-    var i, c;
+function tc_txt(f, x, y, s) {                         /* x, y de l'ecran entier (1024 x 256) ; reste dans le panneau de x */
+    var i, c, k = Math.floor(x / 256), t = (k < 2) ? 0 : 1, xp = x - 256 * k, yp = y + ((k % 2) ? 256 : 0);
+    if (t != tc_cur) return;
     for (i = 0; i < s.length; i++) {
-        if (s[i] == " ") { x += 8; continue; }
+        if (s[i] == " ") { xp += 4; continue; }
         c = f.c[s[i]]; if (!c) continue;
-        td_cp(1, c[0], c[1], x, y, c[2], f.h);
-        x += c[2] - 1;
+        mx.paste_custom_frame(TC_TEX[t], 1, c[0] / 256, c[1] / 512, xp / 256, yp / 512, c[2] / 256, f.h / 512);
+        xp += c[2] - 2;
     }
 }
-function td_marque(m) {
-    var i;
-    for (i = 0; i < TD_MARQUES.length; i++) if (m.match(TD_MARQUES[i][0])) return TD_MARQUES[i][1];
-    return "none";
+function tc_col(f, k, y, s, o) {                      /* texte dans la colonne k de la moitie qui commence en o, coupe a sa largeur */
+    var c = TC_COLS[k], w = c[1] - c[0];
+    while (s.length > 1 && tc_larg(f, s) > w) s = s.substring(0, s.length - 1);
+    if (c[2] == "g") tc_txt(f, o + c[0], y, s);
+    else if (c[2] == "d") tc_txt(f, o + c[1] - tc_larg(f, s), y, s);
+    else tc_txt(f, o + (c[0] + c[1]) / 2 - tc_larg(f, s) / 2, y, s);
 }
-function td_2(n) { n = Math.floor(n).toString(); return n.length < 2 ? "0" + n : n; }
-function td_temps_restant() {
-    var d = mx.get_gate_drop_time(), s = mx.seconds - d;
-    if (d < 0 || s < 0) return TD_FIN_TEMPS;
-    return Math.max(0.0, TD_FIN_TEMPS - s);
-}
-function td_passe_avant(index, secs) {
-    var i, t;
-    for (i = 0; i < td_ordre.length; i++) { t = mx.get_timing(td_ordre[i].slot, index); if (t >= 0 && t < secs) return true; }
-    return false;
-}
-function td_tours_avant(secs) {
-    var i, last, t;
-    if (secs == 0) return 0;
-    secs += mx.get_gate_drop_time();
-    last = mx.index_to_lap(td_ordre[0].position);
-    for (i = last; i > 0; i--) { t = mx.get_timing(td_ordre[0].slot, mx.lap_to_index(i)); if (t < secs) break; }
-    for (; i <= last; i++) if (!td_passe_avant(mx.lap_to_index(i), secs)) break;
-    return i - 1;
-}
-function td_haut() {
-    var t, l, lead = td_ordre.length > 0 && td_ordre[0].position >= 1;
-    if (TD_FIN_TEMPS == 0) {
-        l = TD_FIN_TOURS - (lead ? mx.index_to_lap(td_ordre[0].position) : 0);
-        return Math.max(0, l).toFixed(0) + "L";
-    }
-    t = td_temps_restant();
-    if (t > 0 || !lead) return td_2(t / 60) + ":" + td_2(t % 60) + (TD_FIN_TOURS > 0 ? " + " + TD_FIN_TOURS.toFixed(0) + "L" : "");
-    l = td_tours_avant(TD_FIN_TEMPS) + 1 + TD_FIN_TOURS - mx.index_to_lap(td_ordre[0].position);
-    return "00:00" + (l > 0 ? " + " + l.toFixed(0) + "L" : "");
-}
-function td_nom(s) {
+function td_nom(s) {                                 /* pour le module d'evenements (ev_nom) : dernier mot du nom, 9 lettres */
     var m = s.replace(/\|.*/, "").replace(/^\s+|\s+$/g, "").split(" ");
     return m[m.length - 1].toUpperCase().substring(0, 9);
 }
-function td_lignes_a() {                                     /* v45 : top 10 A, panneau 2 (bas de la page A) : place, numero, nom */
-    var k, r, yy, p, n, f, nm;
-    for (k = 0; k < 10 && k < td_ordre.length; k++) {
-        r = td_ordre[k];
-        if (r.position < 1) break;
-        yy = 256 + 3 + k * 25 + -2;
-        p = (k + 1).toString();
-        td_txt(TD_D, (9 + 43) / 2 - td_larg(TD_D, p) / 2, yy, p);
-        n = mx.get_rider_number(r.slot).toString(); f = TD_N;
-        td_txt(f, (55 + 109) / 2 - td_larg(f, n) / 2, yy, n);
-        nm = td_nom(mx.get_rider_name(r.slot));
-        while (nm.length > 1 && 117 + td_larg(TD_N, nm) > 252) nm = nm.substring(0, nm.length - 1);
-        td_txt(TD_N, 117, yy, nm);
+function tc_2(n) { n = Math.floor(n).toString(); return n.length < 2 ? "0" + n : n; }
+function tc_chrono(t) {                               /* 45.025 / 1:05.123 / 5:55.185 */
+    var m = Math.floor(t / 60), s = t - 60 * m;
+    if (m < 1) return s.toFixed(3);
+    return m + ":" + (s < 10 ? "0" : "") + s.toFixed(3);
+}
+function tc_marque(m) {
+    var i;
+    for (i = 0; i < TC_MARQUES.length; i++) if (m.match(TC_MARQUES[i][0])) return TC_MARQUES[i][1];
+    return "";
+}
+function tc_nom(s) {                                  /* "Sacha Coenen" -> "COENEN Sacha" */
+    var m = s.replace(/\|.*/, "").replace(/^\s+|\s+$/g, "").split(/\s+/), n;
+    if (m.length < 2) return m[0].toUpperCase();
+    n = m.pop().toUpperCase();
+    return n + " " + m.join(" ");
+}
+function tc_maj() {                                   /* tours, temps total, meilleur tour, dernier tour : 1 fois par seconde */
+    var i, k, r, n, t1, t2, st, d = mx.get_gate_drop_time();
+    if (mx.seconds >= tc_s && mx.seconds - tc_s < 1.0) return;
+    tc_s = mx.seconds; tc_stats = {}; tc_mt = [-1, -1];
+    for (i = 0; i < tc_ordre.length; i++) {
+        r = tc_ordre[i]; n = mx.index_to_lap(r.position); st = { tours: n, total: -1, meill: -1, der: -1 };
+        if (n >= 1 && d >= 0) { t2 = mx.get_timing(r.slot, mx.lap_to_index(n)); if (t2 >= 0) st.total = t2 - d; }
+        for (k = 1; k < n; k++) {
+            t1 = mx.get_timing(r.slot, mx.lap_to_index(k)); t2 = mx.get_timing(r.slot, mx.lap_to_index(k + 1));
+            if (t1 >= 0 && t2 > t1) {
+                st.der = t2 - t1;
+                if (st.meill < 0 || t2 - t1 < st.meill) st.meill = t2 - t1;
+            }
+        }
+        if (st.meill > 0 && (tc_mt[0] < 0 || st.meill < tc_mt[0])) tc_mt = [st.meill, r.slot];
+        tc_stats[r.slot] = st;
     }
 }
-function td_ecart(r, l) {                                      /* ecart au leader au meme point de chrono, ou tours de retard */
+function tc_ecart(r, l) {                             /* ecart au premier au meme point de chrono, ou tours de retard */
     var L = mx.lap_to_index(2) - mx.lap_to_index(1), n, t0, t1;
-    if (L > 0) { n = Math.floor((l.position - r.position) / L); if (n >= 1) return "+" + n + "L"; }
+    if (L > 0) { n = Math.floor((l.position - r.position) / L); if (n >= 1) return "+" + n + " L"; }
     t0 = mx.get_timing(l.slot, r.position); t1 = mx.get_timing(r.slot, r.position);
     if (t0 < 0 || t1 < 0) return "";
-    t1 = Math.max(0, t1 - t0);
-    return "+" + (t1 < 60 ? t1.toFixed(1) : ev_temps(t1));
+    return tc_chrono(Math.max(0, t1 - t0));
 }
-function td_lignes_b() {                                     /* panneau 3 (haut de la page B) : ecarts */
-    var k, r, e;
-    for (k = 1; k < 10 && k < td_ordre.length; k++) {
-        r = td_ordre[k];
+function tc_haut() {                                  /* [ecoule (vert), restant (rouge)] */
+    var d = mx.get_gate_drop_time(), e = (d < 0 || mx.seconds < d) ? 0 : mx.seconds - d, r, l;
+    var ec = tc_2(e / 3600) + ":" + tc_2((e % 3600) / 60) + ":" + tc_2(e % 60);
+    if (TC_FIN_TEMPS > 0) {
+        r = Math.max(0, TC_FIN_TEMPS - e);
+        return [ec, tc_2(r / 60) + ":" + tc_2(r % 60) + (TC_FIN_TOURS > 0 ? " +" + TC_FIN_TOURS.toFixed(0) + " L" : "")];
+    }
+    l = TC_FIN_TOURS - (tc_ordre.length > 0 && tc_ordre[0].position >= 1 ? mx.index_to_lap(tc_ordre[0].position) : 0);
+    return [ec, Math.max(0, l).toFixed(0) + " TOURS"];
+}
+function tc_page(t) {
+    var i, r, st, y, s, h, f, mq, o;
+    tc_cur = t;
+    mx.begin_custom_frame(TC_TEX[t]);
+    mx.paste_custom_frame(TC_TEX[t], 0, 0, 0, 0, 0, 1, 1);
+    h = tc_haut();
+    tc_txt(TC_F.V, TC_XV[1] - tc_larg(TC_F.V, h[0]), TC_YHAUT, h[0]);
+    tc_txt(TC_F.R, TC_XR[1] - tc_larg(TC_F.R, h[1]), TC_YHAUT, h[1]);
+    for (i = 0; i < TC_NL * TC_NM && i < tc_ordre.length; i++) {      /* v45e : places 1-11 a gauche, 12-22 a droite */
+        r = tc_ordre[i];
         if (r.position < 1) break;
-        e = td_ecart(r, td_ordre[0]);
-        if (e) td_txt(TD_N, 232 - td_larg(TD_N, e), 3 + k * 25 + -2, e);
+        st = tc_stats[r.slot] || { tours: 0, total: -1, meill: -1, der: -1 };
+        y = TC_Y0 + (i % TC_NL) * TC_H + TC_DY; o = Math.floor(i / TC_NL) * TC_MO;
+        tc_col(TC_F.B, "pos", y, (i + 1).toString(), o);
+        tc_col(TC_F.N, "num", y, mx.get_rider_number(r.slot).toString(), o);
+        tc_col(TC_F.B, "nom", y, tc_nom(mx.get_rider_name(r.slot)), o);
+        mq = tc_marque(mx.get_bike_model(r.slot)); if (mq) tc_col(TC_F.B, "marque", y, mq, o);
+        tc_col(TC_F.B, "tours", y, st.tours.toString(), o);
+        if (st.total > 0) tc_col(TC_F.B, "total", y, tc_chrono(st.total), o);
+        tc_col(TC_F.B, "ecart", y, i == 0 ? "-" : tc_ecart(r, tc_ordre[0]), o);
+        f = (st.der > 0 && st.der == st.meill) ? TC_F.V : TC_F.B;           /* record perso au dernier tour : en vert */
+        if (st.meill > 0) tc_col(f, "meill", y, tc_chrono(st.meill), o);
+        if (st.der > 0) tc_col(f, "tour", y, tc_chrono(st.der), o);
     }
-}
-var td_mt_t = -1, td_mt_s = -100, td_mt_slot = -1;
-function td_mt_maj() {                                       /* meilleur tour de la course (tours complets a partir du 2e), 1 fois par seconde */
-    var i, k, n, t1, t2, best = -1, slot = -1;
-    if (mx.seconds >= td_mt_s && mx.seconds - td_mt_s < 1.0) return;
-    td_mt_s = mx.seconds;
-    for (i = 0; i < td_ordre.length; i++) {
-        n = mx.index_to_lap(td_ordre[i].position);
-        for (k = 1; k < n; k++) {
-            t1 = mx.get_timing(td_ordre[i].slot, mx.lap_to_index(k)); t2 = mx.get_timing(td_ordre[i].slot, mx.lap_to_index(k + 1));
-            if (t1 >= 0 && t2 > t1 && (best < 0 || t2 - t1 < best)) { best = t2 - t1; slot = td_ordre[i].slot; }
-        }
+    if (tc_mt[0] > 0) {
+        tc_txt(TC_F.B, TC_MT[0], TC_YBAS, tc_chrono(tc_mt[0]));                                   /* v45f : 3 parties espacees */
+        tc_txt(TC_F.B, TC_MT[1], TC_YBAS, "(N\u00b0 " + mx.get_rider_number(tc_mt[1]) + ")");
+        s = tc_nom(mx.get_rider_name(tc_mt[1]));
+        while (s.length > 1 && TC_MT[2] - 256 + tc_larg(TC_F.B, s) > 250) s = s.substring(0, s.length - 1);
+        tc_txt(TC_F.B, TC_MT[2], TC_YBAS, s);
     }
-    td_mt_t = best; td_mt_slot = slot;
+    mx.end_custom_frame(TC_TEX[t]);
 }
-function td_chrono(t) { var m = Math.floor(t / 60), s = t - 60 * m; return m + ":" + (s < 10 ? "0" : "") + s.toFixed(3); }
-function td_mt() {                                           /* panneau 4 (bas de la page B) : le meilleur temps seul */
-    var s;
-    td_mt_maj();
-    s = td_mt_t > 0 ? td_chrono(td_mt_t) : "-:--.---";
-    td_txt(TD_T, 128 - td_larg(TD_T, s) / 2, 256 + 98, s);
-    if (td_mt_slot >= 0) {
-        s = mx.get_rider_number(td_mt_slot).toString() + " - " + td_nom(mx.get_rider_name(td_mt_slot));
-        td_txt(TD_P, 128 - td_larg(TD_P, s) / 2, 256 + 156, s);
-    }
-}
-function td_dessine(secs) {
-    var s;
-    td_ordre = mx.get_running_order();
-    td_tex = TD_A;
-    mx.begin_custom_frame(TD_A);
-    td_cp(0, 0, 0, 0, 0, TD_W, TD_H);
-    s = ev_ecran();                                           /* v44 : holeshot / vainqueur / recompenses a la place du temps */
-    if (s) {
-        td_txt(TD_N, TD_W / 2 - td_larg(TD_N, s[0]) / 2, EV_Y[0], s[0]);
-        td_txt(TD_P, TD_W / 2 - (td_larg(TD_P, s[1]) + 8 + td_larg(TD_N, s[2])) / 2, EV_Y[1], s[1]);
-        td_txt(TD_N, TD_W / 2 - (td_larg(TD_P, s[1]) + 8 + td_larg(TD_N, s[2])) / 2 + td_larg(TD_P, s[1]) + 8, EV_Y[1], s[2]);
-        td_txt(TD_N, TD_W / 2 - td_larg(TD_N, s[3]) / 2, EV_Y[2], s[3]);
-    } else {
-        s = td_haut();
-        td_txt(TD_T, TD_W / 2 - td_larg(TD_T, s) / 2, 168, s);
-    }
-    td_lignes_a();
-    mx.end_custom_frame(TD_A);
-    td_tex = TD_B;
-    mx.begin_custom_frame(TD_B);
-    td_cp(0, 0, 0, 0, 0, TD_W, TD_H);
-    td_lignes_b();
-    td_mt();
-    mx.end_custom_frame(TD_B);
-}
-function td_image(secs) {
+function tc_image(secs) {
     try { ev_maj(); } catch (e) { mx.message("evenements : " + e.toString()); }
-    try { td_dessine(secs); } catch (e) { mx.message("classement : " + e.toString()); }
-    td_prev(secs);
+    try { tc_ordre = mx.get_running_order(); tc_maj(); tc_page(0); tc_page(1); } catch (e) { mx.message("classement : " + e.toString()); }
+    tc_prev(secs);
 }
-var td_prev = mx.frame_handler;
-if (!td_prev) td_prev = function (s) {};
-mx.frame_handler = td_image;
+var tc_prev = mx.frame_handler;
+if (!tc_prev) tc_prev = function (s) {};
+mx.frame_handler = tc_image;
 
 /*
 USLAND Paris - evenements de course (code USLAND, v44) : son de la grille, holeshot (ecran + public), vainqueur et recompenses
 de fin de manche sur l'ecran geant (vainqueur, holeshot, hard charger, meilleur tour), public sur les chutes du top 3 et les
 bagarres (depassements dans le top 3). Texte ASCII expres.
 */
-var EV_Y = [164, 189, 213];
+var EV_Y = [147, 177, 205];
 var EV_HS_INDEX = 2;
 var EV_HS_DUREE = 10.0, EV_ROT = 5.0, EV_APRES_DEPART = 20.0, EV_PAUSE_PUBLIC = 10.0;
 var EV_FIN_TOURS = mx.get_finish_laps(), EV_FIN_TEMPS = mx.get_finish_time();
@@ -190,7 +158,7 @@ function ev_sons(f, vol, freq, n) { var k, a = []; for (k = 0; k < n; k++) a.pus
 var EV_S_PUBLIC = ev_sons("@USLANDParisSupercross2026/js/sounds/public.raw", 1.00, 44100, 3);   /* v45i : copies a la camera (volume plafonne a 1) */
 var EV_S_OOH = ev_sons("@USLANDParisSupercross2026/js/sounds/public.raw", 1.00, 33075, 3);
 var EV_S_ANNONCE = ev_son("@USLANDParisSupercross2026/js/sounds/annonce.raw", 1.00, 44100);   /* v44c : annonce "le plus beau supercross du monde, c est Paris" */
-var EV_HP = [[200.7, 50.0, 261.0], [200.7, 50.0, 419.4], [401.1, 50.0, 261.0], [401.1, 50.0, 419.4]];                                              /* v44d : hauts-parleurs au-dessus de la piste (remplace par le build) */
+var EV_HP = [[201.4, 50.0, 261.1], [201.4, 50.0, 419.7], [402.6, 50.0, 261.1], [402.6, 50.0, 419.7]];                                              /* v44d : hauts-parleurs au-dessus de la piste (remplace par le build) */
 var EV_S_HP = [], ev_k;
 for (ev_k = 0; ev_k < EV_HP.length; ev_k++) {
     EV_S_HP.push(ev_son("@USLANDParisSupercross2026/js/sounds/annonce.raw", 0.50, 44100));
@@ -321,7 +289,7 @@ function ev_ecran() {                                                 /* [titre,
         l.push(["WINNER", ev_num(r.vainqueur), ev_nom(r.vainqueur), ""]);
         if (r.holeshot >= 0) l.push(["HOLESHOT", ev_num(r.holeshot), ev_nom(r.holeshot), ""]);
         if (r.charger >= 0) l.push(["HARD CHARGER", ev_num(r.charger), ev_nom(r.charger), "+" + r.gain + " PLACES"]);
-        if (r.mt >= 0) l.push(["FASTEST LAP", ev_num(r.mt), ev_nom(r.mt), ev_temps(r.mt_t)]);
+        if (r.mt >= 0) l.push(["MEILLEUR TOUR", ev_num(r.mt), ev_nom(r.mt), ev_temps(r.mt_t)]);
         k = Math.floor((mx.seconds - ev_fin_t) / EV_ROT) % l.length;
         return l[k];
     }

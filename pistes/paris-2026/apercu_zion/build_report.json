@@ -266,13 +266,13 @@
  "socles": 7,
  "sable_tuiles": 12843,
  "tuiles_zion": [
-  "texture @USLANDParisbyRyan/ztile/2.png",
-  "roost texture=@USLANDParisbyRyan/ztile/roost.png count=0.1 slow_angle=1.0 vscale=0.2 size=.2 r=150 g=150 b=150 fade_a=0",
-  "roost texture=@USLANDParisbyRyan/ztile/roost.png count=1 grow=1.5 slow_angle=1.0 drag=10 size=1.0 fade_a=0.1",
-  "treadmark texture=@USLANDParisbyRyan/ztile/darkdirt_lroost2x4.png size=4 aspect=0.5 spacing=1.5 slip_threshold=4.0 speed_threshold=-20",
-  "treadmark texture=@USLANDParisbyRyan/ztile/darkdirt_lroost2x8.png size=8 aspect=0.25 spacing=3 slip_threshold=4.0",
-  "treadmark texture=@USLANDParisbyRyan/ztile/darkdirt_trackfade1x4.png size=4 aspect=0.25 spacing=1.5 speed_threshold=-20",
-  "treadmark texture=@USLANDParisbyRyan/ztile/darkdirt_trackfade1x8.png size=8 aspect=0.125 spacing=3"
+  "texture @USLANDParisSupercross2026/ztile/2.png",
+  "roost texture=@USLANDParisSupercross2026/ztile/roost.png count=0.1 slow_angle=1.0 vscale=0.2 size=.2 r=150 g=150 b=150 fade_a=0",
+  "roost texture=@USLANDParisSupercross2026/ztile/roost.png count=1 grow=1.5 slow_angle=1.0 drag=10 size=1.0 fade_a=0.1",
+  "treadmark texture=@USLANDParisSupercross2026/ztile/darkdirt_lroost2x4.png size=4 aspect=0.5 spacing=1.5 slip_threshold=4.0 speed_threshold=-20",
+  "treadmark texture=@USLANDParisSupercross2026/ztile/darkdirt_lroost2x8.png size=8 aspect=0.25 spacing=3 slip_threshold=4.0",
+  "treadmark texture=@USLANDParisSupercross2026/ztile/darkdirt_trackfade1x4.png size=4 aspect=0.25 spacing=1.5 speed_threshold=-20",
+  "treadmark texture=@USLANDParisSupercross2026/ztile/darkdirt_trackfade1x8.png size=8 aspect=0.125 spacing=3"
  ],
  "objets": {
   "objets": {
@@ -326,6 +326,11 @@
  "sol_zion": {
   "tuiles": 8,
   "ombrage_plat": 228
+ },
+ "erosion_rf": {
+  "tuiles": 6,
+  "cases_saut": 160543,
+  "cases_pied": 50882
  },
  "traces_sgm": {
   "single": 25,
@@ -419,17 +424,7 @@
   "triangles": 46468
  },
  "classement_direct": {
-  "lettres": [
-   39,
-   11,
-   10,
-   13
-  ],
-  "panneaux": 4,
-  "panneau_ft": [
-   52.5,
-   55.8
-  ],
+  "da": "chrono",
   "apercu": "C:\\Users\\basil\\AppData\\Local\\Claude-Data\\claude_pzs8sxrjxfjjc\\scratch-workspaces\\88d478f8-540d-4811-8570-5b7d3789edd5\\7ce31b78-0ed2-4bc7-b5fd-226fa3f6aa26\\scratch-2026-10-24-bdb21d\\work\\wt_ryan\\pistes\\paris-2026\\apercu_zion\\apercu_ecran_direct.png"
  },
  "deco_v21": {
@@ -540,16 +535,16 @@
   ],
   "murs_invisibles": [
    [
-    "invisible_freestyle",
-    66.6,
-    12.5,
-    35.0
+    "invisible_milwaukee",
+    173.4,
+    10.8,
+    35.8
    ],
    [
-    "invisible_milwaukee",
-    178.9,
-    18.9,
-    43.9
+    "invisible_amv",
+    76.1,
+    15.8,
+    40.8
    ],
    [
     "invisible_arrivee",
@@ -576,7 +571,8 @@
     684.6,
     555.6
    ],
-   "plaques": 22
+   "plaques": 22,
+   "modele": "start_grids de Saint-Georges"
   },
   "couloir_depart": {
    "A": [
@@ -656,7 +652,7 @@
     "k": 1.2
    }
   },
-  "grates_decals": 56,
+  "grates_decals": 34,
   "rampes_v38c": {
    "k": 1.4,
    "grilles": [
@@ -700,18 +696,23 @@
   ],
   "boudins_20s": 24
  },
- "chant_grille": {
-  "fichier": "sounds/chant_grille.wav",
-  "volume": 0.7
- },
+ "chant_grille": null,
  "cameras_tv": {
   "cameras": 8,
   "portes": 29
  },
+ "terre_couleur": {
+  "tuile": [
+   142,
+   103,
+   67
+  ],
+  "decals": 8
+ },
  "minimap": {
-  "px_par_ft": 0.863,
+  "px_par_ft": 1.726,
   "objets": 0,
-  "arene_px": 403
+  "arene_px": 807
  },
  "flammes": {
   "start": [
@@ -739,6 +740,79 @@
    ]
   ],
   "scripts": 2
+ },
+ "scripts": {
+  "lignes": 409,
+  "chant": false,
+  "flammes": true,
+  "ecran": false
+ },
+ "toit": {
+  "enleves": 16,
+  "charpente_faces_haut": 2550
+ },
+ "sable_hors_pentes": {
+  "enlevees": 161,
+  "grain_ajoute": 42
+ },
+ "recadrage": {
+  "x0": 200.0,
+  "z0": 256.0,
+  "cote_ft": 680.0,
+  "pas_ft": 0.33203,
+  "fichiers": {
+   "statues": 896,
+   "billboards": 7339,
+   "flaggers": 25,
+   "variants\\statues_nuit": 908,
+   "decals": 6464,
+   "frills.js": [
+    1,
+    1
+   ],
+   "nofrills.js": [
+    1,
+    1
+   ]
+  }
+ },
+ "portes": {
+  "portes": 30,
+  "ajoutees": 1,
+  "premier_tour": "28 29 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27",
+  "tour": "0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27"
+ },
+ "hauts_parleurs": [
+  [
+   201.4,
+   50.0,
+   261.1
+  ],
+  [
+   201.4,
+   50.0,
+   419.7
+  ],
+  [
+   402.6,
+   50.0,
+   261.1
+  ],
+  [
+   402.6,
+   50.0,
+   419.7
+  ]
+ ],
+ "taille": {
+  "avant_mo": 402.1,
+  "apres_mo": 163.6,
+  "enleves": 241,
+  "jm_gz": 168
+ },
+ "noms": {
+  "renommes": 34,
+  "textes": 6
  },
  "lap_ft": 2528.5,
  "start": {
