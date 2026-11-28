@@ -2067,8 +2067,13 @@ def toit_editeur(OUT):
 
 
 NOMS_DOSSIERS = {"rfborder": "uslandborder", "rfsand": "uslandsand", "zdecal": "uslanddecal", "zsky": "uslandsky",
-                 "ztile": "uslandtile", "2024Bh1Conway": "USLANDsignaleur"}
-NOMS_MOTS = {"rf": "usland", "a1": "usland"}          # morceaux de nom de fichier (entre _ . / ou bout du nom)
+                 "ztile": "uslandtile", "2024Bh1Conway": "USLANDsignaleur", "sx1sand": "uslandsx1sand"}   # v45g : + sx1sand
+# v45g (« que USLAND partout dans la piste, pas de nom d'un autre créateur ») : + dew (moto du paddock), sgm / stt (Saint-Georges,
+# Saint-Thibéry : textures de terre, grates)
+NOMS_MOTS = {"rf": "usland", "a1": "usland", "dew": "usland", "sgm": "usland", "stt": "usland"}   # morceaux de nom de fichier (entre _ . / ou bout du nom)
+# v45g : noms des tuiles (tileinfo, vus dans l'éditeur) : ceux de ZION -> USLAND (rôle de chaque tuile)
+NOMS_TUILES = {"dirtappel 3.0": "USLAND terre", "jump transition": "USLAND pied de saut", "viraplaterre": "USLAND saut",
+               "turnterre": "USLAND virage", "viraplasable": "USLAND sable", "turnsable": "USLAND sable virage"}
 NOMS_TEXTE = (("comme la tour de classement de ZION 2025 Supercross Paris ", ""),)
 
 
@@ -2081,7 +2086,8 @@ def renommer(OUT, FOLDER):
     def neuf(rel):
         parts = rel.split("/")
         parts = [NOMS_DOSSIERS.get(p, p) for p in parts[:-1]] + [parts[-1]]
-        parts[-1] = re.sub(r"(?<![A-Za-z0-9])(rf|a1)(?=[_.])|(?<=_)(rf|a1)(?=[_.])",
+        mots_ = "|".join(NOMS_MOTS)
+        parts[-1] = re.sub(r"(?<![A-Za-z0-9])(%s)(?=[_.])|(?<=_)(%s)(?=[_.])" % (mots_, mots_),
                            lambda m: NOMS_MOTS[(m.group(1) or m.group(2)).lower()], parts[-1])
         return "/".join(parts)
     mp = {}
@@ -2110,6 +2116,8 @@ def renommer(OUT, FOLDER):
             t_ = pat.sub(lambda m: "@%s/%s" % (FOLDER, mp.get(m.group(1), m.group(1))), s_)
             for a_, b_ in NOMS_TEXTE:
                 t_ = t_.replace(a_, b_)
+            if f_ == "tileinfo":                                   # v45g : noms des tuiles
+                t_ = re.sub(r"^name (.+?)[ \t\r]*$", lambda m: "name " + NOMS_TUILES.get(m.group(1), m.group(1)), t_, flags=re.M)
             if t_ != s_:
                 open(p_, "w", encoding="latin-1", newline="").write(t_); n_txt += 1
     return dict(renommes=len([k for k in mp if not k.endswith(".jm") or k + ".gz" not in mp]), textes=n_txt)
