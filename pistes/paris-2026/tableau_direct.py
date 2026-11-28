@@ -76,6 +76,10 @@ MT_NOM_Y = 156                          # v45b (« laisse 202 - OPPLIGER ») : n
 EV_Y = (147, 177, 205)                  # v45c (DA E) : titre, numéro + nom, valeur sous « LIVE » ; v44 : (164, 189, 213) dans la case du temps
 EV_HS_INDEX = 2                         # holeshot : 1er à passer 2 portes (porte 28, entrée du 1er virage ; la 27 est au milieu de la ligne droite)
 EV_VOL = dict(grille=1.5, public=1.0, ooh=1.0, foule=1.0, foule_fin=0.25, annonce=1.0, hp=0.5, mus=1.0, mus_hp=0.4)
+# v45h (« le bruit du public et ses réactions, c'est à 4 : mets à 2,5 ; la musique, laisse ») : foule, clameur et « ooh » x 2,5 / 4
+PUBLIC_K = 2.5 / 4.0
+for k_ in ("public", "ooh", "foule", "foule_fin"):
+    EV_VOL[k_] = round(EV_VOL[k_] * PUBLIC_K, 3)
 EV_COPIES = dict(public=3, mus=2)   # v45i : volume plafonné à 1 dans le jeu -> plus fort = plusieurs copies au même point (pas d'écho)   # sons RF (pack sx2026) : clameur rms ~1100 (RF la joue à 25), grille rms ~2400 ; v45e (Ryan : « la foule j'entends rien ; chaque micro en décalé, trop ») : foule normalisée (x9) à 4, son principal à la caméra, hauts-parleurs bas (léger écho) ; v45g (« pas assez fort », chutes pas entendues) : chanson x2, clameur normalisée (x3,8) à 8 ; v45h : grille inchangée (1.5), foule 4 -> 1 après l'arrivée
 MUSIQUE = os.path.join(HERE, "sons", "musique_paris.raw")       # v45d : chanson FIVE - SX Paris 2022 (locale seulement, voir _bloc_musique)
 SONS_RF = os.path.join(os.path.dirname(os.path.dirname(HERE)), "commun", "assets", "sons_rf")

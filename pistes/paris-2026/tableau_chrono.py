@@ -27,18 +27,22 @@ BLANC, NOIR, VERT, ROUGE, JAUNE = (255, 255, 255), (0, 0, 0), (0, 230, 0), (240,
 # 2 moitiés côte à côte (places 1-11 à gauche, 12-22 à droite : les 22 grilles), 11 lignes chacune, toutes les colonnes dans chaque moitié
 # v45f (« non : seulement les 11 qui ont la place, sur toute la longueur, pas 2 colonnes ; espace un peu plus les sections, même le
 # meilleur tour ») : un seul tableau de 11 lignes sur toute la largeur de l'écran, colonnes réparties sur les 4 panneaux
-N_LIGNES, N_MOITIES, MOITIE = 11, 1, 1024
-Y_TITRES, H_TITRES, Y0, H = 20, 16, 38, 17                     # px de l'écran entier (256 de haut)
-Y_BAS = Y0 + N_LIGNES * H + 4                                  # ligne du meilleur tour
-GH = 16                                                        # hauteur d'une cellule de lettre
-TAILLE = 13
+N_LIGNES, N_MOITIES, MOITIE = 9, 1, 1024
+# v45h (« le top 9 ou 10, les colonnes plus grosses, qu'on voie mieux le temps : en roulant c'est en haut de l'écran, ça va vite ») :
+# 9 lignes, police 18 px (13 avant) ; bande du haut plus haute : temps écoulé (vert) et décompte (rouge) en 18 px à droite, meilleur
+# tour à gauche (place de l'heure du logiciel de chrono) ; plus de ligne en bas : les 9 lignes vont jusqu'en bas de l'écran
+# v45h (« le meilleur tour doit être en bas de l'écran ») : bande du haut = temps seulement, meilleur tour sur la dernière ligne
+Y_TITRES, H_TITRES, Y0, H = 24, 18, 43, 21                     # px de l'écran entier (256 de haut)
+GH = 22                                                        # hauteur d'une cellule de lettre
+Y_BAS = Y0 + N_LIGNES * H + 1                                  # meilleur tour : en bas de l'écran
+TAILLE = 18
 # colonnes (x 0-1023 ; ancre : g = gauche, d = droite, c = centre) ; chaque colonne dans un seul panneau de 256
-COLS = dict(pos=(6, 34, "c"), num=(44, 88, "c"), nom=(100, 252, "g"),
-            marque=(272, 382, "c"), tours=(412, 482, "c"),
-            total=(536, 636, "d"), ecart=(666, 756, "d"),
-            meill=(796, 884, "d"), tour=(924, 1012, "d"))
+COLS = dict(pos=(6, 38, "c"), num=(46, 98, "c"), nom=(108, 252, "g"),
+            marque=(268, 390, "c"), tours=(410, 490, "c"),
+            total=(530, 640, "d"), ecart=(660, 756, "d"),
+            meill=(790, 884, "d"), tour=(918, 1014, "d"))
 TITRES = dict(pos="Pos.", num="N°", nom="Pilote", marque="Marque", tours="Tours", total="Tps total", ecart="Ecart", meill="M. Tour", tour="Tps. tour")
-X_MT_T, X_MT_N, X_MT_P = 90, 166, 272                          # bas : temps, (N° x), nom (panneau 2) : espacés
+X_MT_T, X_MT_N, X_MT_P = 104, 172, 268                          # bas : temps, (N° x), nom (panneau 2) : espacés
 X_VERT, X_ROUGE = (780, 884), (900, 1012)                       # haut, panneau 4 : temps écoulé (vert), temps / tours restants (rouge)
 X_MT_LABEL, X_MT = 8, 72                                        # bas, panneau 1 : « Meill TR : » puis temps (numéro) nom
 CH_B = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789:.-+()'éè°"
@@ -59,7 +63,7 @@ def fonds():
     """pages 0 de direct_a / direct_b : bandeau rouge des titres, lignes, colonne bleue, cases blanches des numéros, « Meill TR : »."""
     big = Image.new("RGBA", (1024, 256), FOND + (255,)); d = ImageDraw.Draw(big)
     d.rectangle([0, Y_TITRES, 1023, Y_TITRES + H_TITRES - 1], fill=BLEU_TITRES + (255,))
-    ft = ImageFont.truetype(FONT_B, 11)
+    ft = ImageFont.truetype(FONT_B, 14)
     for m in range(N_MOITIES):
         o = m * MOITIE
         for k, (x0, x1, a) in COLS.items():
@@ -69,7 +73,7 @@ def fonds():
             y = Y0 + i * H
             d.rectangle([o, y, o + MOITIE - 4, y + H - 2], fill=(LIGNE1 if i % 2 == 0 else LIGNE2) + (255,))
             d.rectangle([o + COLS["pos"][0], y, o + COLS["pos"][1], y + H - 2], fill=BLEU_PLACE + (255,))
-            d.rectangle([o + COLS["num"][0], y + 1, o + COLS["num"][1], y + H - 3], fill=BOITE_NUM + (255,))
+            d.rectangle([o + COLS["num"][0], y + 2, o + COLS["num"][1], y + H - 4], fill=BOITE_NUM + (255,))
     d.text((X_MT_LABEL, Y_BAS + GH / 2), "Meill TR :", font=ImageFont.truetype(FONT, TAILLE), fill=JAUNE + (255,), anchor="lm")
     A = Image.new("RGBA", (PW, PH)); B = Image.new("RGBA", (PW, PH))
     for k in range(4):
@@ -223,7 +227,9 @@ function tc_page(t) {
         y = TC_Y0 + (i % TC_NL) * TC_H + TC_DY; o = Math.floor(i / TC_NL) * TC_MO;
         tc_col(TC_F.B, "pos", y, (i + 1).toString(), o);
         tc_col(TC_F.N, "num", y, mx.get_rider_number(r.slot).toString(), o);
-        tc_col(TC_F.B, "nom", y, tc_nom(mx.get_rider_name(r.slot)), o);
+        s = tc_nom(mx.get_rider_name(r.slot));                               /* v45h : trop long -> initiale du prenom */
+        if (tc_larg(TC_F.B, s) > TC_COLS.nom[1] - TC_COLS.nom[0] && s.indexOf(" ") > 0) s = s.substring(0, s.indexOf(" ") + 2) + ".";
+        tc_col(TC_F.B, "nom", y, s, o);
         mq = tc_marque(mx.get_bike_model(r.slot)); if (mq) tc_col(TC_F.B, "marque", y, mq, o);
         tc_col(TC_F.B, "tours", y, st.tours.toString(), o);
         if (st.total > 0) tc_col(TC_F.B, "total", y, tc_chrono(st.total), o);
@@ -290,6 +296,8 @@ def apercu(fA, fB, let, polices, path_png):
                      "%d:%06.3f" % (t // 60, t % 60), "+1 L", "%.3f" % (47.5 + rnd.random() * 2), "%.3f" % (48 + rnd.random() * 3), 0))
     for i, (num, nom, mq, nt, tot, ec, me, de, vert) in enumerate(rows[:N_LIGNES * N_MOITIES]):
         y = Y0 + (i % N_LIGNES) * H + (H - 1 - GH) // 2; o = (i // N_LIGNES) * MOITIE; f = P["V"] if vert else P["B"]
+        if larg(P["B"], nom) > COLS["nom"][1] - COLS["nom"][0] and " " in nom:
+            nom = nom[:nom.index(" ") + 2] + "."
         col(P["B"], "pos", y, str(i + 1), o); col(P["N"], "num", y, str(num), o); col(P["B"], "nom", y, nom, o); col(P["B"], "marque", y, mq, o)
         col(P["B"], "tours", y, str(nt), o); col(P["B"], "total", y, tot, o); col(P["B"], "ecart", y, ec, o); col(f, "meill", y, me, o); col(f, "tour", y, de, o)
     txt(P["B"], X_MT_T, Y_BAS, "45.025"); txt(P["B"], X_MT_N, Y_BAS, "(N° 84)"); txt(P["B"], X_MT_P, Y_BAS, "COENEN Sacha")
