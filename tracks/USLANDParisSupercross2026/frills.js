@@ -89,7 +89,7 @@ function td_rangees(y0, k0, n) {                              /* places k0+1 .. 
         p = td_2(k + 1);                                        /* v42 : la place (r.position = portes de chrono passees : 44) */
         td_txt(TD_D, (4 + 40) / 2 - td_larg(TD_D, p) / 2, yy, p);
         td_cp(1, TD_BANDES[td_marque(mx.get_bike_model(r.slot))] * 10, TD_BY, 44, yy - 1, 6, 32 - 4);
-        td_txt(TD_P, 55, yy, mx.get_rider_number(r.slot).toString() + "-");
+        td_txt(TD_P, 55, yy, mx.get_rider_number(r.slot).toString() + " -");
         td_txt(TD_N, 116, yy, td_nom(mx.get_rider_name(r.slot)));
     }
 }
