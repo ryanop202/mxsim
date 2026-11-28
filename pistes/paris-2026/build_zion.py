@@ -42,7 +42,8 @@ LAT = dict(T=(34.0, 7.0), W=(40.0, 2.2))      # dessus plat, flanc (ft) : obstac
 #   gardant la forme des bosses ») : obstacles à la coupe mesurée sur RF Anaheim 1 (dessus 34 ft, flancs 7 ft ; était 35,1 / 5,2)
 ZION_R = 28.3
 GRATE_W = 3.1                               # v41c : largeur d'une grate de départ (Saint-Georges : 3,1 ft, pas 4 ft)
-GRATES_SGM = True                           # v42 : le modèle de grates de Saint-Georges (start_grids) posé par-dessus les décals
+MUR_MILWAUKEE_BAS = 13.0                    # v43c : bas du mur invisible après le Milwaukee (ft au-dessus du 1er obstacle du triple) ; v23f : 15
+GRATES_SGM = True                          # v42 : le modèle de grates de Saint-Georges (start_grids) posé par-dessus les décals
 SGM_TERRE = True                            # v41b (« remplace la texture de la terre par exactement celle de Saint-Georges ») : tuile dirt_light.ppm, décals track_lt.png, projections de SGM
 STT_TERRE = True                            # v29c : terre de Saint-Thibéry (texture, couleur, projections, traces) ; False = TERRE_RGB
 TERRE_RGB = (171, 130, 50)                  # v29b (photos de Paris 2025 + capture en jeu : « reprends la texture de Saint-Georges, change juste la couleur ») :
@@ -1231,8 +1232,9 @@ def deco_v21(OUT, FOLDER, combos):
     # v38 (« un mur invisible, pas buggé, entre le petit double avant le saut freestyle et le saut freestyle, comme pour l'arrivée ») : au milieu
     # du creux entre la fin de la petite table et le pied de l'appel, de 12,5 à 35 ft (on roule dessous : rien en dessous de 11 ft)
     st3_ = next(q for q in g3['sections'] if q[2] != LP.L3_SEC); sa3_ = next(q for q in g3['sections'] if q[2] == LP.L3_SEC)
-    u_fs = (st3_[1] + combos[st3_[2]]['items'][-1][2] + sa3_[1]) / 2; inv_wall('invisible_freestyle', g3, u_fs, 12.5, 35.0)
-    inv_wall('invisible_milwaukee', gR, sR[1] + (itR[kM + 1][1] + itR[kM + 1][2]) / 2, 15.0, 40.0)   # v23f : plus haut (« buggés »)
+    # v43c (« le mur invisible du saut de freestyle, enlève-le complètement, ça sert à rien ») : retiré
+    # v43c (« sur le Milwaukee, baisse un petit peu le mur, sans abuser : là on saute dans la 2e sans le toucher ») : 15 -> 13 ft
+    inv_wall('invisible_milwaukee', gR, sR[1] + (itR[kM + 1][1] + itR[kM + 1][2]) / 2, MUR_MILWAUKEE_BAS, MUR_MILWAUKEE_BAS + 25.0)
     g5 = next(g for g in BP.PATH.segs if g['kind'] == 'S' and g['tag'].startswith('L5')); s5 = g5['sections'][0]; it5 = combos[s5[2]]['items']
     inv_wall('invisible_arrivee', g5, s5[1] + (it5[1][2] + it5[2][1]) / 2, 13.0, 30.0)   # v23f : « le plus haut pour le saut d'arrivée encore »
     late_ = deco_v28(OUT, FOLDER, combos, Hf, lines, line, sd, DV, rep_, g3, gR)
