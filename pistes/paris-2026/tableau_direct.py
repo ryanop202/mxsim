@@ -64,7 +64,7 @@ MT_NOM_Y = 156                          # v45b (« laisse 202 - OPPLIGER ») : n
 # grille ; le public sur les chutes et les bagarres ; refais notre propre code ») : module d'événements (code USLAND, écrit ici)
 EV_Y = (164, 189, 213)                  # 3 lignes dans la case du temps, sous son trait blanc (y 159-162) : titre, numéro + nom, valeur
 EV_HS_INDEX = 2                         # holeshot : 1er à passer 2 portes (porte 28, entrée du 1er virage ; la 27 est au milieu de la ligne droite)
-EV_VOL = dict(grille=1.5, public=4.0, ooh=4.0, foule=2.0, annonce=0.6, hp=2.0)   # sons RF (pack sx2026) : clameur rms ~1100 (RF la joue à 25), grille rms ~2400
+EV_VOL = dict(grille=1.5, public=4.0, ooh=4.0, foule=10.0, annonce=4.0, hp=5.0)   # sons RF (pack sx2026) : clameur rms ~1100 (RF la joue à 25), grille rms ~2400 ; v45c : foule 2 -> 10 (rms 692), annonce 0.6 -> 4, hauts-parleurs 2 -> 5 (inaudibles en jeu)
 SONS_RF = os.path.join(os.path.dirname(os.path.dirname(HERE)), "commun", "assets", "sons_rf")
 EV_JS = r"""
 /*
@@ -97,8 +97,13 @@ function ev_hauts_parleurs() {                                         /* l'anno
     ev_joue(EV_S_ANNONCE);
 }
 var EV_ANNONCE_MAX = 120.0;                                           /* si un pilote ne finit jamais (abandon) : annonce 120 s apres le vainqueur */
-var EV_S_FOULE = mx.add_sound("@FOLDER/js/sounds/foule.raw");          /* v44b : bruit du public en continu (boucle), suit la camera */
-if (EV_S_FOULE >= 0) { mx.set_sound_freq(EV_S_FOULE, 44100); mx.set_sound_vol(EV_S_FOULE, EVVF); mx.set_sound_loop(EV_S_FOULE, 1); mx.start_sound(EV_S_FOULE); }
+var EV_S_FOULE = ev_son("@FOLDER/js/sounds/foule.raw", EVVF, 44100);  /* v44b : bruit du public en continu, suit la camera */
+var EV_FOULE_DUREE = EVFD, ev_foule_t = -1000;                        /* v45c : relance a chaque fin (pas de boucle du jeu, pas au chargement) */
+function ev_foule() {
+    if (EV_S_FOULE < 0) return;
+    mx.set_sound_pos(EV_S_FOULE, ev_p[0], ev_p[1], ev_p[2]);
+    if (mx.seconds < ev_foule_t || mx.seconds - ev_foule_t >= EV_FOULE_DUREE) { ev_foule_t = mx.seconds; mx.start_sound(EV_S_FOULE); }
+}
 var ev_p = [0, 0, 0], ev_r = [1, 0, 0, 0, 1, 0, 0, 0, 1];
 var ev_d = -2, ev_grille = -1, ev_hs = -1, ev_hs_t = -1, ev_fin_t = -1, ev_tour_temps = -1, ev_public_t = -100;
 var ev_fin_tv = -1, ev_annonce = 0;
@@ -146,7 +151,7 @@ function ev_tous_finis(o) {                                          /* chacun a
 function ev_maj() {
     var d = mx.get_gate_drop_time(), o, i, tour, top;
     mx.get_camera_location(ev_p, ev_r);
-    if (EV_S_FOULE >= 0) mx.set_sound_pos(EV_S_FOULE, ev_p[0], ev_p[1], ev_p[2]);
+    ev_foule();
     if (mx.seconds < ev_prec_s) { ev_reset(); ev_grille = -1; }          /* retour en arriere (replay) */
     ev_prec_s = mx.seconds;
     if (d != ev_d) { ev_d = d; ev_reset(); }                          /* nouvelle course */
@@ -189,7 +194,7 @@ function ev_ecran() {                                                 /* [titre,
     return null;
 }
 """.replace("EVY0", str(EV_Y[0])).replace("EVY1", str(EV_Y[1])).replace("EVY2", str(EV_Y[2])).replace("EVHS", str(EV_HS_INDEX)) \
-   .replace("EVVG", "%.1f" % EV_VOL["grille"]).replace("EVVP", "%.1f" % EV_VOL["public"]).replace("EVVO", "%.1f" % EV_VOL["ooh"]).replace("EVVF", "%.1f" % EV_VOL["foule"]).replace("EVVA", "%.1f" % EV_VOL["annonce"]).replace("EVVH", "%.1f" % EV_VOL["hp"])
+   .replace("EVVG", "%.1f" % EV_VOL["grille"]).replace("EVVP", "%.1f" % EV_VOL["public"]).replace("EVVO", "%.1f" % EV_VOL["ooh"]).replace("EVVF", "%.1f" % EV_VOL["foule"]).replace("EVVA", "%.1f" % EV_VOL["annonce"]).replace("EVVH", "%.1f" % EV_VOL["hp"]).replace("EVFD", "%.2f" % (os.path.getsize(os.path.join(SONS_RF, "crowdconstant.raw")) / 2.0 / 44100))
 
 
 def _police(im, chars, path, px, gh, col, y0):
@@ -258,7 +263,7 @@ def _top10_fond(dA, dB):
         ya = 256 + y
         dA.rectangle([A_X0, ya, PW, ya + A_H - 3], fill=col + (255,))
         dA.rounded_rectangle([A_PLACE[0], ya + 2, A_PLACE[1], ya + A_H - 5], 3, fill=(255, 255, 255, 255))
-        dA.rounded_rectangle([A_PILL[0], ya + 3, A_PILL[1], ya + A_H - 6], 4, fill=((255, 255, 255) if k == 0 else ROSE) + (255,))
+        dA.rounded_rectangle([A_PILL[0], ya + 3, A_PILL[1], ya + A_H - 6], 4, fill=(VIOLET if k == 0 else ROSE) + (255,))   # v45c : leader violet foncé, numéro blanc
         dB.polygon([(0, y), (A_BANDE_X1, y), (A_BANDE_X1 - A_PENTE, y + A_H - 3), (0, y + A_H - 3)], fill=col + (255,))
         if k == 0:
             dB.text((A_ECART_X1, y + (A_H - 3) / 2), "LEADER", font=f, fill=(255, 255, 255), anchor="rm")
@@ -359,7 +364,7 @@ function td_lignes_a() {                                     /* v45 : top 10 A, 
         yy = 256 + %(ay0)d + k * %(ah)d + %(ady)d;
         p = (k + 1).toString();
         td_txt(TD_D, (%(pl0)d + %(pl1)d) / 2 - td_larg(TD_D, p) / 2, yy, p);
-        n = mx.get_rider_number(r.slot).toString(); f = k == 0 ? TD_P : TD_N;
+        n = mx.get_rider_number(r.slot).toString(); f = TD_N;
         td_txt(f, (%(pi0)d + %(pi1)d) / 2 - td_larg(f, n) / 2, yy, n);
         nm = td_nom(mx.get_rider_name(r.slot));
         while (nm.length > 1 && %(nx0)d + td_larg(TD_N, nm) > %(nx1)d) nm = nm.substring(0, nm.length - 1);
@@ -475,7 +480,7 @@ def apercu(OUT, path_png, ordre=None, temps="04:32 + 1L", mt="1:52.341", mt_nom=
     else:
         txt(frames["a"], T, PW / 2 - larg(T, temps) / 2, TIME_Y, temps)
     for k, (num, nom, ec) in enumerate(ordre[:A_N]):
-        yy = A_Y0 + k * A_H + A_DY; p = str(k + 1); n = str(num); f = P if k == 0 else N
+        yy = A_Y0 + k * A_H + A_DY; p = str(k + 1); n = str(num); f = N
         txt(frames["a"], Dg, (A_PLACE[0] + A_PLACE[1]) / 2 - larg(Dg, p) / 2, 256 + yy, p)
         txt(frames["a"], f, (A_PILL[0] + A_PILL[1]) / 2 - larg(f, n) / 2, 256 + yy, n)
         nm = nom.upper()[:NAME_MAX]
