@@ -32,7 +32,7 @@ NAME_X = 116                            # nom (blanc)
 NAME_MAX = 9
 FONT_B = r"C:/Windows/Fonts/ariblk.ttf"     # Arial Black (gras, comme l'habillage TV)
 NOM = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-'."
-NUM = "0123456789."
+NUM = "0123456789.-"                    # v43d : « - » après le numéro (était « . »)
 POS = "0123456789"
 TEMPS = "0123456789:+L"
 VIOLET, VIOLET2, ROSE = (34, 10, 52), (52, 16, 78), (236, 48, 196)
@@ -196,7 +196,7 @@ function td_rangees(y0, k0, n) {                              /* places k0+1 .. 
         p = td_2(k + 1);                                        /* v42 : la place (r.position = portes de chrono passees : 44) */
         td_txt(TD_D, (%(px0)d + %(px1)d) / 2 - td_larg(TD_D, p) / 2, yy, p);
         td_cp(1, TD_BANDES[td_marque(mx.get_bike_model(r.slot))] * 10, TD_BY, %(bx0)d, yy - 1, %(bw)d, %(rh)d - 4);
-        td_txt(TD_P, %(nx)d, yy, mx.get_rider_number(r.slot).toString() + ".");
+        td_txt(TD_P, %(nx)d, yy, mx.get_rider_number(r.slot).toString() + "-");
         td_txt(TD_N, %(nmx)d, yy, td_nom(mx.get_rider_name(r.slot)));
     }
 }
@@ -258,7 +258,7 @@ def apercu(OUT, path_png, ordre=None, temps="04:32 + 1L"):
         txt(fr, meta["D"], (POS_X0 + POS_X1) / 2 - larg(meta["D"], p) / 2, yy, p)
         mq = next((kk for r, kk in MARQUES if re.match(r, mod)), "none")
         fr.alpha_composite(f1.crop((B[mq] * 10, meta["by"], B[mq] * 10 + BAR_X1 - BAR_X0, meta["by"] + ROW_H - 4)), (BAR_X0, yy - 1))
-        txt(fr, meta["P"], NUM_X, yy, "%d." % num); txt(fr, meta["N"], NAME_X, yy, nom.upper()[:NAME_MAX])
+        txt(fr, meta["P"], NUM_X, yy, "%d-" % num); txt(fr, meta["N"], NAME_X, yy, nom.upper()[:NAME_MAX])
     full = Image.new("RGBA", (4 * PW, 256))
     for i, (tex, y0, _) in enumerate(PANNEAUX):
         full.paste(frames[tex].crop((0, y0, PW, y0 + 256)), (i * PW, 0))
