@@ -5,7 +5,7 @@ USP_CHARGE = 1;
 (function () {
 /*
 USLAND Paris by Ryan v39b - classement en direct sur tout l'ecran geant (DA de la retransmission Supercross Paris).
-Fait comme la tour de classement de ZION 2025 Supercross Paris (pages 256 x 512, dessin a chaque image). Texte ASCII expres.
+Fait (pages 256 x 512, dessin a chaque image). Texte ASCII expres.
 */
 var TD_A = mx.read_texture("@USLANDParisSupercross2026/statue/paris/direct/direct_a.seq");
 var TD_B = mx.read_texture("@USLANDParisSupercross2026/statue/paris/direct/direct_b.seq");

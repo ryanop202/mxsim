@@ -1684,6 +1684,7 @@ def export_zion(*a, **k):
     if RECADRE:
         BP.REPORT['recadrage'] = recadrer(BP.OUT, *RECADRE)           # v42b : terrain collé à l'arène (comme RF) -> minimap ~1,7x plus grande
     BP.REPORT['taille'] = alleger(BP.OUT, BP.FOLDER)                  # v42 : < 200 Mo (fichiers inutilisés enlevés, .jm -> .jm.gz)
+    BP.REPORT['noms'] = renommer(BP.OUT, BP.FOLDER)                   # v43b : RF / A1 / ZION / Conway -> USLAND (dossier de la piste seulement)
 
 
 CHANT = False      # v42d : chant de la grille coupé (« il ne marche pas »)
@@ -1946,7 +1947,56 @@ def toit_editeur(OUT):
     return dict(enleves=len(L_) - len(k_), charpente_faces_haut=n_f)
 
 
-ALLEGER_SANS_X2 = True  # v42 : pas de shadingx2.ppm (copie de shading.ppm / 2)
+NOMS_DOSSIERS = {"rfborder": "uslandborder", "rfsand": "uslandsand", "zdecal": "uslanddecal", "zsky": "uslandsky",
+                 "ztile": "uslandtile", "2024Bh1Conway": "USLANDsignaleur"}
+NOMS_MOTS = {"rf": "usland", "a1": "usland"}          # morceaux de nom de fichier (entre _ . / ou bout du nom)
+NOMS_TEXTE = (("comme la tour de classement de ZION 2025 Supercross Paris ", ""),)
+
+
+def renommer(OUT, FOLDER):
+    """v43b (« renomme tout : au lieu de RF, mets USLAND ; mais que dans la piste, dans GitHub on garde les mêmes noms ») : DERNIÈRE étape,
+    seulement dans le dossier de la piste construite (le code et les fichiers sources gardent leurs noms) : dossiers (rfborder, rfsand,
+    zdecal / zsky / ztile, ext/2024Bh1Conway) et morceaux de noms (rf_, a1_, _a1, rf.) -> USLAND ; chaque chemin @FOLDER/... des
+    fichiers texte (statues, décals, billboards, tileinfo, éclairage, signaleurs, scripts, .seq, variants) réécrit pareil ; commentaire
+    ZION enlevé des scripts. Rien ne change en jeu."""
+    def neuf(rel):
+        parts = rel.split("/")
+        parts = [NOMS_DOSSIERS.get(p, p) for p in parts[:-1]] + [parts[-1]]
+        parts[-1] = re.sub(r"(?<![A-Za-z0-9])(rf|a1)(?=[_.])|(?<=_)(rf|a1)(?=[_.])",
+                           lambda m: NOMS_MOTS[(m.group(1) or m.group(2)).lower()], parts[-1])
+        return "/".join(parts)
+    mp = {}
+    for r_, ds_, fs_ in os.walk(OUT):
+        for f_ in fs_:
+            rel = os.path.relpath(os.path.join(r_, f_), OUT).replace(os.sep, "/")
+            if "/" in rel and neuf(rel) != rel:
+                mp[rel] = neuf(rel)
+                if rel.endswith(".jm.gz"):
+                    mp[rel[:-3]] = neuf(rel)[:-3]                  # les statues nomment le .jm
+    for o_, n_ in mp.items():
+        po, pn = os.path.join(OUT, o_), os.path.join(OUT, n_)
+        if os.path.exists(po):
+            os.makedirs(os.path.dirname(pn), exist_ok=True); os.replace(po, pn)
+    for r_, ds_, fs_ in sorted(os.walk(OUT), reverse=True):
+        if r_ != OUT and not os.listdir(r_):
+            os.rmdir(r_)
+    pat = re.compile(r"@" + re.escape(FOLDER) + r"/([^\s\"'\]]+)")
+    n_txt = 0
+    for r_, ds_, fs_ in os.walk(OUT):
+        for f_ in fs_:
+            p_ = os.path.join(r_, f_)
+            if f_.lower().endswith((".png", ".ppm", ".jpg", ".raw", ".wav", ".gz", ".jm", ".shp", ".hf")) or f_ in ("tilemap",) or os.path.getsize(p_) > 30e6:
+                continue
+            s_ = open(p_, encoding="latin-1").read()
+            t_ = pat.sub(lambda m: "@%s/%s" % (FOLDER, mp.get(m.group(1), m.group(1))), s_)
+            for a_, b_ in NOMS_TEXTE:
+                t_ = t_.replace(a_, b_)
+            if t_ != s_:
+                open(p_, "w", encoding="latin-1", newline="").write(t_); n_txt += 1
+    return dict(renommes=len([k for k in mp if not k.endswith(".jm") or k + ".gz" not in mp]), textes=n_txt)
+
+
+ALLEGER_SANS_X2 = True # v42 : pas de shadingx2.ppm (copie de shading.ppm / 2)
 ALLEGER_MOTOS_PX = 1024  # v42 : textures des motos du paddock (2048 -> 1024 px)
 
 

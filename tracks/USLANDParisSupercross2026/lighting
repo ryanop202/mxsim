@@ -1,10 +1,10 @@
 sun_vector [ 12049 12000 -8049 ] 
 sun_color [ 1.3 1.3 1.3 ]
 ambient [ 0.08 0.08 0.08 ]
-sky_n @USLANDParisSupercross2026/zsky/sky-n.png
-sky_e @USLANDParisSupercross2026/zsky/sky-e.png
-sky_s @USLANDParisSupercross2026/zsky/sky-s.png
-sky_w @USLANDParisSupercross2026/zsky/sky-w.png
-sky_u @USLANDParisSupercross2026/zsky/sky-u.png
-sky_env @USLANDParisSupercross2026/zsky/sky-env.png
+sky_n @USLANDParisSupercross2026/uslandsky/sky-n.png
+sky_e @USLANDParisSupercross2026/uslandsky/sky-e.png
+sky_s @USLANDParisSupercross2026/uslandsky/sky-s.png
+sky_w @USLANDParisSupercross2026/uslandsky/sky-w.png
+sky_u @USLANDParisSupercross2026/uslandsky/sky-u.png
+sky_env @USLANDParisSupercross2026/uslandsky/sky-env.png
 dynamic_lighting 1
