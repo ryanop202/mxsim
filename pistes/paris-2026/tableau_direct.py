@@ -32,9 +32,9 @@ NAME_X = 116                            # nom (blanc)
 NAME_MAX = 9
 FONT_B = r"C:/Windows/Fonts/ariblk.ttf"     # Arial Black (gras, comme l'habillage TV)
 NOM = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-'.:+"   # v44 : « : » et « + » (temps du meilleur tour, places gagnées)
-NUM = "0123456789.-"                    # v43d : « - » après le numéro (était « . »)
+NUM = "0123456789.-ABCDEFGHIJKLMNOPQRSTUVWXYZ'"   # v43d : « - » après le numéro ; v45b : lettres roses (« 202 - OPPLIGER » du meilleur tour)
 POS = "0123456789"
-TEMPS = "0123456789:+L"
+TEMPS = "0123456789:+L.-"              # v45 : « . » et « - » (meilleur tour 1:52.341, « -:--.--- » avant le 1er)
 VIOLET, VIOLET2, ROSE = (34, 10, 52), (52, 16, 78), (236, 48, 196)
 BANDES = dict(honda=(214, 24, 36), ktm=(250, 110, 0), kawasaki=(60, 180, 60), yamaha=(30, 70, 210), suzuki=(245, 205, 0),
               husqvarna=(235, 238, 244), gasgas=(200, 20, 40), triumph=(120, 120, 128), none=(150, 60, 190))
@@ -44,6 +44,22 @@ MARQUES = [(r"^crf?[0-9]+", "honda"), (r"^[0-9]+sx", "ktm"), (r"^kx[0-9]+", "kaw
 PANNEAUX = [("a", 0, None), ("a", 256, 1), ("b", 0, 9), ("b", 256, 17)]
 TIME_BOX = (16, 150, 240, 240)          # case du temps dans le panneau 1 (px du carré)
 TIME_Y = 168
+# v45 (Ryan : « top 10 A, mais à droite je veux le meilleur temps seul, rien d'autre ») : proposition A (apercu_top10.prop_a) :
+# panneaux 2 + 3 = 10 lignes en bandeau (place en case blanche, numéro en pastille rose, nom, écart au leader à droite ; leader en
+# rose, pastille blanche) ; panneau 4 = la carte du meilleur tour, seule (plus de nom, plus de logo).
+A_N, A_H, A_Y0 = 10, 25, 3              # lignes, hauteur, haut de la 1re ligne (px du carré)
+A_DY = -2                               # cellule de police (26 px) centrée sur la bande (22 px)
+A_X0 = 6                                # début de la bande (panneau 2)
+A_PLACE = (9, 43)                       # case blanche de la place (panneau 2)
+A_PILL = (55, 109)                      # pastille du numéro (panneau 2)
+A_NOM_X, A_NOM_X1 = 117, 252            # nom (panneau 2 seulement : lettres en trop enlevées)
+A_BANDE_X1, A_PENTE = 250, 10           # fin de la bande en biais (panneau 3)
+A_ECART_X1 = 232                        # bord droit de l'écart (panneau 3)
+VIOLET3 = (74, 24, 110)
+MT_CARTE = (10, 58, 246, 198)           # carte du meilleur tour (panneau 4)
+MT_TITRE = "FASTEST LAP"
+MT_Y = 98                               # haut de la cellule (56 px) du temps
+MT_NOM_Y = 156                          # v45b (« laisse 202 - OPPLIGER ») : numéro - nom du meilleur tour, en rose, sous le temps
 # v44 (« holeshot avec le nom du pilote sur le grand écran ; à l'arrivée le vainqueur ; les récompenses en fin de manche ; son de la
 # grille ; le public sur les chutes et les bagarres ; refais notre propre code ») : module d'événements (code USLAND, écrit ici)
 EV_Y = (164, 189, 213)                  # 3 lignes dans la case du temps, sous son trait blanc (y 159-162) : titre, numéro + nom, valeur
@@ -179,11 +195,12 @@ function ev_ecran() {                                                 /* [titre,
 def _police(im, chars, path, px, gh, col, y0):
     """lettres rangées à partir de y0 (largeur de la page) ; renvoie {lettre: [x, y, largeur]} (px de la page) et le bas."""
     f = ImageFont.truetype(path, px); d = ImageDraw.Draw(im); x, y = 1, y0; cells = {}
+    _, rt, _, rb = d.textbbox((0, 0), "H0", font=f)                 # v45 : même ligne de base pour tous (le « . » en bas, plus au milieu)
     for ch in chars:
         l, t, r, b = d.textbbox((0, 0), ch, font=f); w = r - l + 2
         if x + w > PW - 1:
             x, y = 1, y + gh
-        oy = (gh - (b - t)) // 2 - t
+        oy = (gh - (rb - rt)) // 2 - rt
         d.text((x + 1 - l, y + oy), ch, font=f, fill=col + (255,))
         cells[ch] = [x, y, w]; x += w + 1
     return cells, y + gh
@@ -227,15 +244,32 @@ def _fonds(PD):
     dA.ellipse([PW - 66, 120, PW - 56, 130], fill=(255, 40, 60)); dA.text((PW - 52, 114), "LIVE", font=f, fill=(255, 255, 255))
     dA.rounded_rectangle(TIME_BOX, 8, fill=(28, 28, 34, 255))
     dA.rectangle([TIME_BOX[0] + 22, TIME_BOX[1] + 9, TIME_BOX[2] - 22, TIME_BOX[1] + 12], fill=(235, 235, 240, 255))
-    _rangees(dA, 256, NPAN)
     dB = ImageDraw.Draw(B)
-    _rangees(dB, 0, NPAN)
-    _rangees(dB, 256, 6)
-    # v39b (Ryan, capture : « sur le grand écran, remplace le USLAND entouré par le logo MX Sim Racing ») : logo de l'utilisateur, fond noir enlevé
-    mx = Image.open(os.path.join(HERE, "..", "..", "commun", "assets", "logos", "user", "logo mxsim racing.png")).convert("RGBA"); b_ = np.asarray(mx).copy()
-    b_[..., 3] = np.where(b_[..., :3].max(-1) > 38, 255, 0); mx = Image.fromarray(b_, "RGBA"); mx = mx.crop(mx.getbbox())
-    PD.fitc(B, mx, (24, 256 + 6 * ROW_H + 10, PW - 24, PH - 8), 0.02)
+    _top10_fond(dA, dB)
+    _mt_fond(dB)
     return A, B
+
+
+def _top10_fond(dA, dB):
+    """v45 : bandes du top 10 (A) : panneau 2 = bas de la page A, panneau 3 = haut de la page B."""
+    f = ImageFont.truetype(FONT_B, 12)
+    for k in range(A_N):
+        y = A_Y0 + k * A_H; col = ROSE if k == 0 else (VIOLET3 if k % 2 == 0 else VIOLET2)
+        ya = 256 + y
+        dA.rectangle([A_X0, ya, PW, ya + A_H - 3], fill=col + (255,))
+        dA.rounded_rectangle([A_PLACE[0], ya + 2, A_PLACE[1], ya + A_H - 5], 3, fill=(255, 255, 255, 255))
+        dA.rounded_rectangle([A_PILL[0], ya + 3, A_PILL[1], ya + A_H - 6], 4, fill=((255, 255, 255) if k == 0 else ROSE) + (255,))
+        dB.polygon([(0, y), (A_BANDE_X1, y), (A_BANDE_X1 - A_PENTE, y + A_H - 3), (0, y + A_H - 3)], fill=col + (255,))
+        if k == 0:
+            dB.text((A_ECART_X1, y + (A_H - 3) / 2), "LEADER", font=f, fill=(255, 255, 255), anchor="rm")
+
+
+def _mt_fond(dB):
+    """v45 : panneau 4 (bas de la page B) : carte du meilleur tour seule."""
+    x0, y0, x1, y1 = MT_CARTE
+    dB.rounded_rectangle([x0, 256 + y0, x1, 256 + y1], 10, fill=VIOLET2 + (255,))
+    dB.polygon([(x0, 256 + y0), (x0 + 190, 256 + y0), (x0 + 176, 256 + y0 + 30), (x0, 256 + y0 + 30)], fill=ROSE + (255,))
+    dB.text((x0 + 12, 256 + y0 + 15), MT_TITRE, font=ImageFont.truetype(FONT_B, 15), fill=(255, 255, 255), anchor="lm")
 
 
 def _js(N, P, D, T, by, tex_a, tex_b, folder=""):
@@ -317,17 +351,61 @@ function td_nom(s) {
     var m = s.replace(/\|.*/, "").replace(/^\s+|\s+$/g, "").split(" ");
     return m[m.length - 1].toUpperCase().substring(0, %(nmax)d);
 }
-function td_rangees(y0, k0, n) {                              /* places k0+1 .. k0+n dans le carre qui commence a y0 */
-    var k, r, yy, p;
-    for (k = k0; k < k0 + n && k < td_ordre.length; k++) {
+function td_lignes_a() {                                     /* v45 : top 10 A, panneau 2 (bas de la page A) : place, numero, nom */
+    var k, r, yy, p, n, f, nm;
+    for (k = 0; k < %(an)d && k < td_ordre.length; k++) {
         r = td_ordre[k];
         if (r.position < 1) break;
-        yy = y0 + (k - k0) * %(rh)d + 3;
-        p = td_2(k + 1);                                        /* v42 : la place (r.position = portes de chrono passees : 44) */
-        td_txt(TD_D, (%(px0)d + %(px1)d) / 2 - td_larg(TD_D, p) / 2, yy, p);
-        td_cp(1, TD_BANDES[td_marque(mx.get_bike_model(r.slot))] * 10, TD_BY, %(bx0)d, yy - 1, %(bw)d, %(rh)d - 4);
-        td_txt(TD_P, %(nx)d, yy, mx.get_rider_number(r.slot).toString() + " -");
-        td_txt(TD_N, %(nmx)d, yy, td_nom(mx.get_rider_name(r.slot)));
+        yy = 256 + %(ay0)d + k * %(ah)d + %(ady)d;
+        p = (k + 1).toString();
+        td_txt(TD_D, (%(pl0)d + %(pl1)d) / 2 - td_larg(TD_D, p) / 2, yy, p);
+        n = mx.get_rider_number(r.slot).toString(); f = k == 0 ? TD_P : TD_N;
+        td_txt(f, (%(pi0)d + %(pi1)d) / 2 - td_larg(f, n) / 2, yy, n);
+        nm = td_nom(mx.get_rider_name(r.slot));
+        while (nm.length > 1 && %(nx0)d + td_larg(TD_N, nm) > %(nx1)d) nm = nm.substring(0, nm.length - 1);
+        td_txt(TD_N, %(nx0)d, yy, nm);
+    }
+}
+function td_ecart(r, l) {                                      /* ecart au leader au meme point de chrono, ou tours de retard */
+    var L = mx.lap_to_index(2) - mx.lap_to_index(1), n, t0, t1;
+    if (L > 0) { n = Math.floor((l.position - r.position) / L); if (n >= 1) return "+" + n + "L"; }
+    t0 = mx.get_timing(l.slot, r.position); t1 = mx.get_timing(r.slot, r.position);
+    if (t0 < 0 || t1 < 0) return "";
+    t1 = Math.max(0, t1 - t0);
+    return "+" + (t1 < 60 ? t1.toFixed(1) : ev_temps(t1));
+}
+function td_lignes_b() {                                     /* panneau 3 (haut de la page B) : ecarts */
+    var k, r, e;
+    for (k = 1; k < %(an)d && k < td_ordre.length; k++) {
+        r = td_ordre[k];
+        if (r.position < 1) break;
+        e = td_ecart(r, td_ordre[0]);
+        if (e) td_txt(TD_N, %(ex1)d - td_larg(TD_N, e), %(ay0)d + k * %(ah)d + %(ady)d, e);
+    }
+}
+var td_mt_t = -1, td_mt_s = -100, td_mt_slot = -1;
+function td_mt_maj() {                                       /* meilleur tour de la course (tours complets a partir du 2e), 1 fois par seconde */
+    var i, k, n, t1, t2, best = -1, slot = -1;
+    if (mx.seconds >= td_mt_s && mx.seconds - td_mt_s < 1.0) return;
+    td_mt_s = mx.seconds;
+    for (i = 0; i < td_ordre.length; i++) {
+        n = mx.index_to_lap(td_ordre[i].position);
+        for (k = 1; k < n; k++) {
+            t1 = mx.get_timing(td_ordre[i].slot, mx.lap_to_index(k)); t2 = mx.get_timing(td_ordre[i].slot, mx.lap_to_index(k + 1));
+            if (t1 >= 0 && t2 > t1 && (best < 0 || t2 - t1 < best)) { best = t2 - t1; slot = td_ordre[i].slot; }
+        }
+    }
+    td_mt_t = best; td_mt_slot = slot;
+}
+function td_chrono(t) { var m = Math.floor(t / 60), s = t - 60 * m; return m + ":" + (s < 10 ? "0" : "") + s.toFixed(3); }
+function td_mt() {                                           /* panneau 4 (bas de la page B) : le meilleur temps seul */
+    var s;
+    td_mt_maj();
+    s = td_mt_t > 0 ? td_chrono(td_mt_t) : "-:--.---";
+    td_txt(TD_T, %(mtcx)d - td_larg(TD_T, s) / 2, 256 + %(mty)d, s);
+    if (td_mt_slot >= 0) {
+        s = mx.get_rider_number(td_mt_slot).toString() + " - " + td_nom(mx.get_rider_name(td_mt_slot));
+        td_txt(TD_P, %(mtcx)d - td_larg(TD_P, s) / 2, 256 + %(mtny)d, s);
     }
 }
 function td_dessine(secs) {
@@ -346,13 +424,13 @@ function td_dessine(secs) {
         s = td_haut();
         td_txt(TD_T, TD_W / 2 - td_larg(TD_T, s) / 2, %(ty)d, s);
     }
-    td_rangees(256, 0, %(npan)d);
+    td_lignes_a();
     mx.end_custom_frame(TD_A);
     td_tex = TD_B;
     mx.begin_custom_frame(TD_B);
     td_cp(0, 0, 0, 0, 0, TD_W, TD_H);
-    td_rangees(0, %(npan)d, %(npan)d);
-    td_rangees(256, 2 * %(npan)d, 6);
+    td_lignes_b();
+    td_mt();
     mx.end_custom_frame(TD_B);
 }
 function td_image(secs) {
@@ -365,11 +443,12 @@ if (!td_prev) td_prev = function (s) {};
 mx.frame_handler = td_image;
 """ % dict(ta=tex_a, tb=tex_b, pw=PW, ph=PH, N=json.dumps(N), P=json.dumps(P), D=json.dumps(D), T=json.dumps(T), bandes=json.dumps(bandes),
            by=by, marques=", ".join('[/%s/, "%s"]' % (r, k) for r, k in MARQUES), nmax=NAME_MAX, rh=ROW_H, px0=POS_X0, px1=POS_X1,
-           bx0=BAR_X0, bw=BAR_X1 - BAR_X0, nx=NUM_X, nmx=NAME_X, ty=TIME_Y, npan=NPAN) + EV_JS.replace("@FOLDER", "@" + folder)
+           bx0=BAR_X0, bw=BAR_X1 - BAR_X0, nx=NUM_X, nmx=NAME_X, ty=TIME_Y, npan=NPAN, an=A_N, ah=A_H, ay0=A_Y0, ady=A_DY, pl0=A_PLACE[0], pl1=A_PLACE[1], pi0=A_PILL[0], pi1=A_PILL[1],
+           nx0=A_NOM_X, nx1=A_NOM_X1, ex1=A_ECART_X1, mtcx=(MT_CARTE[0] + MT_CARTE[2]) // 2, mty=MT_Y, mtny=MT_NOM_Y) + EV_JS.replace("@FOLDER", "@" + folder)
 
 
-def apercu(OUT, path_png, ordre=None, temps="04:32 + 1L"):
-    """aperçu de l'écran entier (mêmes calculs que frills.js, rejoués en Python) : 4 panneaux côte à côte."""
+def apercu(OUT, path_png, ordre=None, temps="04:32 + 1L", mt="1:52.341", mt_nom="202 - OPPLIGER", evt=None):
+    """aperçu de l'écran entier (mêmes calculs que frills.js, rejoués en Python) : 4 panneaux côte à côte (v45 : top 10 A)."""
     D_ = os.path.join(OUT, *SUB.split("/"))
     fA = Image.open(os.path.join(D_, "fond_a.png")).convert("RGBA"); fB = Image.open(os.path.join(D_, "fond_b.png")).convert("RGBA")
     f1 = Image.open(os.path.join(D_, "lettres.png")).convert("RGBA"); meta = json.load(open(os.path.join(D_, "polices.json")))
@@ -385,19 +464,29 @@ def apercu(OUT, path_png, ordre=None, temps="04:32 + 1L"):
             if ch not in f["c"]:
                 continue
             c = f["c"][ch]; fr.alpha_composite(f1.crop((c[0], c[1], c[0] + c[2], c[1] + f["h"])), (int(round(x)), int(round(y)))); x += c[2] - 1
-    noms = ["TURNER", "THOMAS", "HARRIS", "CLARK", "PIETERS", "MILLER", "COEN", "HICKS", "MANZI", "SOULE", "POLLET", "LOPEZ",
-            "VINCENT", "BRUN", "SIMON", "LEBEAU", "LAMARQUE", "BRIAND", "HUDSON", "EKER", "OPPLIGER", "BAZO"]
-    mods = ["crf450", "yz450f", "kx450", "450sxf", "fc450", "rmz450", "mc450f", "crf250"]
-    ordre = ordre or [(n_ * 7 % 900 + 2, nm, mods[i % len(mods)]) for i, (n_, nm) in enumerate(zip(range(1, 23), noms))]
-    B = meta["bandes"]
-    txt(frames["a"], meta["T"], PW / 2 - larg(meta["T"], temps) / 2, TIME_Y, temps)
-    for k, (num, nom, mod) in enumerate(ordre):
-        tex, y0 = ("a", 256) if k < NPAN else ("b", 0) if k < 2 * NPAN else ("b", 256)
-        yy = y0 + (k % NPAN) * ROW_H + 3; p = "%02d" % (k + 1); fr = frames[tex]
-        txt(fr, meta["D"], (POS_X0 + POS_X1) / 2 - larg(meta["D"], p) / 2, yy, p)
-        mq = next((kk for r, kk in MARQUES if re.match(r, mod)), "none")
-        fr.alpha_composite(f1.crop((B[mq] * 10, meta["by"], B[mq] * 10 + BAR_X1 - BAR_X0, meta["by"] + ROW_H - 4)), (BAR_X0, yy - 1))
-        txt(fr, meta["P"], NUM_X, yy, "%d -" % num); txt(fr, meta["N"], NAME_X, yy, nom.upper()[:NAME_MAX])
+    ordre = ordre or [(202, "OPPLIGER", ""), (21, "THOMAS", "+1.4"), (9, "HARRIS", "+2.9"), (47, "CLARK", "+3.3"), (151, "PIETERS", "+5.8"),
+                      (16, "MILLER", "+7.0"), (348, "COEN", "+9.6"), (33, "HICKS", "+12.1"), (77, "MANZI", "+1L"), (5, "LAMARQUE", "+2L")]
+    N, P, Dg, T = meta["N"], meta["P"], meta["D"], meta["T"]
+    if evt:                                     # comme td_dessine : [titre, numéro, nom, valeur] dans la case du temps
+        txt(frames["a"], N, PW / 2 - larg(N, evt[0]) / 2, EV_Y[0], evt[0])
+        w = larg(P, evt[1]) + 8 + larg(N, evt[2])
+        txt(frames["a"], P, PW / 2 - w / 2, EV_Y[1], evt[1]); txt(frames["a"], N, PW / 2 - w / 2 + larg(P, evt[1]) + 8, EV_Y[1], evt[2])
+        txt(frames["a"], N, PW / 2 - larg(N, evt[3]) / 2, EV_Y[2], evt[3])
+    else:
+        txt(frames["a"], T, PW / 2 - larg(T, temps) / 2, TIME_Y, temps)
+    for k, (num, nom, ec) in enumerate(ordre[:A_N]):
+        yy = A_Y0 + k * A_H + A_DY; p = str(k + 1); n = str(num); f = P if k == 0 else N
+        txt(frames["a"], Dg, (A_PLACE[0] + A_PLACE[1]) / 2 - larg(Dg, p) / 2, 256 + yy, p)
+        txt(frames["a"], f, (A_PILL[0] + A_PILL[1]) / 2 - larg(f, n) / 2, 256 + yy, n)
+        nm = nom.upper()[:NAME_MAX]
+        while len(nm) > 1 and A_NOM_X + larg(N, nm) > A_NOM_X1:
+            nm = nm[:-1]
+        txt(frames["a"], N, A_NOM_X, 256 + yy, nm)
+        if k and ec:
+            txt(frames["b"], N, A_ECART_X1 - larg(N, ec), yy, ec)
+    cx = (MT_CARTE[0] + MT_CARTE[2]) // 2
+    txt(frames["b"], T, cx - larg(T, mt) / 2, 256 + MT_Y, mt)
+    txt(frames["b"], P, cx - larg(P, mt_nom) / 2, 256 + MT_NOM_Y, mt_nom)
     full = Image.new("RGBA", (4 * PW, 256))
     for i, (tex, y0, _) in enumerate(PANNEAUX):
         full.paste(frames[tex].crop((0, y0, PW, y0 + 256)), (i * PW, 0))

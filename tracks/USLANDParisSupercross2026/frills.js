@@ -11,10 +11,10 @@ var TD_A = mx.read_texture("@USLANDParisSupercross2026/statue/paris/direct/direc
 var TD_B = mx.read_texture("@USLANDParisSupercross2026/statue/paris/direct/direct_b.seq");
 var TD_W = 256, TD_H = 512;
 var TD_N = { h: 26, c: {"A": [1, 0, 16], "B": [18, 0, 15], "C": [34, 0, 15], "D": [50, 0, 15], "E": [66, 0, 14], "F": [81, 0, 13], "G": [95, 0, 16], "H": [112, 0, 16], "I": [129, 0, 9], "J": [139, 0, 13], "K": [153, 0, 17], "L": [171, 0, 13], "M": [185, 0, 18], "N": [204, 0, 16], "O": [221, 0, 16], "P": [238, 0, 14], "Q": [1, 26, 16], "R": [18, 26, 16], "S": [35, 26, 14], "T": [50, 26, 14], "U": [65, 26, 16], "V": [82, 26, 16], "W": [99, 26, 21], "X": [121, 26, 16], "Y": [138, 26, 16], "Z": [155, 26, 14], "0": [170, 26, 13], "1": [184, 26, 13], "2": [198, 26, 13], "3": [212, 26, 13], "4": [226, 26, 13], "5": [240, 26, 13], "6": [1, 52, 13], "7": [15, 52, 13], "8": [29, 52, 13], "9": [43, 52, 13], "-": [57, 52, 8], "'": [66, 52, 7], ".": [74, 52, 8], ":": [83, 52, 8], "+": [92, 52, 13]} };
-var TD_P = { h: 26, c: {"0": [1, 78, 13], "1": [15, 78, 13], "2": [29, 78, 13], "3": [43, 78, 13], "4": [57, 78, 13], "5": [71, 78, 13], "6": [85, 78, 13], "7": [99, 78, 13], "8": [113, 78, 13], "9": [127, 78, 13], ".": [141, 78, 8], "-": [150, 78, 8]} };
-var TD_D = { h: 26, c: {"0": [1, 104, 13], "1": [15, 104, 13], "2": [29, 104, 13], "3": [43, 104, 13], "4": [57, 104, 13], "5": [71, 104, 13], "6": [85, 104, 13], "7": [99, 104, 13], "8": [113, 104, 13], "9": [127, 104, 13]} };
-var TD_T = { h: 56, c: {"0": [1, 130, 25], "1": [27, 130, 25], "2": [53, 130, 25], "3": [79, 130, 25], "4": [105, 130, 25], "5": [131, 130, 25], "6": [157, 130, 25], "7": [183, 130, 25], "8": [209, 130, 25], "9": [1, 186, 25], ":": [27, 186, 14], "+": [42, 186, 25], "L": [68, 186, 25]} };
-var TD_BANDES = {"honda": 0, "ktm": 1, "kawasaki": 2, "yamaha": 3, "suzuki": 4, "husqvarna": 5, "gasgas": 6, "triumph": 7, "none": 8}, TD_BY = 242;
+var TD_P = { h: 26, c: {"0": [1, 78, 13], "1": [15, 78, 13], "2": [29, 78, 13], "3": [43, 78, 13], "4": [57, 78, 13], "5": [71, 78, 13], "6": [85, 78, 13], "7": [99, 78, 13], "8": [113, 78, 13], "9": [127, 78, 13], ".": [141, 78, 8], "-": [150, 78, 8], "A": [159, 78, 16], "B": [176, 78, 15], "C": [192, 78, 15], "D": [208, 78, 15], "E": [224, 78, 14], "F": [239, 78, 13], "G": [1, 104, 16], "H": [18, 104, 16], "I": [35, 104, 9], "J": [45, 104, 13], "K": [59, 104, 17], "L": [77, 104, 13], "M": [91, 104, 18], "N": [110, 104, 16], "O": [127, 104, 16], "P": [144, 104, 14], "Q": [159, 104, 16], "R": [176, 104, 16], "S": [193, 104, 14], "T": [208, 104, 14], "U": [223, 104, 16], "V": [1, 130, 16], "W": [18, 130, 21], "X": [40, 130, 16], "Y": [57, 130, 16], "Z": [74, 130, 14], "'": [89, 130, 7]} };
+var TD_D = { h: 26, c: {"0": [1, 156, 13], "1": [15, 156, 13], "2": [29, 156, 13], "3": [43, 156, 13], "4": [57, 156, 13], "5": [71, 156, 13], "6": [85, 156, 13], "7": [99, 156, 13], "8": [113, 156, 13], "9": [127, 156, 13]} };
+var TD_T = { h: 56, c: {"0": [1, 182, 25], "1": [27, 182, 25], "2": [53, 182, 25], "3": [79, 182, 25], "4": [105, 182, 25], "5": [131, 182, 25], "6": [157, 182, 25], "7": [183, 182, 25], "8": [209, 182, 25], "9": [1, 238, 25], ":": [27, 238, 14], "+": [42, 238, 25], "L": [68, 238, 25], ".": [94, 238, 14], "-": [109, 238, 14]} };
+var TD_BANDES = {"honda": 0, "ktm": 1, "kawasaki": 2, "yamaha": 3, "suzuki": 4, "husqvarna": 5, "gasgas": 6, "triumph": 7, "none": 8}, TD_BY = 294;
 var TD_MARQUES = [[/^crf?[0-9]+/, "honda"], [/^[0-9]+sx/, "ktm"], [/^kx[0-9]+/, "kawasaki"], [/^yz[0-9]+/, "yamaha"], [/^rmz?[0-9]+/, "suzuki"], [/^fc[0-9]+/, "husqvarna"], [/^mc[0-9]+/, "gasgas"], [/^tf[0-9]+/, "triumph"]];
 var TD_FIN_TOURS = mx.get_finish_laps(), TD_FIN_TEMPS = mx.get_finish_time();
 var td_ordre = [];
@@ -80,17 +80,61 @@ function td_nom(s) {
     var m = s.replace(/\|.*/, "").replace(/^\s+|\s+$/g, "").split(" ");
     return m[m.length - 1].toUpperCase().substring(0, 9);
 }
-function td_rangees(y0, k0, n) {                              /* places k0+1 .. k0+n dans le carre qui commence a y0 */
-    var k, r, yy, p;
-    for (k = k0; k < k0 + n && k < td_ordre.length; k++) {
+function td_lignes_a() {                                     /* v45 : top 10 A, panneau 2 (bas de la page A) : place, numero, nom */
+    var k, r, yy, p, n, f, nm;
+    for (k = 0; k < 10 && k < td_ordre.length; k++) {
         r = td_ordre[k];
         if (r.position < 1) break;
-        yy = y0 + (k - k0) * 32 + 3;
-        p = td_2(k + 1);                                        /* v42 : la place (r.position = portes de chrono passees : 44) */
-        td_txt(TD_D, (4 + 40) / 2 - td_larg(TD_D, p) / 2, yy, p);
-        td_cp(1, TD_BANDES[td_marque(mx.get_bike_model(r.slot))] * 10, TD_BY, 44, yy - 1, 6, 32 - 4);
-        td_txt(TD_P, 55, yy, mx.get_rider_number(r.slot).toString() + " -");
-        td_txt(TD_N, 116, yy, td_nom(mx.get_rider_name(r.slot)));
+        yy = 256 + 3 + k * 25 + -2;
+        p = (k + 1).toString();
+        td_txt(TD_D, (9 + 43) / 2 - td_larg(TD_D, p) / 2, yy, p);
+        n = mx.get_rider_number(r.slot).toString(); f = k == 0 ? TD_P : TD_N;
+        td_txt(f, (55 + 109) / 2 - td_larg(f, n) / 2, yy, n);
+        nm = td_nom(mx.get_rider_name(r.slot));
+        while (nm.length > 1 && 117 + td_larg(TD_N, nm) > 252) nm = nm.substring(0, nm.length - 1);
+        td_txt(TD_N, 117, yy, nm);
+    }
+}
+function td_ecart(r, l) {                                      /* ecart au leader au meme point de chrono, ou tours de retard */
+    var L = mx.lap_to_index(2) - mx.lap_to_index(1), n, t0, t1;
+    if (L > 0) { n = Math.floor((l.position - r.position) / L); if (n >= 1) return "+" + n + "L"; }
+    t0 = mx.get_timing(l.slot, r.position); t1 = mx.get_timing(r.slot, r.position);
+    if (t0 < 0 || t1 < 0) return "";
+    t1 = Math.max(0, t1 - t0);
+    return "+" + (t1 < 60 ? t1.toFixed(1) : ev_temps(t1));
+}
+function td_lignes_b() {                                     /* panneau 3 (haut de la page B) : ecarts */
+    var k, r, e;
+    for (k = 1; k < 10 && k < td_ordre.length; k++) {
+        r = td_ordre[k];
+        if (r.position < 1) break;
+        e = td_ecart(r, td_ordre[0]);
+        if (e) td_txt(TD_N, 232 - td_larg(TD_N, e), 3 + k * 25 + -2, e);
+    }
+}
+var td_mt_t = -1, td_mt_s = -100, td_mt_slot = -1;
+function td_mt_maj() {                                       /* meilleur tour de la course (tours complets a partir du 2e), 1 fois par seconde */
+    var i, k, n, t1, t2, best = -1, slot = -1;
+    if (mx.seconds >= td_mt_s && mx.seconds - td_mt_s < 1.0) return;
+    td_mt_s = mx.seconds;
+    for (i = 0; i < td_ordre.length; i++) {
+        n = mx.index_to_lap(td_ordre[i].position);
+        for (k = 1; k < n; k++) {
+            t1 = mx.get_timing(td_ordre[i].slot, mx.lap_to_index(k)); t2 = mx.get_timing(td_ordre[i].slot, mx.lap_to_index(k + 1));
+            if (t1 >= 0 && t2 > t1 && (best < 0 || t2 - t1 < best)) { best = t2 - t1; slot = td_ordre[i].slot; }
+        }
+    }
+    td_mt_t = best; td_mt_slot = slot;
+}
+function td_chrono(t) { var m = Math.floor(t / 60), s = t - 60 * m; return m + ":" + (s < 10 ? "0" : "") + s.toFixed(3); }
+function td_mt() {                                           /* panneau 4 (bas de la page B) : le meilleur temps seul */
+    var s;
+    td_mt_maj();
+    s = td_mt_t > 0 ? td_chrono(td_mt_t) : "-:--.---";
+    td_txt(TD_T, 128 - td_larg(TD_T, s) / 2, 256 + 98, s);
+    if (td_mt_slot >= 0) {
+        s = mx.get_rider_number(td_mt_slot).toString() + " - " + td_nom(mx.get_rider_name(td_mt_slot));
+        td_txt(TD_P, 128 - td_larg(TD_P, s) / 2, 256 + 156, s);
     }
 }
 function td_dessine(secs) {
@@ -109,13 +153,13 @@ function td_dessine(secs) {
         s = td_haut();
         td_txt(TD_T, TD_W / 2 - td_larg(TD_T, s) / 2, 168, s);
     }
-    td_rangees(256, 0, 8);
+    td_lignes_a();
     mx.end_custom_frame(TD_A);
     td_tex = TD_B;
     mx.begin_custom_frame(TD_B);
     td_cp(0, 0, 0, 0, 0, TD_W, TD_H);
-    td_rangees(0, 8, 8);
-    td_rangees(256, 2 * 8, 6);
+    td_lignes_b();
+    td_mt();
     mx.end_custom_frame(TD_B);
 }
 function td_image(secs) {
