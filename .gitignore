@@ -30,7 +30,3 @@ pistes/paris-2026/refs/zion25_full/ZION.2025.SupercrossParisSuperpole/
 
 # vraies motos du jeu (modèles d autres auteurs) : recréées par pistes/paris-2026/motos_jeu.py, pas sur GitHub
 tracks/*/statue/paris/pad/vraie_*
-
-# v45d : chanson FIVE - SX Paris 2022 (pas à nous, dépôt public) : locale seulement
-pistes/paris-2026/sons/musique_paris.raw
-tracks/USLANDParisSupercross2026/js/sounds/musique.raw

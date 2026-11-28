@@ -231,8 +231,8 @@ def _fort(a, k):
 
 def _bloc_musique():
     """v45d (Ryan : la chanson FIVE - SX Paris 2022 « quand tout le monde a passé l'arrivée ») : jouée juste après l'annonce, sur les
-    hauts-parleurs + une copie qui suit la caméra. Pas à nous et dépôt GitHub public : sons/musique_paris.raw reste en local
-    (.gitignore) ; sans le fichier, pas de chanson (EV_S_MUS vide)."""
+    hauts-parleurs + des copies qui suivent la caméra. v45j : sur GitHub à la demande de Ryan (pour que tout le monde l'ait) ;
+    sans le fichier, pas de chanson (EV_S_MUS vide)."""
     an = os.path.getsize(os.path.join(HERE, "sons", "annonce_paris.raw")) / 2.0 / 44100
     L = ["var EV_ANNONCE_DUREE = %.2f, EV_S_MUS = [], EV_S_MUS_CAM = [], EV_MUS_DUREE = 0;" % (an + 0.5)]
     if os.path.exists(MUSIQUE):
