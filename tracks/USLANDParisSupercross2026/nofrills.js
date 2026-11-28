@@ -144,17 +144,31 @@ function ev_son(f, vol, freq) {
 var EV_S_GRILLE = ev_son("@USLANDParisSupercross2026/js/sounds/grille.raw", 1.5, 44100);
 var EV_S_PUBLIC = ev_son("@USLANDParisSupercross2026/js/sounds/public.raw", 4.0, 44100);
 var EV_S_OOH = ev_son("@USLANDParisSupercross2026/js/sounds/public.raw", 4.0, 33075);
+var EV_S_ANNONCE = ev_son("@USLANDParisSupercross2026/js/sounds/annonce.raw", 0.6, 44100);   /* v44c : annonce "le plus beau supercross du monde, c est Paris" */
+var EV_HP = [[200.7, 50.0, 261.0], [200.7, 50.0, 419.4], [401.1, 50.0, 261.0], [401.1, 50.0, 419.4]];                                              /* v44d : hauts-parleurs au-dessus de la piste (remplace par le build) */
+var EV_S_HP = [], ev_k;
+for (ev_k = 0; ev_k < EV_HP.length; ev_k++) {
+    EV_S_HP.push(ev_son("@USLANDParisSupercross2026/js/sounds/annonce.raw", 2.0, 44100));
+    if (EV_S_HP[ev_k] >= 0) mx.set_sound_pos(EV_S_HP[ev_k], EV_HP[ev_k][0], EV_HP[ev_k][1], EV_HP[ev_k][2]);
+}
+function ev_hauts_parleurs() {                                         /* l'annonce part de chaque haut-parleur + un peu a la camera */
+    var k;
+    for (k = 0; k < EV_S_HP.length; k++) if (EV_S_HP[k] >= 0) mx.start_sound(EV_S_HP[k]);
+    ev_joue(EV_S_ANNONCE);
+}
+var EV_ANNONCE_MAX = 120.0;                                           /* si un pilote ne finit jamais (abandon) : annonce 120 s apres le vainqueur */
 var EV_S_FOULE = mx.add_sound("@USLANDParisSupercross2026/js/sounds/foule.raw");          /* v44b : bruit du public en continu (boucle), suit la camera */
 if (EV_S_FOULE >= 0) { mx.set_sound_freq(EV_S_FOULE, 44100); mx.set_sound_vol(EV_S_FOULE, 2.0); mx.set_sound_loop(EV_S_FOULE, 1); mx.start_sound(EV_S_FOULE); }
 var ev_p = [0, 0, 0], ev_r = [1, 0, 0, 0, 1, 0, 0, 0, 1];
 var ev_d = -2, ev_grille = -1, ev_hs = -1, ev_hs_t = -1, ev_fin_t = -1, ev_tour_temps = -1, ev_public_t = -100;
+var ev_fin_tv = -1, ev_annonce = 0;
 var ev_top = [], ev_bas = {}, ev_prec_s = -1, ev_rec = null, ev_rec_t = -1;
 
 function ev_joue(i) { if (i >= 0) { mx.set_sound_pos(i, ev_p[0], ev_p[1], ev_p[2]); mx.start_sound(i); } }
 function ev_public(i) { if (mx.seconds - ev_public_t >= EV_PAUSE_PUBLIC) { ev_public_t = mx.seconds; ev_joue(i); } }
 function ev_nom(slot) { return td_nom(mx.get_rider_name(slot)); }
 function ev_num(slot) { return mx.get_rider_number(slot).toString() + " -"; }
-function ev_reset() { ev_hs = -1; ev_hs_t = -1; ev_fin_t = -1; ev_tour_temps = -1; ev_top = []; ev_bas = {}; ev_rec = null; ev_rec_t = -1; }
+function ev_reset() { ev_hs = -1; ev_hs_t = -1; ev_fin_t = -1; ev_tour_temps = -1; ev_top = []; ev_bas = {}; ev_rec = null; ev_rec_t = -1; ev_fin_tv = -1; ev_annonce = 0; }
 function ev_tours_course() {
     if (EV_FIN_TEMPS > 0) return ev_tour_temps >= 0 ? ev_tour_temps + 1 + EV_FIN_TOURS : 1000000;
     return EV_FIN_TOURS > 0 ? EV_FIN_TOURS : 1000000;
@@ -181,6 +195,14 @@ function ev_recompenses(o) {
     r.mt_t = best;
     return r;
 }
+function ev_tous_finis(o) {                                          /* chacun a repasse la ligne apres le vainqueur */
+    var i, t;
+    for (i = 0; i < o.length; i++) {
+        t = mx.get_timing(o[i].slot, mx.lap_to_index(mx.index_to_lap(o[i].position)));
+        if (!(t >= ev_fin_tv - 0.001)) return false;
+    }
+    return true;
+}
 function ev_maj() {
     var d = mx.get_gate_drop_time(), o, i, tour, top;
     mx.get_camera_location(ev_p, ev_r);
@@ -195,9 +217,10 @@ function ev_maj() {
     if (ev_hs < 0 && o[0].position >= EV_HS_INDEX) { ev_hs = o[0].slot; ev_hs_t = mx.seconds; ev_public(EV_S_PUBLIC); }
     tour = mx.index_to_lap(o[0].position);
     if (EV_FIN_TEMPS > 0 && ev_tour_temps < 0 && mx.seconds - d >= EV_FIN_TEMPS) ev_tour_temps = tour;
-    if (ev_fin_t < 0 && o[0].position >= 1 && tour >= ev_tours_course()) { ev_fin_t = mx.seconds; ev_public_t = -100; ev_public(EV_S_PUBLIC); }
+    if (ev_fin_t < 0 && o[0].position >= 1 && tour >= ev_tours_course()) { ev_fin_t = mx.seconds; ev_fin_tv = mx.get_timing(o[0].slot, mx.lap_to_index(tour)); ev_public_t = -100; ev_public(EV_S_PUBLIC); }
     if (ev_fin_t >= 0) {
         if (ev_rec_t < 0 || mx.seconds - ev_rec_t >= 1.0) { ev_rec = ev_recompenses(o); ev_rec_t = mx.seconds; }
+        if (!ev_annonce && (ev_tous_finis(o) || mx.seconds - ev_fin_t >= EV_ANNONCE_MAX)) { ev_annonce = 1; ev_hauts_parleurs(); }
         return;
     }
     if (mx.seconds - d < EV_APRES_DEPART) return;

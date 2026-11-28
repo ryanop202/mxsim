@@ -1686,6 +1686,7 @@ def export_zion(*a, **k):
     if RECADRE:
         BP.REPORT['recadrage'] = recadrer(BP.OUT, *RECADRE)           # v42b : terrain collé à l'arène (comme RF) -> minimap ~1,7x plus grande
     BP.REPORT['portes'] = portes_ryan(BP.OUT)                         # v44b : portes de chrono refaites par Ryan dans l'éditeur
+    BP.REPORT['hauts_parleurs'] = hauts_parleurs(BP.OUT)             # v44d : 4 hauts-parleurs au-dessus de la piste (annonce de fin)
     BP.REPORT['taille'] = alleger(BP.OUT, BP.FOLDER)                  # v42 : < 200 Mo (fichiers inutilisés enlevés, .jm -> .jm.gz)
     BP.REPORT['noms'] = renommer(BP.OUT, BP.FOLDER)                   # v43b : RF / A1 / ZION / Conway -> USLAND (dossier de la piste seulement)
 
@@ -1703,6 +1704,26 @@ def portes_ryan(OUT):
     assert len(R) == i1 - i0 - 1, ("portes de Ryan : %d au lieu de %d" % (len(R), i1 - i0 - 1))
     open(p, "w", newline=chr(10)).write(chr(10).join(L[:i0 + 1] + R + L[i1:]))
     return len(R)
+
+
+HP_Y = 50.0          # v44d : hauteur des hauts-parleurs (ft), sous le toit
+HP_FRAC = (0.25, 0.75)
+
+
+def hauts_parleurs(OUT):
+    """v44d (Ryan : « mets maintenant tout ce qui est haut-parleur ») : 4 hauts-parleurs au-dessus de la piste, aux quarts du rectangle des
+    portes de chrono (coordonnées finales, après recadrer) ; EV_HP du script (frills.js = nofrills.js) remplacé par leurs positions."""
+    import re
+    tg = open(os.path.join(OUT, "timing_gates")).read()
+    cp = tg.split("checkpoints:")[1].split("firstlap:")[0].strip().splitlines()
+    G = np.array([[float(v) for v in re.findall(r"\[(\S+) \S+ (\S+)\]", l)[0]] for l in cp])
+    (x0, z0), (x1, z1) = G.min(0), G.max(0)
+    P = [[round(x0 + fx * (x1 - x0), 1), HP_Y, round(z0 + fz * (z1 - z0), 1)] for fx in HP_FRAC for fz in HP_FRAC]
+    for f_ in ("frills.js", "nofrills.js"):
+        p_ = os.path.join(OUT, f_); s_ = open(p_, encoding="ascii").read()
+        assert s_.count("var EV_HP = [[0, 0, 0]];") == 1, f_
+        open(p_, "w", newline=chr(10), encoding="ascii").write(s_.replace("var EV_HP = [[0, 0, 0]];", "var EV_HP = %s;" % json.dumps(P)))
+    return P
 
 
 CHANT = False      # v42d : chant de la grille coupé (« il ne marche pas »)
