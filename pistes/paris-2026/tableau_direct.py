@@ -64,7 +64,7 @@ MT_NOM_Y = 156                          # v45b (« laisse 202 - OPPLIGER ») : n
 # grille ; le public sur les chutes et les bagarres ; refais notre propre code ») : module d'événements (code USLAND, écrit ici)
 EV_Y = (164, 189, 213)                  # 3 lignes dans la case du temps, sous son trait blanc (y 159-162) : titre, numéro + nom, valeur
 EV_HS_INDEX = 2                         # holeshot : 1er à passer 2 portes (porte 28, entrée du 1er virage ; la 27 est au milieu de la ligne droite)
-EV_VOL = dict(grille=1.5, public=4.0, ooh=4.0, foule=4.0, annonce=6.0, hp=1.5, mus=5.0, mus_hp=1.0)   # sons RF (pack sx2026) : clameur rms ~1100 (RF la joue à 25), grille rms ~2400 ; v45e (Ryan : « la foule j'entends rien ; chaque micro en décalé, trop ») : foule normalisée (x9) à 4, son principal à la caméra, hauts-parleurs bas (léger écho)
+EV_VOL = dict(grille=1.5, public=8.0, ooh=8.0, foule=4.0, foule_fin=1.0, annonce=6.0, hp=1.5, mus=10.0, mus_hp=2.0)   # sons RF (pack sx2026) : clameur rms ~1100 (RF la joue à 25), grille rms ~2400 ; v45e (Ryan : « la foule j'entends rien ; chaque micro en décalé, trop ») : foule normalisée (x9) à 4, son principal à la caméra, hauts-parleurs bas (léger écho) ; v45g (« pas assez fort », chutes pas entendues) : chanson x2, clameur normalisée (x3,8) à 8 ; v45h : grille inchangée (1.5), foule 4 -> 1 après l'arrivée
 MUSIQUE = os.path.join(HERE, "sons", "musique_paris.raw")       # v45d : chanson FIVE - SX Paris 2022 (locale seulement, voir _bloc_musique)
 SONS_RF = os.path.join(os.path.dirname(os.path.dirname(HERE)), "commun", "assets", "sons_rf")
 EV_JS = r"""
@@ -101,10 +101,15 @@ function ev_hauts_parleurs() {                                         /* l'anno
 /*EV_MUSIQUE*/
 var EV_ANNONCE_MAX = 120.0;                                           /* si un pilote ne finit jamais (abandon) : annonce 120 s apres le vainqueur */
 var EV_S_FOULE = ev_son("@FOLDER/js/sounds/foule.raw", EVVF, 44100);  /* v44b : bruit du public en continu, suit la camera */
-var EV_FOULE_DUREE = EVFD, ev_foule_t = -1000;                        /* v45c : relance a chaque fin (pas de boucle du jeu, pas au chargement) */
+var EV_FOULE_DUREE = EVFD, ev_foule_t = -1000, ev_foule_v = EVVF;
+var EV_FOULE_FIN = EVFF;                                              /* v45h : foule plus basse apres l'arrivee (la chanson par-dessus) */                        /* v45c : relance a chaque fin (pas de boucle du jeu, pas au chargement) */
 function ev_foule() {
     if (EV_S_FOULE < 0) return;
     mx.set_sound_pos(EV_S_FOULE, ev_p[0], ev_p[1], ev_p[2]);
+    if ((ev_fin_t >= 0 ? EV_FOULE_FIN : EVVF) != ev_foule_v) {        /* volume change : on relance a ce volume */
+        ev_foule_v = ev_fin_t >= 0 ? EV_FOULE_FIN : EVVF;
+        mx.stop_sound(EV_S_FOULE); mx.set_sound_vol(EV_S_FOULE, ev_foule_v); ev_foule_t = -1000;
+    }
     if (mx.seconds < ev_foule_t || mx.seconds - ev_foule_t >= EV_FOULE_DUREE) { ev_foule_t = mx.seconds; mx.start_sound(EV_S_FOULE); }
 }
 var ev_p = [0, 0, 0], ev_r = [1, 0, 0, 0, 1, 0, 0, 0, 1];
@@ -209,7 +214,7 @@ function ev_ecran() {                                                 /* [titre,
     return null;
 }
 """.replace("EVY0", str(EV_Y[0])).replace("EVY1", str(EV_Y[1])).replace("EVY2", str(EV_Y[2])).replace("EVHS", str(EV_HS_INDEX)) \
-   .replace("EVVG", "%.1f" % EV_VOL["grille"]).replace("EVVP", "%.1f" % EV_VOL["public"]).replace("EVVO", "%.1f" % EV_VOL["ooh"]).replace("EVVF", "%.1f" % EV_VOL["foule"]).replace("EVVA", "%.1f" % EV_VOL["annonce"]).replace("EVVH", "%.1f" % EV_VOL["hp"]).replace("EVFD", "%.2f" % (os.path.getsize(os.path.join(SONS_RF, "crowdconstant.raw")) / 2.0 / 44100))
+   .replace("EVVG", "%.1f" % EV_VOL["grille"]).replace("EVVP", "%.1f" % EV_VOL["public"]).replace("EVVO", "%.1f" % EV_VOL["ooh"]).replace("EVFF", "%.1f" % EV_VOL["foule_fin"]).replace("EVVF", "%.1f" % EV_VOL["foule"]).replace("EVVA", "%.1f" % EV_VOL["annonce"]).replace("EVVH", "%.1f" % EV_VOL["hp"]).replace("EVFD", "%.2f" % (os.path.getsize(os.path.join(SONS_RF, "crowdconstant.raw")) / 2.0 / 44100))
 
 
 def _bloc_musique():
@@ -564,7 +569,8 @@ def make(OUT, FOLDER, x, z, yaw, apercu_png=None):
     import shutil
     sd_ = os.path.join(OUT, "js", "sounds"); os.makedirs(sd_, exist_ok=True)
     shutil.copy(os.path.join(SONS_RF, "gatedrop.raw"), os.path.join(sd_, "grille.raw"))
-    shutil.copy(os.path.join(SONS_RF, "crowdroar.raw"), os.path.join(sd_, "public.raw"))
+    cr_ = np.fromfile(os.path.join(SONS_RF, "crowdroar.raw"), "<i2").astype(float)            # v45g : clameur au-dessus de la foule
+    (cr_ * (29000.0 / np.abs(cr_).max())).astype("<i2").tofile(os.path.join(sd_, "public.raw"))
     fo_ = np.fromfile(os.path.join(SONS_RF, "crowdconstant.raw"), "<i2").astype(float)       # v45e : rms 692 -> pic 29000 (inaudible avant)
     (fo_ * (29000.0 / np.abs(fo_).max())).astype("<i2").tofile(os.path.join(sd_, "foule.raw"))
     shutil.copy(os.path.join(os.path.dirname(os.path.abspath(__file__)), "sons", "annonce_paris.raw"), os.path.join(sd_, "annonce.raw"))   # v44c     # v44b : « et le son des spectateurs »

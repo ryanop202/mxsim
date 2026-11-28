@@ -186,8 +186,8 @@ function ev_son(f, vol, freq) {
     return i;
 }
 var EV_S_GRILLE = ev_son("@USLANDParisSupercross2026/js/sounds/grille.raw", 1.5, 44100);
-var EV_S_PUBLIC = ev_son("@USLANDParisSupercross2026/js/sounds/public.raw", 4.0, 44100);
-var EV_S_OOH = ev_son("@USLANDParisSupercross2026/js/sounds/public.raw", 4.0, 33075);
+var EV_S_PUBLIC = ev_son("@USLANDParisSupercross2026/js/sounds/public.raw", 8.0, 44100);
+var EV_S_OOH = ev_son("@USLANDParisSupercross2026/js/sounds/public.raw", 8.0, 33075);
 var EV_S_ANNONCE = ev_son("@USLANDParisSupercross2026/js/sounds/annonce.raw", 6.0, 44100);   /* v44c : annonce "le plus beau supercross du monde, c est Paris" */
 var EV_HP = [[200.7, 50.0, 261.0], [200.7, 50.0, 419.4], [401.1, 50.0, 261.0], [401.1, 50.0, 419.4]];                                              /* v44d : hauts-parleurs au-dessus de la piste (remplace par le build) */
 var EV_S_HP = [], ev_k;
@@ -204,16 +204,21 @@ function ev_hauts_parleurs() {                                         /* l'anno
 var EV_ANNONCE_DUREE = 20.49, EV_S_MUS = [], EV_MUS_DUREE = 0;
 EV_MUS_DUREE = 147.36;
 for (ev_k = 0; ev_k < EV_HP.length; ev_k++) {
-    EV_S_MUS.push(ev_son("@USLANDParisSupercross2026/js/sounds/musique.raw", 1.0, 44100));
+    EV_S_MUS.push(ev_son("@USLANDParisSupercross2026/js/sounds/musique.raw", 2.0, 44100));
     if (EV_S_MUS[ev_k] >= 0) mx.set_sound_pos(EV_S_MUS[ev_k], EV_HP[ev_k][0], EV_HP[ev_k][1], EV_HP[ev_k][2]);
 }
-EV_S_MUS.push(ev_son("@USLANDParisSupercross2026/js/sounds/musique.raw", 5.0, 44100));   /* copie a la camera (en dernier) */
+EV_S_MUS.push(ev_son("@USLANDParisSupercross2026/js/sounds/musique.raw", 10.0, 44100));   /* copie a la camera (en dernier) */
 var EV_ANNONCE_MAX = 120.0;                                           /* si un pilote ne finit jamais (abandon) : annonce 120 s apres le vainqueur */
 var EV_S_FOULE = ev_son("@USLANDParisSupercross2026/js/sounds/foule.raw", 4.0, 44100);  /* v44b : bruit du public en continu, suit la camera */
-var EV_FOULE_DUREE = 21.22, ev_foule_t = -1000;                        /* v45c : relance a chaque fin (pas de boucle du jeu, pas au chargement) */
+var EV_FOULE_DUREE = 21.22, ev_foule_t = -1000, ev_foule_v = 4.0;
+var EV_FOULE_FIN = 1.0;                                              /* v45h : foule plus basse apres l'arrivee (la chanson par-dessus) */                        /* v45c : relance a chaque fin (pas de boucle du jeu, pas au chargement) */
 function ev_foule() {
     if (EV_S_FOULE < 0) return;
     mx.set_sound_pos(EV_S_FOULE, ev_p[0], ev_p[1], ev_p[2]);
+    if ((ev_fin_t >= 0 ? EV_FOULE_FIN : 4.0) != ev_foule_v) {        /* volume change : on relance a ce volume */
+        ev_foule_v = ev_fin_t >= 0 ? EV_FOULE_FIN : 4.0;
+        mx.stop_sound(EV_S_FOULE); mx.set_sound_vol(EV_S_FOULE, ev_foule_v); ev_foule_t = -1000;
+    }
     if (mx.seconds < ev_foule_t || mx.seconds - ev_foule_t >= EV_FOULE_DUREE) { ev_foule_t = mx.seconds; mx.start_sound(EV_S_FOULE); }
 }
 var ev_p = [0, 0, 0], ev_r = [1, 0, 0, 0, 1, 0, 0, 0, 1];
