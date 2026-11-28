@@ -75,7 +75,9 @@ MT_NOM_Y = 156                          # v45b (« laisse 202 - OPPLIGER ») : n
 # grille ; le public sur les chutes et les bagarres ; refais notre propre code ») : module d'événements (code USLAND, écrit ici)
 EV_Y = (147, 177, 205)                  # v45c (DA E) : titre, numéro + nom, valeur sous « LIVE » ; v44 : (164, 189, 213) dans la case du temps
 EV_HS_INDEX = 2                         # holeshot : 1er à passer 2 portes (porte 28, entrée du 1er virage ; la 27 est au milieu de la ligne droite)
-EV_VOL = dict(grille=1.5, public=4.0, ooh=4.0, foule=2.0, annonce=0.6, hp=2.0)   # sons RF (pack sx2026) : clameur rms ~1100 (RF la joue à 25), grille rms ~2400
+EV_VOL = dict(grille=1.5, public=1.0, ooh=1.0, foule=1.0, foule_fin=0.25, annonce=1.0, hp=0.5, mus=1.0, mus_hp=0.4)
+EV_COPIES = dict(public=3, mus=2)   # v45i : volume plafonné à 1 dans le jeu -> plus fort = plusieurs copies au même point (pas d'écho)   # sons RF (pack sx2026) : clameur rms ~1100 (RF la joue à 25), grille rms ~2400 ; v45e (Ryan : « la foule j'entends rien ; chaque micro en décalé, trop ») : foule normalisée (x9) à 4, son principal à la caméra, hauts-parleurs bas (léger écho) ; v45g (« pas assez fort », chutes pas entendues) : chanson x2, clameur normalisée (x3,8) à 8 ; v45h : grille inchangée (1.5), foule 4 -> 1 après l'arrivée
+MUSIQUE = os.path.join(HERE, "sons", "musique_paris.raw")       # v45d : chanson FIVE - SX Paris 2022 (locale seulement, voir _bloc_musique)
 SONS_RF = os.path.join(os.path.dirname(os.path.dirname(HERE)), "commun", "assets", "sons_rf")
 EV_JS = r"""
 /*
@@ -93,8 +95,9 @@ function ev_son(f, vol, freq) {
     return i;
 }
 var EV_S_GRILLE = ev_son("@FOLDER/js/sounds/grille.raw", EVVG, 44100);
-var EV_S_PUBLIC = ev_son("@FOLDER/js/sounds/public.raw", EVVP, 44100);
-var EV_S_OOH = ev_son("@FOLDER/js/sounds/public.raw", EVVO, 33075);
+function ev_sons(f, vol, freq, n) { var k, a = []; for (k = 0; k < n; k++) a.push(ev_son(f, vol, freq)); return a; }
+var EV_S_PUBLIC = ev_sons("@FOLDER/js/sounds/public.raw", EVVP, 44100, EVNP);   /* v45i : copies a la camera (volume plafonne a 1) */
+var EV_S_OOH = ev_sons("@FOLDER/js/sounds/public.raw", EVVO, 33075, EVNP);
 var EV_S_ANNONCE = ev_son("@FOLDER/js/sounds/annonce.raw", EVVA, 44100);   /* v44c : annonce "le plus beau supercross du monde, c est Paris" */
 var EV_HP = [[0, 0, 0]];                                              /* v44d : hauts-parleurs au-dessus de la piste (remplace par le build) */
 var EV_S_HP = [], ev_k;
@@ -104,22 +107,49 @@ for (ev_k = 0; ev_k < EV_HP.length; ev_k++) {
 }
 function ev_hauts_parleurs() {                                         /* l'annonce part de chaque haut-parleur + un peu a la camera */
     var k;
+    if (EV_S_MUS.length) { ev_mus_t = mx.seconds; return; }            /* v45f : la chanson complete seule (plus l'extrait de 20 s avant) */
     for (k = 0; k < EV_S_HP.length; k++) if (EV_S_HP[k] >= 0) mx.start_sound(EV_S_HP[k]);
     ev_joue(EV_S_ANNONCE);
 }
+/*EV_MUSIQUE*/
 var EV_ANNONCE_MAX = 120.0;                                           /* si un pilote ne finit jamais (abandon) : annonce 120 s apres le vainqueur */
-var EV_S_FOULE = mx.add_sound("@FOLDER/js/sounds/foule.raw");          /* v44b : bruit du public en continu (boucle), suit la camera */
-if (EV_S_FOULE >= 0) { mx.set_sound_freq(EV_S_FOULE, 44100); mx.set_sound_vol(EV_S_FOULE, EVVF); mx.set_sound_loop(EV_S_FOULE, 1); mx.start_sound(EV_S_FOULE); }
+var EV_S_FOULE = ev_son("@FOLDER/js/sounds/foule.raw", EVVF, 44100);  /* v44b : bruit du public en continu, suit la camera */
+var EV_FOULE_DUREE = EVFD, ev_foule_t = -1000, ev_foule_v = EVVF;
+var EV_FOULE_FIN = EVFF;                                              /* v45h : foule plus basse apres l'arrivee (la chanson par-dessus) */                        /* v45c : relance a chaque fin (pas de boucle du jeu, pas au chargement) */
+function ev_foule() {
+    if (EV_S_FOULE < 0) return;
+    mx.set_sound_pos(EV_S_FOULE, ev_p[0], ev_p[1], ev_p[2]);
+    if ((ev_fin_t >= 0 ? EV_FOULE_FIN : EVVF) != ev_foule_v) {        /* volume change : on relance a ce volume */
+        ev_foule_v = ev_fin_t >= 0 ? EV_FOULE_FIN : EVVF;
+        mx.stop_sound(EV_S_FOULE); mx.set_sound_vol(EV_S_FOULE, ev_foule_v); ev_foule_t = -1000;
+    }
+    if (mx.seconds < ev_foule_t || mx.seconds - ev_foule_t >= EV_FOULE_DUREE) { ev_foule_t = mx.seconds; mx.start_sound(EV_S_FOULE); }
+}
 var ev_p = [0, 0, 0], ev_r = [1, 0, 0, 0, 1, 0, 0, 0, 1];
 var ev_d = -2, ev_grille = -1, ev_hs = -1, ev_hs_t = -1, ev_fin_t = -1, ev_tour_temps = -1, ev_public_t = -100;
 var ev_fin_tv = -1, ev_annonce = 0;
+var ev_mus_t = -1, ev_mus_fin = -1;
+function ev_mus_stop() { var k; if (ev_mus_fin < 0) return; for (k = 0; k < EV_S_MUS.length; k++) if (EV_S_MUS[k] >= 0) mx.stop_sound(EV_S_MUS[k]); ev_mus_fin = -1; }
+function ev_musique() {                                                /* v45d : chanson sur les hauts-parleurs + une copie qui suit la camera */
+    var k;
+    if (ev_mus_t >= 0 && mx.seconds >= ev_mus_t) {
+        ev_mus_t = -1; ev_mus_fin = mx.seconds + EV_MUS_DUREE;
+        for (k = 0; k < EV_S_MUS.length; k++) if (EV_S_MUS[k] >= 0) mx.start_sound(EV_S_MUS[k]);
+    }
+    if (ev_mus_fin >= 0 && mx.seconds > ev_mus_fin) ev_mus_fin = -1;
+    if (ev_mus_fin >= 0) for (k = 0; k < EV_S_MUS_CAM.length; k++) if (EV_S_MUS_CAM[k] >= 0) mx.set_sound_pos(EV_S_MUS_CAM[k], ev_p[0], ev_p[1], ev_p[2]);
+}
 var ev_top = [], ev_bas = {}, ev_prec_s = -1, ev_rec = null, ev_rec_t = -1;
 
-function ev_joue(i) { if (i >= 0) { mx.set_sound_pos(i, ev_p[0], ev_p[1], ev_p[2]); mx.start_sound(i); } }
+function ev_joue(i) {
+    var k;
+    if (typeof i == "object") { for (k = 0; k < i.length; k++) ev_joue(i[k]); return; }
+    if (i >= 0) { mx.set_sound_pos(i, ev_p[0], ev_p[1], ev_p[2]); mx.start_sound(i); }
+}
 function ev_public(i) { if (mx.seconds - ev_public_t >= EV_PAUSE_PUBLIC) { ev_public_t = mx.seconds; ev_joue(i); } }
 function ev_nom(slot) { return td_nom(mx.get_rider_name(slot)); }
 function ev_num(slot) { return mx.get_rider_number(slot).toString() + " -"; }
-function ev_reset() { ev_hs = -1; ev_hs_t = -1; ev_fin_t = -1; ev_tour_temps = -1; ev_top = []; ev_bas = {}; ev_rec = null; ev_rec_t = -1; ev_fin_tv = -1; ev_annonce = 0; }
+function ev_reset() { ev_hs = -1; ev_hs_t = -1; ev_fin_t = -1; ev_tour_temps = -1; ev_top = []; ev_bas = {}; ev_rec = null; ev_rec_t = -1; ev_fin_tv = -1; ev_annonce = 0; ev_mus_t = -1; ev_mus_stop(); }
 function ev_tours_course() {
     if (EV_FIN_TEMPS > 0) return ev_tour_temps >= 0 ? ev_tour_temps + 1 + EV_FIN_TOURS : 1000000;
     return EV_FIN_TOURS > 0 ? EV_FIN_TOURS : 1000000;
@@ -157,7 +187,8 @@ function ev_tous_finis(o) {                                          /* chacun a
 function ev_maj() {
     var d = mx.get_gate_drop_time(), o, i, tour, top;
     mx.get_camera_location(ev_p, ev_r);
-    if (EV_S_FOULE >= 0) mx.set_sound_pos(EV_S_FOULE, ev_p[0], ev_p[1], ev_p[2]);
+    ev_foule();
+    ev_musique();
     if (mx.seconds < ev_prec_s) { ev_reset(); ev_grille = -1; }          /* retour en arriere (replay) */
     ev_prec_s = mx.seconds;
     if (d != ev_d) { ev_d = d; ev_reset(); }                          /* nouvelle course */
@@ -200,7 +231,34 @@ function ev_ecran() {                                                 /* [titre,
     return null;
 }
 """.replace("EVY0", str(EV_Y[0])).replace("EVY1", str(EV_Y[1])).replace("EVY2", str(EV_Y[2])).replace("EVHS", str(EV_HS_INDEX)) \
-   .replace("EVVG", "%.1f" % EV_VOL["grille"]).replace("EVVP", "%.1f" % EV_VOL["public"]).replace("EVVO", "%.1f" % EV_VOL["ooh"]).replace("EVVF", "%.1f" % EV_VOL["foule"]).replace("EVVA", "%.1f" % EV_VOL["annonce"]).replace("EVVH", "%.1f" % EV_VOL["hp"])
+   .replace("EVVG", "%.2f" % EV_VOL["grille"]).replace("EVVP", "%.2f" % EV_VOL["public"]).replace("EVNP", str(EV_COPIES["public"])).replace("EVVO", "%.2f" % EV_VOL["ooh"]).replace("EVFF", "%.2f" % EV_VOL["foule_fin"]).replace("EVVF", "%.2f" % EV_VOL["foule"]).replace("EVVA", "%.2f" % EV_VOL["annonce"]).replace("EVVH", "%.2f" % EV_VOL["hp"]).replace("EVFD", "%.2f" % (os.path.getsize(os.path.join(SONS_RF, "crowdconstant.raw")) / 2.0 / 44100))
+
+
+def _fort(a, k):
+    """v45i : limiteur doux (tanh) : monte le niveau moyen sans dépasser le pic de 29000 (le volume du jeu est plafonné à 1)."""
+    a = a / np.abs(a).max()
+    return (np.tanh(k * a) / np.tanh(k) * 29000.0).astype("<i2")
+
+
+def _bloc_musique():
+    """v45d (Ryan : la chanson FIVE - SX Paris 2022 « quand tout le monde a passé l'arrivée ») : jouée juste après l'annonce, sur les
+    hauts-parleurs + des copies qui suivent la caméra. v45j : sur GitHub à la demande de Ryan (pour que tout le monde l'ait),
+    avec l'accord de l'artiste FIVE donné à Ryan ;
+    sans le fichier, pas de chanson (EV_S_MUS vide)."""
+    an = os.path.getsize(os.path.join(HERE, "sons", "annonce_paris.raw")) / 2.0 / 44100
+    L = ["var EV_ANNONCE_DUREE = %.2f, EV_S_MUS = [], EV_S_MUS_CAM = [], EV_MUS_DUREE = 0;" % (an + 0.5)]
+    if os.path.exists(MUSIQUE):
+        L += ["EV_MUS_DUREE = %.2f;" % (os.path.getsize(MUSIQUE) / 2.0 / 44100),
+              "for (ev_k = 0; ev_k < EV_HP.length; ev_k++) {",
+              '    EV_S_MUS.push(ev_son("@FOLDER/js/sounds/musique.raw", %.1f, 44100));' % EV_VOL["mus_hp"],
+              "    if (EV_S_MUS[ev_k] >= 0) mx.set_sound_pos(EV_S_MUS[ev_k], EV_HP[ev_k][0], EV_HP[ev_k][1], EV_HP[ev_k][2]);",
+              "}",
+              'EV_S_MUS_CAM = ev_sons("@FOLDER/js/sounds/musique.raw", %.1f, 44100, %d);   /* copies a la camera */' % (EV_VOL["mus"], EV_COPIES["mus"]),
+              "EV_S_MUS = EV_S_MUS.concat(EV_S_MUS_CAM);"]
+    return chr(10).join(L) + chr(10)
+
+
+EV_JS = EV_JS.replace("/*EV_MUSIQUE*/" + chr(10), _bloc_musique())
 
 
 def _font(path, px):
@@ -295,7 +353,7 @@ def _top10_fond(dA, dB):
         ya = 256 + y
         dA.rectangle([A_X0, ya, PW, ya + A_H - 3], fill=col + (255,))
         dA.rounded_rectangle([A_PLACE[0], ya + 2, A_PLACE[1], ya + A_H - 5], 3, fill=(255, 255, 255, 255))
-        dA.rounded_rectangle([A_PILL[0], ya + 3, A_PILL[1], ya + A_H - 6], 4, fill=((255, 255, 255) if k == 0 else ROSE) + (255,))
+        dA.rounded_rectangle([A_PILL[0], ya + 3, A_PILL[1], ya + A_H - 6], 4, fill=(VIOLET if k == 0 else ROSE) + (255,))   # v45c : leader violet foncé, numéro blanc
         dB.polygon([(0, y), (A_BANDE_X1, y), (A_BANDE_X1 - A_PENTE, y + A_H - 3), (0, y + A_H - 3)], fill=col + (255,))
         if k == 0:
             dB.text((A_ECART_X1, y + (A_H - 3) / 2), "LEADER", font=f, fill=(255, 255, 255), anchor="rm")
@@ -569,9 +627,13 @@ def make(OUT, FOLDER, x, z, yaw, apercu_png=None):
     import shutil
     sd_ = os.path.join(OUT, "js", "sounds"); os.makedirs(sd_, exist_ok=True)
     shutil.copy(os.path.join(SONS_RF, "gatedrop.raw"), os.path.join(sd_, "grille.raw"))
-    shutil.copy(os.path.join(SONS_RF, "crowdroar.raw"), os.path.join(sd_, "public.raw"))
-    shutil.copy(os.path.join(SONS_RF, "crowdconstant.raw"), os.path.join(sd_, "foule.raw"))
+    cr_ = np.fromfile(os.path.join(SONS_RF, "crowdroar.raw"), "<i2").astype(float)            # v45g : clameur au-dessus de la foule
+    _fort(cr_, 2.5).tofile(os.path.join(sd_, "public.raw"))                                   # v45i : limiteur doux (plus fort à pic égal)
+    fo_ = np.fromfile(os.path.join(SONS_RF, "crowdconstant.raw"), "<i2").astype(float)       # v45e : rms 692 -> pic 29000 (inaudible avant)
+    (fo_ * (29000.0 / np.abs(fo_).max())).astype("<i2").tofile(os.path.join(sd_, "foule.raw"))
     shutil.copy(os.path.join(os.path.dirname(os.path.abspath(__file__)), "sons", "annonce_paris.raw"), os.path.join(sd_, "annonce.raw"))   # v44c     # v44b : « et le son des spectateurs »
+    if os.path.exists(MUSIQUE):                                                                          # v45d : chanson (locale)
+        _fort(np.fromfile(MUSIQUE, "<i2").astype(float), 2.0).tofile(os.path.join(sd_, "musique.raw"))   # v45i
     if DA_CHRONO:
         open(os.path.join(OUT, "frills.js"), "w", newline="\n", encoding="ascii").write(TC.js(pol_, ta, tb) + EV_JS.replace("@FOLDER", "@" + FOLDER))
         ap = TC.apercu(A, B, let, pol_, apercu_png or os.path.join(D, "..", "apercu_direct.png"))

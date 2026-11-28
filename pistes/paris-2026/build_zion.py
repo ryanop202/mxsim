@@ -2170,8 +2170,10 @@ def alleger(OUT, FOLDER):
         if rl_.startswith("statue/paris/pad/vraie_") and max(im_.size) > ALLEGER_MOTOS_PX:
             f_ = ALLEGER_MOTOS_PX / max(im_.size); im_ = im_.resize((round(im_.size[0] * f_), round(im_.size[1] * f_)), Image.LANCZOS)
             im_.save(p_, optimize=True); return
-        if im_.mode == "RGBA" and rl_.startswith(("statue/", "tex/")) and im_.getchannel("A").getextrema()[0] == 255 and rl_.lower() not in seq_pngs:
-            im_ = im_.convert("RGB")      # v45b : pas les images d'une séquence .seq (fond_b en RGB + lettres en RGBA : moitié droite de l'écran noire)
+        # v45c (Ryan) : jamais l'écran géant (statue/paris/direct) ; v45b (Bazo) : ni aucune image d'une séquence .seq : leurs pages ANIM
+        # (fond + police RGBA) doivent rester au même format, sinon la texture ne s'affiche pas (moitié droite de l'écran absente en jeu)
+        if im_.mode == "RGBA" and rl_.startswith(("statue/", "tex/")) and not rl_.startswith("statue/paris/direct/")                 and im_.getchannel("A").getextrema()[0] == 255 and rl_.lower() not in seq_pngs:
+            im_ = im_.convert("RGB")
         tmp_ = p_ + ".tmp.png"; im_.save(tmp_, optimize=True)
         if os.path.getsize(tmp_) < os.path.getsize(p_):
             os.replace(tmp_, p_)
